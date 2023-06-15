@@ -20,6 +20,10 @@ ACH_CORE::ACH_CORE() {
 	this->BodyMesh->SetupAttachment(RootComponent);
 	this->BodyMesh->SetRelativeLocation(FVector(0.f, 0.f, -96.f));
 
+	this->PlayerFeet = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PlayerFeet"));
+	this->PlayerFeet->SetupAttachment(RootComponent);
+	this->PlayerFeet->SetRelativeLocation(FVector(0.f, 0.f, -96.f));
+
 	return;
 }
 
@@ -38,13 +42,16 @@ void ACH_CORE::Tick(float DeltaTime) {
 }
 
 void ACH_CORE::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) {
-
-	// APlayerController* PC = Cast<APlayerController>(GetController());
-	// APC_CORE* PC_Core = Cast<APC_CORE>(PC);
-
-	if (APC_CORE* PC_Core = CastChecked<APC_CORE>(GetController()))
-		PC_Core->SetupPlayerInputComponent(PlayerInputComponent);
+	APC_CORE* PC_Core = CastChecked<APC_CORE>(GetController());
+	check(PC_Core);
+	bool bSuccessfull = PC_Core->SetupPlayerInputComponent(PlayerInputComponent);
 	
+	if (bSuccessfull) {
+		UE_LOG(LogTemp, Display, TEXT("ACH_CORE::SetupPlayerInputComponent was successfully executed."))
+		return;
+	}
+
+	UE_LOG(LogTemp, Fatal, TEXT("ACH_CORE::SetupPlayerInputComponent executed with errors."))
 	return;
 }
 

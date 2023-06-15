@@ -6,6 +6,8 @@
 #include "GameFramework/PlayerController.h"
 #include "InputActionValue.h"
 
+#include "../World/FJAFGCoordinateSystem.h"
+
 #include "APC_CORE.generated.h"
 
 
@@ -19,12 +21,18 @@ class JAFG_API APC_CORE : public APlayerController {
 
 public:
 
-	virtual void BeginPlay() override;
-	
+	virtual void BeginPlay() override;	
+
+#pragma region Input Mappings
+
 public:
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Input|IA")
+	// IMC
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Input|IA|IMC")
 	UInputMappingContext* IMC_DefaultStart;
+
+	// Movement
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Movement")
 	UInputAction* IA_Jump;
@@ -35,26 +43,39 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Movement")
 	UInputAction* IA_Move;
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|MISC")
-	UInputAction* IA_EscapeMenu;
+	// Debug
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|MISC")
-	UInputAction* IA_OpenDebugMenu;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Debug")
+	UInputAction* IA_ToggleDebugScreen;
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|MISC")
-	UInputAction* IA_OpenGameChat;
-
+#pragma endregion Input Mappings
 
 public:
 	
 	// Call this function from the character
-	void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent);
+	bool SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent);
+
+#pragma region Input Actions
 
 private:
 
+	// Movement
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 	void TriggerJump(const FInputActionValue& Value);
 	void CompleteJump(const FInputActionValue& Value);
+
+	// Debug
+	void ToggleDebugScreen();
+
+#pragma endregion Input Actions
+
+#pragma region Player State API
+
+public:
+
+	FVector GetPlayerPosition() const;
+
+#pragma endregion Player State API
 
 };

@@ -3,10 +3,12 @@
 
 #include "CORE/APC_CORE.h"
 
+#include "CORE/ACH_CORE.h"
+#include "CORE/AHUD_CORE.h"
+
 #include "GameFramework/Character.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "CORE/ACH_CORE.h"
 
 void APC_CORE::BeginPlay() {
 	Super::BeginPlay();
@@ -14,29 +16,30 @@ void APC_CORE::BeginPlay() {
 	return;
 }
 
-void APC_CORE::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
-	UE_LOG(LogTemp, Warning, TEXT("APC_CORE::SetupPlayerInputComponent()"));
-
+bool APC_CORE::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
 	UEnhancedInputLocalPlayerSubsystem* Subsystem =
 			ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(this->GetLocalPlayer());
+	check(Subsystem)	
+	Subsystem->ClearAllMappings();
+	Subsystem->AddMappingContext(this->IMC_DefaultStart, 0);
 
-	UE_LOG(LogTemp, Warning, TEXT("Subsystem: %s"), Subsystem ? TEXT("true") : TEXT("false"));
+	UEnhancedInputComponent* PEI = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
 
-	if (Subsystem) {
-		Subsystem->ClearAllMappings();
-		Subsystem->AddMappingContext(this->IMC_DefaultStart, 0);
-	}
-	
-	UEnhancedInputComponent* PEI = Cast<UEnhancedInputComponent>(PlayerInputComponent);
-	UE_LOG(LogTemp, Warning, TEXT("PEI: %s"), PEI ? TEXT("true") : TEXT("false"));
+	// Movement
+	PEI->BindAction(this->IA_Move, ETriggerEvent::Triggered, this, &APC_CORE::Move);
+	PEI->BindAction(this->IA_Look, ETriggerEvent::Triggered, this, &APC_CORE::Look);
+	PEI->BindAction(this->IA_Jump, ETriggerEvent::Triggered, this, &APC_CORE::TriggerJump);
+	PEI->BindAction(this->IA_Jump, ETriggerEvent::Completed, this, &APC_CORE::CompleteJump);
 
-	if (PEI) {
-		PEI->BindAction(this->IA_Move, ETriggerEvent::Triggered, this, &APC_CORE::Move);
-		PEI->BindAction(this->IA_Look, ETriggerEvent::Triggered, this, &APC_CORE::Look);
-		PEI->BindAction(this->IA_Jump, ETriggerEvent::Triggered, this, &APC_CORE::TriggerJump);
-		PEI->BindAction(this->IA_Jump, ETriggerEvent::Completed, this, &APC_CORE::CompleteJump);
-	}
+	// Debug
+	PEI->BindAction(this->IA_ToggleDebugScreen, ETriggerEvent::Started, this, &APC_CORE::ToggleDebugScreen);
+
+	return true;
 }
+
+#pragma region Input Actions
+
+#pragma region Movement
 
 void APC_CORE::Move(const FInputActionValue& Value) {
 	if (ACH_CORE* PC_Core = Cast<ACH_CORE>(this->GetPawn()))
@@ -65,3 +68,27 @@ void APC_CORE::CompleteJump(const FInputActionValue& Value) {
 
 	return;
 }
+
+#pragma endregion Movement
+
+#pragma region Debug
+
+void APC_CORE::ToggleDebugScreen() {
+	if (AHUD_CORE* HUD_Core = Cast<AHUD_CORE>(this->GetHUD()))
+		HUD_Core->ToggleDebugScreen();
+
+
+	return;
+}
+
+#pragma endregion Debug
+
+#pragma endregion Input Actions
+
+#pragma region Player State API
+
+FVector APC_CORE::GetPlayerPosition() const {
+	return CastChecked<ACH_CORE>(this->GetPawn())->PlayerFeet->GetComponentLocation();
+}
+
+#pragma endregion Player State API

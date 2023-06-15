@@ -35,8 +35,12 @@ public:
 public:
 
 	// Components
+	
 	UPROPERTY(EditDefaultsOnly, category = "Components")
 	UStaticMeshComponent* BodyMesh;
+
+	UPROPERTY(EditDefaultsOnly, category = "Components")
+	class UStaticMeshComponent* PlayerFeet;
 
 public:
 
