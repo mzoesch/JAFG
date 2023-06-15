@@ -1,0 +1,1 @@
+"E:\dev\ue\source\ue-rel\Engine\Binaries\Win64\UnrealEditor.exe" "E:\dev\ue\prjs\JAFG\unreal\JAFG.uproject" -game -ResX=800 ResY=900 -WinX=0 -WinY=20 -log
