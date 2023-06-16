@@ -42,6 +42,11 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Movement")
 	UInputAction* IA_Move;
+	
+	// Interaction
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Interaction")
+	UInputAction* IA_Secondary;
 
 	// Debug
 
@@ -64,6 +69,9 @@ private:
 	void Look(const FInputActionValue& Value);
 	void TriggerJump(const FInputActionValue& Value);
 	void CompleteJump(const FInputActionValue& Value);
+
+	// Interaction
+	void Secondary();
 
 	// Debug
 	void ToggleDebugScreen();

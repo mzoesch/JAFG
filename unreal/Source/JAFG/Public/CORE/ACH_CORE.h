@@ -42,6 +42,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, category = "Components")
 	class UStaticMeshComponent* PlayerFeet;
 
+	UPROPERTY(EditDefaultsOnly, category = "Components")
+	class UCameraComponent* FirstPersonCamera;
+
 public:
 
 	void Move(const FInputActionValue& Value);
@@ -53,5 +56,9 @@ protected:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+public:
+
+	FHitResult TraceNearestObject(float JAFGRange);
 
 };

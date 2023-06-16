@@ -5,6 +5,7 @@
 
 #include "CORE/APC_CORE.h"
 
+#include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 
 // Sets default values
@@ -19,6 +20,12 @@ ACH_CORE::ACH_CORE() {
 	this->BodyMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BodyMesh"));
 	this->BodyMesh->SetupAttachment(RootComponent);
 	this->BodyMesh->SetRelativeLocation(FVector(0.f, 0.f, -96.f));
+
+	this->FirstPersonCamera =
+		CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
+	this->FirstPersonCamera->SetupAttachment(this->GetCapsuleComponent());
+	this->FirstPersonCamera->SetRelativeLocation(FVector(0.f, 0.f, 64.f));
+	this->FirstPersonCamera->bUsePawnControlRotation = true;
 
 	this->PlayerFeet = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PlayerFeet"));
 	this->PlayerFeet->SetupAttachment(RootComponent);
@@ -37,7 +44,7 @@ void ACH_CORE::BeginPlay() {
 // Called every frame
 void ACH_CORE::Tick(float DeltaTime) {
 	Super::Tick(DeltaTime);
-
+	UE_LOG(LogTemp, Warning, TEXT("WARNING: ACH_CORE::Tick should never be called."));
 	return;
 }
 
@@ -79,4 +86,30 @@ void ACH_CORE::CompleteJump() {
 	Super::StopJumping();
 
 	return;
+}
+
+FHitResult ACH_CORE::TraceNearestObject(float JAFGRange) {
+	const FVector CameraLocation = this->FirstPersonCamera->GetComponentLocation();
+	const FRotator CameraRotation = this->FirstPersonCamera->GetComponentRotation();
+	
+	const FVector TraceEnd =
+		CameraLocation + (CameraRotation.Vector()
+			* (JAFGRange * FJAFGCoordinateSystem::JAFGToUnrealCoordinateSystemScale)
+			)
+			;
+	
+	FCollisionQueryParams TraceParams =
+		FCollisionQueryParams(FName(TEXT("")), false, this->GetOwner());
+	
+	FHitResult HitResult;
+	GetWorld()->LineTraceSingleByChannel(
+		HitResult,
+		CameraLocation,
+		TraceEnd,
+		ECC_Visibility,
+		TraceParams
+		)
+		;
+
+	return HitResult;
 }
