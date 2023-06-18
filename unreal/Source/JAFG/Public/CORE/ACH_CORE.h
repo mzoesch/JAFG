@@ -59,6 +59,11 @@ protected:
 
 public:
 
+	FTransform GetCameraTransfrom();
+
+public:
+
 	FHitResult TraceNearestObject(float JAFGRange);
+	FHitResult TraceNearestObject(float JAFGRange, const FTransform& StartTransform);
 
 };

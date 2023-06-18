@@ -7,6 +7,7 @@
 #include "CORE/AHUD_CORE.h"
 #include "CORE/AACTR_BLOCKCORE.h"
 
+#include "Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -33,6 +34,7 @@ bool APC_CORE::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) 
 	PEI->BindAction(this->IA_Jump, ETriggerEvent::Completed, this, &APC_CORE::CompleteJump);
 
 	// Interaction
+	PEI->BindAction(this->IA_Primary, ETriggerEvent::Started, this, &APC_CORE::Primary);
 	PEI->BindAction(this->IA_Secondary, ETriggerEvent::Started, this, &APC_CORE::Secondary);
 
 	// Debug
@@ -77,6 +79,27 @@ void APC_CORE::CompleteJump(const FInputActionValue& Value) {
 
 #pragma region Interaction
 
+void APC_CORE::Primary() {
+	// Player wants to destroy block
+	ACH_CORE* CH_Core = CastChecked<ACH_CORE>(this->GetPawn());
+	if (!CH_Core)
+		return;
+	FHitResult HitResult = CH_Core->TraceNearestObject(4);
+	if (!HitResult.bBlockingHit)
+		return;
+	AACTR_BLOCKCORE* Block = Cast<AACTR_BLOCKCORE>(HitResult.GetActor());
+	if (!Block)
+		return;
+
+	// Debug
+	// DrawDebugLine(this->GetWorld(), HitResult.TraceStart, HitResult.TraceEnd, FColor::Red, false, 5.f);
+	// DrawDebugSphere(this->GetWorld(), HitResult.ImpactPoint, 10.0f, 12, FColor::Red, false, 5.f);
+	
+	FTransform CameraTransform = CH_Core->GetCameraTransfrom();
+	this->SV_DestroyBlock(CameraTransform);
+	return;
+}
+
 void APC_CORE::Secondary() {
 	// Player wants to place block
 	ACH_CORE* CH_Core = CastChecked<ACH_CORE>(this->GetPawn());
@@ -90,13 +113,12 @@ void APC_CORE::Secondary() {
 		return;
 	
 	// Debug
-	DrawDebugLine(this->GetWorld(), HitResult.TraceStart, HitResult.TraceEnd, FColor::Red, false, 5.f);
-	DrawDebugSphere(this->GetWorld(), HitResult.ImpactPoint, 10.0f, 12, FColor::Red, false, 5.f);
+	// DrawDebugLine(this->GetWorld(), HitResult.TraceStart, HitResult.TraceEnd, FColor::Red, false, 5.f);
+	// DrawDebugSphere(this->GetWorld(), HitResult.ImpactPoint, 10.0f, 12, FColor::Red, false, 5.f);
 	
 	FJAFGCoordinateSystem NewBlockPosition = Block->GetNewBlockPositionOnHit(HitResult);
+	this->SV_PlaceBlock(NewBlockPosition);
 
-	UE_LOG(LogTemp, Warning, TEXT("New Block Position: %s"), *NewBlockPosition.ToString());
-	
 	return;
 }
 
@@ -114,6 +136,62 @@ void APC_CORE::ToggleDebugScreen() {
 #pragma endregion Debug
 
 #pragma endregion Input Actions
+
+#pragma region Server Functions
+
+void APC_CORE::SV_DestroyBlock_Implementation(const FTransform& StartTransform) {
+	ACH_CORE* CH_Core = CastChecked<ACH_CORE>(this->GetPawn());
+	if (!CH_Core)
+		return;
+	FHitResult HitResult = CH_Core->TraceNearestObject(4, StartTransform);
+	if (!HitResult.bBlockingHit)
+		return;
+	AACTR_BLOCKCORE* Block = Cast<AACTR_BLOCKCORE>(HitResult.GetActor());
+	if (!Block)
+		return;
+
+	// Debug
+	// DrawDebugLine(this->GetWorld(), HitResult.TraceStart, HitResult.TraceEnd, FColor::Red, false, 5.f);
+	// DrawDebugSphere(this->GetWorld(), HitResult.ImpactPoint, 10.0f, 12, FColor::Red, false, 5.f);
+
+	Block->DestroyBlock();
+
+	return;
+}
+
+void APC_CORE::SV_PlaceBlock_Implementation(const FJAFGCoordinateSystem& BlockPosition) {
+	UE_LOG(LogTemp, Warning, TEXT("SV_PlaceBlock_Implementation %s"), *BlockPosition.ToString());
+
+	bool bAboard = false;
+	TArray<AActor*> PlayerPawns;
+	UGameplayStatics::GetAllActorsOfClass(this->GetWorld(), ACharacter::StaticClass(), PlayerPawns);
+	for (AActor* PlayerPawn : PlayerPawns) {
+		ACH_CORE* CH = Cast<ACH_CORE>(PlayerPawn);
+		if (!CH)
+			continue;
+
+		// TODO: This is not 100% accurate
+		CH->GetActorLocation();
+		if (CH->GetActorLocation().Equals(BlockPosition.GetAsUnrealTransform().GetLocation(), 100.f)) {
+			bAboard = true;
+			break;
+		}
+	}
+
+	if (bAboard)
+		return;
+
+	FActorSpawnParameters SpawnParams = FActorSpawnParameters();
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
+	AACTR_BLOCKCORE* NewBlock = this->GetWorld()->SpawnActor<AACTR_BLOCKCORE>(
+		this->BlockClass, BlockPosition.GetAsUnrealTransform(), SpawnParams
+	);
+	NewBlock->SetReplicates(true);
+
+	return;
+}
+
+#pragma endregion Server Functions
 
 #pragma region Player State API
 

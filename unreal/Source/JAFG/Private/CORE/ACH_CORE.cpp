@@ -88,23 +88,31 @@ void ACH_CORE::CompleteJump() {
 	return;
 }
 
+FTransform ACH_CORE::GetCameraTransfrom() {
+	return this->FirstPersonCamera->GetComponentTransform();
+}
+
 FHitResult ACH_CORE::TraceNearestObject(float JAFGRange) {
 	const FVector CameraLocation = this->FirstPersonCamera->GetComponentLocation();
 	const FRotator CameraRotation = this->FirstPersonCamera->GetComponentRotation();
 	
+	return this->TraceNearestObject(JAFGRange, FTransform(CameraRotation, CameraLocation));
+}
+
+FHitResult ACH_CORE::TraceNearestObject(float JAFGRange, const FTransform& StartTransform) {
 	const FVector TraceEnd =
-		CameraLocation + (CameraRotation.Vector()
+		StartTransform.GetLocation() + (StartTransform.GetRotation().Vector()
 			* (JAFGRange * FJAFGCoordinateSystem::JAFGToUnrealCoordinateSystemScale)
 			)
-			;
-	
+		;
+
 	FCollisionQueryParams TraceParams =
 		FCollisionQueryParams(FName(TEXT("")), false, this->GetOwner());
-	
+
 	FHitResult HitResult;
 	GetWorld()->LineTraceSingleByChannel(
 		HitResult,
-		CameraLocation,
+		StartTransform.GetLocation(),
 		TraceEnd,
 		ECC_Visibility,
 		TraceParams

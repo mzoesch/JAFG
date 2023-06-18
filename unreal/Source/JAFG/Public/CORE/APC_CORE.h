@@ -13,7 +13,7 @@
 
 class UInputMappingContext;
 class UInputAction;
-
+class AACTR_BLOCKCORE;
 
 UCLASS()
 class JAFG_API APC_CORE : public APlayerController {
@@ -46,6 +46,9 @@ public:
 	// Interaction
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Interaction")
+	UInputAction* IA_Primary;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Interaction")
 	UInputAction* IA_Secondary;
 
 	// Debug
@@ -71,12 +74,24 @@ private:
 	void CompleteJump(const FInputActionValue& Value);
 
 	// Interaction
+	void Primary();
 	void Secondary();
 
 	// Debug
 	void ToggleDebugScreen();
 
 #pragma endregion Input Actions
+
+#pragma region Server Functions
+
+public:
+
+	UFUNCTION(Server, Reliable)
+	void SV_DestroyBlock(const FTransform& StartTransform);
+	UFUNCTION(Server, Reliable)
+	void SV_PlaceBlock(const FJAFGCoordinateSystem& BlockPosition);
+
+#pragma endregion Server Functions
 
 #pragma region Player State API
 
@@ -85,5 +100,9 @@ public:
 	FVector GetPlayerPosition() const;
 
 #pragma endregion Player State API
+
+	// Just Temporary
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<class AACTR_BLOCKCORE> BlockClass;
 
 };
