@@ -7,6 +7,9 @@
 #include "CORE/AHUD_CORE.h"
 #include "CORE/AACTR_BLOCKCORE.h"
 
+#include "World/WorldManipulation.h"
+#include "World/Blocks.h"
+
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
 #include "EnhancedInputComponent.h"
@@ -160,8 +163,6 @@ void APC_CORE::SV_DestroyBlock_Implementation(const FTransform& StartTransform) 
 }
 
 void APC_CORE::SV_PlaceBlock_Implementation(const FJAFGCoordinateSystem& BlockPosition) {
-	UE_LOG(LogTemp, Warning, TEXT("SV_PlaceBlock_Implementation %s"), *BlockPosition.ToString());
-
 	bool bAboard = false;
 	TArray<AActor*> PlayerPawns;
 	UGameplayStatics::GetAllActorsOfClass(this->GetWorld(), ACharacter::StaticClass(), PlayerPawns);
@@ -181,12 +182,11 @@ void APC_CORE::SV_PlaceBlock_Implementation(const FJAFGCoordinateSystem& BlockPo
 	if (bAboard)
 		return;
 
-	FActorSpawnParameters SpawnParams = FActorSpawnParameters();
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
-	AACTR_BLOCKCORE* NewBlock = this->GetWorld()->SpawnActor<AACTR_BLOCKCORE>(
-		this->BlockClass, BlockPosition.GetAsUnrealTransform(), SpawnParams
+	WorldManipulation::SpawnBlock(
+		this->GetWorld(),
+		BlockPosition,
+		Blocks::Stone
 	);
-	NewBlock->SetReplicates(true);
 
 	return;
 }
