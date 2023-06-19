@@ -15,6 +15,7 @@ class UInputMappingContext;
 class UInputAction;
 class AACTR_BLOCKCORE;
 
+
 UCLASS()
 class JAFG_API APC_CORE : public APlayerController {
 	GENERATED_BODY()
@@ -51,6 +52,37 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Interaction")
 	UInputAction* IA_Secondary;
 
+	// Inventory
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+	UInputAction* IA_QuickSelect0;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+	UInputAction* IA_QuickSelect1;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+	UInputAction* IA_QuickSelect2;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+	UInputAction* IA_QuickSelect3;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+	UInputAction* IA_QuickSelect4;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+	UInputAction* IA_QuickSelect5;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+	UInputAction* IA_QuickSelect6;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+	UInputAction* IA_QuickSelect7;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+	UInputAction* IA_QuickSelect8;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+	UInputAction* IA_QuickSelect9;
+
 	// Debug
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Debug")
@@ -77,6 +109,18 @@ private:
 	void Primary();
 	void Secondary();
 
+	// Inventory
+	void QuickSelect0();
+	void QuickSelect1();
+	void QuickSelect2();
+	void QuickSelect3();
+	void QuickSelect4();
+	void QuickSelect5();
+	void QuickSelect6();
+	void QuickSelect7();
+	void QuickSelect8();
+	void QuickSelect9();
+
 	// Debug
 	void ToggleDebugScreen();
 
@@ -101,8 +145,12 @@ public:
 
 #pragma endregion Player State API
 
-	// Just Temporary
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<class AACTR_BLOCKCORE> BlockClass;
+#pragma region Dependencies
+
+public:
+
+
+
+#pragma endregion Dependencies
 
 };

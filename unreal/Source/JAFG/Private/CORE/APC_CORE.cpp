@@ -40,6 +40,18 @@ bool APC_CORE::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) 
 	PEI->BindAction(this->IA_Primary, ETriggerEvent::Started, this, &APC_CORE::Primary);
 	PEI->BindAction(this->IA_Secondary, ETriggerEvent::Started, this, &APC_CORE::Secondary);
 
+	// Inventory
+	PEI->BindAction(this->IA_QuickSelect0, ETriggerEvent::Started, this, &APC_CORE::QuickSelect0);
+	PEI->BindAction(this->IA_QuickSelect1, ETriggerEvent::Started, this, &APC_CORE::QuickSelect1);
+	PEI->BindAction(this->IA_QuickSelect2, ETriggerEvent::Started, this, &APC_CORE::QuickSelect2);
+	PEI->BindAction(this->IA_QuickSelect3, ETriggerEvent::Started, this, &APC_CORE::QuickSelect3);
+	PEI->BindAction(this->IA_QuickSelect4, ETriggerEvent::Started, this, &APC_CORE::QuickSelect4);
+	PEI->BindAction(this->IA_QuickSelect5, ETriggerEvent::Started, this, &APC_CORE::QuickSelect5);
+	PEI->BindAction(this->IA_QuickSelect6, ETriggerEvent::Started, this, &APC_CORE::QuickSelect6);
+	PEI->BindAction(this->IA_QuickSelect7, ETriggerEvent::Started, this, &APC_CORE::QuickSelect7);
+	PEI->BindAction(this->IA_QuickSelect8, ETriggerEvent::Started, this, &APC_CORE::QuickSelect8);
+	PEI->BindAction(this->IA_QuickSelect9, ETriggerEvent::Started, this, &APC_CORE::QuickSelect9);
+
 	// Debug
 	PEI->BindAction(this->IA_ToggleDebugScreen, ETriggerEvent::Started, this, &APC_CORE::ToggleDebugScreen);
 
@@ -126,6 +138,71 @@ void APC_CORE::Secondary() {
 }
 
 #pragma endregion Interaction
+
+#pragma region Inventory
+
+
+void APC_CORE::QuickSelect0() {
+	if (AHUD_CORE* HUD_Core = Cast<AHUD_CORE>(this->GetHUD()))
+		HUD_Core->QuickSelect(0);
+	return;
+}
+
+void APC_CORE::QuickSelect1() {
+	if (AHUD_CORE* HUD_Core = Cast<AHUD_CORE>(this->GetHUD()))
+		HUD_Core->QuickSelect(1);
+	return;
+}
+
+void APC_CORE::QuickSelect2() {
+	if (AHUD_CORE* HUD_Core = Cast<AHUD_CORE>(this->GetHUD()))
+		HUD_Core->QuickSelect(2);
+	return;
+}
+
+void APC_CORE::QuickSelect3() {
+	if (AHUD_CORE* HUD_Core = Cast<AHUD_CORE>(this->GetHUD()))
+		HUD_Core->QuickSelect(3);
+	return;
+}
+
+void APC_CORE::QuickSelect4() {
+	if (AHUD_CORE* HUD_Core = Cast<AHUD_CORE>(this->GetHUD()))
+		HUD_Core->QuickSelect(4);
+	return;
+}
+
+void APC_CORE::QuickSelect5() {
+	if (AHUD_CORE* HUD_Core = Cast<AHUD_CORE>(this->GetHUD()))
+		HUD_Core->QuickSelect(5);
+	return;
+}
+
+void APC_CORE::QuickSelect6() {
+	if (AHUD_CORE* HUD_Core = Cast<AHUD_CORE>(this->GetHUD()))
+		HUD_Core->QuickSelect(6);
+	return;
+}
+
+void APC_CORE::QuickSelect7() {
+	if (AHUD_CORE* HUD_Core = Cast<AHUD_CORE>(this->GetHUD()))
+		HUD_Core->QuickSelect(7);
+	return;
+}
+
+void APC_CORE::QuickSelect8() {
+	if (AHUD_CORE* HUD_Core = Cast<AHUD_CORE>(this->GetHUD()))
+		HUD_Core->QuickSelect(8);
+	return;
+}
+
+void APC_CORE::QuickSelect9() {
+	if (AHUD_CORE* HUD_Core = Cast<AHUD_CORE>(this->GetHUD()))
+		HUD_Core->QuickSelect(9);
+	return;
+}
+
+#pragma endregion Inventory
 
 #pragma region Debug
 

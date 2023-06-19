@@ -22,5 +22,13 @@ public:
 
 #pragma endregion Blocks
 
+#pragma region Items
+
+public:
+
+	UPROPERTY(EditDefaultsOnly, category = "Actors|ItemsTextures") UTexture2D* TBase;
+	UPROPERTY(EditDefaultsOnly, category = "Actors|ItemsTextures") UTexture2D* TStone;
+
+#pragma endregion Items
 	
 };
