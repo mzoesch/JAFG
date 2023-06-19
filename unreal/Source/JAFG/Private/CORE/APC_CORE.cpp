@@ -14,11 +14,31 @@
 #include "GameFramework/Character.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Net/UnrealNetwork.h"
 
 void APC_CORE::BeginPlay() {
 	Super::BeginPlay();
-	
+
+	this->bReplicates = true;
+
+	this->PlayerHotbar.Add(Blocks::Stone);
+	this->PlayerHotbar.Add(Blocks::Dirt);
+	this->PlayerHotbar.Add(Blocks::Grass);
+	this->PlayerHotbar.Add(Blocks::Sand);
+	this->PlayerHotbar.Add(Blocks::Gravel);
+
+	this->PlayerHotbar.Add(Blocks::OakLeaves);
+	this->PlayerHotbar.Add(Blocks::OakWood);
+	this->PlayerHotbar.Add(Blocks::Iron);
+	this->PlayerHotbar.Add(Blocks::Gold);
+	this->PlayerHotbar.Add(Blocks::Base);
+
 	return;
+}
+
+void APC_CORE::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	DOREPLIFETIME(APC_CORE, CurrentHotbarIndex);
 }
 
 bool APC_CORE::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
@@ -143,62 +163,77 @@ void APC_CORE::Secondary() {
 
 
 void APC_CORE::QuickSelect0() {
-	if (AHUD_CORE* HUD_Core = Cast<AHUD_CORE>(this->GetHUD()))
-		HUD_Core->QuickSelect(0);
+	this->SV_QuickSelect(0);
+	if (AHUD_CORE* HUD_Core = CastChecked<AHUD_CORE>(this->GetHUD()))
+		HUD_Core->UpdateHotBar(0);
 	return;
 }
 
 void APC_CORE::QuickSelect1() {
-	if (AHUD_CORE* HUD_Core = Cast<AHUD_CORE>(this->GetHUD()))
-		HUD_Core->QuickSelect(1);
+	this->SV_QuickSelect(1);
+	if (AHUD_CORE* HUD_Core = CastChecked<AHUD_CORE>(this->GetHUD()))
+		HUD_Core->UpdateHotBar(1);
 	return;
 }
 
 void APC_CORE::QuickSelect2() {
-	if (AHUD_CORE* HUD_Core = Cast<AHUD_CORE>(this->GetHUD()))
-		HUD_Core->QuickSelect(2);
+	this->SV_QuickSelect(2);
+	if (AHUD_CORE* HUD_Core = CastChecked<AHUD_CORE>(this->GetHUD()))
+		HUD_Core->UpdateHotBar(2);
 	return;
 }
 
 void APC_CORE::QuickSelect3() {
-	if (AHUD_CORE* HUD_Core = Cast<AHUD_CORE>(this->GetHUD()))
-		HUD_Core->QuickSelect(3);
+	this->SV_QuickSelect(3);
+	if (AHUD_CORE* HUD_Core = CastChecked<AHUD_CORE>(this->GetHUD()))
+		HUD_Core->UpdateHotBar(3);
 	return;
 }
 
 void APC_CORE::QuickSelect4() {
-	if (AHUD_CORE* HUD_Core = Cast<AHUD_CORE>(this->GetHUD()))
-		HUD_Core->QuickSelect(4);
+	this->SV_QuickSelect(4);
+	if (AHUD_CORE* HUD_Core = CastChecked<AHUD_CORE>(this->GetHUD()))
+		HUD_Core->UpdateHotBar(4);
 	return;
 }
 
 void APC_CORE::QuickSelect5() {
-	if (AHUD_CORE* HUD_Core = Cast<AHUD_CORE>(this->GetHUD()))
-		HUD_Core->QuickSelect(5);
+	this->SV_QuickSelect(5);
+	if (AHUD_CORE* HUD_Core = CastChecked<AHUD_CORE>(this->GetHUD()))
+		HUD_Core->UpdateHotBar(5);
 	return;
 }
 
 void APC_CORE::QuickSelect6() {
-	if (AHUD_CORE* HUD_Core = Cast<AHUD_CORE>(this->GetHUD()))
-		HUD_Core->QuickSelect(6);
+	this->SV_QuickSelect(6);
+	if (AHUD_CORE* HUD_Core = CastChecked<AHUD_CORE>(this->GetHUD()))
+		HUD_Core->UpdateHotBar(6);
 	return;
 }
 
 void APC_CORE::QuickSelect7() {
-	if (AHUD_CORE* HUD_Core = Cast<AHUD_CORE>(this->GetHUD()))
-		HUD_Core->QuickSelect(7);
+	this->SV_QuickSelect(7);
+	if (AHUD_CORE* HUD_Core = CastChecked<AHUD_CORE>(this->GetHUD()))
+		HUD_Core->UpdateHotBar(7);
 	return;
 }
 
 void APC_CORE::QuickSelect8() {
-	if (AHUD_CORE* HUD_Core = Cast<AHUD_CORE>(this->GetHUD()))
-		HUD_Core->QuickSelect(8);
+	this->SV_QuickSelect(8);
+	if (AHUD_CORE* HUD_Core = CastChecked<AHUD_CORE>(this->GetHUD()))
+		HUD_Core->UpdateHotBar(8);
 	return;
 }
 
 void APC_CORE::QuickSelect9() {
-	if (AHUD_CORE* HUD_Core = Cast<AHUD_CORE>(this->GetHUD()))
-		HUD_Core->QuickSelect(9);
+	this->SV_QuickSelect(9);
+	if (AHUD_CORE* HUD_Core = CastChecked<AHUD_CORE>(this->GetHUD()))
+		HUD_Core->UpdateHotBar(9);
+	return;
+}
+
+void APC_CORE::SV_QuickSelect_Implementation(int Index) {
+	this->CurrentHotbarIndex = Index;
 	return;
 }
 
@@ -258,11 +293,11 @@ void APC_CORE::SV_PlaceBlock_Implementation(const FJAFGCoordinateSystem& BlockPo
 
 	if (bAboard)
 		return;
-
+	
 	WorldManipulation::SpawnBlock(
 		this->GetWorld(),
 		BlockPosition,
-		Blocks::Stone
+		this->GetCurrentlySelectedBlock()
 	);
 
 	return;
@@ -274,6 +309,10 @@ void APC_CORE::SV_PlaceBlock_Implementation(const FJAFGCoordinateSystem& BlockPo
 
 FVector APC_CORE::GetPlayerPosition() const {
 	return CastChecked<ACH_CORE>(this->GetPawn())->PlayerFeet->GetComponentLocation();
+}
+
+FString APC_CORE::GetCurrentlySelectedBlock() const {
+	return this->PlayerHotbar[this->CurrentHotbarIndex];
 }
 
 #pragma endregion Player State API

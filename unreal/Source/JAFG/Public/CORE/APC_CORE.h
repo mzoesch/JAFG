@@ -24,6 +24,10 @@ public:
 
 	virtual void BeginPlay() override;	
 
+protected:
+
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 #pragma region Input Mappings
 
 public:
@@ -120,6 +124,8 @@ private:
 	void QuickSelect7();
 	void QuickSelect8();
 	void QuickSelect9();
+	UFUNCTION(Server, Unreliable)
+	void SV_QuickSelect(int Index);
 
 	// Debug
 	void ToggleDebugScreen();
@@ -145,12 +151,15 @@ public:
 
 #pragma endregion Player State API
 
-#pragma region Dependencies
+#pragma region Inventory
 
 public:
 
+	UPROPERTY(replicated)
+	int CurrentHotbarIndex = 0;
+	TArray<FString> PlayerHotbar;
+	FString GetCurrentlySelectedBlock() const;
 
-
-#pragma endregion Dependencies
+#pragma endregion Inventory
 
 };

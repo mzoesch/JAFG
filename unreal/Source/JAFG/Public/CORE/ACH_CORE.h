@@ -11,6 +11,7 @@
 
 class UInputMappingContext;
 class UInputAction;
+class APC_CORE;
 
 
 UCLASS()

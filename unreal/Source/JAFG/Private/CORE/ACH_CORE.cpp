@@ -4,6 +4,7 @@
 #include "CORE/ACH_CORE.h"
 
 #include "CORE/APC_CORE.h"
+#include "CORE/AHUD_CORE.h"
 
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -104,7 +105,7 @@ FHitResult ACH_CORE::TraceNearestObject(float JAFGRange, const FTransform& Start
 		StartTransform.GetLocation() + (StartTransform.GetRotation().Vector()
 			* (JAFGRange * FJAFGCoordinateSystem::JAFGToUnrealCoordinateSystemScale)
 			)
-		;
+			;
 
 	FCollisionQueryParams TraceParams =
 		FCollisionQueryParams(FName(TEXT("")), false, this->GetOwner());
