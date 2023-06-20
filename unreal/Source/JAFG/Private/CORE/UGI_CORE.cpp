@@ -3,8 +3,11 @@
 
 #include "CORE/UGI_CORE.h"
 
+#include "MainMenu/APC_MainMenu.h"
+
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
+
 
 UGI_CORE::UGI_CORE()
 {
@@ -31,9 +34,20 @@ void UGI_CORE::Init() {
 
 void UGI_CORE::OnCreateSessionComplete(FName SessionName, bool bSucceeded) {
 	if (bSucceeded) {
+		UE_LOG(LogTemp, Warning, TEXT("Successfully created session (%s). Loading Map."), *SessionName.ToString());
+		if (this->TargetOwningPlayerController)
+			this->TargetOwningPlayerController->ShowLoadingScreen(
+				FText::FromString("Loading Map...")
+			);
 		GetWorld()->ServerTravel("/Game/Levels/Dev?listen");
+		return;
 	}
 
+	UE_LOG(LogTemp, Error, TEXT("Failed to create session (%s)."), *SessionName.ToString());
+	if (this->TargetOwningPlayerController)
+		this->TargetOwningPlayerController->ShowErrorMessage(
+			FText::FromString("Failed to create session.")
+		);
 	return;
 }
 
@@ -61,8 +75,18 @@ void UGI_CORE::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteRe
 	return;
 }
 
-void UGI_CORE::CreateServer() {
-	UE_LOG(LogTemp, Warning, TEXT("Create Server"));
+#pragma region BP API
+
+void UGI_CORE::CreateServer(
+	APC_MainMenu* OwningPlayerController,
+	int MaxPublicConnections,
+	FText SessionName
+) {
+	this->TargetOwningPlayerController = OwningPlayerController;
+	UE_LOG(LogTemp, Warning,
+		TEXT("Creating listen Server with %s public connections."),
+		*FString::FromInt(MaxPublicConnections)
+	);
 
 	FOnlineSessionSettings SessionSettings;
 	SessionSettings.bAllowJoinInProgress = true;
@@ -70,9 +94,21 @@ void UGI_CORE::CreateServer() {
 	SessionSettings.bIsLANMatch = (IOnlineSubsystem::Get()->GetSubsystemName() == "NULL");
 	SessionSettings.bShouldAdvertise = true;
 	SessionSettings.bUsesPresence = true;
-	SessionSettings.NumPublicConnections = 5;
+	SessionSettings.NumPublicConnections = MaxPublicConnections;
 
-	SessionInterface->CreateSession(0, FName("Some Generic Session"), SessionSettings);
+	
+	FName BaseSessionName = "JAFG-Session";
+	FString Converted = SessionName.ToString();
+	Converted.ReplaceInline(TEXT(" "), TEXT("-"));
+	FName FullSessionName = FName(
+		*FString::Printf(TEXT("%s-%s"),
+			*BaseSessionName.ToString(),
+			*Converted
+			)
+		)
+		;
+
+	SessionInterface->CreateSession(0, FullSessionName, SessionSettings);
 
 	return;
 }
@@ -87,3 +123,5 @@ void UGI_CORE::JoinServer() {
 
 	return;
 }
+
+#pragma endregion

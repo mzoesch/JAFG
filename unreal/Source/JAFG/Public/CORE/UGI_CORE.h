@@ -13,6 +13,9 @@
 #include "UGI_CORE.generated.h"
 
 
+class APC_MainMenu;
+
+
 UCLASS()
 class JAFG_API UGI_CORE : public UGameInstance {
 	GENERATED_BODY()
@@ -35,7 +38,12 @@ protected:
 	virtual void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
 
 	UFUNCTION(BlueprintCallable)
-	void CreateServer();
+	void CreateServer(
+		APC_MainMenu* OwningPlayerController,
+		int MaxPublicConnections,
+		FText SessionName
+	);
+	APC_MainMenu* TargetOwningPlayerController;
 
 	UFUNCTION(BlueprintCallable)
 	void JoinServer();
