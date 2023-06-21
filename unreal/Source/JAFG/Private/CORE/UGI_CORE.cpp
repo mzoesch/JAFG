@@ -4,6 +4,7 @@
 #include "CORE/UGI_CORE.h"
 
 #include "MainMenu/APC_MainMenu.h"
+#include "MainMenu/FSearchResult.h"
 
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
@@ -35,8 +36,8 @@ void UGI_CORE::Init() {
 void UGI_CORE::OnCreateSessionComplete(FName SessionName, bool bSucceeded) {
 	if (bSucceeded) {
 		UE_LOG(LogTemp, Warning, TEXT("Successfully created session (%s). Loading Map."), *SessionName.ToString());
-		if (this->TargetOwningPlayerController)
-			this->TargetOwningPlayerController->ShowLoadingScreen(
+		if (this->_CallbackTarget)
+			this->_CallbackTarget->ShowLoadingScreen(
 				FText::FromString("Loading Map...")
 			);
 		GetWorld()->ServerTravel("/Game/Levels/Dev?listen");
@@ -44,8 +45,8 @@ void UGI_CORE::OnCreateSessionComplete(FName SessionName, bool bSucceeded) {
 	}
 
 	UE_LOG(LogTemp, Error, TEXT("Failed to create session (%s)."), *SessionName.ToString());
-	if (this->TargetOwningPlayerController)
-		this->TargetOwningPlayerController->ShowErrorMessage(
+	if (this->_CallbackTarget)
+		this->_CallbackTarget->ShowErrorMessage(
 			FText::FromString("Failed to create session.")
 		);
 	return;
@@ -54,12 +55,28 @@ void UGI_CORE::OnCreateSessionComplete(FName SessionName, bool bSucceeded) {
 void UGI_CORE::OnFindSessionComplete(bool bSucceeded) {
 	if (bSucceeded) {
 		TArray<FOnlineSessionSearchResult> SearchResults = SessionSearch->SearchResults;
-
-		if (SearchResults.Num()) {
-			SessionInterface->JoinSession(0, FName("Some Generic Session"), SearchResults[0]);
+		TArray<FSearchResult> ProcessedSearchResults;
+		for (int i = 0; i < SearchResults.Num(); i++) {
+			FSearchResult Result;
+			Result.SessionName = SearchResults[i].Session.OwningUserName;
+			Result.MaxPublicConnections = SearchResults[i].Session.SessionSettings.NumPublicConnections;
+			Result.CurrentPublicConnections =
+				Result.MaxPublicConnections - SearchResults[i].Session.NumOpenPublicConnections;
+			Result.PingInMs = SearchResults[i].PingInMs;
+			ProcessedSearchResults.Add(Result);
 		}
+		
+		UE_LOG(LogTemp, Warning, TEXT("Successfully found %s sessions."), *FString::FromInt(SearchResults.Num()));
+		this->_CallbackTarget->OnSearchSessionsComplete(ProcessedSearchResults);
+		
+		return;
 	}
 
+	UE_LOG(LogTemp, Error, TEXT("Failed to find sessions."));
+	if (this->_CallbackTarget)
+		this->_CallbackTarget->ShowErrorMessage(
+			FText::FromString("Failed to find sessions.")
+	);
 	return;
 }
 
@@ -68,9 +85,20 @@ void UGI_CORE::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteRe
 		FString JoinAddress = "";
 		SessionInterface->GetResolvedConnectString(SessionName, JoinAddress);
 		if (JoinAddress != "") {
+			UE_LOG(LogTemp, Warning, TEXT("Successfully joined session (%s). Traveling to Session."), *SessionName.ToString());
+			this->_CallbackTarget->ShowLoadingScreen(
+				FText::FromString("Traveling to Session...")
+			);
 			PController->ClientTravel(JoinAddress, ETravelType::TRAVEL_Absolute);
+			
+			return;
 		}
 	}
+
+	UE_LOG(LogTemp, Error, TEXT("Failed to join session (%s)."), *SessionName.ToString());
+	this->_CallbackTarget->ShowErrorMessage(
+		FText::FromString("Failed to join session.")
+	);
 
 	return;
 }
@@ -78,11 +106,11 @@ void UGI_CORE::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteRe
 #pragma region BP API
 
 void UGI_CORE::CreateServer(
-	APC_MainMenu* OwningPlayerController,
+	APC_MainMenu* CallbackTarget,
 	int MaxPublicConnections,
 	FText SessionName
 ) {
-	this->TargetOwningPlayerController = OwningPlayerController;
+	this->_CallbackTarget = CallbackTarget;
 	UE_LOG(LogTemp, Warning,
 		TEXT("Creating listen Server with %s public connections."),
 		*FString::FromInt(MaxPublicConnections)
@@ -121,6 +149,39 @@ void UGI_CORE::JoinServer() {
 
 	SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
 
+	return;
+}
+
+void UGI_CORE::FindServers(APC_MainMenu* CallbackTarget) {
+	this->_CallbackTarget = CallbackTarget;
+
+	SessionSearch = MakeShareable(new FOnlineSessionSearch());
+	SessionSearch->bIsLanQuery = (IOnlineSubsystem::Get()->GetSubsystemName() == "NULL");
+	SessionSearch->MaxSearchResults = 50;
+	SessionSearch->QuerySettings.Set("SEARCH_PRESENCE", true, EOnlineComparisonOp::Equals);
+
+	SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
+
+	return;
+}
+
+void UGI_CORE::JoinServerByIndex(APC_MainMenu* CallbackTarget, int Index) {
+	this->_CallbackTarget = CallbackTarget;
+	
+	bool bSuccess = SessionInterface->JoinSession(
+		0,
+		FName(*SessionSearch->SearchResults[Index].GetSessionIdStr()),
+		SessionSearch->SearchResults[Index]
+	);
+
+	if (bSuccess)
+		return;
+
+	UE_LOG(LogTemp, Error, TEXT("Failed to join session (%s)."), *SessionSearch->SearchResults[Index].GetSessionIdStr());
+	this->_CallbackTarget->ShowErrorMessage(
+		FText::FromString("Failed to join session.")
+	);
+		
 	return;
 }
 

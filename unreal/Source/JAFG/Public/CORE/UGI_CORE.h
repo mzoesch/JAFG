@@ -39,13 +39,24 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	void CreateServer(
-		APC_MainMenu* OwningPlayerController,
+		APC_MainMenu* CallbackTarget,
 		int MaxPublicConnections,
 		FText SessionName
 	);
-	APC_MainMenu* TargetOwningPlayerController;
+	APC_MainMenu* _CallbackTarget;
 
 	UFUNCTION(BlueprintCallable)
 	void JoinServer();
 	
+	UFUNCTION(BlueprintCallable)
+	void FindServers(
+		APC_MainMenu* CallbackTarget
+	);
+
+	UFUNCTION(BlueprintCallable)
+	void JoinServerByIndex(
+		APC_MainMenu* CallbackTarget,
+		int Index
+	);
+
 };
