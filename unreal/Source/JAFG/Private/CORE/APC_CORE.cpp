@@ -311,6 +311,14 @@ FVector APC_CORE::GetPlayerPosition() const {
 	return CastChecked<ACH_CORE>(this->GetPawn())->PlayerFeet->GetComponentLocation();
 }
 
+FTransform APC_CORE::GetPlayerTransform() const {
+	return CastChecked<ACH_CORE>(this->GetPawn())->PlayerFeet->GetComponentTransform();
+}
+
+float APC_CORE::GetPlayerYaw() const {
+	return this->GetPlayerTransform().Rotator().Yaw;
+}
+
 FString APC_CORE::GetCurrentlySelectedBlock() const {
 	return this->PlayerHotbar[this->CurrentHotbarIndex];
 }

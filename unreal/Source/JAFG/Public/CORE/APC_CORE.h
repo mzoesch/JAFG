@@ -148,6 +148,8 @@ public:
 public:
 
 	FVector GetPlayerPosition() const;
+	FTransform GetPlayerTransform() const;
+	float GetPlayerYaw() const;
 
 #pragma endregion Player State API
 

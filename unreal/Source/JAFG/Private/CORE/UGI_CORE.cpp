@@ -40,7 +40,7 @@ void UGI_CORE::OnCreateSessionComplete(FName SessionName, bool bSucceeded) {
 			this->_CallbackTarget->ShowLoadingScreen(
 				FText::FromString("Loading Map...")
 			);
-		GetWorld()->ServerTravel("/Game/Levels/Dev?listen");
+		GetWorld()->ServerTravel("/Game/Levels/CORE?listen");
 		return;
 	}
 
