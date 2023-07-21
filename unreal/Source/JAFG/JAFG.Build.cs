@@ -28,10 +28,15 @@ public class JAFG : ModuleRules
 			"Slate",
 			"SlateCore"
 		});
-		
-		// Uncomment if you are using online features
-		// PrivateDependencyModuleNames.Add("OnlineSubsystem");
 
-		// To include OnlineSubsystemSteam, add it to the plugins section in your uproject file with the Enabled attribute set to true
-	}
+		PrivateDependencyModuleNames.AddRange(new string[] {
+            "SQLiteCore",
+            "SQLiteSupport"
+        });
+
+        // Uncomment if you are using online features
+        // PrivateDependencyModuleNames.Add("OnlineSubsystem");
+
+        // To include OnlineSubsystemSteam, add it to the plugins section in your uproject file with the Enabled attribute set to true
+    }
 }
