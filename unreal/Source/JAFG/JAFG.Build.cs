@@ -17,11 +17,11 @@ public class JAFG : ModuleRules
 			"UMG"
 		});
 
-		PublicDependencyModuleNames.AddRange(new string[] {
-			"DatabaseSupport",
-            "SQLiteCore",
-            "SQLiteSupport"
-        });
+		PublicDependencyModuleNames.AddRange(new string[] { 
+			"DatabaseSupport", 
+			"SQLiteCore",
+			"SQLiteSupport"
+		});
 		
 		PrivateDependencyModuleNames.AddRange(new string[] {
 			"OnlineSubsystem",
