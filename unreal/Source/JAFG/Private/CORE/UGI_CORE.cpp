@@ -34,6 +34,8 @@ void UGI_CORE::Init() {
 }
 
 void UGI_CORE::OnCreateSessionComplete(FName SessionName, bool bSucceeded) {
+	this->SessionName = FString(SessionName.ToString());
+	
 	if (bSucceeded) {
 		UE_LOG(LogTemp, Warning, TEXT("Successfully created session (%s). Loading Map."), *SessionName.ToString());
 		if (this->_CallbackTarget)

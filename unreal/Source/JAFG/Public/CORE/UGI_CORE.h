@@ -59,4 +59,10 @@ protected:
 		int Index
 	);
 
+	FString SessionName;
+
+public:
+
+	FString GetSessionName() const { return this->SessionName; }
+	
 };
