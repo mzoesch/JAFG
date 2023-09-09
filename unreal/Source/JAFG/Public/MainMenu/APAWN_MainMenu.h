@@ -1,4 +1,4 @@
-// © 2023 mzoesch. All rights reserved.
+// Â© 2023 mzoesch. All rights reserved.
 
 #pragma once
 

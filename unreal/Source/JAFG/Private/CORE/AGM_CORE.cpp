@@ -5,12 +5,19 @@
 
 #include "Kismet/GameplayStatics.h"
 
+#include "CORE/UGI_CORE.h"
 #include "World/Generation/ALVL_CORE.h"
 
 AGM_CORE::AGM_CORE() {
 	UE_LOG(LogTemp, Warning, TEXT("Initialize AGM_CORE"))
 
-	this->LvlCore = new ALVL_CORE();
+	UGI_CORE* GI = Cast<UGI_CORE>(UGameplayStatics::GetGameInstance(this->GetWorld()));
+	if (!GI) {
+		UE_LOG(LogTemp, Error, TEXT("Could not cast UGameInstance to UGI_CORE."))
+		return;
+	}
+	check(GI)
+	this->LvlCore = new ALVL_CORE(GI);
 	
 	return;
 }

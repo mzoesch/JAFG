@@ -14,8 +14,25 @@ UGI_CORE::UGI_CORE()
 {
 }
 
-UGI_CORE::~UGI_CORE()
-{
+UGI_CORE::~UGI_CORE() {
+	UE_LOG(LogTemp, Warning, TEXT("Trying to kill session %s."), *this->SessionWorldURL)
+
+	const FName BaseSessionName = "JAFG-Session";
+	FString Converted = this->SessionWorldURL;
+	Converted.ReplaceInline(TEXT(" "), TEXT("-"));
+	const FName FullSessionName = FName(
+		*FString::Printf(TEXT("%s-%s"),
+			*BaseSessionName.ToString(),
+			*Converted
+			)
+		)
+		;
+	
+	if (SessionInterface.IsValid()) {
+		SessionInterface->DestroySession(FullSessionName);
+	}
+
+	return;
 }
 
 void UGI_CORE::Init() {
@@ -34,8 +51,6 @@ void UGI_CORE::Init() {
 }
 
 void UGI_CORE::OnCreateSessionComplete(FName SessionName, bool bSucceeded) {
-	this->SessionName = FString(SessionName.ToString());
-	
 	if (bSucceeded) {
 		UE_LOG(LogTemp, Warning, TEXT("Successfully created session (%s). Loading Map."), *SessionName.ToString());
 		if (this->_CallbackTarget)
@@ -109,8 +124,8 @@ void UGI_CORE::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteRe
 
 void UGI_CORE::CreateServer(
 	APC_MainMenu* CallbackTarget,
-	int MaxPublicConnections,
-	FText SessionName
+	const int MaxPublicConnections,
+	const FText SessionName
 ) {
 	this->_CallbackTarget = CallbackTarget;
 	UE_LOG(LogTemp, Warning,
@@ -127,16 +142,17 @@ void UGI_CORE::CreateServer(
 	SessionSettings.NumPublicConnections = MaxPublicConnections;
 
 	
-	FName BaseSessionName = "JAFG-Session";
+	const FName BaseSessionName = "JAFG-Session";
 	FString Converted = SessionName.ToString();
 	Converted.ReplaceInline(TEXT(" "), TEXT("-"));
-	FName FullSessionName = FName(
+	const FName FullSessionName = FName(
 		*FString::Printf(TEXT("%s-%s"),
 			*BaseSessionName.ToString(),
 			*Converted
 			)
 		)
 		;
+	this->SessionWorldURL = Converted;
 
 	SessionInterface->CreateSession(0, FullSessionName, SessionSettings);
 

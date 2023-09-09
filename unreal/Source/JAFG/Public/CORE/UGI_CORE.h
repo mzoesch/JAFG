@@ -40,8 +40,8 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void CreateServer(
 		APC_MainMenu* CallbackTarget,
-		int MaxPublicConnections,
-		FText SessionName
+		const int MaxPublicConnections,
+		const FText SessionName
 	);
 	APC_MainMenu* _CallbackTarget;
 
@@ -59,10 +59,17 @@ protected:
 		int Index
 	);
 
-	FString SessionName;
+private:
+	
+	FString SessionWorldURL = "";
 
 public:
 
-	FString GetSessionName() const { return this->SessionName; }
+	FString GetSessionName() const {
+		if (!this->SessionWorldURL.IsEmpty())
+			return this->SessionWorldURL;
+		else
+			return FString("InternalSessionWorldURL");
+	}
 	
 };
