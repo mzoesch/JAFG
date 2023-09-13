@@ -5,7 +5,11 @@
 
 #include "Kismet/GameplayStatics.h"
 
+#include "World/FJAFGCoordinateSystem.h"
+#include "World/Generation/FChunk.h"
+
 #include "CORE/UGI_CORE.h"
+#include "CORE/APC_CORE.h"
 #include "World/Generation/ALVL_CORE.h"
 
 AGM_CORE::AGM_CORE() {
@@ -41,7 +45,6 @@ void AGM_CORE::Tick(float DeltaSeconds) {
 #pragma region World
 
 void AGM_CORE::UpdateLoadedChunks(bool bForceUpdate) {
-
 	if (!bForceUpdate) {
 		this->TimeSinceLastChunkUpdate += this->GetWorld()->GetDeltaSeconds();
 		if (this->TimeSinceLastChunkUpdate < this->WAIT_FOR_NEXT_CHUNK_UPDATE)
@@ -50,6 +53,14 @@ void AGM_CORE::UpdateLoadedChunks(bool bForceUpdate) {
 	this->TimeSinceLastChunkUpdate = 0.0f;
 	
 	UE_LOG(LogTemp, Warning, TEXT("Updating loaded chunks"))
+
+	TArray<AActor*> FoundActors;
+	TArray<FTransform> PlayerTransforms;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerController::StaticClass(), FoundActors);
+	for (AActor* Actor : FoundActors)
+		PlayerTransforms.Add(Cast<APC_CORE>(Actor)->GetPlayerTransform());
+
+	this->LvlCore->UpdateLoadedChunksFromTransformArray(PlayerTransforms);
 	
 	return;
 }
