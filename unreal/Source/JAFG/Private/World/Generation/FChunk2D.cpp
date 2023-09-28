@@ -66,9 +66,25 @@ FString FChunk2D::ToString() const {
 }
 
 FString FChunk2D::ToDBReadyString() const {
+	FString _X = FString::FromInt(abs(this->X));
+	while (_X.Len() < 6)
+		_X = "0" + _X;
+	if (this->X < 0)
+		_X = "-" + _X;
+	else
+		_X = "+" + _X;
+	
+	FString _Y = FString::FromInt(abs(this->Y));
+	while (_Y.Len() < 6)
+		_Y = "0" + _Y;
+	if (this->Y < 0)
+		_Y = "-" + _Y;
+	else
+		_Y = "+" + _Y;
+	
 	return FString::Printf(
-		TEXT("%d%d"),
-		this->X,
-		this->Y
+		TEXT("%s%s"),
+		*_X,
+		*_Y
 	);
 }
