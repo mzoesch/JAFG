@@ -46,14 +46,18 @@ protected:
 
 public:
 
+	/* TODO Take from ChunkWorld. */
 	TObjectPtr<UMaterialInterface> Material;
+	TObjectPtr<UMaterialInterface> TranslucentMaterial;
 	
 protected:
 
 	TObjectPtr<UProceduralMeshComponent> Mesh;
 	FastNoiseLite* Noise;
 	FChunkMeshData MeshData;
+	FChunkMeshData TranslucentMeshData;
 	int VertexCount = 0;
+	int TranslucentVertexCount = 0;
 
 public:
 

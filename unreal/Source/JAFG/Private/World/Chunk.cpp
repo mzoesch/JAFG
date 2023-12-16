@@ -44,6 +44,8 @@ void AChunk::BeginPlay()
 void AChunk::ApplyMesh() const
 {
     this->Mesh->SetMaterial(0, this->Material);
+    this->Mesh->SetMaterial(1, this->TranslucentMaterial);
+
     this->Mesh->CreateMeshSection(
         0,
         this->MeshData.Vertices,
@@ -55,13 +57,26 @@ void AChunk::ApplyMesh() const
         true
     );
 
+    this->Mesh->CreateMeshSection(
+        1,
+        this->TranslucentMeshData.Vertices,
+        this->TranslucentMeshData.Triangles,
+        this->TranslucentMeshData.Normals,
+        this->TranslucentMeshData.UV0,
+        this->TranslucentMeshData.Colors,
+        this->TranslucentMeshData.Tangents,
+        true
+    );
+
     return;
 }
 
 void AChunk::ClearMesh()
 {
     this->VertexCount = 0;
+    this->TranslucentVertexCount = 0;
     this->MeshData.Clear();
+    this->TranslucentMeshData.Clear();
     return;
 }
 

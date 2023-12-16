@@ -77,9 +77,70 @@ void AGreedyChunk::GenerateDevVoxel(const FIntVector& LocalVoxelPosition, const 
 void AGreedyChunk::CreateQuad(const FMask Mask, const FIntVector AxisMask, const int Width, const int Height, const FIntVector V1, const FIntVector V2, const FIntVector V3, const FIntVector V4)
 {
 	const FVector Normal = FVector(AxisMask * Mask.Normal);
-	const FColor Color = FColor(0, 0, 0, this->GetTextureIndex(Mask.Block, Normal));
+
+	const FColor Color = Mask.Block == EVoxel::Glass ? FColor(0, 0, 0, 0) : FColor(0, 0, 0, this->GetTextureIndex(Mask.Block, Normal));
 	
 	// HERE Calculate Tangents for Mesh
+
+#pragma region Translucent
+
+	if (Mask.Block == EVoxel::Glass)
+	{
+		this->TranslucentMeshData.Vertices.Append({
+			FVector(V1) * 100,
+			FVector(V2) * 100,
+			FVector(V3) * 100,
+			FVector(V4) * 100
+		});
+
+		this->TranslucentMeshData.Triangles.Append({
+			this->TranslucentVertexCount,
+			this->TranslucentVertexCount + 2 + Mask.Normal,
+			this->TranslucentVertexCount + 2 - Mask.Normal,
+			this->TranslucentVertexCount + 3,
+			this->TranslucentVertexCount + 1 - Mask.Normal,
+			this->TranslucentVertexCount + 1 + Mask.Normal
+		});
+
+		this->TranslucentMeshData.Normals.Append({
+			Normal,
+			Normal,
+			Normal,
+			Normal
+		});
+
+		this->TranslucentMeshData.Colors.Append({
+			Color,
+			Color,
+			Color,
+			Color
+		});
+
+		if (Normal.X == 1 || Normal.X == -1)
+		{
+			this->TranslucentMeshData.UV0.Append({
+				FVector2D(Width, Height),
+				FVector2D(0, Height),
+				FVector2D(Width, 0),
+				FVector2D(0, 0),
+			});
+		}
+		else
+		{
+			this->TranslucentMeshData.UV0.Append({
+				FVector2D(Height, Width),
+				FVector2D(Height, 0),
+				FVector2D(0, Width),
+				FVector2D(0, 0),
+			});
+		}
+
+		this->TranslucentVertexCount += 4;
+		
+		return;
+	}
+	
+#pragma endregion Translucent
 	
 	this->MeshData.Vertices.Append({
 		FVector(V1) * 100,
@@ -133,7 +194,8 @@ void AGreedyChunk::CreateQuad(const FMask Mask, const FIntVector AxisMask, const
 	this->VertexCount += 4;
 
 	// UKismetProceduralMeshLibrary::CalculateTangentsForMesh(MeshData.Vertices, MeshData.Triangles, MeshData.UV0, MeshData.Normals, MeshData.Tangents);
-	
+
+	return;
 }
 
 bool AGreedyChunk::CompareMask(const FMask M1, const FMask M2)
@@ -161,6 +223,7 @@ int AGreedyChunk::GetTextureIndex(const EVoxel Voxel, const FVector& Normal)
 
 			return 3;
 		}
+		case EVoxel::Glass: return 4;
 		default: return 255;
 	}
 }
@@ -221,15 +284,29 @@ void AGreedyChunk::GenerateMesh()
 			{
 				for (ChunkItr[Axis1] = 0; ChunkItr[Axis1] < Axis1Limit; ++ChunkItr[Axis1])
 				{
-					const auto CurrentBlock = GetVoxel(ChunkItr);
-					const auto CompareBlock = GetVoxel(ChunkItr + AxisMask);
+					const auto CurrentBlock = this->GetVoxel(ChunkItr);
+					const auto CompareBlock = this->GetVoxel(ChunkItr + AxisMask);
 
 					const bool CurrentBlockOpaque = CurrentBlock != EVoxel::Air;
 					const bool CompareBlockOpaque = CompareBlock != EVoxel::Air;
 
 					if (CurrentBlockOpaque == CompareBlockOpaque)
 					{
-						Mask[N++] = FMask{EVoxel::Null, 0};
+						if (CompareBlock == EVoxel::Glass)
+						{
+							if (CompareBlock == EVoxel::Glass && CurrentBlock == EVoxel::Glass)
+							{
+								Mask[N++] = FMask{EVoxel::Null, 0};
+							}
+							else
+							{
+								Mask[N++] = FMask{CurrentBlock, 1};
+							}
+						}
+						else
+						{
+							Mask[N++] = FMask{EVoxel::Null, 0};
+						}
 					}
 					else if (CurrentBlockOpaque)
 					{

@@ -8,4 +8,5 @@ enum EVoxel
 	Stone,
 	Dirt,
 	Grass,
+	Glass,
 };
