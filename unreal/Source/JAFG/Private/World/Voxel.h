@@ -9,4 +9,7 @@ enum EVoxel
 	Dirt,
 	Grass,
 	Glass,
+	Log,
+	Planks,
+	Leaves,
 };

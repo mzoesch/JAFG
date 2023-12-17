@@ -2,7 +2,6 @@
 
 #include "World/Chunks/GreedyChunk.h"
 
-#include "ToolContextInterfaces.h"
 #include "Lib/FastNoiseLite.h"
 #include "World/JCoordinate.h"
 
@@ -84,7 +83,7 @@ void AGreedyChunk::CreateQuad(const FMask Mask, const FIntVector AxisMask, const
 
 #pragma region Translucent
 
-	if (Mask.Block == EVoxel::Glass)
+	if (Mask.Block == EVoxel::Glass || Mask.Block == EVoxel::Leaves)
 	{
 		this->TranslucentMeshData.Vertices.Append({
 			FVector(V1) * 100,
@@ -207,24 +206,35 @@ int AGreedyChunk::GetTextureIndex(const EVoxel Voxel, const FVector& Normal)
 {
 	switch (Voxel)
 	{
-		case EVoxel::Stone: return 0;
-		case EVoxel::Dirt: return 1;
-		case EVoxel::Grass:
+	case EVoxel::Stone: return 0;
+	case EVoxel::Dirt: return 1;
+	case EVoxel::Grass:
+	{
+		if (Normal == FVector::DownVector)
 		{
-			if (Normal == FVector::DownVector)
-			{
-				return 1;
-			}
-				
-			if (Normal == FVector::UpVector)
-			{
-				return 2;
-			}
-
-			return 3;
+			return 1;
 		}
-		case EVoxel::Glass: return 4;
-		default: return 255;
+			
+		if (Normal == FVector::UpVector)
+		{
+			return 2;
+		}
+
+		return 3;
+	}
+	case EVoxel::Glass: return 0;
+	case EVoxel::Log:
+	{
+		if (Normal == FVector::UpVector || Normal == FVector::DownVector)
+		{
+			return 5;
+		}
+
+		return 4;
+	}
+	case EVoxel::Planks: return 6;
+	case EVoxel::Leaves: return 1;
+	default: return 255;
 	}
 }
 
@@ -302,6 +312,10 @@ void AGreedyChunk::GenerateMesh()
 							{
 								Mask[N++] = FMask{CurrentBlock, 1};
 							}
+						}
+						else if (CompareBlock == EVoxel::Leaves)
+						{
+							Mask[N++] = FMask{CurrentBlock, 1};
 						}
 						else
 						{

@@ -8,4 +8,7 @@ enum EItem
     DirtVoxel,
     GrassVoxel,
     GlassVoxel,
+    LogVoxel,
+    PlanksVoxel,
+    LeavesVoxel,
 };
