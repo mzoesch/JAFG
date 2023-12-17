@@ -6,3 +6,4 @@ Enum with methods for Transelucenty.
 Images for Items
 @see grass / leaves with extra brush! because white!
 Make Unreal find the Textures on the fly and not set TObject pointer
+Consitent naming
