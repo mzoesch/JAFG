@@ -1,9 +1,9 @@
-Change mipmap in 2d array for better anti analyzing
+Change mipmap in 2d array for better anti analyzing <br />
 
-2way rendering @see Translucent
+2way rendering @see Translucent <br />
 
-Enum with methods for Transelucenty.
-Images for Items
-@see grass / leaves with extra brush! because white!
-Make Unreal find the Textures on the fly and not set TObject pointer
-Consitent naming
+Enum with methods for Transelucenty. <br />
+Images for Items <br />
+@see grass / leaves with extra brush! because white! <br />
+Make Unreal find the Textures on the fly and not set TObject pointer <br />
+Consitent naming <br />
