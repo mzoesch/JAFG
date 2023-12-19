@@ -6,7 +6,9 @@
 #include "ProceduralMeshComponent.h"
 #include "GameFramework/Actor.h"
 
+#include "Lib/Item.h"
 #include "World/Voxel.h"
+#include "Lib/FAccumulated.h"
 
 #include "Cuboid.generated.h"
 
@@ -40,10 +42,11 @@ protected:
     UProceduralMeshComponent* Mesh;
 
 public:
-
-    void GenerateMesh(const EVoxel VToGenerate);
-    /* TODO Generate Mesh for EItem. */
-
+    
+    void GenerateMesh(const EItem I);
+    void GenerateMesh(const EVoxel V);
+    void GenerateMesh(const FAccumulated Accumulated);
+    
 private:
 
     // TODO
@@ -51,6 +54,7 @@ private:
     //      Works without this? What are the drawbacks and benefits?
 
     EVoxel Voxel;
+    EItem Item;
     
     TArray<FVector> Vertices;
     TArray<int32> Triangles;

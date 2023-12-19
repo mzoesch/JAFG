@@ -16,14 +16,30 @@ ACuboid::ACuboid()
     this->TriangleIndexCounter = 0;
 
     this->Voxel = EVoxel::Null;
+    this->Item = EItem::NullItem;
     
     return;
 }
 
-void ACuboid::GenerateMesh(const EVoxel VToGenerate)
+void ACuboid::GenerateMesh(const EItem I)
 {
-    this->Voxel = VToGenerate;
+    this->GenerateMesh(FAccumulated(I));
+    return;
+}
+
+void ACuboid::GenerateMesh(const EVoxel V)
+{
+    this->GenerateMesh(FAccumulated(V));
+    return;
+}
+
+void ACuboid::GenerateMesh(const FAccumulated Accumulated)
+{
+    this->Item = Accumulated.GetItem();
+    this->Voxel = Accumulated.GetVoxel();
+    
     this->GenerateMesh();
+
     return;
 }
 
@@ -38,6 +54,12 @@ void ACuboid::GenerateMesh()
 
     this->TriangleIndexCounter = 0;
 
+    if (this->Voxel == EVoxel::Null && this->Item == EItem::NullItem)
+    {
+        this->ApplyMesh();
+        return;
+    }
+    
     this->PreDefinedShape[0] = FVector( this->CuboidX,  this->CuboidY,  this->CuboidZ); /* Forward  Top    Right */
     this->PreDefinedShape[1] = FVector( this->CuboidX,  this->CuboidY, -this->CuboidZ); /* Forward  Bottom Right */
     this->PreDefinedShape[2] = FVector( this->CuboidX, -this->CuboidY,  this->CuboidZ); /* Forward  Top    Left  */
@@ -109,11 +131,6 @@ void ACuboid::CreateQuadrilateral(const FVector& TopRight, const FVector& Bottom
 
 void ACuboid::ApplyMesh() const
 {
-    if (this->Voxel == EVoxel::Null)
-    {
-        return;
-    }
-
     this->Mesh->SetMaterial(0, this->Voxel == EVoxel::Glass || this->Voxel == EVoxel::Leaves ? CastChecked<UGI_Master>(this->GetGameInstance())->TranslucentMaterial : CastChecked<UGI_Master>(this->GetGameInstance())->DevMaterial);
 
     this->Mesh->CreateMeshSection(
