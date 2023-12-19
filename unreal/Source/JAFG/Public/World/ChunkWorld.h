@@ -17,13 +17,7 @@ public:
 	AChunkWorld();
 
 public:
-
-	UPROPERTY(EditInstanceOnly, Category="Material")
-	const TObjectPtr<UMaterialInterface> DevMaterial;
-
-	UPROPERTY(EditInstanceOnly, Category="Material")
-	const TObjectPtr<UMaterialInterface> TranslucentMaterial;
-
+	
 	UPROPERTY(EditInstanceOnly, Category="Generation")
 	int DetailedDrawDistance = 1;
 

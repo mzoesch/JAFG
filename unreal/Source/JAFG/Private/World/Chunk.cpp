@@ -4,6 +4,7 @@
 
 #include "Lib/FastNoiseLite.h"
 #include "ProceduralMeshComponent.h"
+#include "Core/GI_Master.h"
 #include "World/ChunkWorld.h"
 
 AChunk::AChunk()
@@ -43,8 +44,8 @@ void AChunk::BeginPlay()
 
 void AChunk::ApplyMesh() const
 {
-    this->Mesh->SetMaterial(0, this->Material);
-    this->Mesh->SetMaterial(1, this->TranslucentMaterial);
+    this->Mesh->SetMaterial(0, CastChecked<UGI_Master>(this->GetGameInstance())->DevMaterial);
+    this->Mesh->SetMaterial(1, CastChecked<UGI_Master>(this->GetGameInstance())->TranslucentMaterial);
 
     this->Mesh->CreateMeshSection(
         0,

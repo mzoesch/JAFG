@@ -44,12 +44,6 @@ protected:
 	virtual void GenerateMesh() PURE_VIRTUAL(AChunk::GenerateMesh);
 	virtual void ModifyVoxelData(const FIntVector& LocalVoxelPosition, const EVoxel Voxel) PURE_VIRTUAL(AChunk::ModifyVoxelData);
 
-public:
-
-	/* TODO Take from ChunkWorld. */
-	TObjectPtr<UMaterialInterface> Material;
-	TObjectPtr<UMaterialInterface> TranslucentMaterial;
-	
 protected:
 
 	TObjectPtr<UProceduralMeshComponent> Mesh;

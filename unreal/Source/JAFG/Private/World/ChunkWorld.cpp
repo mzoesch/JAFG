@@ -61,8 +61,6 @@ void AChunkWorld::GenerateWorld()
                 );
 
                 /* TODO Here set the biomes etc. maybe? */
-                Chunk->Material = this->DevMaterial;
-                Chunk->TranslucentMaterial = this->TranslucentMaterial;
 
                 UGameplayStatics::FinishSpawningActor(Chunk, Transform);
 
