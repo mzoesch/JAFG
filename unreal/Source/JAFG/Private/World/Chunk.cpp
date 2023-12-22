@@ -34,11 +34,18 @@ void AChunk::BeginPlay()
     this->Noise->SetNoiseType(FastNoiseLite::NoiseType_Perlin);
     this->Noise->SetFractalType(FastNoiseLite::FractalType_FBm);
 
+    this->PreSetup();
     this->Setup();
     this->InitiateVoxels();
     this->GenerateMesh();
     this->ApplyMesh();
 
+    return;
+}
+
+void AChunk::PreSetup()
+{
+    this->Voxels.SetNum(AChunk::CHUNK_SIZE * AChunk::CHUNK_SIZE * AChunk::CHUNK_SIZE, false);
     return;
 }
 
@@ -79,6 +86,31 @@ void AChunk::ClearMesh()
     this->MeshData.Clear();
     this->TranslucentMeshData.Clear();
     return;
+}
+
+int AChunk::GetVoxelIndex(const FIntVector& LocalVoxelPosition)
+{
+    return LocalVoxelPosition.Z * AChunk::CHUNK_SIZE * AChunk::CHUNK_SIZE + LocalVoxelPosition.Y * AChunk::CHUNK_SIZE + LocalVoxelPosition.X;
+}
+
+EVoxel AChunk::GetVoxel(const FIntVector& LocalVoxelPosition) const
+{
+    // TODO
+    //      So we must check here if out of bounds for the neighboring
+    //      chunk and get, if existing, the voxel data from there.
+    if (
+           LocalVoxelPosition.X >= AChunk::CHUNK_SIZE
+        || LocalVoxelPosition.Y >= AChunk::CHUNK_SIZE
+        || LocalVoxelPosition.Z >= AChunk::CHUNK_SIZE
+        || LocalVoxelPosition.X < 0
+        || LocalVoxelPosition.Y < 0
+        || LocalVoxelPosition.Z < 0
+    )
+    {
+        return EVoxel::Air;
+    }
+    
+    return this->Voxels[AChunk::GetVoxelIndex(LocalVoxelPosition)];
 }
 
 void AChunk::ModifyVoxel(const FIntVector& LocalVoxelPosition, const EVoxel Voxel)

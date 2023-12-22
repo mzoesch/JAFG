@@ -12,6 +12,7 @@
 
 #include "Cuboid.generated.h"
 
+class USphereComponent;
 class UProceduralMeshComponent;
 
 UCLASS()
@@ -36,16 +37,38 @@ public:
     UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Mesh Params")
     int32 CuboidZ = 100;
 
+    UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Mesh Params")
+    int32 ConvexX = 100;
+
+    UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Mesh Params")
+    int32 ConvexY = 100;
+
+    UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Mesh Params")
+    int32 ConvexZ = 100;
+
+    UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Mesh Params")
+    float CollisionSphereRadius = 100.0f;
+    
 protected:
 
-    UPROPERTY(VisibleAnywhere)
-    UProceduralMeshComponent* Mesh;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    class UProceduralMeshComponent* Mesh;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    class USphereComponent* SphereComponent;
+
+public:
+
+    virtual void BeginPlay() override;
+    
 public:
     
     void GenerateMesh(const EItem I);
     void GenerateMesh(const EVoxel V);
     void GenerateMesh(const FAccumulated Accumulated);
+
+    UFUNCTION()
+    void OnSphereComponentOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
     
 private:
 
@@ -53,8 +76,14 @@ private:
     //      Do we have to calculate Tangents? See the Greedy Meshing Algorithm.
     //      Works without this? What are the drawbacks and benefits?
 
+    bool bHasCollisionConvexMesh;
+    bool bHasPawnCollision;
+    
     EVoxel Voxel;
     EItem Item;
+
+    int32 TriangleIndexCounter = 0;
+    FVector PreDefinedShape[8];
     
     TArray<FVector> Vertices;
     TArray<int32> Triangles;
@@ -67,9 +96,13 @@ private:
     void CreateQuadrilateral(const FVector& TopRight, const FVector& BottomRight, const FVector& TopLeft, const FVector& BottomLeft, const FProcMeshTangent& Tangent);
     void ApplyMesh() const;
 
-    int32 TriangleIndexCounter = 0;
-    FVector PreDefinedShape[8];
-
     int GetTextureIndex(const EVoxel VToGet, const FVector& Normal) const;
+
+public:
+
+    inline bool GetHasCollisionConvexMesh() const { return this->bHasCollisionConvexMesh; }
+    inline void SetHasCollisionConvexMesh(const bool B) { this->bHasCollisionConvexMesh = B; }
+    inline bool GetHasPawnCollision() const { return this->bHasPawnCollision; }
+    inline void SetHasPawnCollision(const bool B) { this->bHasPawnCollision = B; }
     
 };

@@ -3,6 +3,8 @@
 #include "Lib/Cuboid.h"
 
 #include "ProceduralMeshComponent.h"
+#include "Components/SphereComponent.h"
+#include "Core/CH_Master.h"
 #include "Core/GI_Master.h"
 
 ACuboid::ACuboid()
@@ -13,10 +15,52 @@ ACuboid::ACuboid()
     this->Mesh->SetCastShadow(false);
     this->SetRootComponent(this->Mesh);
 
-    this->TriangleIndexCounter = 0;
-
+    this->bHasCollisionConvexMesh = false;
+    this->bHasPawnCollision = false;
+    
     this->Voxel = EVoxel::Null;
     this->Item = EItem::NullItem;
+
+    this->TriangleIndexCounter = 0;
+
+    this->SphereComponent = this->CreateDefaultSubobject<USphereComponent>(TEXT("SpehereComponent"));
+    this->SphereComponent->InitSphereRadius(this->CollisionSphereRadius);
+    this->SphereComponent->SetupAttachment(this->Mesh);
+    this->SphereComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    this->SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &ACuboid::OnSphereComponentOverlapBegin);
+    
+    return;
+}
+
+void ACuboid::BeginPlay()
+{
+    Super::BeginPlay();
+
+    if (this->bHasCollisionConvexMesh == true)
+    {
+        this->Mesh->bUseComplexAsSimpleCollision = false;
+
+        TArray<FVector> CollisionConvexMesh;
+        CollisionConvexMesh.Add(FVector( this->ConvexX,  this->ConvexY,  this->ConvexZ)); /* Forward  Top    Right */
+        CollisionConvexMesh.Add(FVector( this->ConvexX,  this->ConvexY, -this->ConvexZ)); /* Forward  Bottom Right */
+        CollisionConvexMesh.Add(FVector( this->ConvexX, -this->ConvexY,  this->ConvexZ)); /* Forward  Top    Left  */
+        CollisionConvexMesh.Add(FVector( this->ConvexX, -this->ConvexY, -this->ConvexZ)); /* Forward  Bottom Left  */
+        CollisionConvexMesh.Add(FVector(-this->ConvexX, -this->ConvexY,  this->ConvexZ)); /* Backward Top    Left  */
+        CollisionConvexMesh.Add(FVector(-this->ConvexX, -this->ConvexY, -this->ConvexZ)); /* Backward Bottom Left  */
+        CollisionConvexMesh.Add(FVector(-this->ConvexX,  this->ConvexY,  this->ConvexZ)); /* Backward Top    Right */
+        CollisionConvexMesh.Add(FVector(-this->ConvexX,  this->ConvexY, -this->ConvexZ)); /* Backward Bottom Right */
+        this->Mesh->AddCollisionConvexMesh(CollisionConvexMesh);
+
+        this->Mesh->SetSimulatePhysics(true);
+        this->Mesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+    }
+
+    if (this->bHasPawnCollision)
+    {
+        this->SphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+        this->SphereComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+        this->SphereComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+    }
     
     return;
 }
@@ -40,6 +84,22 @@ void ACuboid::GenerateMesh(const FAccumulated Accumulated)
     
     this->GenerateMesh();
 
+    return;
+}
+
+void ACuboid::OnSphereComponentOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+    if (OtherActor->IsA(ACH_Master::StaticClass()) == false)
+    {
+        return;
+    }
+
+    ACH_Master* Character = CastChecked<ACH_Master>(OtherActor);
+    if (Character->AddToInventory(FAccumulated(this->Voxel, 1)))
+    {
+        Destroy();
+    }
+    
     return;
 }
 

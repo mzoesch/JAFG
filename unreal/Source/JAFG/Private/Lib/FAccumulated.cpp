@@ -38,3 +38,12 @@ FAccumulated::FAccumulated(const EItem I, const uint16_t A)
 
     return;
 }
+
+FAccumulated::FAccumulated(const EItem I, const EVoxel V)
+{
+    this->Item = I;
+    this->Voxel = V;
+    this->Amount = 1;
+
+    return;
+}

@@ -20,6 +20,7 @@ public:
     explicit FAccumulated(const EItem I);
     explicit FAccumulated(const EVoxel V, const uint16_t);
     explicit FAccumulated(const EItem I, const uint16_t);
+    explicit FAccumulated(const EItem I, const EVoxel V);
 
 private:
 

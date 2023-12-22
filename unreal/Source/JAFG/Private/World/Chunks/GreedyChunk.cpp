@@ -14,7 +14,6 @@ AGreedyChunk::AGreedyChunk()
 void AGreedyChunk::Setup()
 {
     this->ActorCoordinate = this->GetActorLocation() * AJCoordinate::U_TO_J_SCALE;
-    this->Voxels.SetNum(AChunk::CHUNK_SIZE * AChunk::CHUNK_SIZE * AChunk::CHUNK_SIZE);
     return;
 }
 
@@ -33,6 +32,7 @@ void AGreedyChunk::InitiateVoxels()
                 this->GenerateDevVoxel(FIntVector(X, Y, Z), VoxelPillarHeight);
                 continue;
             }
+
 
             continue;
         }
@@ -96,7 +96,7 @@ void AGreedyChunk::CreateQuad(const FMask Mask, const FIntVector AxisMask, const
             this->TranslucentVertexCount + 3,
             this->TranslucentVertexCount + 1 - Mask.Normal,
             this->TranslucentVertexCount + 1 + Mask.Normal
-        });
+        }); 
 
         this->TranslucentMeshData.Normals.Append({
             Normal,
@@ -233,28 +233,6 @@ int AGreedyChunk::GetTextureIndex(const EVoxel Voxel, const FVector& Normal)
     case EVoxel::Leaves: return 1;
     default: return 255;
     }
-}
-
-EVoxel AGreedyChunk::GetVoxel(const FIntVector& LocalVoxelPosition) const
-{
-    if (
-           LocalVoxelPosition.X >= AGreedyChunk::CHUNK_SIZE
-        || LocalVoxelPosition.Y >= AGreedyChunk::CHUNK_SIZE
-        || LocalVoxelPosition.Z >= AGreedyChunk::CHUNK_SIZE
-        || LocalVoxelPosition.X < 0
-        || LocalVoxelPosition.Y < 0
-        || LocalVoxelPosition.Z < 0
-    )
-    {
-        return EVoxel::Air;
-    }
-    
-    return this->Voxels[AGreedyChunk::GetVoxelIndex(LocalVoxelPosition)];
-}
-
-int AGreedyChunk::GetVoxelIndex(const FIntVector& LocalVoxelPosition)
-{
-    return LocalVoxelPosition.Z * AChunk::CHUNK_SIZE * AChunk::CHUNK_SIZE + LocalVoxelPosition.Y * AChunk::CHUNK_SIZE + LocalVoxelPosition.X;
 }
 
 void AGreedyChunk::GenerateMesh()
