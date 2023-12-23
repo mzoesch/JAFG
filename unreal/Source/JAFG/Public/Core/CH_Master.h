@@ -168,6 +168,7 @@ public:
 private:
 
     void AddToInventorySlot(const int Slot, const uint16_t Amount);
+    void AddToInventorySlot(const int Slot, const FAccumulated Accumulated);
     
 #pragma endregion Inventory
     

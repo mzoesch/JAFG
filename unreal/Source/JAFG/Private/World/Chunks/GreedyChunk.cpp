@@ -384,8 +384,6 @@ void AGreedyChunk::GenerateMesh()
 
 void AGreedyChunk::ModifyVoxelData(const FIntVector& LocalVoxelPosition, const EVoxel Voxel)
 {
-    UE_LOG(LogTemp, Warning, TEXT("Modifiying Voxel at (%s) to %s"), *LocalVoxelPosition.ToString(), *UEnum::GetValueAsString(Voxel))
     this->Voxels[AGreedyChunk::GetVoxelIndex(LocalVoxelPosition)] = Voxel;
-
     return;
 }

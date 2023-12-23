@@ -94,12 +94,16 @@ void ACuboid::OnSphereComponentOverlapBegin(UPrimitiveComponent* OverlappedCompo
         return;
     }
 
+    // TODO
+    //      This ofc has to move to the AActor class. And then we need to check if
+    //      the AActor has a specific interface and calls the method from the interface.
+    
     ACH_Master* Character = CastChecked<ACH_Master>(OtherActor);
     if (Character->AddToInventory(FAccumulated(this->Voxel, 1)))
     {
         Destroy();
     }
-    
+
     return;
 }
 
