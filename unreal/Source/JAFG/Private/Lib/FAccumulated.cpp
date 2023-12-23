@@ -63,5 +63,5 @@ FAccumulated::FAccumulated(const EVoxel V, const EItem I, const uint16_t A)
 
 FString FAccumulated::ToString() const
 {
-    return FString::Printf(TEXT("FAccumulated { Voxel: %s, Item: %s, Amount: %d }"), *UEnum::GetValueAsString(this->Voxel), *UEnum::GetValueAsString(this->Voxel), this->Amount);
+    return FString::Printf(TEXT("FAccumulated { Voxel: %s, Item: %s, Amount: %d }"), *UEnum::GetValueAsString(this->Voxel), *UEnum::GetValueAsString(this->Item), this->Amount);
 }
