@@ -69,7 +69,7 @@ public:
 
     UFUNCTION()
     void OnSphereComponentOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-    
+
 private:
 
     // TODO
@@ -104,5 +104,9 @@ public:
     inline void SetHasCollisionConvexMesh(const bool B) { this->bHasCollisionConvexMesh = B; }
     inline bool GetHasPawnCollision() const { return this->bHasPawnCollision; }
     inline void SetHasPawnCollision(const bool B) { this->bHasPawnCollision = B; }
+
+public:
+
+    void SetAccumulated(const FAccumulated Accumulated);
     
 };

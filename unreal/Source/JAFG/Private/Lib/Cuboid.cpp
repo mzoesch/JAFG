@@ -246,3 +246,11 @@ int ACuboid::GetTextureIndex(const EVoxel VToGet, const FVector& Normal) const
     default: return 255;
     }
 }
+
+void ACuboid::SetAccumulated(const FAccumulated Accumulated)
+{
+    this->Item = Accumulated.GetItem();
+    this->Voxel = Accumulated.GetVoxel();
+
+    return;
+}
