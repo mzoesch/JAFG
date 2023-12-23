@@ -56,6 +56,9 @@ public:
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IMC")
     UInputMappingContext* IMCFoot;
 
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IMC")
+    UInputMappingContext* IMCInventory;
+    
     /* Movement */
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Movement")
@@ -77,6 +80,9 @@ public:
 
     /* Inventory */
 
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+    UInputAction* IAToggleInventory;
+    
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
     UInputAction* IAQuickSlot0;
 
@@ -124,6 +130,7 @@ private:
     void OnSecondary(const FInputActionValue& Value);
 
     /* Inventory */
+    void OnToggleInventory(const FInputActionValue& Value);
     void OnQuickSlot0(const FInputActionValue& Value);
     void OnQuickSlot1(const FInputActionValue& Value);
     void OnQuickSlot2(const FInputActionValue& Value);
