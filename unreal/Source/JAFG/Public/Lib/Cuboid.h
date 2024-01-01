@@ -62,8 +62,9 @@ public:
     virtual void BeginPlay() override;
     
 public:
-    
+
     void GenerateMesh(const EItem I);
+    UFUNCTION(BlueprintCallable, Category = "Mesh")
     void GenerateMesh(const EVoxel V);
     void GenerateMesh(const FAccumulated Accumulated);
 
