@@ -2,16 +2,15 @@
 
 #include "World/Chunk.h"
 
-#include "Lib/FastNoiseLite.h"
 #include "ProceduralMeshComponent.h"
+
+#include "Lib/FastNoiseLite.h"
 #include "Core/GI_Master.h"
 #include "World/ChunkWorld.h"
 
 AChunk::AChunk()
 {
-    // Set this actor to call Tick() every frame.
-    // You can turn this off to improve performance if you don't need it.
-    PrimaryActorTick.bCanEverTick = false;
+    this->PrimaryActorTick.bCanEverTick = false;
 
     this->Mesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Mesh"));
     this->Mesh->SetCastShadow(true);

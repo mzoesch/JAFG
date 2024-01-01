@@ -1,0 +1,13 @@
+{
+  "voxels": [
+    {
+      "name": "Stone"
+    },
+    {
+      "name": "Dirt"
+    },
+    {
+      "name": "Grass"
+    }
+  ]
+}
