@@ -3,6 +3,7 @@
 #include "Assets/General.h"
 
 #include "ImageUtils.h"
+#include "World/WorldVoxel.h"
 
 #define UIL_LOG(Verbosity, Format, ...) UE_LOG(LogTemp, Verbosity, Format, ##__VA_ARGS__)
 
@@ -36,7 +37,7 @@ UTexture2D* FGeneral::LoadTexture2DFromDisk(const FString& Path)
 
 UTexture2D* FGeneral::LoadTexture2D(const FAccumulated Accumulated)
 {
-    if (Accumulated.GetVoxel() != EVoxel::Null)
+    if (Accumulated.GetVoxel() != EWorldVoxel::VoxelNull)
     {
         const FString Path = FString::Printf(TEXT("%sRender.png"), *FGeneral::GeneratedAssetsDirectory);
         // const FString Path = FString::Printf(TEXT("E:\\dev\\ue\\prj_bi\\JAFGv3\\unreal\\Saved\\gen\\Render.png"));

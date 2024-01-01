@@ -7,14 +7,15 @@
 #include "Lib/FastNoiseLite.h"
 #include "Core/GI_Master.h"
 #include "World/ChunkWorld.h"
+#include "World/WorldVoxel.h"
 
 AChunk::AChunk()
 {
     this->PrimaryActorTick.bCanEverTick = false;
 
-    this->Mesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Mesh"));
-    this->Mesh->SetCastShadow(true);
-    this->SetRootComponent(this->Mesh);
+    this->ProcMesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Mesh"));
+    this->ProcMesh->SetCastShadow(true);
+    this->SetRootComponent(this->ProcMesh);
 
     this->Noise = new FastNoiseLite();
     
@@ -50,10 +51,10 @@ void AChunk::PreSetup()
 
 void AChunk::ApplyMesh() const
 {
-    this->Mesh->SetMaterial(0, CastChecked<UGI_Master>(this->GetGameInstance())->DevMaterial);
-    this->Mesh->SetMaterial(1, CastChecked<UGI_Master>(this->GetGameInstance())->TranslucentMaterial);
+    this->ProcMesh->SetMaterial(0, CastChecked<UGI_Master>(this->GetGameInstance())->DevMaterial);
+    this->ProcMesh->SetMaterial(1, CastChecked<UGI_Master>(this->GetGameInstance())->TranslucentMaterial);
 
-    this->Mesh->CreateMeshSection(
+    this->ProcMesh->CreateMeshSection(
         0,
         this->MeshData.Vertices,
         this->MeshData.Triangles,
@@ -64,7 +65,7 @@ void AChunk::ApplyMesh() const
         true
     );
 
-    this->Mesh->CreateMeshSection(
+    this->ProcMesh->CreateMeshSection(
         1,
         this->TranslucentMeshData.Vertices,
         this->TranslucentMeshData.Triangles,
@@ -92,7 +93,7 @@ int AChunk::GetVoxelIndex(const FIntVector& LocalVoxelPosition)
     return LocalVoxelPosition.Z * AChunk::CHUNK_SIZE * AChunk::CHUNK_SIZE + LocalVoxelPosition.Y * AChunk::CHUNK_SIZE + LocalVoxelPosition.X;
 }
 
-EVoxel AChunk::GetVoxel(const FIntVector& LocalVoxelPosition) const
+int AChunk::GetVoxel(const FIntVector& LocalVoxelPosition) const
 {
     // TODO
     //      So we must check here if out of bounds for the neighboring
@@ -106,13 +107,13 @@ EVoxel AChunk::GetVoxel(const FIntVector& LocalVoxelPosition) const
         || LocalVoxelPosition.Z < 0
     )
     {
-        return EVoxel::Air;
+        return EWorldVoxel::AirVoxel;
     }
     
     return this->Voxels[AChunk::GetVoxelIndex(LocalVoxelPosition)];
 }
 
-void AChunk::ModifyVoxel(const FIntVector& LocalVoxelPosition, const EVoxel Voxel)
+void AChunk::ModifyVoxel(const FIntVector& LocalVoxelPosition, const int Voxel)
 {
     if (
            LocalVoxelPosition.X >= AChunk::CHUNK_SIZE

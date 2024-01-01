@@ -2,7 +2,6 @@
 
 #include "CoreMinimal.h"
 
-#include "World/Voxel.h"
 #include "Lib/Item.h"
 
 #include "FCollectable.generated.h"
@@ -15,7 +14,7 @@ struct JAFG_API FCollectable
 public:
 
     FCollectable() = default;
-    explicit FCollectable(const EVoxel Voxel);
+    explicit FCollectable(const int Voxel);
     explicit FCollectable(const EItem Item);
 
 private:

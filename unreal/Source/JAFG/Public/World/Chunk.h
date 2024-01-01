@@ -6,7 +6,6 @@
 #include "GameFramework/Actor.h"
 
 #include "World/Chunks/ChunkMeshData.h"
-#include "World/Voxel.h"
 
 #include "Chunk.generated.h"
 
@@ -43,7 +42,7 @@ protected:
     virtual void Setup() PURE_VIRTUAL(AChunk::Setup);
     virtual void InitiateVoxels() PURE_VIRTUAL(AChunk::InitiateBlocks);
     virtual void GenerateMesh() PURE_VIRTUAL(AChunk::GenerateMesh);
-    virtual void ModifyVoxelData(const FIntVector& LocalVoxelPosition, const EVoxel Voxel) PURE_VIRTUAL(AChunk::ModifyVoxelData);
+    virtual void ModifyVoxelData(const FIntVector& LocalVoxelPosition, const int Voxel) PURE_VIRTUAL(AChunk::ModifyVoxelData);
 
 protected:
 
@@ -53,10 +52,11 @@ protected:
 protected:
 
     /* Data */
-    TArray<EVoxel> Voxels;
+    TArray<int> Voxels;
     
     /* Mesh */
-    TObjectPtr<UProceduralMeshComponent> Mesh;
+    UPROPERTY()
+    TObjectPtr<UProceduralMeshComponent> ProcMesh;
     FastNoiseLite* Noise;
     FChunkMeshData MeshData;
     FChunkMeshData TranslucentMeshData;
@@ -65,7 +65,7 @@ protected:
 
 public:
 
-    EVoxel GetVoxel(const FIntVector& LocalVoxelPosition) const;
-    void ModifyVoxel(const FIntVector& LocalVoxelPosition, const EVoxel Voxel);
+    int GetVoxel(const FIntVector& LocalVoxelPosition) const;
+    void ModifyVoxel(const FIntVector& LocalVoxelPosition, const int Voxel);
     
 };

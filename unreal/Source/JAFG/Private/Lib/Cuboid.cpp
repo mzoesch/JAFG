@@ -7,6 +7,8 @@
 #include "Core/CH_Master.h"
 #include "Core/GI_Master.h"
 
+#define GI CastChecked<UGI_Master>(this->GetGameInstance())
+
 ACuboid::ACuboid()
 {
     this->PrimaryActorTick.bCanEverTick = false;
@@ -18,7 +20,7 @@ ACuboid::ACuboid()
     this->bHasCollisionConvexMesh = false;
     this->bHasPawnCollision = false;
     
-    this->Voxel = EVoxel::Null;
+    this->Voxel = EWorldVoxel::VoxelNull;
     this->Item = EItem::NullItem;
 
     this->TriangleIndexCounter = 0;
@@ -71,7 +73,7 @@ void ACuboid::GenerateMesh(const EItem I)
     return;
 }
 
-void ACuboid::GenerateMesh(const EVoxel V)
+void ACuboid::GenerateMesh(const int V)
 {
     this->GenerateMesh(FAccumulated(V));
     return;
@@ -118,7 +120,7 @@ void ACuboid::GenerateMesh()
 
     this->TriangleIndexCounter = 0;
 
-    if (this->Voxel == EVoxel::Null && this->Item == EItem::NullItem)
+    if (this->Voxel == EWorldVoxel::VoxelNull && this->Item == EItem::NullItem)
     {
         this->ApplyMesh();
         return;
@@ -195,7 +197,8 @@ void ACuboid::CreateQuadrilateral(const FVector& TopRight, const FVector& Bottom
 
 void ACuboid::ApplyMesh() const
 {
-    this->Mesh->SetMaterial(0, this->Voxel == EVoxel::Glass || this->Voxel == EVoxel::Leaves ? CastChecked<UGI_Master>(this->GetGameInstance())->TranslucentMaterial : CastChecked<UGI_Master>(this->GetGameInstance())->DevMaterial);
+    
+    this->Mesh->SetMaterial(0, GI->IsVoxelTranslucent(this->Voxel) ? CastChecked<UGI_Master>(this->GetGameInstance())->TranslucentMaterial : CastChecked<UGI_Master>(this->GetGameInstance())->DevMaterial);
 
     this->Mesh->CreateMeshSection(
         0,
@@ -211,13 +214,13 @@ void ACuboid::ApplyMesh() const
     return;
 }
 
-int ACuboid::GetTextureIndex(const EVoxel VToGet, const FVector& Normal) const
+int ACuboid::GetTextureIndex(const int VToGet, const FVector& Normal) const
 {
     switch (VToGet)
     {
-    case EVoxel::Stone: return 0;
-    case EVoxel::Dirt: return 1;
-    case EVoxel::Grass:
+    case 2: return 0;
+    case 3: return 1;
+    case 4:
         {
             if (Normal == FVector::DownVector)
             {
@@ -231,18 +234,6 @@ int ACuboid::GetTextureIndex(const EVoxel VToGet, const FVector& Normal) const
 
             return 3;
         }
-    case EVoxel::Glass: return 0;
-    case EVoxel::Log:
-        {
-            if (Normal == FVector::UpVector || Normal == FVector::DownVector)
-            {
-                return 5;
-            }
-
-            return 4;
-        }
-    case EVoxel::Planks: return 6;
-    case EVoxel::Leaves: return 1;
     default: return 255;
     }
 }
@@ -254,3 +245,5 @@ void ACuboid::SetAccumulated(const FAccumulated Accumulated)
 
     return;
 }
+
+#undef GI

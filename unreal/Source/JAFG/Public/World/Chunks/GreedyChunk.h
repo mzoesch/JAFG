@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 
 #include "World/Chunk.h"
-#include "World/Voxel.h"
 
 #include "GreedyChunk.generated.h"
 
@@ -20,14 +19,14 @@ public:
 
 private:
     
-    struct FMask { EVoxel Block; int Normal; };
+    struct FMask { int Voxel; int Normal; };
 
 protected:
 
     virtual void Setup() override;
     virtual void InitiateVoxels() override;
     virtual void GenerateMesh() override;
-    virtual void ModifyVoxelData(const FIntVector& LocalVoxelPosition, const EVoxel Voxel) override;
+    virtual void ModifyVoxelData(const FIntVector& LocalVoxelPosition, const int Voxel) override;
 
 private:
 
@@ -40,6 +39,6 @@ private:
 
     void CreateQuad(const FMask Mask, const FIntVector AxisMask, const int Width, const int Height, const FIntVector V1, const FIntVector V2, const FIntVector V3, const FIntVector V4);
     static bool CompareMask(const FMask M1, const FMask M2);
-    static int GetTextureIndex(const EVoxel Voxel, const FVector& Normal);
+    static int GetTextureIndex(const int Voxel, const FVector& Normal);
     
 };

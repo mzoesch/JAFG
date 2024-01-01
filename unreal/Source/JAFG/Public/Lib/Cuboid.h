@@ -7,7 +7,7 @@
 #include "GameFramework/Actor.h"
 
 #include "Lib/Item.h"
-#include "World/Voxel.h"
+#include "World/WorldVoxel.h"
 #include "Lib/FAccumulated.h"
 
 #include "Cuboid.generated.h"
@@ -65,7 +65,7 @@ public:
 
     void GenerateMesh(const EItem I);
     UFUNCTION(BlueprintCallable, Category = "Mesh")
-    void GenerateMesh(const EVoxel V);
+    void GenerateMesh(const int V);
     void GenerateMesh(const FAccumulated Accumulated);
 
     UFUNCTION()
@@ -80,7 +80,7 @@ private:
     bool bHasCollisionConvexMesh;
     bool bHasPawnCollision;
     
-    EVoxel Voxel;
+    int Voxel;
     EItem Item;
 
     int32 TriangleIndexCounter = 0;
@@ -97,7 +97,7 @@ private:
     void CreateQuadrilateral(const FVector& TopRight, const FVector& BottomRight, const FVector& TopLeft, const FVector& BottomLeft, const FProcMeshTangent& Tangent);
     void ApplyMesh() const;
 
-    int GetTextureIndex(const EVoxel VToGet, const FVector& Normal) const;
+    int GetTextureIndex(const int VToGet, const FVector& Normal) const;
 
 public:
 
