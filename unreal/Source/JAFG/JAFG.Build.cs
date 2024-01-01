@@ -20,7 +20,9 @@ public class JAFG : ModuleRules
 
 		PrivateDependencyModuleNames.AddRange(new string[]
 		{
-			"ProceduralMeshComponent"
+			"ProceduralMeshComponent",
+            "RenderCore",
+            "ImageWrapper"
 		});
 
 		// Uncomment if you are using Slate UI
