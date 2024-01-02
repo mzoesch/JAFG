@@ -4,6 +4,8 @@
 
 #include "Lib/FAccumulated.h"
 
+#include "Core/GI_Master.h"
+
 #include "General.generated.h"
 
 USTRUCT()
@@ -12,7 +14,7 @@ struct JAFG_API FGeneral
     GENERATED_BODY()
 
 public:
-
+    
     static const inline FString DataDirectoryRelative               = FPaths::ProjectConfigDir() + "Data/";
     static const inline FString DataDirectory                       = FPaths::ConvertRelativePathToFull(FGeneral::DataDirectoryRelative);
     static const inline FString VoxelDataDirectoryRelative          = FGeneral::DataDirectoryRelative + "Voxel/";
@@ -26,6 +28,6 @@ private:
     
 public:
     
-    static UTexture2D* LoadTexture2D(const FAccumulated Accumulated);
+    static UTexture2D* LoadTexture2D(const FAccumulated Accumulated, const UGI_Master* GI);
 };
 

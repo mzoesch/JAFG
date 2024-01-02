@@ -58,10 +58,9 @@ protected:
     UPROPERTY()
     TObjectPtr<UProceduralMeshComponent> ProcMesh;
     FastNoiseLite* Noise;
-    FChunkMeshData MeshData;
-    FChunkMeshData TranslucentMeshData;
-    int VertexCount = 0;
-    int TranslucentVertexCount = 0;
+
+    TArray<FChunkMeshData>  MeshDataArray;
+    TArray<int>             VertexCounts;
 
 public:
 

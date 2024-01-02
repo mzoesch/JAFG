@@ -54,37 +54,41 @@ void AChunk::ApplyMesh() const
     this->ProcMesh->SetMaterial(0, CastChecked<UGI_Master>(this->GetGameInstance())->DevMaterial);
     this->ProcMesh->SetMaterial(1, CastChecked<UGI_Master>(this->GetGameInstance())->TranslucentMaterial);
 
-    this->ProcMesh->CreateMeshSection(
+    for (int i = 0; i < this->MeshDataArray.Num(); i++)
+    {
+        this->ProcMesh->CreateMeshSection(
         0,
-        this->MeshData.Vertices,
-        this->MeshData.Triangles,
-        this->MeshData.Normals,
-        this->MeshData.UV0,
-        this->MeshData.Colors,
-        this->MeshData.Tangents,
+        this->MeshDataArray[i].Vertices,
+        this->MeshDataArray[i].Triangles,
+        this->MeshDataArray[i].Normals,
+        this->MeshDataArray[i].UV0,
+        this->MeshDataArray[i].Colors,
+        this->MeshDataArray[i].Tangents,
         true
     );
-
-    this->ProcMesh->CreateMeshSection(
-        1,
-        this->TranslucentMeshData.Vertices,
-        this->TranslucentMeshData.Triangles,
-        this->TranslucentMeshData.Normals,
-        this->TranslucentMeshData.UV0,
-        this->TranslucentMeshData.Colors,
-        this->TranslucentMeshData.Tangents,
-        true
-    );
+    }
 
     return;
 }
 
 void AChunk::ClearMesh()
 {
-    this->VertexCount = 0;
-    this->TranslucentVertexCount = 0;
-    this->MeshData.Clear();
-    this->TranslucentMeshData.Clear();
+    // TODO What is faster?
+    // this->MeshDataArray.Empty();
+    // this->VertexCounts.Empty();
+
+    for (int i = 0; i < this->MeshDataArray.Num(); i++)
+    {
+        this->MeshDataArray[i].Clear();
+        continue;
+    }
+
+    for (int i = 0; i < this->VertexCounts.Num(); i++)
+    {
+        this->VertexCounts[i] = 0;
+        continue;
+    }
+    
     return;
 }
 

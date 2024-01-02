@@ -14,11 +14,12 @@ struct JAFG_API FVoxelMask
 public:
 
     FVoxelMask() = default;
-    FVoxelMask(const FString& NameSpace, const FString& Name, const bool bIsTranslucent);
+    FVoxelMask(const FString& NameSpace, const FString& Name, const bool bIsTranslucent, const int TextureGroup);
     
 public:
     
     FString NameSpace;
     FString Name;
     bool bIsTranslucent;
+    int TextureGroup;
 };

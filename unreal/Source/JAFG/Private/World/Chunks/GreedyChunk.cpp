@@ -12,6 +12,7 @@
 AGreedyChunk::AGreedyChunk()
 {
     this->PrimaryActorTick.bCanEverTick = false;
+    this->VertexCounts = TArray<int>();
     return;
 }
 
@@ -77,103 +78,50 @@ void AGreedyChunk::GenerateDevVoxel(const FIntVector& LocalVoxelPosition, const 
 void AGreedyChunk::CreateQuad(const FMask Mask, const FIntVector AxisMask, const int Width, const int Height, const FIntVector V1, const FIntVector V2, const FIntVector V3, const FIntVector V4)
 {
     const FVector Normal = FVector(AxisMask * Mask.Normal);
-    const FColor Color = GI->IsVoxelTranslucent(Mask.Voxel) ? FColor(0, 0, 0, 0) : FColor(0, 0, 0, this->GetTextureIndex(Mask.Voxel, Normal));
-    
-    // HERE Calculate Tangents for Mesh
+    const FColor Color = FColor(0, 0, 0, GI->GetTextureIndex(Mask.Voxel, Normal));
 
-#pragma region Translucent
+    const int TextureGroup = GI->GetTextureGroup(Mask.Voxel);
 
-    if (GI->IsVoxelTranslucent(Mask.Voxel))
+    if (TextureGroup > this->VertexCounts.Num() - 1)
     {
-        this->TranslucentMeshData.Vertices.Append({
-            FVector(V1) * 100,
-            FVector(V2) * 100,
-            FVector(V3) * 100,
-            FVector(V4) * 100
-        });
-
-        this->TranslucentMeshData.Triangles.Append({
-            this->TranslucentVertexCount,
-            this->TranslucentVertexCount + 2 + Mask.Normal,
-            this->TranslucentVertexCount + 2 - Mask.Normal,
-            this->TranslucentVertexCount + 3,
-            this->TranslucentVertexCount + 1 - Mask.Normal,
-            this->TranslucentVertexCount + 1 + Mask.Normal
-        }); 
-
-        this->TranslucentMeshData.Normals.Append({
-            Normal,
-            Normal,
-            Normal,
-            Normal
-        });
-
-        this->TranslucentMeshData.Colors.Append({
-            Color,
-            Color,
-            Color,
-            Color
-        });
-
-        if (Normal.X == 1 || Normal.X == -1)
+        const int Delta = TextureGroup - this->VertexCounts.Num() + 1;
+        for (int i = 0; i < Delta; ++i)
         {
-            this->TranslucentMeshData.UV0.Append({
-                FVector2D(Width, Height),
-                FVector2D(0, Height),
-                FVector2D(Width, 0),
-                FVector2D(0, 0),
-            });
+            this->VertexCounts.Add(0);
+            UE_LOG(LogTemp, Warning, TEXT("Added Texture Group %d to VertexCounts"), this->VertexCounts.Num() - 1);
+            continue;
         }
-        else
-        {
-            this->TranslucentMeshData.UV0.Append({
-                FVector2D(Height, Width),
-                FVector2D(Height, 0),
-                FVector2D(0, Width),
-                FVector2D(0, 0),
-            });
-        }
+    }
 
-        this->TranslucentVertexCount += 4;
-        
-        return;
+    if (TextureGroup > this->MeshDataArray.Num() - 1)
+    {
+        const int Delta = TextureGroup - this->MeshDataArray.Num() + 1;
+        for (int i = 0; i < Delta; ++i)
+        {
+            this->MeshDataArray.Add(FChunkMeshData());
+            UE_LOG(LogTemp, Warning, TEXT("Added Mesh Data Group %d to MeshDataArray"), this->MeshDataArray.Num() - 1);
+            continue;
+        }
     }
     
-#pragma endregion Translucent
+    /* TODO Should we calculate tangents for mesh here? Works without it but what are the drawbacks. */
+    /* UKismetProceduralMeshLibrary::CalculateTangentsForMesh(MeshData.Vertices, MeshData.Triangles, MeshData.UV0, MeshData.Normals, MeshData.Tangents); */
     
-    this->MeshData.Vertices.Append({
-        FVector(V1) * 100,
-        FVector(V2) * 100,
-        FVector(V3) * 100,
-        FVector(V4) * 100
+    this->MeshDataArray[TextureGroup].Vertices.Append({FVector(V1) * 100, FVector(V2) * 100, FVector(V3) * 100, FVector(V4) * 100});
+    this->MeshDataArray[TextureGroup].Triangles.Append({
+        this->VertexCounts[TextureGroup],
+        this->VertexCounts[TextureGroup] + 2 + Mask.Normal,
+        this->VertexCounts[TextureGroup] + 2 - Mask.Normal,
+        this->VertexCounts[TextureGroup] + 3,
+        this->VertexCounts[TextureGroup] + 1 - Mask.Normal,
+        this->VertexCounts[TextureGroup] + 1 + Mask.Normal
     });
-
-    this->MeshData.Triangles.Append({
-        this->VertexCount,
-        this->VertexCount + 2 + Mask.Normal,
-        this->VertexCount + 2 - Mask.Normal,
-        this->VertexCount + 3,
-        this->VertexCount + 1 - Mask.Normal,
-        this->VertexCount + 1 + Mask.Normal
-    });
-
-    this->MeshData.Normals.Append({
-        Normal,
-        Normal,
-        Normal,
-        Normal
-    });
-
-    this->MeshData.Colors.Append({
-        Color,
-        Color,
-        Color,
-        Color
-    });
+    this->MeshDataArray[TextureGroup].Normals.Append({Normal, Normal, Normal, Normal});
+    this->MeshDataArray[TextureGroup].Colors.Append({Color, Color, Color, Color});
 
     if (Normal.X == 1 || Normal.X == -1)
     {
-        this->MeshData.UV0.Append({
+        this->MeshDataArray[TextureGroup].UV0.Append({
             FVector2D(Width, Height),
             FVector2D(0, Height),
             FVector2D(Width, 0),
@@ -182,7 +130,7 @@ void AGreedyChunk::CreateQuad(const FMask Mask, const FIntVector AxisMask, const
     }
     else
     {
-        this->MeshData.UV0.Append({
+        this->MeshDataArray[TextureGroup].UV0.Append({
             FVector2D(Height, Width),
             FVector2D(Height, 0),
             FVector2D(0, Width),
@@ -190,9 +138,7 @@ void AGreedyChunk::CreateQuad(const FMask Mask, const FIntVector AxisMask, const
         });
     }
 
-    this->VertexCount += 4;
-
-    // UKismetProceduralMeshLibrary::CalculateTangentsForMesh(MeshData.Vertices, MeshData.Triangles, MeshData.UV0, MeshData.Normals, MeshData.Tangents);
+    this->VertexCounts[TextureGroup] += 4;
 
     return;
 }
@@ -200,30 +146,6 @@ void AGreedyChunk::CreateQuad(const FMask Mask, const FIntVector AxisMask, const
 bool AGreedyChunk::CompareMask(const FMask M1, const FMask M2)
 {
     return M1.Voxel == M2.Voxel && M1.Normal == M2.Normal;
-}
-
-int AGreedyChunk::GetTextureIndex(const int Voxel, const FVector& Normal)
-{
-    switch (Voxel)
-    {
-    case 2: return 0;
-    case 3: return 1;
-    case 4:
-    {
-        if (Normal == FVector::DownVector)
-        {
-            return 1;
-        }
-            
-        if (Normal == FVector::UpVector)
-        {
-            return 2;
-        }
-
-        return 3;
-    }
-    default: return 255;
-    }
 }
 
 void AGreedyChunk::GenerateMesh()

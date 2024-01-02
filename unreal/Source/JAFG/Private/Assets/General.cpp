@@ -15,33 +15,27 @@ UTexture2D* FGeneral::LoadTexture2DFromDisk(const FString& Path)
         return nullptr;
     }
 
-    const FString File = FString::Printf(TEXT("gen/Render.png"));
-    
-    FString SavedPath = FPaths::ProjectSavedDir();
-    FString FullSavedPath = FPaths::ConvertRelativePathToFull(SavedPath);
-    FString FullPath = FullSavedPath + File;
-    UIL_LOG(Error, TEXT("FGeneral::LoadTexture2DFromDisk - FullPath: %s"), *FullPath);
-    UTexture2D* Texture = nullptr;
-    if (FullPath.Len() > 0) {
-        FullPath.ReplaceInline(TEXT("\\"), TEXT("/"), ESearchCase::CaseSensitive);
-        FullPath.ReplaceInline(TEXT("//"), TEXT("/"), ESearchCase::CaseSensitive);
-        FullPath.RemoveFromStart(TEXT("/"));
-        FullPath.RemoveFromEnd(TEXT("/"));
-        FPlatformMisc::NormalizePath(FullPath);
-        UIL_LOG(Error, TEXT("FGeneral::LoadTexture2DFromDisk - FullPath norm: %s"), *FullPath);
-        Texture = FImageUtils::ImportFileAsTexture2D(FullPath);
+    if (Path.Len() > 0)
+    {
+        FString NormalizedPath = Path;
+
+        NormalizedPath.ReplaceInline(TEXT("\\"), TEXT("/"), ESearchCase::CaseSensitive);
+        NormalizedPath.ReplaceInline(TEXT("//"), TEXT("/"), ESearchCase::CaseSensitive);
+        NormalizedPath.RemoveFromStart(TEXT("/"));
+        NormalizedPath.RemoveFromEnd(TEXT("/"));
+        FPlatformMisc::NormalizePath(NormalizedPath);
+
+        return FImageUtils::ImportFileAsTexture2D(NormalizedPath);
     }
 
-    return Texture;
+    return nullptr;
 }
 
-UTexture2D* FGeneral::LoadTexture2D(const FAccumulated Accumulated)
+UTexture2D* FGeneral::LoadTexture2D(const FAccumulated Accumulated, const UGI_Master* GI)
 {
     if (Accumulated.GetVoxel() != EWorldVoxel::VoxelNull)
     {
-        const FString Path = FString::Printf(TEXT("%sRender.png"), *FGeneral::GeneratedAssetsDirectory);
-        // const FString Path = FString::Printf(TEXT("E:\\dev\\ue\\prj_bi\\JAFGv3\\unreal\\Saved\\gen\\Render.png"));
-        return FGeneral::LoadTexture2DFromDisk(Path);
+        return FGeneral::LoadTexture2DFromDisk(FString::Printf(TEXT("%s%s.png"), *FGeneral::GeneratedAssetsDirectory, *GI->GetVoxelName(Accumulated.GetVoxel())));
     }
     
     return nullptr;
