@@ -15,13 +15,18 @@ struct JAFG_API FGeneral
 
 public:
     
-    static const inline FString DataDirectoryRelative               = FPaths::ProjectConfigDir() + "Data/";
+    static const inline FString DataDirectoryRelative               = FPaths::ProjectContentDir() + "Data/";
     static const inline FString DataDirectory                       = FPaths::ConvertRelativePathToFull(FGeneral::DataDirectoryRelative);
+
     static const inline FString VoxelDataDirectoryRelative          = FGeneral::DataDirectoryRelative + "Voxel/";
     static const inline FString VoxelDataDirectory                  = FPaths::ConvertRelativePathToFull(FGeneral::VoxelDataDirectoryRelative);
+
     static const inline FString GeneratedAssetsDirectoryRelative    = FPaths::ProjectSavedDir() + "gen/";
     static const inline FString GeneratedAssetsDirectory            = FPaths::ConvertRelativePathToFull(FGeneral::GeneratedAssetsDirectoryRelative);
 
+    static const inline FString TextureDirectoryRelative            = FPaths::ProjectContentDir() + "Texture/";
+    static const inline FString TextureDirectory                    = FPaths::ConvertRelativePathToFull(FGeneral::TextureDirectoryRelative);
+    
 private:
 
     static inline const UGI_Master*             GI;

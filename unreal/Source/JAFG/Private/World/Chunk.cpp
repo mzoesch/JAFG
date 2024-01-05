@@ -9,6 +9,8 @@
 #include "World/ChunkWorld.h"
 #include "World/WorldVoxel.h"
 
+#define GI CastChecked<UGI_Master>(this->GetGameInstance())
+
 AChunk::AChunk()
 {
     this->PrimaryActorTick.bCanEverTick = false;
@@ -51,21 +53,24 @@ void AChunk::PreSetup()
 
 void AChunk::ApplyMesh() const
 {
-    this->ProcMesh->SetMaterial(0, CastChecked<UGI_Master>(this->GetGameInstance())->DevMaterial);
-    this->ProcMesh->SetMaterial(1, CastChecked<UGI_Master>(this->GetGameInstance())->TranslucentMaterial);
+    // this->ProcMesh->SetMaterial(0, GI->DevMaterial);
+    // this->ProcMesh->SetMaterial(1, CastChecked<UGI_Master>(this->GetGameInstance())->TranslucentMaterial);
 
     for (int i = 0; i < this->MeshDataArray.Num(); i++)
     {
+        this->ProcMesh->SetMaterial(i, GI->DynamicDevMaterial);
         this->ProcMesh->CreateMeshSection(
-        0,
-        this->MeshDataArray[i].Vertices,
-        this->MeshDataArray[i].Triangles,
-        this->MeshDataArray[i].Normals,
-        this->MeshDataArray[i].UV0,
-        this->MeshDataArray[i].Colors,
-        this->MeshDataArray[i].Tangents,
-        true
-    );
+            i,
+            this->MeshDataArray[i].Vertices,
+            this->MeshDataArray[i].Triangles,
+            this->MeshDataArray[i].Normals,
+            this->MeshDataArray[i].UV0,
+            this->MeshDataArray[i].Colors,
+            this->MeshDataArray[i].Tangents,
+            true
+        );
+
+        continue;
     }
 
     return;
