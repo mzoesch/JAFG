@@ -42,7 +42,7 @@ protected:
     virtual void Setup() PURE_VIRTUAL(AChunk::Setup);
     virtual void InitiateVoxels() PURE_VIRTUAL(AChunk::InitiateBlocks);
     virtual void GenerateMesh() PURE_VIRTUAL(AChunk::GenerateMesh);
-    virtual void ModifyVoxelData(const FIntVector& LocalVoxelPosition, const int Voxel) PURE_VIRTUAL(AChunk::ModifyVoxelData);
+    virtual void ModifyVoxelData(const FIntVector& LocalVoxelPosition, const int Voxel) PURE_VIRTUAL(AChunk::ModifyVoxelData)
 
 protected:
 
