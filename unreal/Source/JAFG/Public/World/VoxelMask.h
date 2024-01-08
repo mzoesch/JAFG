@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 
+#include "Voxels/NormalLookup.h"
+
 #include "VoxelMask.generated.h"
 
 USTRUCT()
@@ -18,9 +20,14 @@ public:
     
 public:
     
-    FString         NameSpace;
-    FString         Name;
-    bool            bIsTranslucent;
-    int             TextureGroup;
-    class IVoxel*   VoxelClass;
+    FString                     NameSpace;
+    FString                     Name;
+    bool                        bIsTranslucent;
+    int                         TextureGroup;
+    class IVoxel*               VoxelClass;
+    TMap<ENormalLookup, int>    NormalLookup;
+
+public:
+    
+    int GetTextureIndex(const FVector& Normal) const;
 };

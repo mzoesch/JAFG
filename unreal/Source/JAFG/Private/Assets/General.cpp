@@ -8,6 +8,8 @@
 #include "Core/GI_Master.h"
 
 #define UIL_LOG(Verbosity, Format, ...) UE_LOG(LogTemp, Verbosity, Format, ##__VA_ARGS__)
+#define VOXEL_TEXTURE_FILE(NameSpace, Name, Normal) FString::Printf(TEXT("%s/%s%s"), *NameSpace, *Name, *FGeneral::GetNormalSuffix(Normal))
+#define UVOXEL_TEXTURE_DIRECTORY(NameSpace, Name, Normal) FString::Printf(TEXT("%s%s"), *FGeneral::UnrealVoxelTextureDirectory, *VOXEL_TEXTURE_FILE(NameSpace, Name, Normal))
 
 void FGeneral::Init(const UGI_Master* GIPtr)
 {
@@ -42,6 +44,41 @@ UTexture2D* FGeneral::LoadTexture2DFromDisk(const FString& Path)
     return nullptr;
 }
 
+ENormalLookup FGeneral::GetNormalLookup(const FVector& Normal)
+{
+    if (Normal == FVector::UpVector)
+    {
+        return ENormalLookup::NL_Top;
+    }
+
+    if (Normal == FVector::DownVector)
+    {
+        return ENormalLookup::NL_Bottom;
+    }
+
+    if (Normal == FVector::ForwardVector || Normal == FVector::BackwardVector)
+    {
+        return ENormalLookup::NL_Front;
+    }
+
+    if (Normal == FVector::RightVector || Normal == FVector::LeftVector)
+    {
+        return ENormalLookup::NL_Side;
+    }
+
+    return NL_Default;
+}
+
+FString FGeneral::GetNormalSuffix(const ENormalLookup Normal)
+{
+    if (Normal == ENormalLookup::NL_Top)
+    {
+        return FGeneral::SuffixTop;
+    }
+
+    return "";
+}
+
 UTexture2D* FGeneral::LoadTexture2D(const FAccumulated Accumulated)
 {
     if (Accumulated.GetVoxel() != EWorldVoxel::VoxelNull)
@@ -64,3 +101,17 @@ UTexture2D* FGeneral::LoadTexture2D(const FAccumulated Accumulated)
     
     return nullptr;
 }
+
+bool FGeneral::ExistsAssetTexture2D(const FString& String, const FString& Name, const ENormalLookup Normal)
+{
+    return FPaths::FileExists(FString::Printf(TEXT("%s%s.uasset"), *FGeneral::VoxelTextureDirectory, *VOXEL_TEXTURE_FILE(String, Name, Normal)));
+}
+
+UTexture2D* FGeneral::LoadAssetTexture2D(const FString& NameSpace, const FString& Name, const ENormalLookup Normal)
+{
+    return CastChecked<UTexture2D>(StaticLoadObject(UTexture2D::StaticClass(), nullptr, *UVOXEL_TEXTURE_DIRECTORY(NameSpace, Name, Normal)));
+}
+
+#undef UIL_LOG
+#undef VOXEL_TEXTURE_FILE
+#undef UVOXEL_TEXTURE_DIRECTORY

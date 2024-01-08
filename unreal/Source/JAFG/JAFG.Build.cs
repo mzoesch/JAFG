@@ -22,7 +22,8 @@ public class JAFG : ModuleRules
 		{
 			"ProceduralMeshComponent",
             "RenderCore",
-            "ImageWrapper"
+            "ImageWrapper",
+            "EditorScriptingUtilities",
 		});
 
 		// Uncomment if you are using Slate UI

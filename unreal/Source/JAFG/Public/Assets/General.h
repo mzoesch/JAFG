@@ -4,6 +4,8 @@
 
 #include "Lib/FAccumulated.h"
 
+#include "World/Voxels/NormalLookup.h"
+
 #include "General.generated.h"
 
 class UGI_Master;
@@ -14,18 +16,16 @@ struct JAFG_API FGeneral
     GENERATED_BODY()
 
 public:
+
+    static const inline FString SuffixTop                           = "Top";
     
-    static const inline FString DataDirectoryRelative               = FPaths::ProjectContentDir() + "Data/";
-    static const inline FString DataDirectory                       = FPaths::ConvertRelativePathToFull(FGeneral::DataDirectoryRelative);
-
-    static const inline FString VoxelDataDirectoryRelative          = FGeneral::DataDirectoryRelative + "Voxel/";
-    static const inline FString VoxelDataDirectory                  = FPaths::ConvertRelativePathToFull(FGeneral::VoxelDataDirectoryRelative);
-
+public:
+    
     static const inline FString GeneratedAssetsDirectoryRelative    = FPaths::ProjectSavedDir() + "gen/";
     static const inline FString GeneratedAssetsDirectory            = FPaths::ConvertRelativePathToFull(FGeneral::GeneratedAssetsDirectoryRelative);
 
-    static const inline FString TextureDirectoryRelative            = FPaths::ProjectContentDir() + "Texture/";
-    static const inline FString TextureDirectory                    = FPaths::ConvertRelativePathToFull(FGeneral::TextureDirectoryRelative);
+    static const inline FString VoxelTextureDirectory               = FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir() + "Assets/Textures/Voxels/");
+    static const inline FString UnrealVoxelTextureDirectory         = "/Game/Assets/Textures/Voxels/";
     
 private:
 
@@ -38,10 +38,15 @@ public:
 
 private:
     
-    static UTexture2D* LoadTexture2DFromDisk(const FString& Path);
+    static UTexture2D*      LoadTexture2DFromDisk(const FString& Path);
     
 public:
+    
+    static ENormalLookup    GetNormalLookup(const FVector& Normal);
+    static FString          GetNormalSuffix(const ENormalLookup Normal);
 
-    static UTexture2D* LoadTexture2D(const FAccumulated Accumulated);
+    static UTexture2D*      LoadTexture2D(const FAccumulated Accumulated);
+    static bool             ExistsAssetTexture2D(const FString& String, const FString& Name, const ENormalLookup Normal);
+    static UTexture2D*      LoadAssetTexture2D(const FString& NameSpace, const FString& Name, const ENormalLookup Normal);
 };
 
