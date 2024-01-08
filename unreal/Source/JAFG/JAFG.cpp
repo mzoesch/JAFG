@@ -1,4 +1,5 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
+// © 2023 mzoesch. All rights reserved.
 
 #include "JAFG.h"
 #include "Modules/ModuleManager.h"
