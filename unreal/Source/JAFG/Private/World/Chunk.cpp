@@ -53,12 +53,9 @@ void AChunk::PreSetup()
 
 void AChunk::ApplyMesh() const
 {
-    // this->ProcMesh->SetMaterial(0, GI->DevMaterial);
-    // this->ProcMesh->SetMaterial(1, CastChecked<UGI_Master>(this->GetGameInstance())->TranslucentMaterial);
-
     for (int i = 0; i < this->MeshDataArray.Num(); i++)
     {
-        this->ProcMesh->SetMaterial(i, GI->DynamicDevMaterial);
+        this->ProcMesh->SetMaterial(i, GI->MDynamicOpaque);
         this->ProcMesh->CreateMeshSection(
             i,
             this->MeshDataArray[i].Vertices,

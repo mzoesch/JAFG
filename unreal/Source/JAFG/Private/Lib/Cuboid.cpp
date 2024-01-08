@@ -197,20 +197,8 @@ void ACuboid::CreateQuadrilateral(const FVector& TopRight, const FVector& Bottom
 
 void ACuboid::ApplyMesh() const
 {
-    
-    this->Mesh->SetMaterial(0, GI->IsVoxelTranslucent(this->Voxel) ? CastChecked<UGI_Master>(this->GetGameInstance())->TranslucentMaterial : CastChecked<UGI_Master>(this->GetGameInstance())->DevMaterial);
-
-    this->Mesh->CreateMeshSection(
-        0,
-        this->Vertices,
-        this->Triangles,
-        this->Normals,
-        this->UVs,
-        this->Colors,
-        this->Tangents,
-        false
-    );
-
+    this->Mesh->SetMaterial(0, GI->MDynamicOpaque);
+    this->Mesh->CreateMeshSection(0, this->Vertices, this->Triangles, this->Normals, this->UVs, this->Colors, this->Tangents, false);
     return;
 }
 
