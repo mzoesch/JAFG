@@ -141,3 +141,5 @@ void AChunk::ModifyVoxel(const FIntVector& LocalVoxelPosition, const int Voxel)
 
     return;
 }
+
+#undef GI

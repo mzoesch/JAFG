@@ -87,7 +87,6 @@ void AGreedyChunk::CreateQuad(const FMask Mask, const FIntVector AxisMask, const
         for (int i = 0; i < Delta; ++i)
         {
             this->VertexCounts.Add(0);
-            UE_LOG(LogTemp, Warning, TEXT("Added Texture Group %d to VertexCounts"), this->VertexCounts.Num() - 1);
             continue;
         }
     }
@@ -98,7 +97,6 @@ void AGreedyChunk::CreateQuad(const FMask Mask, const FIntVector AxisMask, const
         for (int i = 0; i < Delta; ++i)
         {
             this->MeshDataArray.Add(FChunkMeshData());
-            UE_LOG(LogTemp, Warning, TEXT("Added Mesh Data Group %d to MeshDataArray"), this->MeshDataArray.Num() - 1);
             continue;
         }
     }
