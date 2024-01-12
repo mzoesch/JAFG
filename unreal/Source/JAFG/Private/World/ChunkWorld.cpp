@@ -2,23 +2,62 @@
 
 #include "World/ChunkWorld.h"
 
+#include "SWarningOrErrorBox.h"
 #include "Kismet/GameplayStatics.h"
 
-#include "World/Chunk.h"
+#include "Lib/FastNoiseLite.h"
 #include "World/JCoordinate.h"
 #include "World/Chunks/GreedyChunk.h"
+
+float FNoiseSplinePoint::GetDensity(const TArray<FNoiseSplinePoint>& Points, const float PercentHeight, const float X, const float Y)
+{
+    // Get the two points that are left and right of the current height.
+    FNoiseSplinePoint LeftPoint;;
+    FNoiseSplinePoint RightPoint;
+    for (int i = 1; i < Points.Num(); ++i)
+    {
+        if (Points[i].PercentHeight >= PercentHeight)
+        {
+            LeftPoint = Points[i - 1];
+            RightPoint = Points[i];
+            break;
+        }
+        
+        continue;
+    }
+
+    const float Distance = (PercentHeight - LeftPoint.PercentHeight) / (RightPoint.PercentHeight - LeftPoint.PercentHeight);
+    
+    const float Density = ( (1 - Distance) * LeftPoint.TargetDensity ) + ( Distance * RightPoint.TargetDensity );
+
+
+    if (X == 0 && Y == 0) UE_LOG(LogTemp, Warning, TEXT("Height: %f Density: %f Distance %f [{%f %f}{%f %f}]"), PercentHeight, Density, Distance, LeftPoint.PercentHeight, LeftPoint.TargetDensity, RightPoint.PercentHeight, RightPoint.TargetDensity)
+    
+    return Density;
+}
 
 AChunkWorld::AChunkWorld()
 {
     // Set this actor to call Tick() every frame.
     // You can turn this off to improve performance if you don't need it.
-    PrimaryActorTick.bCanEverTick = false;
+    this->PrimaryActorTick.bCanEverTick = false;
+    this->LoadedChunks = TMap<FIntVector, AChunk*>();
+
+    this->NContinentalness = new FastNoiseLite();
+    
     return;
 }
 
 void AChunkWorld::BeginPlay()
 {
     Super::BeginPlay();
+
+    this->LoadedChunks.Empty();
+
+    this->NContinentalness->SetSeed(this->Seed);
+    this->NContinentalness->SetFrequency(this->ContinentalnessFrequency);
+    this->NContinentalness->SetFractalType(this->ContinentalnessFractalType);
+    this->NContinentalness->SetNoiseType(this->ContinentalnessNoiseType);
 
     this->GenerateWorld();
 
@@ -34,10 +73,8 @@ void AChunkWorld::Tick(const float DeltaTime)
 
 void AChunkWorld::GenerateWorld()
 {
-    // 1. Generate a biome map.
-    // 2. Generate the chunks according to the biome map.
-
     /* This is ofc very basic and has to be rewritten to generate chunks around a character and destroy them if not. */
+    
     for (int X = -this->DetailedDrawDistance; X <= this->DetailedDrawDistance; X++)
     {
         for (int Y = -this->DetailedDrawDistance; Y <= this->DetailedDrawDistance; Y++)
@@ -64,6 +101,8 @@ void AChunkWorld::GenerateWorld()
 
                 UGameplayStatics::FinishSpawningActor(Chunk, Transform);
 
+                this->LoadedChunks.Add(FIntVector(X, Y, Z), Chunk);
+                
                 continue;
             }
 
@@ -102,4 +141,23 @@ FIntVector AChunkWorld::WorldToLocalVoxelPosition(const FVector& WorldPosition)
     if (WorldToChunkPosition.Z < 0) WorldToBlockPosition.Z--;
     
     return WorldToBlockPosition;
+}
+
+float AChunkWorld::GetDensity(const float X, const float Y, const float Z) const
+{
+    const float PercentHeight = (Z - this->GetLowestPoint()) / (this->GetHighestPoint() - this->GetLowestPoint()) * 100.0f;
+    
+    // const float Density = 2.0 * (PercentHeight / 100.0) - 1.0;
+
+    const float Density = FNoiseSplinePoint::GetDensity(this->NoiseSplinePoints, PercentHeight, X, Y);
+    
+    return Density;
+}
+
+float AChunkWorld::GenDensity(const float ContinentalnessNoise, const float WorldZ)
+{
+
+
+
+    return 0.0f;
 }

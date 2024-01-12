@@ -23,20 +23,10 @@ private:
 
 protected:
 
-    virtual void Setup() override;
-    virtual void InitiateVoxels() override;
     virtual void GenerateMesh() override;
-    virtual void ModifyVoxelData(const FIntVector& LocalVoxelPosition, const int Voxel) override;
 
 private:
-
-    /* TODO Move to super class? */
-    FVector ActorCoordinate;
-
-private:
-
-    void GenerateDevVoxel(const FIntVector& LocalVoxelPosition, const int VoxelPillarHeight);
-
+    
     void CreateQuad(const FMask Mask, const FIntVector AxisMask, const int Width, const int Height, const FIntVector V1, const FIntVector V2, const FIntVector V3, const FIntVector V4);
     static bool CompareMask(const FMask M1, const FMask M2);
     

@@ -1,3 +1,6 @@
+// © 2023 mzoesch. All rights reserved.
+// Slightly modified version of FastNoiseLite.h to fit the needs of the Unreal Engine V Norms.
+
 // MIT License
 //
 // Copyright(c) 2023 Jordan Peck (jordan.me2@gmail.com)
@@ -47,39 +50,49 @@
 // VERSION: 1.1.0
 // https://github.com/Auburn/FastNoiseLite
 
-#ifndef FASTNOISELITE_H
-#define FASTNOISELITE_H
+// Pragma once must be used instead of #ifndef
+// 'UENUM' must not be inside preprocessor blocks, except for WITH_EDITORONLY_DATA
+#pragma once
+// #ifndef FASTNOISELITE_H
+// #define FASTNOISELITE_H
+
+#include "CoreMinimal.h"
 
 #include <cmath>
 
+#include "FastNoiseLite.generated.h"
+
+UENUM()
+enum ENoiseType
+{
+    NoiseType_OpenSimplex2,
+    NoiseType_OpenSimplex2S,
+    NoiseType_Cellular,
+    NoiseType_Perlin,
+    NoiseType_ValueCubic,
+    NoiseType_Value
+};
+
+UENUM()
+enum EFractalType
+{
+    FractalType_None,
+    FractalType_FBm,
+    FractalType_Ridged,
+    FractalType_PingPong,
+    FractalType_DomainWarpProgressive,
+    FractalType_DomainWarpIndependent
+};
+
+// ReSharper disable once CppUE4CodingStandardNamingViolationWarning
 class FastNoiseLite
 {
 public:
-    enum NoiseType
-    {
-        NoiseType_OpenSimplex2,
-        NoiseType_OpenSimplex2S,
-        NoiseType_Cellular,
-        NoiseType_Perlin,
-        NoiseType_ValueCubic,
-        NoiseType_Value
-    };
-
     enum RotationType3D
     {
         RotationType3D_None,
         RotationType3D_ImproveXYPlanes,
         RotationType3D_ImproveXZPlanes
-    };
-
-    enum FractalType
-    {
-        FractalType_None,
-        FractalType_FBm,
-        FractalType_Ridged,
-        FractalType_PingPong,
-        FractalType_DomainWarpProgressive,
-        FractalType_DomainWarpIndependent
     };
 
     enum CellularDistanceFunction
@@ -159,7 +172,7 @@ public:
     /// <remarks>
     /// Default: OpenSimplex2
     /// </remarks>
-    void SetNoiseType(NoiseType noiseType)
+    void SetNoiseType(ENoiseType noiseType)
     {
         mNoiseType = noiseType;
         UpdateTransformType3D();
@@ -186,7 +199,7 @@ public:
     /// Default: None
     /// Note: FractalType_DomainWarp... only affects DomainWarp(...)
     /// </remarks>
-    void SetFractalType(FractalType fractalType) { mFractalType = fractalType; }
+    void SetFractalType(EFractalType fractalType) { mFractalType = fractalType; }
 
     /// <summary>
     /// Sets octave count for all fractal noise types 
@@ -407,11 +420,11 @@ private:
 
     int mSeed;
     float mFrequency;
-    NoiseType mNoiseType;
+    ENoiseType mNoiseType;
     RotationType3D mRotationType3D;
     TransformType3D mTransformType3D;
 
-    FractalType mFractalType;
+    EFractalType mFractalType;
     int mOctaves;
     float mLacunarity;
     float mGain;
@@ -2583,4 +2596,6 @@ const T FastNoiseLite::Lookup<T>::RandVecs3D[] =
     -0.7870349638f, 0.03447489231f, 0.6159443543f, 0, -0.2015596421f, 0.6859872284f, 0.6991389226f, 0, -0.08581082512f, -0.10920836f, -0.9903080513f, 0, 0.5532693395f, 0.7325250401f, -0.396610771f, 0, -0.1842489331f, -0.9777375055f, -0.1004076743f, 0, 0.0775473789f, -0.9111505856f, 0.4047110257f, 0, 0.1399838409f, 0.7601631212f, -0.6344734459f, 0, 0.4484419361f, -0.845289248f, 0.2904925424f, 0
 };
 
-#endif
+// Pragma once must be used instead of #ifndef
+// 'UENUM' must not be inside preprocessor blocks, except for WITH_EDITORONLY_DATA
+// #endif

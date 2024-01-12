@@ -2,8 +2,6 @@
 
 #include "World/Chunks/GreedyChunk.h"
 
-#include "Lib/FastNoiseLite.h"
-#include "World/JCoordinate.h"
 #include "World/WorldVoxel.h"
 #include "Core/GI_Master.h"
 
@@ -13,65 +11,6 @@ AGreedyChunk::AGreedyChunk()
 {
     this->PrimaryActorTick.bCanEverTick = false;
     this->VertexCounts = TArray<int>();
-    return;
-}
-
-void AGreedyChunk::Setup()
-{
-    this->ActorCoordinate = this->GetActorLocation() * AJCoordinate::U_TO_J_SCALE;
-    return;
-}
-
-void AGreedyChunk::InitiateVoxels()
-{
-    for (int X = 0; X < AChunk::CHUNK_SIZE; X++)
-    {
-        for (int Y = 0; Y < AChunk::CHUNK_SIZE; Y++)
-        {
-            const float WorldX = X + ActorCoordinate.X;
-            const float WorldY = Y + ActorCoordinate.Y;
-            const int VoxelPillarHeight = FMath::RoundToInt((Noise->GetNoise(WorldX, WorldY) + 1) * AChunk::CHUNK_SIZE / 2);
-
-            for (int Z = 0; Z < AChunk::CHUNK_SIZE; Z++)
-            {
-                this->GenerateDevVoxel(FIntVector(X, Y, Z), VoxelPillarHeight);
-                continue;
-            }
-
-
-            continue;
-        }
-
-        continue;
-    }
-
-    return;
-}
-
-void AGreedyChunk::GenerateDevVoxel(const FIntVector& LocalVoxelPosition, const int VoxelPillarHeight)
-{
-    const int WorldZ = this->ActorCoordinate.Z + LocalVoxelPosition.Z;
-
-    if (WorldZ < VoxelPillarHeight - 3)
-    {
-        this->Voxels[AGreedyChunk::GetVoxelIndex(LocalVoxelPosition)] = 2; /* Stone */
-        return;
-    }
-
-    if (WorldZ < VoxelPillarHeight - 1)
-    {
-        this->Voxels[AGreedyChunk::GetVoxelIndex(LocalVoxelPosition)] = 3; /* Dirt */
-        return;
-    }
-
-    if (WorldZ == VoxelPillarHeight - 1)
-    {
-        this->Voxels[AGreedyChunk::GetVoxelIndex(LocalVoxelPosition)] = 4; /* Grass */
-        return;
-    }
-
-    this->Voxels[AGreedyChunk::GetVoxelIndex(LocalVoxelPosition)] = EWorldVoxel::AirVoxel;
-    
     return;
 }
 
@@ -289,12 +228,6 @@ void AGreedyChunk::GenerateMesh()
         }
     }
     
-    return;
-}
-
-void AGreedyChunk::ModifyVoxelData(const FIntVector& LocalVoxelPosition, const int Voxel)
-{
-    this->Voxels[AGreedyChunk::GetVoxelIndex(LocalVoxelPosition)] = Voxel;
     return;
 }
 
