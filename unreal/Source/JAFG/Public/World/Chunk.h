@@ -57,9 +57,14 @@ private:
     /* Chunk World Generation */
 
     void GenerateSuperFlatWorld();
-    void GenerateLegacyWorld();
-    void GeneratePure3DDefaultWorld();
     void GenerateDefaultWorld();
+
+    /* Default World Generation */
+    void DWShapeTerrain();
+    /* Water Filling */
+    void DWSurfaceReplacement();
+    /* Caves */
+    /* Features and structrues */
     
 protected:
 

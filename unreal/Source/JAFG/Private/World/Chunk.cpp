@@ -62,12 +62,6 @@ void AChunk::GenerateVoxels()
     case EWorldGenerationType::WGT_SuperFlat:
         this->GenerateSuperFlatWorld();
         break;
-    case EWorldGenerationType::WGT_Legacy:
-        this->GenerateLegacyWorld();
-        break;
-    case EWorldGenerationType::WGT_Pure3DDefault:
-        this->GeneratePure3DDefaultWorld();
-        break;
     case EWorldGenerationType::WGT_Default:
         this->GenerateDefaultWorld();
         break;
@@ -177,87 +171,16 @@ void AChunk::GenerateSuperFlatWorld()
     return;
 }
 
-void AChunk::GenerateLegacyWorld()
-{
-    for (int X = 0; X < AChunk::CHUNK_SIZE; X++)
-    {
-        for (int Y = 0; Y < AChunk::CHUNK_SIZE; Y++)
-        {
-            const float WorldX = X + ActorCoordinate.X;
-            const float WorldY = Y + ActorCoordinate.Y;
-            const int VoxelPillarHeight = FMath::RoundToInt((this->ChunkWorld->NContinentalness->GetNoise(WorldX, WorldY) + 1) * AChunk::CHUNK_SIZE / 2);
-    
-            for (int Z = 0; Z < AChunk::CHUNK_SIZE; Z++)
-            {
-                const FIntVector LocalVoxelPosition = FIntVector(X, Y, Z);
-                
-                const int WorldZ = this->ActorCoordinate.Z + LocalVoxelPosition.Z;
-
-                if (WorldZ < VoxelPillarHeight - 3)
-                {
-                    this->Voxels[AChunk::GetVoxelIndex(LocalVoxelPosition)] = 2; /* Stone */
-                    continue;
-                }
-
-                if (WorldZ < VoxelPillarHeight - 1)
-                {
-                    this->Voxels[AChunk::GetVoxelIndex(LocalVoxelPosition)] = 3; /* Dirt */
-                    continue;
-                }
-
-                if (WorldZ == VoxelPillarHeight - 1)
-                {
-                    this->Voxels[AChunk::GetVoxelIndex(LocalVoxelPosition)] = 4; /* Grass */
-                    continue;
-                }
-
-                this->Voxels[AChunk::GetVoxelIndex(LocalVoxelPosition)] = EWorldVoxel::AirVoxel;
-                
-                continue;
-            }
-    
-            continue;
-        }
-    
-        continue;
-    }
-
-    return;
-}
-
-void AChunk::GeneratePure3DDefaultWorld()
-{
-    for (int X = 0; X < AChunk::CHUNK_SIZE; ++X)
-    {
-        const float WorldX = X + ActorCoordinate.X;
-
-        for (int Y = 0; Y < AChunk::CHUNK_SIZE; ++Y)
-        {
-            const float WorldY = Y + ActorCoordinate.Y;
-    
-            for (int Z = 0; Z < AChunk::CHUNK_SIZE; ++Z)
-            {
-                const float WorldZ = this->ActorCoordinate.Z + Z;
-                
-                const float NoiseValue = CW->NContinentalness->GetNoise(WorldX, WorldY, WorldZ);
-                const float Density = CW->GetDensity(WorldX, WorldY, WorldZ);
-                
-                this->Voxels[AChunk::GetVoxelIndex(FIntVector(X, Y, Z))] = NoiseValue > Density ? 2 : EWorldVoxel::AirVoxel;
-                
-                continue;
-            }
-    
-            continue;
-        }
-    
-        continue;
-    }
-
-    return;
-}
-
 void AChunk::GenerateDefaultWorld()
 {
+    this->DWShapeTerrain();
+    this->DWSurfaceReplacement();
+
+    return;
+}
+
+void AChunk::DWShapeTerrain()
+{
     for (int X = 0; X < AChunk::CHUNK_SIZE; ++X)
     {
         const float WorldX = X + ActorCoordinate.X;
@@ -266,15 +189,36 @@ void AChunk::GenerateDefaultWorld()
         {
             const float WorldY = Y + ActorCoordinate.Y;
 
-            const float NoisePillarHeight = CW->NContinentalness->GetNoise(WorldX, WorldY);
-            const float FillUpTo = (NoisePillarHeight + 1.0f) / 2.0f * CW->GetWorldHeight();
+            const float NoiseValue = CW->NContinentalness->GetNoise(WorldX, WorldY);
 
-            
-            for (int Z = 0; Z < AChunk::CHUNK_SIZE; ++Z)
+            FNoiseSplinePointV2 LeftPoint;;
+            FNoiseSplinePointV2 RightPoint;
+            for (int i = 1; i < CW->ContinentalnessSplinePoints.Num(); ++i)
             {
-                const float Density = CW->GetDensity(WorldX, WorldY, this->ActorCoordinate.Z + Z);
-                
-                this->Voxels[AChunk::GetVoxelIndex(FIntVector(X, Y, Z))] = Density < FillUpTo ? 2 : EWorldVoxel::AirVoxel;
+                if (CW->ContinentalnessSplinePoints[i].NoiseValue >= NoiseValue)
+                {
+                    LeftPoint = CW->ContinentalnessSplinePoints[i - 1];
+                    RightPoint = CW->ContinentalnessSplinePoints[i];
+                    break;
+                }
+        
+                continue;
+            }
+            const float Distance = (NoiseValue - LeftPoint.NoiseValue) / (RightPoint.NoiseValue - LeftPoint.NoiseValue);
+
+            const float TargetPercentageHeight = ( ( (1 - Distance) * LeftPoint.TargetPercentageTerrainHeight ) + ( Distance * RightPoint.TargetPercentageTerrainHeight ) ) / 100.0f;
+
+            const float HighestDensity = TargetPercentageHeight * 2.f - 1.f;
+            
+            
+            for (int Z = AChunk::CHUNK_SIZE - 1; Z >= 0; --Z)
+            {
+                const float WorldZ = this->ActorCoordinate.Z + Z;
+
+                const float PercentageHeight = (WorldZ / CW->GetWorldHeight()) * CW->FakeHeightMultiplier;
+                const float Density = (HighestDensity + 1) * PercentageHeight - 1;
+
+                this->Voxels[AChunk::GetVoxelIndex(FIntVector(X, Y, Z))] = CW->NWorld->GetNoise(WorldX, WorldY, WorldZ) < Density ? EWorldVoxel::AirVoxel : 2;
                     
                 continue;
             }
@@ -282,6 +226,49 @@ void AChunk::GenerateDefaultWorld()
             continue;
         }
         
+        continue;
+    }
+
+    return;
+}
+
+void AChunk::DWSurfaceReplacement()
+{
+    for (int X = 0; X < AChunk::CHUNK_SIZE; ++X)
+    {
+        for (int Y = 0; Y < AChunk::CHUNK_SIZE; ++Y)
+        {
+            int Modified = 0;
+            
+            for (int Z = AChunk::CHUNK_SIZE - 1; Z >= 0; --Z)
+            {
+                if (this->GetVoxel(FIntVector(X, Y, Z)) == EWorldVoxel::AirVoxel)
+                {
+                    if (Modified > 0)
+                    {
+                        Modified++;
+                        if (Modified > 3)
+                        {
+                            break;
+                        }
+                    }
+                    
+                    continue;
+                }
+
+                this->ModifyVoxelData(FIntVector(X, Y, Z), Modified == 0 ? 4 : 3);
+                Modified++;
+                if (Modified > 3)
+                {
+                    break;
+                }
+                
+                continue;
+            }
+    
+            continue;
+        }
+
         continue;
     }
 

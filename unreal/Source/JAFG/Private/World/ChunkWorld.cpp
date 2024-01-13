@@ -43,6 +43,7 @@ AChunkWorld::AChunkWorld()
     this->PrimaryActorTick.bCanEverTick = false;
     this->LoadedChunks = TMap<FIntVector, AChunk*>();
 
+    this->NWorld = new FastNoiseLite();
     this->NContinentalness = new FastNoiseLite();
     
     return;
@@ -54,6 +55,11 @@ void AChunkWorld::BeginPlay()
 
     this->LoadedChunks.Empty();
 
+    this->NWorld->SetSeed(this->Seed);
+    this->NWorld->SetFrequency(this->WorldFrequency);
+    this->NWorld->SetFractalType(this->WorldFractalType);
+    this->NWorld->SetNoiseType(this->WorldNoiseType);
+    
     this->NContinentalness->SetSeed(this->Seed);
     this->NContinentalness->SetFrequency(this->ContinentalnessFrequency);
     this->NContinentalness->SetFractalType(this->ContinentalnessFractalType);
@@ -141,23 +147,4 @@ FIntVector AChunkWorld::WorldToLocalVoxelPosition(const FVector& WorldPosition)
     if (WorldToChunkPosition.Z < 0) WorldToBlockPosition.Z--;
     
     return WorldToBlockPosition;
-}
-
-float AChunkWorld::GetDensity(const float X, const float Y, const float Z) const
-{
-    const float PercentHeight = (Z - this->GetLowestPoint()) / (this->GetHighestPoint() - this->GetLowestPoint()) * 100.0f;
-    
-    // const float Density = 2.0 * (PercentHeight / 100.0) - 1.0;
-
-    const float Density = FNoiseSplinePoint::GetDensity(this->NoiseSplinePoints, PercentHeight, X, Y);
-    
-    return Density;
-}
-
-float AChunkWorld::GenDensity(const float ContinentalnessNoise, const float WorldZ)
-{
-
-
-
-    return 0.0f;
 }
