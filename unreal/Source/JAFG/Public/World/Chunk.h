@@ -64,14 +64,17 @@ private:
     /* Water Filling */
     void DWSurfaceReplacement();
     /* Caves */
-    /* Features and structrues */
+    /* Features and structures */
     
 protected:
 
     UPROPERTY()
     AChunkWorld* ChunkWorld;
 
-    FVector ActorCoordinate;
+    FVector     ChunkPosition;
+    FIntVector  ChunkKey;
+
+    FORCEINLINE FIntVector GetTopChunkKey() const;
     
 protected:
 

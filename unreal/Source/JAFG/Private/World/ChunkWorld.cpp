@@ -3,6 +3,7 @@
 #include "World/ChunkWorld.h"
 
 #include "SWarningOrErrorBox.h"
+#include "Assets/General.h"
 #include "Kismet/GameplayStatics.h"
 
 #include "Lib/FastNoiseLite.h"
@@ -49,6 +50,16 @@ AChunkWorld::AChunkWorld()
     return;
 }
 
+AChunk* AChunkWorld::GetChunkByKey(const FIntVector& Key) const
+{
+    if (this->LoadedChunks.Contains(Key))
+    {
+        return this->LoadedChunks[Key];
+    }
+    
+    return nullptr;
+}
+
 void AChunkWorld::BeginPlay()
 {
     Super::BeginPlay();
@@ -81,11 +92,11 @@ void AChunkWorld::GenerateWorld()
 {
     /* This is ofc very basic and has to be rewritten to generate chunks around a character and destroy them if not. */
     
-    for (int X = -this->DetailedDrawDistance; X <= this->DetailedDrawDistance; X++)
+    for (int X = -this->DetailedDrawDistance; X <= this->DetailedDrawDistance; ++X)
     {
-        for (int Y = -this->DetailedDrawDistance; Y <= this->DetailedDrawDistance; Y++)
+        for (int Y = -this->DetailedDrawDistance; Y <= this->DetailedDrawDistance; ++Y)
         {
-            for (int Z = -this->ChunksBelowZero; Z <= this->DrawHeight - this->ChunksBelowZero; Z++)
+            for (int Z = this->ChunksAboveZero; Z >= 0; --Z)
             {
                 const FTransform Transform = FTransform(
                     FRotator::ZeroRotator,
@@ -97,16 +108,8 @@ void AChunkWorld::GenerateWorld()
                     FVector::OneVector
                 );
 
-                AChunk* Chunk = this->GetWorld()->SpawnActorDeferred<AChunk>(
-                    AGreedyChunk::StaticClass(),
-                    Transform,
-                    this
-                );
-
-                /* TODO Here set the biomes etc. maybe? */
-
-                UGameplayStatics::FinishSpawningActor(Chunk, Transform);
-
+                AChunk* Chunk = this->GetWorld()->SpawnActor<AChunk>(AGreedyChunk::StaticClass(), Transform);
+                
                 this->LoadedChunks.Add(FIntVector(X, Y, Z), Chunk);
                 
                 continue;
@@ -118,7 +121,33 @@ void AChunkWorld::GenerateWorld()
         continue;
     }
 
+    UE_LOG(LogTemp, Warning, TEXT("Loaded Chunks: %d"), this->LoadedChunks.Num())
+    // TArray<FIntVector> Keys = TArray<FIntVector>();
+    // this->LoadedChunks.GetKeys(Keys);
+    // for (const auto& Key : Keys)
+    // {
+    //     UE_LOG(LogTemp, Warning, TEXT("Key: %s"), *Key.ToString())
+    // }
+    
     return;
+}
+
+FIntVector AChunkWorld::WorldToChunkPosition(const FVector& WorldPosition)
+{
+    FIntVector          ChunkPosition;
+    const FIntVector    IntPosition     = FIntVector(WorldPosition);
+    constexpr int       Factor          = AChunk::CHUNK_SIZE * AJCoordinate::J_TO_U_SCALE;
+    
+    if (IntPosition.X < 0) ChunkPosition.X = (int) (WorldPosition.X / Factor) - 1;
+    else ChunkPosition.X = (int) (WorldPosition.X / Factor);
+
+    if (IntPosition.Y < 0) ChunkPosition.Y = (int) (WorldPosition.Y / Factor) - 1;
+    else ChunkPosition.Y = (int) (WorldPosition.Y / Factor);
+
+    if (IntPosition.Z < 0) ChunkPosition.Z = (int) (WorldPosition.Z / Factor) - 1;
+    else ChunkPosition.Z = (int) (WorldPosition.Z / Factor);
+
+    return ChunkPosition;
 }
 
 FIntVector AChunkWorld::WorldToLocalVoxelPosition(const FVector& WorldPosition)

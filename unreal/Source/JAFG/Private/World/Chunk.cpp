@@ -51,7 +51,8 @@ void AChunk::BeginPlay()
 void AChunk::Setup()
 {
     this->Voxels.SetNum(AChunk::CHUNK_SIZE * AChunk::CHUNK_SIZE * AChunk::CHUNK_SIZE, false);
-    this->ActorCoordinate = this->GetActorLocation() * AJCoordinate::U_TO_J_SCALE;
+    this->ChunkPosition = this->GetActorLocation() * AJCoordinate::U_TO_J_SCALE;
+    this->ChunkKey = FIntVector((this->GetActorLocation() * AJCoordinate::U_TO_J_SCALE) / (AChunk::CHUNK_SIZE - 1));
     return;
 }
 
@@ -137,7 +138,7 @@ void AChunk::GenerateSuperFlatWorld()
             {
                 /* TODO We might want to move this to a JSON. And parse some params to this method to make it modular. */
 
-                const float WorldZ = this->ActorCoordinate.Z + Z;
+                const float WorldZ = this->ChunkPosition.Z + Z;
 
                 if (WorldZ < 10)
                 {
@@ -183,11 +184,11 @@ void AChunk::DWShapeTerrain()
 {
     for (int X = 0; X < AChunk::CHUNK_SIZE; ++X)
     {
-        const float WorldX = X + ActorCoordinate.X;
+        const float WorldX = X + ChunkPosition.X;
 
         for (int Y = 0; Y < AChunk::CHUNK_SIZE; ++Y)
         {
-            const float WorldY = Y + ActorCoordinate.Y;
+            const float WorldY = Y + ChunkPosition.Y;
 
             const float NoiseValue = CW->NContinentalness->GetNoise(WorldX, WorldY);
 
@@ -213,9 +214,9 @@ void AChunk::DWShapeTerrain()
             
             for (int Z = AChunk::CHUNK_SIZE - 1; Z >= 0; --Z)
             {
-                const float WorldZ = this->ActorCoordinate.Z + Z;
+                const float WorldZ = this->ChunkPosition.Z + Z;
 
-                const float PercentageHeight = (WorldZ / CW->GetWorldHeight()) * CW->FakeHeightMultiplier;
+                const float PercentageHeight = (WorldZ / CW->GetHighestPointV2()) * CW->FakeHeightMultiplier;
                 const float Density = (HighestDensity + 1) * PercentageHeight - 1;
 
                 this->Voxels[AChunk::GetVoxelIndex(FIntVector(X, Y, Z))] = CW->NWorld->GetNoise(WorldX, WorldY, WorldZ) < Density ? EWorldVoxel::AirVoxel : 2;
@@ -238,30 +239,46 @@ void AChunk::DWSurfaceReplacement()
     {
         for (int Y = 0; Y < AChunk::CHUNK_SIZE; ++Y)
         {
+            constexpr int SurfaceBlock{4};
+            constexpr int SubSurfaceBlock{3};
+            constexpr int DefaultBlock{2};
+            constexpr int MaxModified{3};
+
             int Modified = 0;
+
+            const int TopVoxel = this->GetVoxel(FIntVector(X, Y, AChunk::CHUNK_SIZE));
+
+            if (TopVoxel == DefaultBlock)
+            {
+                Modified = MaxModified;
+            }
+
+            else if (TopVoxel == SurfaceBlock)
+            {
+                Modified = 1;
+            }
+
+            /* This is kinda sketchy because now there may be parts with more subsurface blocks. */
+            else if (TopVoxel == SubSurfaceBlock)
+            {
+                Modified = 2;
+            }
             
             for (int Z = AChunk::CHUNK_SIZE - 1; Z >= 0; --Z)
             {
                 if (this->GetVoxel(FIntVector(X, Y, Z)) == EWorldVoxel::AirVoxel)
                 {
-                    if (Modified > 0)
-                    {
-                        Modified++;
-                        if (Modified > 3)
-                        {
-                            break;
-                        }
-                    }
-                    
+                    Modified = 0;
                     continue;
                 }
 
-                this->ModifyVoxelData(FIntVector(X, Y, Z), Modified == 0 ? 4 : 3);
-                Modified++;
-                if (Modified > 3)
+                if (Modified >= MaxModified)
                 {
-                    break;
+                    continue;
                 }
+                
+                this->ModifyVoxelData(FIntVector(X, Y, Z), Modified == 0 ? SurfaceBlock : SubSurfaceBlock);
+                Modified++;
                 
                 continue;
             }
@@ -275,11 +292,27 @@ void AChunk::DWSurfaceReplacement()
     return;
 }
 
+FIntVector AChunk::GetTopChunkKey() const
+{
+    return FIntVector(this->ChunkKey.X, this->ChunkKey.Y, this->ChunkKey.Z + 1);
+}
+
 int AChunk::GetVoxel(const FIntVector& LocalVoxelPosition) const
 {
     // TODO
     //      So we must check here if out of bounds for the neighboring
     //      chunk and get, if existing, the voxel data from there.
+
+    if (LocalVoxelPosition.Z >= AChunk::CHUNK_SIZE)
+    {
+        if (CW->GetChunkByKey(this->GetTopChunkKey()) == nullptr)
+        {
+            return EWorldVoxel::AirVoxel;
+        }
+
+        return CW->GetChunkByKey(this->GetTopChunkKey())->GetVoxel(FIntVector(LocalVoxelPosition.X, LocalVoxelPosition.Y, 0));
+    }
+    
     if (
            LocalVoxelPosition.X >= AChunk::CHUNK_SIZE
         || LocalVoxelPosition.Y >= AChunk::CHUNK_SIZE

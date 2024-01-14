@@ -77,10 +77,6 @@ public:
     int DetailedDrawDistance = 1;
 
     UPROPERTY(EditInstanceOnly, Category="Generation")
-    int DrawHeight = 7;
-
-    
-    UPROPERTY(EditInstanceOnly, Category="Generation")
     int ChunksAboveZero = 3;
     
     UPROPERTY(EditInstanceOnly, Category="Generation")
@@ -133,10 +129,12 @@ public:
     
 public:
 
-    int GetLowestPoint()    const   { return -(this->ChunksBelowZero * AChunk::CHUNK_SIZE);                                 }
-    int GetHighestPoint()   const   { return ((this->DrawHeight - this->ChunksBelowZero + 1) * AChunk::CHUNK_SIZE) - 1;     }
-    int GetWorldHeight()    const   { return abs(this->GetHighestPoint() - this->GetLowestPoint() + 1);                     }
+    int GetHighestPointV2() const   { return  this->ChunksAboveZero * AChunk::CHUNK_SIZE; }
+    int GetLowestPointV2()  const   { return -this->ChunksBelowZero * AChunk::CHUNK_SIZE; }
+    int GetWorldHeightV2() const    { return this->GetHighestPointV2() - this->GetLowestPointV2(); }
     
+    AChunk* GetChunkByKey(const FIntVector& Key) const;
+
 protected:
 
     virtual void BeginPlay() override;
@@ -151,6 +149,7 @@ private:
 
 public:
 
+    static FIntVector WorldToChunkPosition(const FVector& WorldPosition);
     static FIntVector WorldToLocalVoxelPosition(const FVector& WorldPosition);
 
 private:
