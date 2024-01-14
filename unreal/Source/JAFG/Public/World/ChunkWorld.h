@@ -126,14 +126,6 @@ public:
 
     FastNoiseLite* NWorld;
     FastNoiseLite* NContinentalness;
-    
-public:
-
-    int GetHighestPointV2() const   { return  this->ChunksAboveZero * AChunk::CHUNK_SIZE; }
-    int GetLowestPointV2()  const   { return -this->ChunksBelowZero * AChunk::CHUNK_SIZE; }
-    int GetWorldHeightV2() const    { return this->GetHighestPointV2() - this->GetLowestPointV2(); }
-    
-    AChunk* GetChunkByKey(const FIntVector& Key) const;
 
 protected:
 
@@ -145,8 +137,17 @@ public:
 
 private:
 
+    void GenerateWorldAsync();
     void GenerateWorld();
 
+public:
+
+    FORCEINLINE int GetHighestPointV2() const   { return  this->ChunksAboveZero * AChunk::CHUNK_SIZE; }
+    FORCEINLINE int GetLowestPointV2()  const   { return -this->ChunksBelowZero * AChunk::CHUNK_SIZE; }
+    FORCEINLINE int GetWorldHeightV2() const    { return this->GetHighestPointV2() - this->GetLowestPointV2(); }
+    
+    AChunk* GetChunkByKey(const FIntVector& Key) const;
+    
 public:
 
     static FIntVector WorldToChunkPosition(const FVector& WorldPosition);
@@ -156,5 +157,7 @@ private:
 
     UPROPERTY()
     TMap<FIntVector, AChunk*> LoadedChunks;
+
+    TQueue<FIntVector> ChunkGenerationQueue;
 
 };

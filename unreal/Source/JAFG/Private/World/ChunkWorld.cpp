@@ -39,13 +39,187 @@ float FNoiseSplinePoint::GetDensity(const TArray<FNoiseSplinePoint>& Points, con
 
 AChunkWorld::AChunkWorld()
 {
-    // Set this actor to call Tick() every frame.
-    // You can turn this off to improve performance if you don't need it.
-    this->PrimaryActorTick.bCanEverTick = false;
-    this->LoadedChunks = TMap<FIntVector, AChunk*>();
+    PrimaryActorTick.bCanEverTick     = true;
+    PrimaryActorTick.bStartWithTickEnabled = true;
+    PrimaryActorTick.bAllowTickOnDedicatedServer = true;
+    PrimaryActorTick.TickInterval = 0.5f;
+    
+    this->LoadedChunks                      = TMap<FIntVector, AChunk*>();
+    this->ChunkGenerationQueue.Empty();
+    
+    this->NWorld                            = new FastNoiseLite();
+    this->NContinentalness                  = new FastNoiseLite();
+    
+    return;
+}
 
-    this->NWorld = new FastNoiseLite();
-    this->NContinentalness = new FastNoiseLite();
+void AChunkWorld::BeginPlay()
+{
+    Super::BeginPlay();
+
+    this->LoadedChunks.Empty();
+    this->ChunkGenerationQueue.Empty();
+
+    this->NWorld->SetSeed(this->Seed);
+    this->NWorld->SetFrequency(this->WorldFrequency);
+    this->NWorld->SetFractalType(this->WorldFractalType);
+    this->NWorld->SetNoiseType(this->WorldNoiseType);
+    
+    this->NContinentalness->SetSeed(this->Seed);
+    this->NContinentalness->SetFrequency(this->ContinentalnessFrequency);
+    this->NContinentalness->SetFractalType(this->ContinentalnessFractalType);
+    this->NContinentalness->SetNoiseType(this->ContinentalnessNoiseType);
+
+    this->GenerateWorldAsync();
+
+    return;
+}
+
+void AChunkWorld::Tick(const float DeltaTime)
+{
+    Super::Tick(DeltaTime);
+
+    if (this->ChunkGenerationQueue.IsEmpty())
+    {
+        return;
+    }
+
+    for (int i = 0; i < 20; ++i)
+    {
+        FIntVector Key;
+        this->ChunkGenerationQueue.Dequeue(Key);
+
+        const FTransform Transform = FTransform(
+            FRotator::ZeroRotator,
+            FVector(
+                Key.X * AChunk::CHUNK_SIZE * AJCoordinate::J_TO_U_SCALE,
+                Key.Y * AChunk::CHUNK_SIZE * AJCoordinate::J_TO_U_SCALE,
+                Key.Z * AChunk::CHUNK_SIZE * AJCoordinate::J_TO_U_SCALE
+            ),
+            FVector::OneVector
+        );
+
+        AChunk* Chunk = this->GetWorld()->SpawnActor<AChunk>(AGreedyChunk::StaticClass(), Transform);
+
+        this->LoadedChunks.Add(Key, Chunk);
+
+        continue;
+    }
+    
+    return;
+}
+
+void AChunkWorld::GenerateWorldAsync()
+{
+    auto MoveRight = [] (const FIntVector2& Position)
+    {
+        return FIntVector2(Position.X + 1, Position.Y);
+    };
+
+    auto MoveDown = [] (const FIntVector2& Position)
+    {
+        return FIntVector2(Position.X, Position.Y - 1);
+    };
+
+    auto MoveLeft = [] (const FIntVector2& Position)
+    {
+        return FIntVector2(Position.X - 1, Position.Y);
+    };
+
+    auto MoveUp = [] (const FIntVector2& Position)
+    {
+        return FIntVector2(Position.X, Position.Y + 1);
+    };
+    
+    constexpr int MaxPoints{500};
+    const auto Moves = TArray<FIntVector2(*)(const FIntVector2&)>({MoveRight, MoveDown, MoveLeft, MoveUp});
+    int MoveIdx = 0;
+
+    int n = 1;
+    FIntVector2 TargetPoint = FIntVector2(0, 0);
+    int TimesToMove = 1;
+
+    for (int Z = this->ChunksAboveZero; Z >= 0; --Z)
+    {
+        const FIntVector Key = FIntVector(0, 0, Z);
+        this->ChunkGenerationQueue.Enqueue(Key);
+
+        continue;
+    }
+
+    while (true)
+    {
+        for (int _ = 0; _ < 2; ++_)
+        {
+            MoveIdx = (MoveIdx + 1) % Moves.Num();
+            for (int __ = 0; __ < TimesToMove; ++__)
+            {
+                if (n >= MaxPoints)
+                {
+                    return;
+                }
+
+                TargetPoint = Moves[MoveIdx](TargetPoint);
+                
+                n++;
+                for (int Z = this->ChunksAboveZero; Z >= 0; --Z)
+                {
+                    const FIntVector Key = FIntVector(TargetPoint.X, TargetPoint.Y, Z);
+                    this->ChunkGenerationQueue.Enqueue(Key);
+                    continue;
+                }
+                
+               
+            }
+
+
+            continue;
+        }
+
+        TimesToMove++;
+
+        continue;
+    }
+
+    UE_LOG(LogTemp, Warning, TEXT("Queued all chunks."))
+    
+    return;
+}
+
+void AChunkWorld::GenerateWorld()
+{
+    /* This is ofc very basic and has to be rewritten to generate chunks around a character and destroy them if not. */
+
+    // for (int X = -this->DetailedDrawDistance; X <= this->DetailedDrawDistance; ++X)
+    // {
+    //     for (int Y = -this->DetailedDrawDistance; Y <= this->DetailedDrawDistance; ++Y)
+    //     {
+    //         for (int Z = this->ChunksAboveZero; Z >= 0; --Z)
+    //         {
+    //             const FTransform Transform = FTransform(
+    //                 FRotator::ZeroRotator,
+    //                 FVector(
+    //                     X * AChunk::CHUNK_SIZE * AJCoordinate::J_TO_U_SCALE,
+    //                     Y * AChunk::CHUNK_SIZE * AJCoordinate::J_TO_U_SCALE,
+    //                     Z * AChunk::CHUNK_SIZE * AJCoordinate::J_TO_U_SCALE
+    //                 ),
+    //                 FVector::OneVector
+    //             );
+    //
+    //             AChunk* Chunk = this->GetWorld()->SpawnActor<AChunk>(AGreedyChunk::StaticClass(), Transform);
+    //             
+    //             this->LoadedChunks.Add(FIntVector(X, Y, Z), Chunk);
+    //             
+    //             continue;
+    //         }
+    //
+    //         continue;
+    //     }
+    //
+    //     continue;
+    // }
+    //
+    // UE_LOG(LogTemp, Warning, TEXT("Loaded Chunks: %d"), this->LoadedChunks.Num())
     
     return;
 }
@@ -58,78 +232,6 @@ AChunk* AChunkWorld::GetChunkByKey(const FIntVector& Key) const
     }
     
     return nullptr;
-}
-
-void AChunkWorld::BeginPlay()
-{
-    Super::BeginPlay();
-
-    this->LoadedChunks.Empty();
-
-    this->NWorld->SetSeed(this->Seed);
-    this->NWorld->SetFrequency(this->WorldFrequency);
-    this->NWorld->SetFractalType(this->WorldFractalType);
-    this->NWorld->SetNoiseType(this->WorldNoiseType);
-    
-    this->NContinentalness->SetSeed(this->Seed);
-    this->NContinentalness->SetFrequency(this->ContinentalnessFrequency);
-    this->NContinentalness->SetFractalType(this->ContinentalnessFractalType);
-    this->NContinentalness->SetNoiseType(this->ContinentalnessNoiseType);
-
-    this->GenerateWorld();
-
-    return;
-}
-
-void AChunkWorld::Tick(const float DeltaTime)
-{
-    Super::Tick(DeltaTime);
-    UE_LOG(LogTemp, Error, TEXT("AChunkWorld::Tick() was called."))
-    return;
-}
-
-void AChunkWorld::GenerateWorld()
-{
-    /* This is ofc very basic and has to be rewritten to generate chunks around a character and destroy them if not. */
-    
-    for (int X = -this->DetailedDrawDistance; X <= this->DetailedDrawDistance; ++X)
-    {
-        for (int Y = -this->DetailedDrawDistance; Y <= this->DetailedDrawDistance; ++Y)
-        {
-            for (int Z = this->ChunksAboveZero; Z >= 0; --Z)
-            {
-                const FTransform Transform = FTransform(
-                    FRotator::ZeroRotator,
-                    FVector(
-                        X * AChunk::CHUNK_SIZE * AJCoordinate::J_TO_U_SCALE,
-                        Y * AChunk::CHUNK_SIZE * AJCoordinate::J_TO_U_SCALE,
-                        Z * AChunk::CHUNK_SIZE * AJCoordinate::J_TO_U_SCALE
-                    ),
-                    FVector::OneVector
-                );
-
-                AChunk* Chunk = this->GetWorld()->SpawnActor<AChunk>(AGreedyChunk::StaticClass(), Transform);
-                
-                this->LoadedChunks.Add(FIntVector(X, Y, Z), Chunk);
-                
-                continue;
-            }
-
-            continue;
-        }
-
-        continue;
-    }
-
-    UE_LOG(LogTemp, Warning, TEXT("Loaded Chunks: %d"), this->LoadedChunks.Num())
-    // TArray<FIntVector> Keys = TArray<FIntVector>();
-    // this->LoadedChunks.GetKeys(Keys);
-    // for (const auto& Key : Keys)
-    // {
-    //     UE_LOG(LogTemp, Warning, TEXT("Key: %s"), *Key.ToString())
-    // }
-    
-    return;
 }
 
 FIntVector AChunkWorld::WorldToChunkPosition(const FVector& WorldPosition)
