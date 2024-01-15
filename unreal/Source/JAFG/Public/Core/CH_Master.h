@@ -112,6 +112,11 @@ public:
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
     UInputAction* IAQuickSlot9;
+
+    /* MISC */
+
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|MISC")
+    UInputAction* IADebugScreen;
     
 #pragma endregion Input Mappings
 
@@ -130,7 +135,7 @@ private:
     void OnSecondary(const FInputActionValue& Value);
 
     /* Inventory */
-    void OnToggleInventory(const FInputActionValue& Value);
+    void OnInventoryToggle(const FInputActionValue& Value);
     void OnQuickSlot0(const FInputActionValue& Value);
     void OnQuickSlot1(const FInputActionValue& Value);
     void OnQuickSlot2(const FInputActionValue& Value);
@@ -142,6 +147,9 @@ private:
     void OnQuickSlot8(const FInputActionValue& Value);
     void OnQuickSlot9(const FInputActionValue& Value);
     void OnQuickSlotSelect(const int Slot);
+
+    /* MISC */
+    void OnDebugScreenToggle(const FInputActionValue& Value);
     
 #pragma endregion Input Actions
 
@@ -180,5 +188,13 @@ private:
 #pragma endregion Inventory
     
 #pragma endregion Member Methods, Variables
+
+#pragma region Getters
+
+public:
+
+    UCameraComponent* GetFPSCamera() const;
+    
+#pragma endregion Getters
     
 };

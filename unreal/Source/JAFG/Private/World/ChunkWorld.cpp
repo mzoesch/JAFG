@@ -131,7 +131,7 @@ void AChunkWorld::GenerateWorldAsync()
         return FIntVector2(Position.X, Position.Y + 1);
     };
     
-    constexpr int MaxPoints{500};
+    constexpr int MaxPoints{20};
     const auto Moves = TArray<FIntVector2(*)(const FIntVector2&)>({MoveRight, MoveDown, MoveLeft, MoveUp});
     int MoveIdx = 0;
 
