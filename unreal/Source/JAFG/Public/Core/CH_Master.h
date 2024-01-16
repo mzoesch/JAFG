@@ -171,11 +171,14 @@ public:
     int QuickSlotSelected;
 
 private:
+
+    static constexpr int InventoryStartSize = 78;
     
     TArray<FAccumulated> Inventory;
 
 public:
-    
+
+    int GetInventorySize() const;
     FAccumulated GetInventorSlot(const int Slot) const { return this->Inventory[Slot]; }
     FAccumulated GetQuickSlotSelected() const { return this->Inventory[this->QuickSlotSelected]; }
     bool AddToInventory(const FAccumulated Accumulated);
