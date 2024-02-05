@@ -173,16 +173,22 @@ public:
 private:
 
     static constexpr int InventoryStartSize = 78;
-    
+
+    FAccumulated HandAccumulated;
     TArray<FAccumulated> Inventory;
 
 public:
 
+    FAccumulated SetHandAccumulated(const FAccumulated Accumulated) { return this->HandAccumulated = Accumulated; }
+    FAccumulated GetHandAccumulated() const { return this->HandAccumulated; }
     int GetInventorySize() const;
-    FAccumulated GetInventorSlot(const int Slot) const { return this->Inventory[Slot]; }
+    FAccumulated GetInventorySlot(const int Slot) const { return this->Inventory[Slot]; }
     FAccumulated GetQuickSlotSelected() const { return this->Inventory[this->QuickSlotSelected]; }
     bool AddToInventory(const FAccumulated Accumulated);
-
+    void SetToInventorySlot(const int Slot, const FAccumulated Accumulated) { this->Inventory[Slot] = Accumulated; }
+    void OnInventorySlotClick(const int Slot);
+    void SwapInventorySlots(const int SlotA, const int SlotB);
+    
 private:
 
     void AddToInventorySlot(const int Slot, const uint16_t Amount);
