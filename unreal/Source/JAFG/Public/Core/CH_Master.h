@@ -174,25 +174,33 @@ private:
 
     static constexpr int InventoryStartSize = 78;
 
-    FAccumulated HandAccumulated;
+    FAccumulated AccumulatedInHand;
     TArray<FAccumulated> Inventory;
 
 public:
 
-    FAccumulated SetHandAccumulated(const FAccumulated Accumulated) { return this->HandAccumulated = Accumulated; }
-    FAccumulated GetHandAccumulated() const { return this->HandAccumulated; }
-    int GetInventorySize() const;
-    FAccumulated GetInventorySlot(const int Slot) const { return this->Inventory[Slot]; }
+    FORCEINLINE FAccumulated    GetAccumulatedInHand() const { return this->AccumulatedInHand; }
+    FORCEINLINE FAccumulated    SetHandAccumulated(const FAccumulated Accumulated) { return this->AccumulatedInHand = Accumulated; }
+    
+    FORCEINLINE int             GetInventorySize() const { return this->Inventory.Num(); }
+    FORCEINLINE FAccumulated    GetInventoryAtSlot(const int Slot) const { return this->Inventory[Slot]; }
+
+    
+    /** Must be used with cautions as there is no check for any safety. */
+    FORCEINLINE void OverrideInventorySlot(const int Slot, const FAccumulated Accumulated) { this->Inventory[Slot] = Accumulated; }
+    
+    bool AddToInventory(const FAccumulated Accumulated, const bool bUpdateHUD);
+    
+    
     FAccumulated GetQuickSlotSelected() const { return this->Inventory[this->QuickSlotSelected]; }
-    bool AddToInventory(const FAccumulated Accumulated);
-    void SetToInventorySlot(const int Slot, const FAccumulated Accumulated) { this->Inventory[Slot] = Accumulated; }
     void OnInventorySlotClick(const int Slot);
     void SwapInventorySlots(const int SlotA, const int SlotB);
     
 private:
 
-    void AddToInventorySlot(const int Slot, const uint16_t Amount);
-    void AddToInventorySlot(const int Slot, const FAccumulated Accumulated);
+    void AddToInventoryAtSlot(const int Slot, const uint16_t Amount, const bool bUpdateHUD);
+    /** Must be used with cautions as there is no check for any safety. */
+    void OverrideInventoryAtSlot(const int Slot, const FAccumulated Accumulated, const bool bUpdateHUD);
     
 #pragma endregion Inventory
     
