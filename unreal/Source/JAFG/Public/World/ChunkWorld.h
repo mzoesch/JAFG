@@ -121,11 +121,32 @@ public:
         FNoiseSplinePointV2(     0.8f  ,   95.0f    ),
         FNoiseSplinePointV2(     1.0f  ,  100.0f    ),
     };
+
+    UPROPERTY(EditInstanceOnly, Category="Generation|Noise|FeaturesAndStructures")
+    bool bAddTrees = true;
+
+    UPROPERTY(EditInstanceOnly, Category="Generation|Noise|FeaturesAndStructures")
+    float TreeFrequency = 0.5f;
+
+    /**
+     * If the density at a given 2D point in the word is below this threshold
+     * and the world generator is allowed to place a tree at this location,
+     * a tree will be spawned.
+     */
+    UPROPERTY(EditInstanceOnly, Category="Generation|Noise|FeaturesAndStructures")
+    float TreeThreshold = -0.2f;
+    
+    UPROPERTY(EditInstanceOnly, Category="Generation|Noise|FeaturesAndStructures")
+    TEnumAsByte<EFractalType> TreeFractalType = EFractalType::FractalType_None;
+
+    UPROPERTY(EditInstanceOnly, Category="Generation|Noise|FeaturesAndStructures")
+    TEnumAsByte<ENoiseType> TreeNoiseType = ENoiseType::NoiseType_Value;
     
 public:
 
     FastNoiseLite* NWorld;
     FastNoiseLite* NContinentalness;
+    FastNoiseLite* NTree;
 
 protected:
 

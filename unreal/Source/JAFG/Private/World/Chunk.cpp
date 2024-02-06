@@ -4,15 +4,16 @@
 
 #include "ProceduralMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Math/RandomStream.h"
 
 #include "World/JCoordinate.h"
 #include "Core/GI_Master.h"
 #include "World/ChunkWorld.h"
 #include "World/WorldVoxel.h"
 
-#define UIL_LOG(Verbosity, Format, ...) UE_LOG(LogTemp, Verbosity, Format, ##__VA_ARGS__)
-#define GI CastChecked<UGI_Master>(this->GetGameInstance())
-#define CW this->ChunkWorld
+#define UIL_LOG(Verbosity, Format, ...)     UE_LOG(LogTemp, Verbosity, Format, ##__VA_ARGS__)
+#define GI                                  CastChecked<UGI_Master>(this->GetGameInstance())
+#define CW                                  this->ChunkWorld
 
 AChunk::AChunk()
 {
@@ -23,7 +24,7 @@ AChunk::AChunk()
     this->SetRootComponent(this->ProcMesh);
 
     this->bGenerationFailed = false;
-    
+
     return;
 }
 
@@ -175,7 +176,8 @@ void AChunk::GenerateSuperFlatWorld()
 void AChunk::GenerateDefaultWorld()
 {
     this->DWShapeTerrain();
-    this->DWSurfaceReplacement();
+    this->DWReplaceSurface();
+    this->DWAddFeaturesAndStructures();
 
     return;
 }
@@ -233,7 +235,7 @@ void AChunk::DWShapeTerrain()
     return;
 }
 
-void AChunk::DWSurfaceReplacement()
+void AChunk::DWReplaceSurface()
 {
     for (int X = 0; X < AChunk::CHUNK_SIZE; ++X)
     {
@@ -292,9 +294,126 @@ void AChunk::DWSurfaceReplacement()
     return;
 }
 
-FIntVector AChunk::GetTopChunkKey() const
+void AChunk::AddTrees()
 {
-    return FIntVector(this->ChunkKey.X, this->ChunkKey.Y, this->ChunkKey.Z + 1);
+    /* We assume that the top voxel is grass. Or the surface block of the biome, when added. */
+
+    constexpr int SurfaceBlock{4};
+    
+    for (int X = 0; X < AChunk::CHUNK_SIZE; ++X)
+    {
+        for (int Y = 0; Y < AChunk::CHUNK_SIZE; ++Y)
+        {
+            int TreeRotZ = -1;
+            
+            for (int Z = AChunk::CHUNK_SIZE - 1; Z >= 0; --Z)
+            {
+                if (this->GetVoxel(FIntVector(X, Y, Z)) == SurfaceBlock)
+                {
+                    TreeRotZ = Z + 1;
+                    break;
+                }
+
+                continue;
+            }
+
+            /* We have to check if the chunk below has the surface block at the top of its border. */
+            /* Currently does not work because we will always render the world from top to bottom. */
+            if (TreeRotZ == -1)
+            {
+                if (CW->GetChunkByKey(this->GetBottomChunkKey()) == nullptr)
+                {
+                    continue;
+                }
+
+                if (CW->GetChunkByKey(this->GetBottomChunkKey())->GetVoxel(FIntVector(X, Y, AChunk::CHUNK_SIZE - 1)) != SurfaceBlock)
+                {
+                    continue;
+                }
+
+                TreeRotZ = 0;
+            }
+            
+            if (TreeRotZ >= AChunk::CHUNK_SIZE)
+            {
+                continue;
+            }
+
+            /* TODO We also have to think of the height. On mountains are not trees ofc. */
+            if (CW->NTree->GetNoise(static_cast<float>(X), static_cast<float>(Y)) > CW->TreeThreshold)
+            {
+                continue;
+            }
+
+            /* We can currently do this because the top chunk is always created first. */
+            for (int i = 0; i < 5; ++i)
+            {
+                this->ModifyVoxel(FIntVector(X, Y, TreeRotZ + i), 5);
+                continue;
+            }
+
+            continue;
+        }
+
+        continue;
+    }
+    
+    return;
+}
+
+void AChunk::DWAddFeaturesAndStructures()
+{
+    if (CW->bAddTrees)
+    {
+        this->AddTrees();
+    }
+    
+    return;
+}
+
+AChunk* AChunk::GetTargetChunk(const FIntVector& LocalVoxelPosition, FIntVector& TransformedLocalVoxelPosition)
+{
+    if (LocalVoxelPosition.Z >= CHUNK_SIZE)
+    {
+        AChunk* TargetChunk = CW->GetChunkByKey(this->GetTopChunkKey());
+        
+        if (TargetChunk == nullptr)
+        {
+            return nullptr;
+        }
+
+        TransformedLocalVoxelPosition = FIntVector(LocalVoxelPosition.X, LocalVoxelPosition.Y, LocalVoxelPosition.Z - AChunk::CHUNK_SIZE);
+    
+        return TargetChunk;
+    }
+    
+    if (LocalVoxelPosition.Z < 0)
+    {
+        AChunk* TargetChunk = CW->GetChunkByKey(this->GetBottomChunkKey()); 
+    
+        if (TargetChunk == nullptr)
+        {
+            return nullptr;
+        }
+
+        TransformedLocalVoxelPosition = FIntVector(LocalVoxelPosition.X, LocalVoxelPosition.Y, LocalVoxelPosition.Z + AChunk::CHUNK_SIZE);
+        
+        return TargetChunk;
+    }
+
+    if (
+           LocalVoxelPosition.X >= AChunk::CHUNK_SIZE
+        || LocalVoxelPosition.Y >= AChunk::CHUNK_SIZE
+        || LocalVoxelPosition.Z >= AChunk::CHUNK_SIZE
+        || LocalVoxelPosition.X < 0
+        || LocalVoxelPosition.Y < 0
+        || LocalVoxelPosition.Z < 0
+    )
+    {
+        return nullptr;
+    }
+
+    return this;
 }
 
 int AChunk::GetVoxel(const FIntVector& LocalVoxelPosition) const
@@ -330,23 +449,19 @@ int AChunk::GetVoxel(const FIntVector& LocalVoxelPosition) const
 
 void AChunk::ModifyVoxel(const FIntVector& LocalVoxelPosition, const int Voxel)
 {
-    if (
-           LocalVoxelPosition.X >= AChunk::CHUNK_SIZE
-        || LocalVoxelPosition.Y >= AChunk::CHUNK_SIZE
-        || LocalVoxelPosition.Z >= AChunk::CHUNK_SIZE
-        || LocalVoxelPosition.X < 0
-        || LocalVoxelPosition.Y < 0
-        || LocalVoxelPosition.Z < 0
-    )
+    FIntVector TransformedLocalVoxelPosition = LocalVoxelPosition;
+    AChunk* TargetChunk = this->GetTargetChunk(LocalVoxelPosition, TransformedLocalVoxelPosition);
+    
+    if (TargetChunk == nullptr)
     {
-        UE_LOG(LogTemp, Warning, TEXT("Voxel out of bounds! Not implemented yet! %s"), *LocalVoxelPosition.ToString());
+        UIL_LOG(Warning, TEXT("No associated chunk for local voxel position exists: %s."), *LocalVoxelPosition.ToString());
         return;
     }
     
-    this->ModifyVoxelData(LocalVoxelPosition, Voxel);
-    this->ClearMesh(); /* TODO Do we really have to regenerate the whole mesh? */
-    this->GenerateMesh();
-    this->ApplyMesh();
+    TargetChunk->ModifyVoxelData(TransformedLocalVoxelPosition, Voxel);
+    TargetChunk->ClearMesh(); /* TODO Do we really have to regenerate the whole mesh? */
+    TargetChunk->GenerateMesh();
+    TargetChunk->ApplyMesh();
 
     return;
 }

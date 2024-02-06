@@ -49,6 +49,7 @@ AChunkWorld::AChunkWorld()
     
     this->NWorld                            = new FastNoiseLite();
     this->NContinentalness                  = new FastNoiseLite();
+    this->NTree                             = new FastNoiseLite();
     
     return;
 }
@@ -70,6 +71,11 @@ void AChunkWorld::BeginPlay()
     this->NContinentalness->SetFractalType(this->ContinentalnessFractalType);
     this->NContinentalness->SetNoiseType(this->ContinentalnessNoiseType);
 
+    this->NTree->SetSeed(this->Seed);
+    this->NTree->SetFrequency(this->TreeFrequency);
+    this->NTree->SetFractalType(this->TreeFractalType);
+    this->NTree->SetNoiseType(this->TreeNoiseType);
+    
     this->GenerateWorldAsync();
 
     return;

@@ -172,25 +172,23 @@ public:
 
 private:
 
-    static constexpr int InventoryStartSize = 78;
+    static constexpr int    InventoryStartSize{78};
 
-    FAccumulated AccumulatedInHand;
-    TArray<FAccumulated> Inventory;
+    FAccumulated            AccumulatedInCursorHand;
+    TArray<FAccumulated>    Inventory;
 
 public:
 
-    FORCEINLINE FAccumulated    GetAccumulatedInHand() const { return this->AccumulatedInHand; }
-    FORCEINLINE FAccumulated    SetHandAccumulated(const FAccumulated Accumulated) { return this->AccumulatedInHand = Accumulated; }
+    FORCEINLINE FAccumulated    GetAccumulatedInCursorHand() const { return this->AccumulatedInCursorHand; }
+    /** Must be used with cautions as there is no check for any safety. */
+    FORCEINLINE FAccumulated    OverrideCursorHandAccumulated(const FAccumulated Accumulated) { return this->AccumulatedInCursorHand = Accumulated; }
     
     FORCEINLINE int             GetInventorySize() const { return this->Inventory.Num(); }
     FORCEINLINE FAccumulated    GetInventoryAtSlot(const int Slot) const { return this->Inventory[Slot]; }
-
     
     /** Must be used with cautions as there is no check for any safety. */
     FORCEINLINE void OverrideInventorySlot(const int Slot, const FAccumulated Accumulated) { this->Inventory[Slot] = Accumulated; }
-    
     bool AddToInventory(const FAccumulated Accumulated, const bool bUpdateHUD);
-    
     
     FAccumulated GetQuickSlotSelected() const { return this->Inventory[this->QuickSlotSelected]; }
     void OnInventorySlotClick(const int Slot);

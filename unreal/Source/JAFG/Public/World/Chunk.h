@@ -62,9 +62,11 @@ private:
     /* Default World Generation */
     void DWShapeTerrain();
     /* Water Filling */
-    void DWSurfaceReplacement();
+    void DWReplaceSurface();
     /* Caves */
     /* Features and structures */
+    void AddTrees();
+    void DWAddFeaturesAndStructures();
     
 protected:
 
@@ -74,7 +76,8 @@ protected:
     FVector     ChunkPosition;
     FIntVector  ChunkKey;
 
-    FORCEINLINE FIntVector GetTopChunkKey() const;
+    FORCEINLINE FIntVector GetTopChunkKey() const { return FIntVector(this->ChunkKey.X, this->ChunkKey.Y, this->ChunkKey.Z + 1); }
+    FORCEINLINE FIntVector GetBottomChunkKey() const { return FIntVector(this->ChunkKey.X, this->ChunkKey.Y, this->ChunkKey.Z - 1); }
     
 protected:
 
@@ -92,7 +95,12 @@ protected:
 
 public:
 
+    /* Gets itself if inbounds or an existing other chunk from the local voxel position. */
+    AChunk* GetTargetChunk(const FIntVector& LocalVoxelPosition, FIntVector& TransformedLocalVoxelPosition);
     int GetVoxel(const FIntVector& LocalVoxelPosition) const;
+    /** 
+     * This only works for the called chunk and all other chunks neighboring that chunk.
+     * But never for chunks that are not neighbors.
+     */
     void ModifyVoxel(const FIntVector& LocalVoxelPosition, const int Voxel);
-    
 };
