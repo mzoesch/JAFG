@@ -39,8 +39,11 @@ private:
     void GenerateVoxels();
     void ApplyMesh() const;
     void ClearMesh();
+    
+    void RegenerateMesh();
 
-    void ModifyVoxelData(const FIntVector& LocalVoxelPosition, const int Voxel);
+    /** The mesh of the chunk is not re generated. */
+    FORCEINLINE void ModifyVoxelData(const FIntVector& LocalVoxelPosition, const int Voxel) { this->Voxels[AChunk::GetVoxelIndex(LocalVoxelPosition)] = Voxel; }
 
 protected:
 
@@ -78,7 +81,7 @@ protected:
 
     FORCEINLINE FIntVector GetTopChunkKey() const { return FIntVector(this->ChunkKey.X, this->ChunkKey.Y, this->ChunkKey.Z + 1); }
     FORCEINLINE FIntVector GetBottomChunkKey() const { return FIntVector(this->ChunkKey.X, this->ChunkKey.Y, this->ChunkKey.Z - 1); }
-    
+
 protected:
 
     bool bGenerationFailed;
@@ -95,12 +98,26 @@ protected:
 
 public:
 
-    /* Gets itself if inbounds or an existing other chunk from the local voxel position. */
-    AChunk* GetTargetChunk(const FIntVector& LocalVoxelPosition, FIntVector& TransformedLocalVoxelPosition);
+    /**
+     * Gets itself if inbounds or an existing other chunk from the relative local voxel
+     * position that is also a neighbor from the called chunk.
+     *
+     * Warning: This method is extremely slow.
+     * Large amounts of calls in one frame will cause a significant performance hit.
+     */
+    AChunk* GetTargetChunk(const FIntVector& LocalVoxelPosition, FIntVector& OutTransformedLocalVoxelPosition);
     int GetVoxel(const FIntVector& LocalVoxelPosition) const;
     /** 
      * This only works for the called chunk and all other chunks neighboring that chunk.
      * But never for chunks that are not neighbors.
+     *
+     * Warning: This method is extremely slow.
+     * Large amounts of calls in one frame will cause a significant performance hit.
      */
     void ModifyVoxel(const FIntVector& LocalVoxelPosition, const int Voxel);
+    /**
+     * Faster implementation of ModifyVoxel. But only checks for out of bounds in the top direction.
+     * No safety checks for other directions.
+     */
+    void ModifyVoxelCheckTopChunkOnly(const FIntVector& CallingChunkLocalVoxelPosition, const int Voxel);
 };

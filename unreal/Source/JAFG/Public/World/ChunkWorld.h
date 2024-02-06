@@ -72,6 +72,10 @@ public:
 
     UPROPERTY(EditInstanceOnly, Category="Generation")
     uint64 Seed = 0;
+
+    /** Temporary until a dynamic generation is implemented. */
+    UPROPERTY(EditInstanceOnly, Category="Generation")
+    int MaxSpiralPoints = 20;
     
     UPROPERTY(EditInstanceOnly, Category="Generation")
     int DetailedDrawDistance = 1;

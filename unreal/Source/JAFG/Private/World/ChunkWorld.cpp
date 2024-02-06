@@ -137,7 +137,6 @@ void AChunkWorld::GenerateWorldAsync()
         return FIntVector2(Position.X, Position.Y + 1);
     };
     
-    constexpr int MaxPoints{20};
     const auto Moves = TArray<FIntVector2(*)(const FIntVector2&)>({MoveRight, MoveDown, MoveLeft, MoveUp});
     int MoveIdx = 0;
 
@@ -160,7 +159,7 @@ void AChunkWorld::GenerateWorldAsync()
             MoveIdx = (MoveIdx + 1) % Moves.Num();
             for (int __ = 0; __ < TimesToMove; ++__)
             {
-                if (n >= MaxPoints)
+                if (n >= this->MaxSpiralPoints)
                 {
                     return;
                 }

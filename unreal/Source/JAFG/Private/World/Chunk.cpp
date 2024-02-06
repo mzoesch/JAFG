@@ -14,6 +14,9 @@
 #define UIL_LOG(Verbosity, Format, ...)     UE_LOG(LogTemp, Verbosity, Format, ##__VA_ARGS__)
 #define GI                                  CastChecked<UGI_Master>(this->GetGameInstance())
 #define CW                                  this->ChunkWorld
+#define WORLD_X(LocalX)                          (LocalX + this->ChunkPosition.X)
+#define WORLD_Y(LocalY)                          (LocalY + this->ChunkPosition.Y)
+#define WORLD_Z(LocalZ)                          (LocalZ + this->ChunkPosition.Z)
 
 AChunk::AChunk()
 {
@@ -119,9 +122,13 @@ void AChunk::ClearMesh()
     return;
 }
 
-void AChunk::ModifyVoxelData(const FIntVector& LocalVoxelPosition, const int Voxel)
+void AChunk::RegenerateMesh()
 {
-    this->Voxels[AChunk::GetVoxelIndex(LocalVoxelPosition)] = Voxel;
+    this->ClearMesh();
+    this->GenerateMesh();
+    this->ApplyMesh();
+
+    return;
 }
 
 int AChunk::GetVoxelIndex(const FIntVector& LocalVoxelPosition)
@@ -299,18 +306,20 @@ void AChunk::AddTrees()
     /* We assume that the top voxel is grass. Or the surface block of the biome, when added. */
 
     constexpr int SurfaceBlock{4};
+
+    bool bRegenerateTopChunk = false;
     
     for (int X = 0; X < AChunk::CHUNK_SIZE; ++X)
     {
         for (int Y = 0; Y < AChunk::CHUNK_SIZE; ++Y)
         {
-            int TreeRotZ = -1;
+            int TreeRootZ = -1;
             
             for (int Z = AChunk::CHUNK_SIZE - 1; Z >= 0; --Z)
             {
                 if (this->GetVoxel(FIntVector(X, Y, Z)) == SurfaceBlock)
                 {
-                    TreeRotZ = Z + 1;
+                    TreeRootZ = Z + 1;
                     break;
                 }
 
@@ -319,7 +328,7 @@ void AChunk::AddTrees()
 
             /* We have to check if the chunk below has the surface block at the top of its border. */
             /* Currently does not work because we will always render the world from top to bottom. */
-            if (TreeRotZ == -1)
+            if (TreeRootZ == -1)
             {
                 if (CW->GetChunkByKey(this->GetBottomChunkKey()) == nullptr)
                 {
@@ -331,31 +340,46 @@ void AChunk::AddTrees()
                     continue;
                 }
 
-                TreeRotZ = 0;
+                TreeRootZ = 0;
             }
             
-            if (TreeRotZ >= AChunk::CHUNK_SIZE)
+            if (TreeRootZ >= AChunk::CHUNK_SIZE)
             {
                 continue;
             }
 
             /* TODO We also have to think of the height. On mountains are not trees ofc. */
-            if (CW->NTree->GetNoise(static_cast<float>(X), static_cast<float>(Y)) > CW->TreeThreshold)
+            if (CW->NTree->GetNoise(WORLD_X(X), WORLD_Y(Y)) > CW->TreeThreshold)
             {
                 continue;
             }
 
+            constexpr int TreeHeight{5};
+            
             /* We can currently do this because the top chunk is always created first. */
-            for (int i = 0; i < 5; ++i)
+            for (int i = 0; i < TreeHeight; ++i)
             {
-                this->ModifyVoxel(FIntVector(X, Y, TreeRotZ + i), 5);
+                this->ModifyVoxelCheckTopChunkOnly(FIntVector(X, Y, TreeRootZ + i), 5);
                 continue;
             }
 
+            /* Check if we have to re-generate the mesh of the above chunk */
+            if (TreeRootZ + TreeHeight < AChunk::CHUNK_SIZE)
+            {
+                continue;
+            }
+
+            bRegenerateTopChunk = true;
+            
             continue;
         }
 
         continue;
+    }
+
+    if (bRegenerateTopChunk)
+    {
+        CW->GetChunkByKey(this->GetTopChunkKey())->RegenerateMesh();
     }
     
     return;
@@ -371,7 +395,7 @@ void AChunk::DWAddFeaturesAndStructures()
     return;
 }
 
-AChunk* AChunk::GetTargetChunk(const FIntVector& LocalVoxelPosition, FIntVector& TransformedLocalVoxelPosition)
+AChunk* AChunk::GetTargetChunk(const FIntVector& LocalVoxelPosition, FIntVector& OutTransformedLocalVoxelPosition)
 {
     if (LocalVoxelPosition.Z >= CHUNK_SIZE)
     {
@@ -382,7 +406,7 @@ AChunk* AChunk::GetTargetChunk(const FIntVector& LocalVoxelPosition, FIntVector&
             return nullptr;
         }
 
-        TransformedLocalVoxelPosition = FIntVector(LocalVoxelPosition.X, LocalVoxelPosition.Y, LocalVoxelPosition.Z - AChunk::CHUNK_SIZE);
+        OutTransformedLocalVoxelPosition = FIntVector(LocalVoxelPosition.X, LocalVoxelPosition.Y, LocalVoxelPosition.Z - AChunk::CHUNK_SIZE);
     
         return TargetChunk;
     }
@@ -396,7 +420,7 @@ AChunk* AChunk::GetTargetChunk(const FIntVector& LocalVoxelPosition, FIntVector&
             return nullptr;
         }
 
-        TransformedLocalVoxelPosition = FIntVector(LocalVoxelPosition.X, LocalVoxelPosition.Y, LocalVoxelPosition.Z + AChunk::CHUNK_SIZE);
+        OutTransformedLocalVoxelPosition = FIntVector(LocalVoxelPosition.X, LocalVoxelPosition.Y, LocalVoxelPosition.Z + AChunk::CHUNK_SIZE);
         
         return TargetChunk;
     }
@@ -466,6 +490,31 @@ void AChunk::ModifyVoxel(const FIntVector& LocalVoxelPosition, const int Voxel)
     return;
 }
 
+void AChunk::ModifyVoxelCheckTopChunkOnly(const FIntVector& CallingChunkLocalVoxelPosition, const int Voxel)
+{
+    if (CallingChunkLocalVoxelPosition.Z >= AChunk::CHUNK_SIZE)
+    {
+        AChunk* TargetChunk = CW->GetChunkByKey(this->GetTopChunkKey());
+        
+        if (TargetChunk == nullptr)
+        {
+            UIL_LOG(Warning, TEXT("No top chunk exists for local voxel position: %s."), *CallingChunkLocalVoxelPosition.ToString());
+            return;
+        }
+
+        TargetChunk->ModifyVoxelData(FIntVector(CallingChunkLocalVoxelPosition.X, CallingChunkLocalVoxelPosition.Y, CallingChunkLocalVoxelPosition.Z - AChunk::CHUNK_SIZE), Voxel);
+
+        return;
+    }
+
+    this->ModifyVoxelData(CallingChunkLocalVoxelPosition, Voxel);
+
+    return;
+}
+
 #undef UIL_LOG
 #undef GI
 #undef CW
+#undef WORLD_X
+#undef WORLD_Y
+#undef WORLD_Z
