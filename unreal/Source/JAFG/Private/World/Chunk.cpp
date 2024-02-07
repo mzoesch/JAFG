@@ -12,11 +12,11 @@
 #include "World/WorldVoxel.h"
 
 #define UIL_LOG(Verbosity, Format, ...)     UE_LOG(LogTemp, Verbosity, Format, ##__VA_ARGS__)
-#define GI                                  CastChecked<UGI_Master>(this->GetGameInstance())
+#define GI                                  Cast<UGI_Master>(this->GetGameInstance())
 #define CW                                  this->ChunkWorld
-#define WORLD_X(LocalX)                          (LocalX + this->ChunkPosition.X)
-#define WORLD_Y(LocalY)                          (LocalY + this->ChunkPosition.Y)
-#define WORLD_Z(LocalZ)                          (LocalZ + this->ChunkPosition.Z)
+#define WORLD_X(LocalX)                     (LocalX + this->ChunkPosition.X)
+#define WORLD_Y(LocalY)                     (LocalY + this->ChunkPosition.Y)
+#define WORLD_Z(LocalZ)                     (LocalZ + this->ChunkPosition.Z)
 
 AChunk::AChunk()
 {
