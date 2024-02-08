@@ -25,6 +25,7 @@ public class JAFG : ModuleRules
             "RenderCore",
             "ImageWrapper",
             "EditorScriptingUtilities",
+            "Json",
         });
 
         /* Uncomment if you are using Slate UI */

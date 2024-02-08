@@ -36,6 +36,7 @@ public:
 public:
     
     int GetVoxel() const { return this->Voxel; }
+    void SetVoxel(const int V) { this->Voxel = V; }
     EItem GetItem() const { return this->Item; }
     uint16_t GetAmount() const { return this->Amount; }
     void SetAmount(const uint16_t A) { this->Amount = A; }

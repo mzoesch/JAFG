@@ -166,39 +166,61 @@ public:
 
 #pragma region Inventory
     
-public:
-
-    int QuickSlotSelected;
-
 private:
 
     static constexpr int    InventoryStartSize{78};
+    static constexpr int    InventoryCrafterSize{4};
 
+    int                     SelectedQuickSlot;
     FAccumulated            AccumulatedInCursorHand;
     TArray<FAccumulated>    Inventory;
+    TArray<FAccumulated>    InventoryCrafter;
+    FAccumulated            InventoryCrafterOutput;
 
+#pragma region Inventory Manipulation
+    
 public:
 
+    //
+    // It is generally safe to assume that all methods that do not have
+    // a bUpdateHUD parameter boolean will never trigger a re-render.
+    //
+    
     FORCEINLINE FAccumulated    GetAccumulatedInCursorHand() const { return this->AccumulatedInCursorHand; }
     /** Must be used with cautions as there is no check for any safety. */
-    FORCEINLINE FAccumulated    OverrideCursorHandAccumulated(const FAccumulated Accumulated) { return this->AccumulatedInCursorHand = Accumulated; }
+    FORCEINLINE FAccumulated    OverrideAccumulatedInCursorHand(const FAccumulated Accumulated) { return this->AccumulatedInCursorHand = Accumulated; }
+    void                        ExecuteBehaviorToClearAccumulatedInCursorHand(const bool bUpdateHUD);
     
     FORCEINLINE int             GetInventorySize() const { return this->Inventory.Num(); }
-    FORCEINLINE FAccumulated    GetInventoryAtSlot(const int Slot) const { return this->Inventory[Slot]; }
-    
+    FORCEINLINE FAccumulated    GetInventorySlot(const int Slot) const { return this->Inventory[Slot]; }
     /** Must be used with cautions as there is no check for any safety. */
-    FORCEINLINE void OverrideInventorySlot(const int Slot, const FAccumulated Accumulated) { this->Inventory[Slot] = Accumulated; }
-    bool AddToInventory(const FAccumulated Accumulated, const bool bUpdateHUD);
+    FORCEINLINE void            OverrideInventorySlot(const int Slot, const FAccumulated Accumulated) { this->Inventory[Slot] = Accumulated; }
     
-    FAccumulated GetQuickSlotSelected() const { return this->Inventory[this->QuickSlotSelected]; }
-    void OnInventorySlotClick(const int Slot);
-    void SwapInventorySlots(const int SlotA, const int SlotB);
+    bool                        AddToInventory(const FAccumulated Accumulated, const bool bUpdateHUD);
+    void                        OnInventorySlotClicked(const int Slot, const bool bUpdateHUD);
+
+    FORCEINLINE int             GetSelectedQuickSlot()                  const { return this->SelectedQuickSlot; }
+    FORCEINLINE FAccumulated    GetAccumulatedAtSelectedQuickSlot()     const { return this->Inventory[this->SelectedQuickSlot]; }
+
+    FORCEINLINE int             GetInventoryCrafterSize() const { return this->InventoryCrafter.Num(); }
+    FORCEINLINE FAccumulated    GetInventoryCrafterSlot(const int Slot) const { return this->InventoryCrafter[Slot]; }
+    
+    void                        OnInventoryCrafterSlotClicked(const int Slot, const bool bUpdateHUD);
+    void                        ExecuteBehaviorToClearInventoryCrafterSlots(const bool bUpdateHUD);
+    FAccumulated                GetInventoryCrafterProduct() const;
+    void                        OnInventoryCrafterDeliveryClicked(const bool bUpdateHUD);
     
 private:
 
-    void AddToInventoryAtSlot(const int Slot, const uint16_t Amount, const bool bUpdateHUD);
+    FORCEINLINE void SwapInventorySlots(const int SlotA, const int SlotB) { this->Inventory.Swap(SlotA, SlotB); }
+    void AddToInventoryAtSlot(const int Slot, const int Amount, const bool bUpdateHUD);
     /** Must be used with cautions as there is no check for any safety. */
     void OverrideInventoryAtSlot(const int Slot, const FAccumulated Accumulated, const bool bUpdateHUD);
+
+    /** In the character crafter we obviously have to remove the accumulated items that where needed to craft such item. */
+    void ReduceInventoryCrafterByProductIngredients(const bool bUpdateHUD);
+    
+#pragma endregion Inventory Manipulation
     
 #pragma endregion Inventory
     
@@ -208,7 +230,7 @@ private:
 
 public:
 
-    UCameraComponent* GetFPSCamera() const;
+    FORCEINLINE UCameraComponent* GetFPSCamera() const { return this->FirstPersonCameraComponent; }
     
 #pragma endregion Getters
     
