@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 
 #include "Lib/FAccumulated.h"
+#include "Net/UnrealNetwork.h"
 
 #include "PrescriptionSeeker.generated.h"
 
@@ -28,6 +29,16 @@ struct FPrescription
     FString             Product;
     FAccumulated        DeliveryAccumulated;
     FAccumulated        ProductAccumulated;
+
+public:
+
+    static const FPrescription NullPrescription;
+
+public:
+    /** Will only check for the name. The program will assume that only one prescription with the same name exists. */
+    FORCEINLINE bool operator==(const FPrescription& O) const { return this->Name == O.Name; }
+    /** Will only check for the name. The program will assume that only one prescription with the same name exists. */
+    static FORCEINLINE bool Equals(const FPrescription& A, const FPrescription& B) { return A == B; }
 };
 
 struct FDelivery
@@ -66,5 +77,6 @@ private:
     
 public:
 
+    void GetPrescription(const FDelivery& Delivery, FPrescription& OutPrescription);
     void GetProduct(const FDelivery& Delivery, FAccumulated& OutProduct);
 };

@@ -9,7 +9,7 @@
 
 void UW_PlayerInventoryCrafterOutput::OnClicked()
 {
-    CH->OnInventoryCrafterDeliveryClicked(true);
+    CH->OnInventoryCrafterProductClicked(true);
     return;
 }
 

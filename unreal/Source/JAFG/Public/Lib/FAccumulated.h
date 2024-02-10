@@ -45,8 +45,8 @@ public:
 public:
     
     /** Does not compare the amount. */
-    inline bool operator==(const FAccumulated& O) const { return this->Voxel == O.Voxel && this->Item == O.Item; }
+    FORCEINLINE bool operator==(const FAccumulated& O) const { return this->Voxel == O.Voxel && this->Item == O.Item; }
     /** Does not compare the amount. */
-    static inline bool Equals(const FAccumulated& A, const FAccumulated& B) { return A == B; }
+    static FORCEINLINE bool Equals(const FAccumulated& A, const FAccumulated& B) { return A == B; }
     FString ToString() const;
 };

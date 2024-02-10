@@ -7,6 +7,7 @@
 #include "InputActionValue.h"
 
 #include "Lib/FAccumulated.h"
+#include "Lib/PrescriptionSeeker.h"
 
 #include "CH_Master.generated.h"
 
@@ -204,19 +205,39 @@ public:
 
     FORCEINLINE int             GetInventoryCrafterSize() const { return this->InventoryCrafter.Num(); }
     FORCEINLINE FAccumulated    GetInventoryCrafterSlot(const int Slot) const { return this->InventoryCrafter[Slot]; }
+    FORCEINLINE FDelivery       GetInventoryCrafterAsDelivery() const { return FDelivery{this->InventoryCrafter, 2}; }
     
     void                        OnInventoryCrafterSlotClicked(const int Slot, const bool bUpdateHUD);
+    /** E.g. if the character inventory was closed while items are in the crafter. */
     void                        ExecuteBehaviorToClearInventoryCrafterSlots(const bool bUpdateHUD);
     FAccumulated                GetInventoryCrafterProduct() const;
-    void                        OnInventoryCrafterDeliveryClicked(const bool bUpdateHUD);
+    void                        OnInventoryCrafterProductClicked(const bool bUpdateHUD);
     
 private:
 
     FORCEINLINE void SwapInventorySlots(const int SlotA, const int SlotB) { this->Inventory.Swap(SlotA, SlotB); }
+    FORCEINLINE void SwapInventorySlotWithCursorHand(const int Slot)
+    {
+        const FAccumulated Temp         = this->Inventory[Slot];
+        this->Inventory[Slot]           = this->AccumulatedInCursorHand;
+        this->AccumulatedInCursorHand   = Temp;
+
+        return;
+    }
+    FORCEINLINE void SwapInventoryCrafterSlotWithCursorHand(const int Slot)
+    {
+        const FAccumulated Temp         = this->InventoryCrafter[Slot];
+        this->InventoryCrafter[Slot]    = this->AccumulatedInCursorHand;
+        this->AccumulatedInCursorHand   = Temp;
+
+        return;
+    }
     void AddToInventoryAtSlot(const int Slot, const int Amount, const bool bUpdateHUD);
     /** Must be used with cautions as there is no check for any safety. */
     void OverrideInventoryAtSlot(const int Slot, const FAccumulated Accumulated, const bool bUpdateHUD);
 
+    void AddToInventoryCrafterAtSlot(const int Slot, const int Amount, const bool bUpdateHUD);
+    
     /** In the character crafter we obviously have to remove the accumulated items that where needed to craft such item. */
     void ReduceInventoryCrafterByProductIngredients(const bool bUpdateHUD);
     

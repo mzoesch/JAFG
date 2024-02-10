@@ -2,9 +2,10 @@
 
 #include "Assets/General.h"
 #include "Core/GI_Master.h"
-#include "Kismet/GameplayStatics.h"
 
 #define UIL_LOG(Verbosity, Format, ...) UE_LOG(LogTemp, Verbosity, Format, ##__VA_ARGS__)
+
+const FPrescription FPrescription::NullPrescription = FPrescription();
 
 void UPrescriptionSeeker::ReloadPrescriptions()
 {
@@ -14,7 +15,7 @@ void UPrescriptionSeeker::ReloadPrescriptions()
 
     if (PrescriptionNames.Num() < 1)
     {
-        UE_LOG(LogTemp, Error, TEXT("UPrescriptionLookup::ReloadPrescriptions - Failed to load prescription names. No prescriptios found."));
+        UE_LOG(LogTemp, Error, TEXT("UPrescriptionLookup::ReloadPrescriptions - Failed to load prescription names. No prescriptions found."));
         return;
     }
     
@@ -59,6 +60,40 @@ bool UPrescriptionSeeker::IsDeliveryEmpty(const FDelivery& Delivery)
     return true;
 }
 
+void UPrescriptionSeeker::GetPrescription(const FDelivery& Delivery, FPrescription& OutPrescription)
+{
+    if (Delivery.Delivery.Num() < 1 || UPrescriptionSeeker::IsDeliveryEmpty(Delivery))
+    {
+        return;
+    }
+
+    for (const FPrescription& P : this->Prescriptions)
+    {
+        if (P.Type == EPrescriptionType::ERT_CraftingShapeless)
+        {
+            for (const FAccumulated& D : Delivery.Delivery)
+            {
+                if (D == FAccumulated::NullAccumulated || D != P.DeliveryAccumulated)
+                {
+                    continue;
+                }
+
+                OutPrescription = P;
+
+                return;
+            }
+            
+            continue;
+        }
+
+        UIL_LOG(Error, TEXT("UPrescriptionSeeker::GetPrescription - Unsupported prescription type: %d."), P.Type);
+
+        continue;
+    }
+
+    return;
+}
+
 void UPrescriptionSeeker::GetProduct(const FDelivery& Delivery, FAccumulated& OutProduct)
 {
     if (Delivery.Delivery.Num() < 1 || UPrescriptionSeeker::IsDeliveryEmpty(Delivery))
@@ -66,32 +101,16 @@ void UPrescriptionSeeker::GetProduct(const FDelivery& Delivery, FAccumulated& Ou
         return;
     }
 
-    for (const FPrescription P : this->Prescriptions)
+    FPrescription Prescription;
+    this->GetPrescription(Delivery, Prescription);
+
+    if (Prescription == FPrescription::NullPrescription)
     {
-        if (P.Type == EPrescriptionType::ERT_CraftingShapeless)
-        {
-            for (FAccumulated D : Delivery.Delivery)
-            {
-                if (D == FAccumulated::NullAccumulated || D != P.DeliveryAccumulated)
-                {
-                    continue;
-                }
-
-                OutProduct.SetVoxel(P.ProductAccumulated.GetVoxel());
-                OutProduct.SetAmount(1);
-
-                return;
-            }
-
-            continue;
-        }
-
-        UIL_LOG(Error, TEXT("UPrescriptionSeeker::GetProduct - Unsupported prescription type: %d."), P.Type);
-
-        continue;
+        return;
     }
 
-    UIL_LOG(Error, TEXT("UPrescriptionSeeker::GetProduct - Failed to find product for delivery."));
+    OutProduct.SetVoxel(Prescription.ProductAccumulated.GetVoxel());
+    OutProduct.SetAmount(1);
 
     return;
 }
