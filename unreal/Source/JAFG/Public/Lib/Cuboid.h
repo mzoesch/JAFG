@@ -97,8 +97,6 @@ private:
     void CreateQuadrilateral(const FVector& TopRight, const FVector& BottomRight, const FVector& TopLeft, const FVector& BottomLeft, const FProcMeshTangent& Tangent);
     void ApplyMesh() const;
 
-    int GetTextureIndex(const int VToGet, const FVector& Normal) const;
-
 public:
 
     inline bool GetHasCollisionConvexMesh() const { return this->bHasCollisionConvexMesh; }

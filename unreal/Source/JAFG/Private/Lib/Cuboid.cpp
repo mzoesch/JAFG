@@ -81,7 +81,7 @@ void ACuboid::GenerateMesh(const int V)
 
 void ACuboid::GenerateMesh(const FAccumulated Accumulated)
 {
-    this->Item = Accumulated.GetItem();
+    this->Item  = Accumulated.GetItem();
     this->Voxel = Accumulated.GetVoxel();
     
     this->GenerateMesh();
@@ -133,6 +133,7 @@ void ACuboid::GenerateMesh()
     this->PreDefinedShape[5] = FVector(-this->CuboidX, -this->CuboidY, -this->CuboidZ); /* Backward Bottom Left  */
     this->PreDefinedShape[6] = FVector(-this->CuboidX,  this->CuboidY,  this->CuboidZ); /* Backward Top    Right */
     this->PreDefinedShape[7] = FVector(-this->CuboidX,  this->CuboidY, -this->CuboidZ); /* Backward Bottom Right */
+    
     this->CreateQuadrilateral( this->PreDefinedShape[0], this->PreDefinedShape[1], this->PreDefinedShape[2], this->PreDefinedShape[3], FProcMeshTangent( 0.f,  1.f, 0.f) ); /* Front  */ 
     this->CreateQuadrilateral( this->PreDefinedShape[2], this->PreDefinedShape[3], this->PreDefinedShape[4], this->PreDefinedShape[5], FProcMeshTangent( 1.f,  0.f, 0.f) ); /* Left   */ 
     this->CreateQuadrilateral( this->PreDefinedShape[4], this->PreDefinedShape[5], this->PreDefinedShape[6], this->PreDefinedShape[7], FProcMeshTangent( 0.f, -1.f, 0.f) ); /* Back   */ 
@@ -179,7 +180,7 @@ void ACuboid::CreateQuadrilateral(const FVector& TopRight, const FVector& Bottom
         {
             TextureNormal = FVector::UpVector;
         }
-        this->Colors.Add(FColor(0, 0, 0, this->GetTextureIndex(this->Voxel, TextureNormal)));
+        this->Colors.Add(FColor(0, 0, 0, GI->GetTextureIndex(this->Voxel, TextureNormal)));
 
         continue;
     }
@@ -199,30 +200,6 @@ void ACuboid::ApplyMesh() const
     this->Mesh->SetMaterial(0, GI->MDynamicOpaque);
     this->Mesh->CreateMeshSection(0, this->Vertices, this->Triangles, this->Normals, this->UVs, this->Colors, this->Tangents, false);
     return;
-}
-
-int ACuboid::GetTextureIndex(const int VToGet, const FVector& Normal) const
-{
-    switch (VToGet)
-    {
-    case 2: return 0;
-    case 3: return 1;
-    case 4:
-        {
-            if (Normal == FVector::DownVector)
-            {
-                return 1;
-            }
-			
-            if (Normal == FVector::UpVector)
-            {
-                return 2;
-            }
-
-            return 3;
-        }
-    default: return 255;
-    }
 }
 
 void ACuboid::SetAccumulated(const FAccumulated Accumulated)
