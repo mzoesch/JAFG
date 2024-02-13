@@ -15,12 +15,12 @@ public:
 
     FAccumulated();
     explicit FAccumulated(const int InAccumulated);
-    explicit FAccumulated(const int InAccumulated, const int inAmount);
+    explicit FAccumulated(const int InAccumulated, const int InAmount);
 
 private:
 
-    int Accumulated;
-    uint16_t Amount;
+    int         Accumulated;
+    uint16_t    Amount;
 
 public:
 

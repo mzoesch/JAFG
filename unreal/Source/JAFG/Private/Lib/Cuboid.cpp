@@ -20,7 +20,7 @@ ACuboid::ACuboid()
     this->bHasCollisionConvexMesh = false;
     this->bHasPawnCollision = false;
     
-    this->Voxel = EWorldVoxel::VoxelNull;
+    this->Voxel = EWorldVoxel::WV_Null;
 
     this->TriangleIndexCounter = 0;
 
@@ -111,7 +111,7 @@ void ACuboid::GenerateMesh()
 
     this->TriangleIndexCounter = 0;
 
-    if (this->Voxel == EWorldVoxel::VoxelNull)
+    if (this->Voxel == EWorldVoxel::WV_Null)
     {
         this->ApplyMesh();
         return;

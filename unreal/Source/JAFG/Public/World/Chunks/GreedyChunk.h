@@ -29,5 +29,4 @@ private:
     
     void CreateQuad(const FMask Mask, const FIntVector AxisMask, const int Width, const int Height, const FIntVector V1, const FIntVector V2, const FIntVector V3, const FIntVector V4);
     static bool CompareMask(const FMask M1, const FMask M2);
-    
 };

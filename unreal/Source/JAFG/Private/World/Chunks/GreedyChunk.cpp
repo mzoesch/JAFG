@@ -121,8 +121,8 @@ void AGreedyChunk::GenerateMesh()
                     const auto CurrentBlock = this->GetVoxel(ChunkItr);
                     const auto CompareBlock = this->GetVoxel(ChunkItr + AxisMask);
 
-                    const bool CurrentBlockOpaque = CurrentBlock != EWorldVoxel::AirVoxel;
-                    const bool CompareBlockOpaque = CompareBlock != EWorldVoxel::AirVoxel;
+                    const bool CurrentBlockOpaque = CurrentBlock != EWorldVoxel::WV_Air;
+                    const bool CompareBlockOpaque = CompareBlock != EWorldVoxel::WV_Air;
 
                     if (CurrentBlockOpaque == CompareBlockOpaque)
                     {
@@ -130,7 +130,7 @@ void AGreedyChunk::GenerateMesh()
                         {
                             if (CompareBlock == 5 && CurrentBlock == 5)
                             {
-                                Mask[N++] = FMask{EWorldVoxel::VoxelNull, 0};
+                                Mask[N++] = FMask{EWorldVoxel::WV_Null, 0};
                             }
                             else
                             {
@@ -143,7 +143,7 @@ void AGreedyChunk::GenerateMesh()
                         }
                         else
                         {
-                            Mask[N++] = FMask{EWorldVoxel::VoxelNull, 0};
+                            Mask[N++] = FMask{EWorldVoxel::WV_Null, 0};
                         }
                     }
                     else if (CurrentBlockOpaque)
@@ -211,7 +211,7 @@ void AGreedyChunk::GenerateMesh()
                         {
                             for (int k = 0; k < Width; ++k)
                             {
-                                Mask[N + k + l * Axis1Limit] = FMask{EWorldVoxel::VoxelNull, 0};
+                                Mask[N + k + l * Axis1Limit] = FMask{EWorldVoxel::WV_Null, 0};
                             }
                         }
 

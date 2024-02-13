@@ -125,7 +125,7 @@ FString FGeneral::GetNormalSuffix(const ENormalLookup Normal)
 
 UTexture2D* FGeneral::LoadTexture2D(const FAccumulated Accumulated)
 {
-    if (Accumulated.GetVoxel() != EWorldVoxel::VoxelNull)
+    if (Accumulated.GetVoxel() != EWorldVoxel::WV_Null)
     {
         if (FGeneral::Cached2DTextures.Contains(FGeneral::GI->GetVoxelName(Accumulated.GetVoxel())))
         {

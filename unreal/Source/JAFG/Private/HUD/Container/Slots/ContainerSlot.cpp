@@ -28,7 +28,7 @@ void UW_ContainerSlot::RenderSlot()
 {
     this->SlotBackground->SetColorAndOpacity(FLinearColor(0.1f, 0.1f, 0.1f, 1.0f));
 
-    if (this->ContainerSlotData->Accumulated.GetVoxel() != EWorldVoxel::VoxelNull)
+    if (this->ContainerSlotData->Accumulated.GetVoxel() != EWorldVoxel::WV_Null)
     {
         this->AccumulatedAmount->SetText(this->ContainerSlotData->Accumulated.GetAmount() != 0 ? FText::FromString(FString::FromInt(this->ContainerSlotData->Accumulated.GetAmount())) : FText());
 

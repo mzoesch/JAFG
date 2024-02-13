@@ -166,7 +166,7 @@ void AChunk::GenerateSuperFlatWorld()
                     continue;
                 }
                 
-                this->Voxels[AChunk::GetVoxelIndex(FIntVector(X, Y, Z))] = EWorldVoxel::AirVoxel;
+                this->Voxels[AChunk::GetVoxelIndex(FIntVector(X, Y, Z))] = EWorldVoxel::WV_Air;
                 
                 continue;
             }
@@ -228,7 +228,7 @@ void AChunk::DWShapeTerrain()
                 const float PercentageHeight = (WorldZ / CW->GetHighestPointV2()) * CW->FakeHeightMultiplier;
                 const float Density = (HighestDensity + 1) * PercentageHeight - 1;
 
-                this->Voxels[AChunk::GetVoxelIndex(FIntVector(X, Y, Z))] = CW->NWorld->GetNoise(WorldX, WorldY, WorldZ) < Density ? EWorldVoxel::AirVoxel : 2;
+                this->Voxels[AChunk::GetVoxelIndex(FIntVector(X, Y, Z))] = CW->NWorld->GetNoise(WorldX, WorldY, WorldZ) < Density ? EWorldVoxel::WV_Air : 2;
                     
                 continue;
             }
@@ -275,7 +275,7 @@ void AChunk::DWReplaceSurface()
             
             for (int Z = AChunk::CHUNK_SIZE - 1; Z >= 0; --Z)
             {
-                if (this->GetVoxel(FIntVector(X, Y, Z)) == EWorldVoxel::AirVoxel)
+                if (this->GetVoxel(FIntVector(X, Y, Z)) == EWorldVoxel::WV_Air)
                 {
                     Modified = 0;
                     continue;
@@ -450,7 +450,7 @@ int AChunk::GetVoxel(const FIntVector& LocalVoxelPosition) const
     {
         if (CW->GetChunkByKey(this->GetTopChunkKey()) == nullptr)
         {
-            return EWorldVoxel::AirVoxel;
+            return EWorldVoxel::WV_Air;
         }
 
         return CW->GetChunkByKey(this->GetTopChunkKey())->GetVoxel(FIntVector(LocalVoxelPosition.X, LocalVoxelPosition.Y, 0));
@@ -465,7 +465,7 @@ int AChunk::GetVoxel(const FIntVector& LocalVoxelPosition) const
         || LocalVoxelPosition.Z < 0
     )
     {
-        return EWorldVoxel::AirVoxel;
+        return EWorldVoxel::WV_Air;
     }
     
     return this->Voxels[AChunk::GetVoxelIndex(LocalVoxelPosition)];

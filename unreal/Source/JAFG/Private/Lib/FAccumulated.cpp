@@ -4,11 +4,11 @@
 
 #include "World/WorldVoxel.h"
 
-const FAccumulated FAccumulated::NullAccumulated = FAccumulated(EWorldVoxel::VoxelNull, 0);
+const FAccumulated FAccumulated::NullAccumulated = FAccumulated(EWorldVoxel::WV_Null, 0);
 
 FAccumulated::FAccumulated()
 {
-    this->Accumulated   = EWorldVoxel::VoxelNull;
+    this->Accumulated   = EWorldVoxel::WV_Null;
     this->Amount        = 0;
 
     return;
