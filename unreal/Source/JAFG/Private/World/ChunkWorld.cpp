@@ -98,9 +98,9 @@ void AChunkWorld::Tick(const float DeltaTime)
         const FTransform Transform = FTransform(
             FRotator::ZeroRotator,
             FVector(
-                Key.X * AChunk::CHUNK_SIZE * AJCoordinate::J_TO_U_SCALE,
-                Key.Y * AChunk::CHUNK_SIZE * AJCoordinate::J_TO_U_SCALE,
-                Key.Z * AChunk::CHUNK_SIZE * AJCoordinate::J_TO_U_SCALE
+                Key.X * AChunk::CHUNK_SIZE * UJCoordinate::J_TO_U_SCALE,
+                Key.Y * AChunk::CHUNK_SIZE * UJCoordinate::J_TO_U_SCALE,
+                Key.Z * AChunk::CHUNK_SIZE * UJCoordinate::J_TO_U_SCALE
             ),
             FVector::OneVector
         );
@@ -243,7 +243,7 @@ FIntVector AChunkWorld::WorldToChunkPosition(const FVector& WorldPosition)
 {
     FIntVector          ChunkPosition;
     const FIntVector    IntPosition     = FIntVector(WorldPosition);
-    constexpr int       Factor          = AChunk::CHUNK_SIZE * AJCoordinate::J_TO_U_SCALE;
+    constexpr int       Factor          = AChunk::CHUNK_SIZE * UJCoordinate::J_TO_U_SCALE;
     
     if (IntPosition.X < 0) ChunkPosition.X = (int) (WorldPosition.X / Factor) - 1;
     else ChunkPosition.X = (int) (WorldPosition.X / Factor);

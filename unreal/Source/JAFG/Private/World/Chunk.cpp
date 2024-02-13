@@ -55,8 +55,8 @@ void AChunk::BeginPlay()
 void AChunk::Setup()
 {
     this->Voxels.SetNum(AChunk::CHUNK_SIZE * AChunk::CHUNK_SIZE * AChunk::CHUNK_SIZE, false);
-    this->ChunkPosition = this->GetActorLocation() * AJCoordinate::U_TO_J_SCALE;
-    this->ChunkKey = FIntVector((this->GetActorLocation() * AJCoordinate::U_TO_J_SCALE) / (AChunk::CHUNK_SIZE - 1));
+    this->ChunkPosition = this->GetActorLocation() * UJCoordinate::U_TO_J_SCALE;
+    this->ChunkKey = FIntVector((this->GetActorLocation() * UJCoordinate::U_TO_J_SCALE) / (AChunk::CHUNK_SIZE - 1));
     return;
 }
 

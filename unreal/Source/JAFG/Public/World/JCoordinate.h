@@ -8,7 +8,7 @@
 #include "JCoordinate.generated.h"
 
 UCLASS()
-class JAFG_API AJCoordinate : public AActor
+class JAFG_API UJCoordinate : public UObject
 {
     GENERATED_BODY()
     
