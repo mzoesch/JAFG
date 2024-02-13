@@ -27,7 +27,7 @@ void FSlot::OnClicked(ACH_Master* Trigger, bool& bOutChangedData)
     {
         if (this->Content == Trigger->CursorHand)
         {
-            this->Content.AddAmount(this->Content.GetAmount());
+            this->Content.Amount += this->Content.Amount;
             Trigger->CursorHand = FAccumulated::NullAccumulated;
 
             return;

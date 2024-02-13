@@ -125,20 +125,20 @@ FString FGeneral::GetNormalSuffix(const ENormalLookup Normal)
 
 UTexture2D* FGeneral::LoadTexture2D(const FAccumulated Accumulated)
 {
-    if (Accumulated.GetVoxel() != EWorldVoxel::WV_Null)
+    if (Accumulated.Accumulated != EWorldVoxel::WV_Null)
     {
-        if (FGeneral::Cached2DTextures.Contains(FGeneral::GI->GetVoxelName(Accumulated.GetVoxel())))
+        if (FGeneral::Cached2DTextures.Contains(FGeneral::GI->GetVoxelName(Accumulated.Accumulated)))
         {
-            return FGeneral::Cached2DTextures[FGeneral::GI->GetVoxelName(Accumulated.GetVoxel())];
+            return FGeneral::Cached2DTextures[FGeneral::GI->GetVoxelName(Accumulated.Accumulated)];
         }
 
-        if (UTexture2D* Tex =  FGeneral::LoadTexture2DFromDisk(FString::Printf(TEXT("%s%s.png"), *FGeneral::GeneratedAssetsDirectory, *GI->GetVoxelName(Accumulated.GetVoxel()))))
+        if (UTexture2D* Tex =  FGeneral::LoadTexture2DFromDisk(FString::Printf(TEXT("%s%s.png"), *FGeneral::GeneratedAssetsDirectory, *GI->GetVoxelName(Accumulated.Accumulated))))
         {
-            FGeneral::Cached2DTextures.Add(FGeneral::GI->GetVoxelName(Accumulated.GetVoxel()), Tex);
+            FGeneral::Cached2DTextures.Add(FGeneral::GI->GetVoxelName(Accumulated.Accumulated), Tex);
             return Tex;
         }
 
-        UIL_LOG(Error, TEXT("FGeneral::LoadTexture2D - Failed to load texture for voxel: %s"), *GI->GetVoxelName(Accumulated.GetVoxel()));
+        UIL_LOG(Error, TEXT("FGeneral::LoadTexture2D - Failed to load texture for voxel: %s"), *GI->GetVoxelName(Accumulated.Accumulated));
         
         return nullptr;
     }

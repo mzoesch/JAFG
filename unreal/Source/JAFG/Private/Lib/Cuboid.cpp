@@ -74,7 +74,7 @@ void ACuboid::GenerateMesh(const int V)
 
 void ACuboid::GenerateMesh(const FAccumulated Accumulated)
 {
-    this->Voxel = Accumulated.GetVoxel();
+    this->Voxel = Accumulated.Accumulated;
     
     this->GenerateMesh();
 
@@ -196,7 +196,7 @@ void ACuboid::ApplyMesh() const
 
 void ACuboid::SetAccumulated(const FAccumulated Accumulated)
 {
-    this->Voxel = Accumulated.GetVoxel();
+    this->Voxel = Accumulated.Accumulated;
 
     return;
 }

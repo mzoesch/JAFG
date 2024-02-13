@@ -14,10 +14,10 @@ struct JAFG_API FAccumulated
 public:
 
     FAccumulated();
-    explicit FAccumulated(const int InAccumulated);
-    explicit FAccumulated(const int InAccumulated, const int InAmount);
+    explicit FAccumulated(const int AccumulatedIndex);
+    explicit FAccumulated(const int AccumulatedIndex, const int InAmount);
 
-private:
+public:
 
     int         Accumulated;
     uint16_t    Amount;
@@ -28,17 +28,9 @@ public:
     
 public:
     
-    int GetVoxel() const { return this->Accumulated; }
-    void SetVoxel(const int V) { this->Accumulated = V; }
-    uint16_t GetAmount() const { return this->Amount; }
-    void SetAmount(const uint16_t A) { this->Amount = A; }
-    void AddAmount(const uint16_t A) { this->Amount += A; }
-
-public:
-    
-    /** Does not compare the amount. */
+    /** Does not compare amount. */
     FORCEINLINE bool operator==(const FAccumulated& O) const { return this->Accumulated == O.Accumulated; }
-    /** Does not compare the amount. */
-    static FORCEINLINE bool Equals(const FAccumulated& A, const FAccumulated& B) { return A == B; }
-    FString ToString() const;
+    /** Does not compare amount. */
+    FORCEINLINE static bool Equals(const FAccumulated& A, const FAccumulated& B) { return A == B; }
+    FORCEINLINE FString ToString() const { return FString::Printf(TEXT("FAccumulated{Accumulated:%d,Amount:%d}"), this->Accumulated, this->Amount); }
 };

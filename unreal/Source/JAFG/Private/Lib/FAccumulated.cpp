@@ -14,21 +14,16 @@ FAccumulated::FAccumulated()
     return;
 }
 
-FAccumulated::FAccumulated(const int InAccumulated)
+FAccumulated::FAccumulated(const int AccumulatedIndex)
 {
-    this->FAccumulated::FAccumulated(InAccumulated, 1);
+    this->FAccumulated::FAccumulated(AccumulatedIndex, 1);
     return;
 }
 
-FAccumulated::FAccumulated(const int InAccumulated, const int InAmount)
+FAccumulated::FAccumulated(const int AccumulatedIndex, const int InAmount)
 {
-    this->Accumulated   = InAccumulated;
+    this->Accumulated   = AccumulatedIndex;
     this->Amount        = InAmount;
 
     return;
-}
-
-FString FAccumulated::ToString() const
-{
-    return FString::Printf(TEXT("FAccumulated {Voxel: %d,Amount: %d}"), this->Accumulated, this->Amount);
 }

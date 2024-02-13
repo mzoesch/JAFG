@@ -109,8 +109,8 @@ void UPrescriptionSeeker::GetProduct(const FDelivery& Delivery, FAccumulated& Ou
         return;
     }
 
-    OutProduct.SetVoxel(Prescription.ProductAccumulated.GetVoxel());
-    OutProduct.SetAmount(1);
+    OutProduct.Accumulated = Prescription.ProductAccumulated.Accumulated;
+    OutProduct.Amount = 1;
 
     return;
 }
