@@ -4,8 +4,6 @@
 
 #include "CoreMinimal.h"
 
-#include "Lib/Item.h"
-
 #include "FAccumulated.generated.h"
 
 USTRUCT()
@@ -16,17 +14,12 @@ struct JAFG_API FAccumulated
 public:
 
     FAccumulated();
-    explicit FAccumulated(const int V);
-    explicit FAccumulated(const EItem I);
-    explicit FAccumulated(const int V, const uint16_t);
-    explicit FAccumulated(const EItem I, const uint16_t);
-    explicit FAccumulated(const EItem I, const int V);
-    explicit FAccumulated(const int V, const EItem I, const uint16_t A);
+    explicit FAccumulated(const int InAccumulated);
+    explicit FAccumulated(const int InAccumulated, const int inAmount);
 
 private:
 
-    int Voxel;
-    EItem Item;
+    int Accumulated;
     uint16_t Amount;
 
 public:
@@ -35,9 +28,8 @@ public:
     
 public:
     
-    int GetVoxel() const { return this->Voxel; }
-    void SetVoxel(const int V) { this->Voxel = V; }
-    EItem GetItem() const { return this->Item; }
+    int GetVoxel() const { return this->Accumulated; }
+    void SetVoxel(const int V) { this->Accumulated = V; }
     uint16_t GetAmount() const { return this->Amount; }
     void SetAmount(const uint16_t A) { this->Amount = A; }
     void AddAmount(const uint16_t A) { this->Amount += A; }
@@ -45,7 +37,7 @@ public:
 public:
     
     /** Does not compare the amount. */
-    FORCEINLINE bool operator==(const FAccumulated& O) const { return this->Voxel == O.Voxel && this->Item == O.Item; }
+    FORCEINLINE bool operator==(const FAccumulated& O) const { return this->Accumulated == O.Accumulated; }
     /** Does not compare the amount. */
     static FORCEINLINE bool Equals(const FAccumulated& A, const FAccumulated& B) { return A == B; }
     FString ToString() const;

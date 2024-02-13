@@ -21,7 +21,6 @@ ACuboid::ACuboid()
     this->bHasPawnCollision = false;
     
     this->Voxel = EWorldVoxel::VoxelNull;
-    this->Item = EItem::NullItem;
 
     this->TriangleIndexCounter = 0;
 
@@ -67,12 +66,6 @@ void ACuboid::BeginPlay()
     return;
 }
 
-void ACuboid::GenerateMesh(const EItem I)
-{
-    this->GenerateMesh(FAccumulated(I));
-    return;
-}
-
 void ACuboid::GenerateMesh(const int V)
 {
     this->GenerateMesh(FAccumulated(V));
@@ -81,7 +74,6 @@ void ACuboid::GenerateMesh(const int V)
 
 void ACuboid::GenerateMesh(const FAccumulated Accumulated)
 {
-    this->Item  = Accumulated.GetItem();
     this->Voxel = Accumulated.GetVoxel();
     
     this->GenerateMesh();
@@ -119,7 +111,7 @@ void ACuboid::GenerateMesh()
 
     this->TriangleIndexCounter = 0;
 
-    if (this->Voxel == EWorldVoxel::VoxelNull && this->Item == EItem::NullItem)
+    if (this->Voxel == EWorldVoxel::VoxelNull)
     {
         this->ApplyMesh();
         return;
@@ -204,7 +196,6 @@ void ACuboid::ApplyMesh() const
 
 void ACuboid::SetAccumulated(const FAccumulated Accumulated)
 {
-    this->Item = Accumulated.GetItem();
     this->Voxel = Accumulated.GetVoxel();
 
     return;

@@ -4,66 +4,31 @@
 
 #include "World/WorldVoxel.h"
 
-const FAccumulated FAccumulated::NullAccumulated = FAccumulated(EWorldVoxel::VoxelNull, EItem::NullItem, 0);
+const FAccumulated FAccumulated::NullAccumulated = FAccumulated(EWorldVoxel::VoxelNull, 0);
 
 FAccumulated::FAccumulated()
 {
-    this->Item = EItem::NullItem;
-    this->Voxel = EWorldVoxel::VoxelNull;
-    this->Amount = 0;
+    this->Accumulated   = EWorldVoxel::VoxelNull;
+    this->Amount        = 0;
 
     return;
 }
 
-FAccumulated::FAccumulated(const int V)
+FAccumulated::FAccumulated(const int InAccumulated)
 {
-    this->FAccumulated::FAccumulated(V, 1);
+    this->FAccumulated::FAccumulated(InAccumulated, 1);
     return;
 }
 
-FAccumulated::FAccumulated(const EItem I)
+FAccumulated::FAccumulated(const int InAccumulated, const int InAmount)
 {
-    this->FAccumulated::FAccumulated(I, 1);
-    return;
-}
-
-FAccumulated::FAccumulated(const int V, const uint16_t A)
-{
-    this->Item = EItem::NullItem;
-    this->Voxel = V;
-    this->Amount = A;
-
-    return;
-}
-
-FAccumulated::FAccumulated(const EItem I, const uint16_t A)
-{
-    this->Item = I;
-    this->Voxel = EWorldVoxel::VoxelNull;
-    this->Amount = A;
-
-    return;
-}
-
-FAccumulated::FAccumulated(const EItem I, const int V)
-{
-    this->Item = I;
-    this->Voxel = V;
-    this->Amount = 1;
-
-    return;
-}
-
-FAccumulated::FAccumulated(const int V, const EItem I, const uint16_t A)
-{
-    this->Item = I;
-    this->Voxel = V;
-    this->Amount = A;
+    this->Accumulated   = InAccumulated;
+    this->Amount        = InAmount;
 
     return;
 }
 
 FString FAccumulated::ToString() const
 {
-    return FString::Printf(TEXT("FAccumulated { Voxel: %d, Item: %s, Amount: %d }"), this->Voxel, *UEnum::GetValueAsString(this->Item), this->Amount);
+    return FString::Printf(TEXT("FAccumulated {Voxel: %d,Amount: %d}"), this->Accumulated, this->Amount);
 }

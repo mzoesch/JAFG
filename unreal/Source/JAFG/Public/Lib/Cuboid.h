@@ -6,7 +6,6 @@
 #include "ProceduralMeshComponent.h"
 #include "GameFramework/Actor.h"
 
-#include "Lib/Item.h"
 #include "World/WorldVoxel.h"
 #include "Lib/FAccumulated.h"
 
@@ -63,7 +62,6 @@ public:
     
 public:
 
-    void GenerateMesh(const EItem I);
     UFUNCTION(BlueprintCallable, Category = "Mesh")
     void GenerateMesh(const int V);
     void GenerateMesh(const FAccumulated Accumulated);
@@ -81,7 +79,6 @@ private:
     bool bHasPawnCollision;
     
     int Voxel;
-    EItem Item;
 
     int32 TriangleIndexCounter = 0;
     FVector PreDefinedShape[8];
