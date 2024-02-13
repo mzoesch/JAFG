@@ -8,6 +8,7 @@
 
 #include "Lib/FAccumulated.h"
 #include "Lib/PrescriptionSeeker.h"
+#include "Lib/Container/Slot.h"
 
 #include "CH_Master.generated.h"
 
@@ -33,18 +34,17 @@ protected:
 public:	
 
     virtual void Tick(const float DeltaTime) override;
-    virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+    virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
 #pragma region Components
 
 public:
 
-    /* TODO Are these params necessary? */
-    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-    UCameraComponent* FirstPersonCameraComponent;
-
-    UPROPERTY()
-    ACuboid* ItemPreview;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+    UCameraComponent*   FirstPersonCameraComponent;
+    
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    ACuboid*            ItemPreview;
     
 #pragma endregion Components
     
@@ -147,36 +147,29 @@ private:
     void OnQuickSlot7(const FInputActionValue& Value);
     void OnQuickSlot8(const FInputActionValue& Value);
     void OnQuickSlot9(const FInputActionValue& Value);
-    void OnQuickSlotSelect(const int Slot);
+    void OnQuickSlot(const int Slot);
 
     /* MISC */
     void OnDebugScreenToggle(const FInputActionValue& Value);
     
 #pragma endregion Input Actions
-
-#pragma region Static Meshes
-
-public:
-    
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category="Mesh")
-    const TObjectPtr<UMaterialInterface> DevMaterial;
-    
-#pragma endregion Static Meshes
     
 #pragma region Member Methods, Variables
 
 #pragma region Inventory
     
 private:
+    
 
     static constexpr int    InventoryStartSize{78};
+    static constexpr int    InventoryCrafterWidth{2};
     static constexpr int    InventoryCrafterSize{4};
 
-    int                     SelectedQuickSlot;
-    FAccumulated            AccumulatedInCursorHand;
-    TArray<FAccumulated>    Inventory;
-    TArray<FAccumulated>    InventoryCrafter;
-    FAccumulated            InventoryCrafterOutput;
+            int             SelectedQuickSlotIndex;
+public:     FAccumulated    CursorHand;
+private:    TArray<FSlot>   Inventory;
+            TArray<FSlot>   InventoryCrafter;
+            FAccumulated    InventoryCrafterProduct;
 
 #pragma region Inventory Manipulation
     
@@ -187,55 +180,31 @@ public:
     // a bUpdateHUD parameter boolean will never trigger a re-render.
     //
     
-    FORCEINLINE FAccumulated    GetAccumulatedInCursorHand() const { return this->AccumulatedInCursorHand; }
-    /** Must be used with cautions as there is no check for any safety. */
-    FORCEINLINE FAccumulated    OverrideAccumulatedInCursorHand(const FAccumulated Accumulated) { return this->AccumulatedInCursorHand = Accumulated; }
-    void                        ExecuteBehaviorToClearAccumulatedInCursorHand(const bool bUpdateHUD);
+    void                        ClearCursorHand(const bool bUpdateHUD);
     
     FORCEINLINE int             GetInventorySize() const { return this->Inventory.Num(); }
-    FORCEINLINE FAccumulated    GetInventorySlot(const int Slot) const { return this->Inventory[Slot]; }
-    /** Must be used with cautions as there is no check for any safety. */
-    FORCEINLINE void            OverrideInventorySlot(const int Slot, const FAccumulated Accumulated) { this->Inventory[Slot] = Accumulated; }
-    
+    FORCEINLINE FAccumulated    GetInventorySlot(const int Slot) const { return this->Inventory[Slot].Content; }
     bool                        AddToInventory(const FAccumulated Accumulated, const bool bUpdateHUD);
     void                        OnInventorySlotClicked(const int Slot, const bool bUpdateHUD);
-
-    FORCEINLINE int             GetSelectedQuickSlot()                  const { return this->SelectedQuickSlot; }
-    FORCEINLINE FAccumulated    GetAccumulatedAtSelectedQuickSlot()     const { return this->Inventory[this->SelectedQuickSlot]; }
+    
+    FORCEINLINE int             GetSelectedQuickSlotIndex() const { return this->SelectedQuickSlotIndex; }
+    FORCEINLINE FAccumulated    GetSelectedQuickSlot() const { return this->Inventory[this->SelectedQuickSlotIndex].Content; }
 
     FORCEINLINE int             GetInventoryCrafterSize() const { return this->InventoryCrafter.Num(); }
-    FORCEINLINE FAccumulated    GetInventoryCrafterSlot(const int Slot) const { return this->InventoryCrafter[Slot]; }
-    FORCEINLINE FDelivery       GetInventoryCrafterAsDelivery() const { return FDelivery{this->InventoryCrafter, 2}; }
-    
-    void                        OnInventoryCrafterSlotClicked(const int Slot, const bool bUpdateHUD);
-    /** E.g. if the character inventory was closed while items are in the crafter. */
-    void                        ExecuteBehaviorToClearInventoryCrafterSlots(const bool bUpdateHUD);
+    FORCEINLINE FAccumulated    GetInventoryCrafterSlot(const int Slot) const { return this->InventoryCrafter[Slot].Content; }
     FAccumulated                GetInventoryCrafterProduct() const;
+    FORCEINLINE FDelivery       GetInventoryCrafterAsDelivery() const
+    {
+        TArray<FAccumulated> DeliveryContents; for (const FSlot& S : this->InventoryCrafter) { DeliveryContents.Add(S.Content); }
+        return FDelivery{DeliveryContents, ACH_Master::InventoryCrafterWidth};
+    }
+    void                        ClearInventoryCrafterSlots(const bool bUpdateHUD);
+    void                        OnInventoryCrafterSlotClicked(const int Slot, const bool bUpdateHUD);
     void                        OnInventoryCrafterProductClicked(const bool bUpdateHUD);
     
 private:
-
-    FORCEINLINE void SwapInventorySlots(const int SlotA, const int SlotB) { this->Inventory.Swap(SlotA, SlotB); }
-    FORCEINLINE void SwapInventorySlotWithCursorHand(const int Slot)
-    {
-        const FAccumulated Temp         = this->Inventory[Slot];
-        this->Inventory[Slot]           = this->AccumulatedInCursorHand;
-        this->AccumulatedInCursorHand   = Temp;
-
-        return;
-    }
-    FORCEINLINE void SwapInventoryCrafterSlotWithCursorHand(const int Slot)
-    {
-        const FAccumulated Temp         = this->InventoryCrafter[Slot];
-        this->InventoryCrafter[Slot]    = this->AccumulatedInCursorHand;
-        this->AccumulatedInCursorHand   = Temp;
-
-        return;
-    }
+    
     void AddToInventoryAtSlot(const int Slot, const int Amount, const bool bUpdateHUD);
-    /** Must be used with cautions as there is no check for any safety. */
-    void OverrideInventoryAtSlot(const int Slot, const FAccumulated Accumulated, const bool bUpdateHUD);
-
     void AddToInventoryCrafterAtSlot(const int Slot, const int Amount, const bool bUpdateHUD);
     
     /** In the character crafter we obviously have to remove the accumulated items that where needed to craft such item. */
