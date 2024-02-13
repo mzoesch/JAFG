@@ -31,15 +31,15 @@ void UW_ContainerSlot::RenderSlot()
     if (this->ContainerSlotData->Accumulated.Accumulated != EWorldVoxel::WV_Null)
     {
         this->AccumulatedAmount->SetText(this->ContainerSlotData->Accumulated.Amount != 0 ? FText::FromString(FString::FromInt(this->ContainerSlotData->Accumulated.Amount)) : FText());
-
+    
         if (UTexture2D* Texture = FGeneral::LoadTexture2D(this->ContainerSlotData->Accumulated))
         {
             this->AccumulatedPreview->SetBrushFromTexture(Texture);
             this->AccumulatedPreview->SetColorAndOpacity(FLinearColor::White);
-
+        
             return;
         }
-
+    
         this->AccumulatedPreview->SetBrushFromTexture(GI->NoTexture);
         this->AccumulatedPreview->SetColorAndOpacity(FLinearColor::White);
         

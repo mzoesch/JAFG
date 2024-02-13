@@ -3,6 +3,7 @@
 #include "Lib/FAccumulated.h"
 
 #include "World/WorldVoxel.h"
+#include "Core/GI_Master.h"
 
 const FAccumulated FAccumulated::NullAccumulated = FAccumulated(EWorldVoxel::WV_Null, 0);
 

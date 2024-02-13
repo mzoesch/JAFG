@@ -132,7 +132,7 @@ UTexture2D* FGeneral::LoadTexture2D(const FAccumulated Accumulated)
             return FGeneral::Cached2DTextures[FGeneral::GI->GetVoxelName(Accumulated.Accumulated)];
         }
 
-        if (UTexture2D* Tex =  FGeneral::LoadTexture2DFromDisk(FString::Printf(TEXT("%s%s.png"), *FGeneral::GeneratedAssetsDirectory, *GI->GetVoxelName(Accumulated.Accumulated))))
+        if (UTexture2D* Tex = FGeneral::LoadTexture2DFromDisk(FString::Printf(TEXT("%s%s.png"), *FGeneral::GeneratedAssetsDirectory, *GI->GetVoxelName(Accumulated.Accumulated))))
         {
             FGeneral::Cached2DTextures.Add(FGeneral::GI->GetVoxelName(Accumulated.Accumulated), Tex);
             return Tex;
