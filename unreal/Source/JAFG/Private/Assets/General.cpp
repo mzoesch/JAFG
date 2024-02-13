@@ -82,7 +82,13 @@ UTexture2D* FGeneral::LoadTexture2DFromDisk(const FString& Path)
         NormalizedPath.RemoveFromEnd(TEXT("/"));
         FPlatformMisc::NormalizePath(NormalizedPath);
 
-        return FImageUtils::ImportFileAsTexture2D(NormalizedPath);
+        UTexture2D* Tex = FImageUtils::ImportFileAsTexture2D(NormalizedPath);
+        Tex->MipGenSettings = TMGS_NoMipmaps;
+        Tex->CompressionSettings = TC_VectorDisplacementmap;
+        Tex->SRGB = false;
+        Tex->Filter = TextureFilter::TF_Nearest;
+        Tex->LODGroup = TextureGroup::TEXTUREGROUP_Pixels2D;
+        return Tex;
     }
 
     return nullptr;
@@ -125,19 +131,30 @@ FString FGeneral::GetNormalSuffix(const ENormalLookup Normal)
 
 UTexture2D* FGeneral::LoadTexture2D(const FAccumulated Accumulated)
 {
-    if (Accumulated.Accumulated != EWorldVoxel::WV_Null)
+    if (Accumulated.Accumulated != FAccumulated::NullAccumulated.Accumulated)
     {
         if (FGeneral::Cached2DTextures.Contains(FGeneral::GI->GetVoxelName(Accumulated.Accumulated)))
         {
             return FGeneral::Cached2DTextures[FGeneral::GI->GetVoxelName(Accumulated.Accumulated)];
         }
 
-        if (UTexture2D* Tex = FGeneral::LoadTexture2DFromDisk(FString::Printf(TEXT("%s%s.png"), *FGeneral::GeneratedAssetsDirectory, *GI->GetVoxelName(Accumulated.Accumulated))))
+        if (Accumulated.IsVoxel())
         {
-            FGeneral::Cached2DTextures.Add(FGeneral::GI->GetVoxelName(Accumulated.Accumulated), Tex);
-            return Tex;
+            if (UTexture2D* Tex = FGeneral::LoadTexture2DFromDisk(FString::Printf(TEXT("%s%s.png"), *FGeneral::GeneratedAssetsDirectory, *GI->GetVoxelName(Accumulated.Accumulated))))
+            {
+                FGeneral::Cached2DTextures.Add(FGeneral::GI->GetVoxelName(Accumulated.Accumulated), Tex);
+                return Tex;
+            }
         }
-
+        else
+        {
+            if (UTexture2D* Tex = FGeneral::LoadTexture2DFromDisk(FString::Printf(TEXT("%s%s.png"), *FGeneral::ItemTextureDirectory, *GI->GetVoxelName(Accumulated.Accumulated))))
+            {
+                FGeneral::Cached2DTextures.Add(FGeneral::GI->GetVoxelName(Accumulated.Accumulated), Tex);
+                return Tex;
+            }
+        }
+        
         UIL_LOG(Error, TEXT("FGeneral::LoadTexture2D - Failed to load texture for voxel: %s"), *GI->GetVoxelName(Accumulated.Accumulated));
         
         return nullptr;

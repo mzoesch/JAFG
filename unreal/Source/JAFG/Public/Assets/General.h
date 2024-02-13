@@ -27,6 +27,8 @@ public:
 
     static const inline FString VoxelTextureDirectory               = FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir() + "Assets/Textures/Voxels/");
     static const inline FString UnrealVoxelTextureDirectory         = "/Game/Assets/Textures/Voxels/";
+
+    static const inline FString ItemTextureDirectory                = FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir() + "Assets/Textures/Items/");
     
 private:
 

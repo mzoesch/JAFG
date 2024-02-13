@@ -10,3 +10,4 @@ Consitent naming <br />
 
 
 
+Enums with e prefix on items

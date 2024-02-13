@@ -4,8 +4,10 @@
 
 #include "ProceduralMeshComponent.h"
 #include "Components/SphereComponent.h"
+
 #include "Core/CH_Master.h"
 #include "Core/GI_Master.h"
+#include "Lib/FAccumulated.h"
 
 #define GI CastChecked<UGI_Master>(this->GetGameInstance())
 
@@ -17,12 +19,10 @@ ACuboid::ACuboid()
     this->Mesh->SetCastShadow(false);
     this->SetRootComponent(this->Mesh);
 
-    this->bHasCollisionConvexMesh = false;
-    this->bHasPawnCollision = false;
-    
-    this->Voxel = EWorldVoxel::WV_Null;
-
-    this->TriangleIndexCounter = 0;
+    this->bHasCollisionConvexMesh   = false;
+    this->bHasPawnCollision         = false;
+    this->AccumulatedIndex          = FAccumulated::NullAccumulated.Accumulated;
+    this->TriangleIndexCounter      = 0;
 
     this->SphereComponent = this->CreateDefaultSubobject<USphereComponent>(TEXT("SpehereComponent"));
     this->SphereComponent->InitSphereRadius(this->CollisionSphereRadius);
@@ -66,18 +66,10 @@ void ACuboid::BeginPlay()
     return;
 }
 
-void ACuboid::GenerateMesh(const int V)
+void ACuboid::GenerateMesh(const int InAccumulatedIndex)
 {
-    this->GenerateMesh(FAccumulated(V));
-    return;
-}
-
-void ACuboid::GenerateMesh(const FAccumulated Accumulated)
-{
-    this->Voxel = Accumulated.Accumulated;
-    
+    this->AccumulatedIndex = InAccumulatedIndex;
     this->GenerateMesh();
-
     return;
 }
 
@@ -92,7 +84,7 @@ void ACuboid::OnSphereComponentOverlapBegin(UPrimitiveComponent* OverlappedCompo
     //      This ofc has to move to the AActor class. And then we need to check if
     //      the AActor has a specific interface and calls the method from the interface.
 
-    if (ACH_Master* Character = CastChecked<ACH_Master>(OtherActor); Character->AddToInventory(FAccumulated(this->Voxel, 1), true))
+    if (ACH_Master* Character = CastChecked<ACH_Master>(OtherActor); Character->AddToInventory(FAccumulated(this->AccumulatedIndex, 1), true))
     {
         this->Destroy();
     }
@@ -108,10 +100,9 @@ void ACuboid::GenerateMesh()
     this->Tangents.Reset();
     this->UVs.Reset();
     this->Colors.Reset();
-
     this->TriangleIndexCounter = 0;
 
-    if (this->Voxel == EWorldVoxel::WV_Null)
+    if (this->AccumulatedIndex == FAccumulated::NullAccumulated.Accumulated)
     {
         this->ApplyMesh();
         return;
@@ -172,8 +163,16 @@ void ACuboid::CreateQuadrilateral(const FVector& TopRight, const FVector& Bottom
         {
             TextureNormal = FVector::UpVector;
         }
-        this->Colors.Add(FColor(0, 0, 0, GI->GetTextureIndex(this->Voxel, TextureNormal)));
+        if (FAccumulated(this->AccumulatedIndex).IsVoxel())
+        {
+            this->Colors.Add(FColor(0, 0, 0, GI->GetTextureIndex(this->AccumulatedIndex, TextureNormal)));
+        }
+        else
+        {
+            this->Colors.Add(FColor(0, 0, 0, 0));
+        }
 
+        
         continue;
     }
 
@@ -191,13 +190,6 @@ void ACuboid::ApplyMesh() const
 {
     this->Mesh->SetMaterial(0, GI->MDynamicOpaque);
     this->Mesh->CreateMeshSection(0, this->Vertices, this->Triangles, this->Normals, this->UVs, this->Colors, this->Tangents, false);
-    return;
-}
-
-void ACuboid::SetAccumulated(const FAccumulated Accumulated)
-{
-    this->Voxel = Accumulated.Accumulated;
-
     return;
 }
 

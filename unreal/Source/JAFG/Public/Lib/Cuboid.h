@@ -6,7 +6,6 @@
 #include "ProceduralMeshComponent.h"
 #include "GameFramework/Actor.h"
 
-#include "World/WorldVoxel.h"
 #include "Lib/FAccumulated.h"
 
 #include "Cuboid.generated.h"
@@ -51,10 +50,10 @@ public:
 protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-    class UProceduralMeshComponent* Mesh;
+    UProceduralMeshComponent* Mesh;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-    class USphereComponent* SphereComponent;
+    USphereComponent* SphereComponent;
 
 public:
 
@@ -63,8 +62,7 @@ public:
 public:
 
     UFUNCTION(BlueprintCallable, Category = "Mesh")
-    void GenerateMesh(const int V);
-    void GenerateMesh(const FAccumulated Accumulated);
+    void GenerateMesh(const int InAccumulatedIndex);
 
     UFUNCTION()
     void OnSphereComponentOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
@@ -77,18 +75,18 @@ private:
 
     bool bHasCollisionConvexMesh;
     bool bHasPawnCollision;
-    
-    int Voxel;
 
-    int32 TriangleIndexCounter = 0;
-    FVector PreDefinedShape[8];
+public:     int AccumulatedIndex;
+
+private:    int32       TriangleIndexCounter = 0;
+    FVector     PreDefinedShape[8];
     
-    TArray<FVector> Vertices;
-    TArray<int32> Triangles;
-    TArray<FVector> Normals;
-    TArray<FProcMeshTangent> Tangents;
-    TArray<FVector2D> UVs;
-    TArray<FColor> Colors;
+    TArray<FVector>             Vertices;
+    TArray<int32>               Triangles;
+    TArray<FVector>             Normals;
+    TArray<FProcMeshTangent>    Tangents;
+    TArray<FVector2D>           UVs;
+    TArray<FColor>              Colors;
 
     void GenerateMesh();
     void CreateQuadrilateral(const FVector& TopRight, const FVector& BottomRight, const FVector& TopLeft, const FVector& BottomLeft, const FProcMeshTangent& Tangent);
@@ -100,9 +98,4 @@ public:
     inline void SetHasCollisionConvexMesh(const bool B) { this->bHasCollisionConvexMesh = B; }
     inline bool GetHasPawnCollision() const { return this->bHasPawnCollision; }
     inline void SetHasPawnCollision(const bool B) { this->bHasPawnCollision = B; }
-
-public:
-
-    void SetAccumulated(const FAccumulated Accumulated);
-    
 };
