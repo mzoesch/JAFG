@@ -193,25 +193,25 @@ void ACuboid::CreateVoxelsBasedOnTexture()
         P8 += FVector( Pixel.X * this->TexX * 2,  Pixel.Y * this->TexY * 2, 0 ); /* Backward Bottom Right - Space Shift */
 
         /* Front */
-        if (Masks.ContainsByPredicate( [&] (const FTexture2DPixelMask& Mask) { return Mask.Pixel == Pixel + FIntVector2( 1,  0 ); }) == false)
+        if (Masks.ContainsByPredicate( [&] (const FTexture2DPixelMask& Mask) { return Mask.Pixel == Pixel + FIntVector2( 1,  0 ); } ) == false)
         {
             this->CreateQuadrilateral( P1, P2, P3, P4, FProcMeshTangent( 0.f,  1.f, 0.f ), Color);
         }
 
         /* Left */
-        if (Masks.ContainsByPredicate( [&] (const FTexture2DPixelMask& Mask) { return Mask.Pixel == Pixel + FIntVector2( 0, -1 ); }) == false)
+        if (Masks.ContainsByPredicate( [&] (const FTexture2DPixelMask& Mask) { return Mask.Pixel == Pixel + FIntVector2( 0, -1 ); } ) == false)
         {
             this->CreateQuadrilateral( P3, P4, P5, P6, FProcMeshTangent( 1.f,  0.f, 0.f ), Color);
         }
 
         /* Back */
-        if (Masks.ContainsByPredicate( [&] (const FTexture2DPixelMask& Mask) { return Mask.Pixel == Pixel + FIntVector2(-1,  0 ); }) == false)
+        if (Masks.ContainsByPredicate( [&] (const FTexture2DPixelMask& Mask) { return Mask.Pixel == Pixel + FIntVector2(-1,  0 ); } ) == false)
         {
             this->CreateQuadrilateral( P5, P6, P7, P8, FProcMeshTangent( 0.f, -1.f, 0.f ), Color);
         }
 
         /* Right */
-        if (Masks.ContainsByPredicate( [&] (const FTexture2DPixelMask& Mask) { return Mask.Pixel == Pixel + FIntVector2( 0,  1 ); }) == false)
+        if (Masks.ContainsByPredicate( [&] (const FTexture2DPixelMask& Mask) { return Mask.Pixel == Pixel + FIntVector2( 0,  1 ); } ) == false)
         {
             this->CreateQuadrilateral( P7, P8, P1, P2, FProcMeshTangent(-1.f,  0.f, 0.f ), Color);
         }
@@ -284,8 +284,17 @@ void ACuboid::CreateQuadrilateral(const FVector& V1, const FVector& V2, const FV
 
 void ACuboid::ApplyMesh() const
 {
-    this->Mesh->SetMaterial(0, GI->MDynamicOpaque);
+    if (FAccumulated(this->AccumulatedIndex).IsVoxel())
+    {
+        this->Mesh->SetMaterial(0, GI->MDynamicOpaque);
+    }
+    else
+    {
+        this->Mesh->SetMaterial(0, GI->MItem);
+    }
+    
     this->Mesh->CreateMeshSection(0, this->Vertices, this->Triangles, this->Normals, this->UVs, this->Colors, this->Tangents, false);
+
     return;
 }
 
