@@ -6,12 +6,16 @@
 #include "ProceduralMeshComponent.h"
 #include "GameFramework/Actor.h"
 
-#include "Lib/FAccumulated.h"
-
 #include "Cuboid.generated.h"
 
 class USphereComponent;
 class UProceduralMeshComponent;
+
+struct FTexture2DPixelMask
+{
+    FIntVector2     Pixel;
+    FColor          Color;
+};
 
 UCLASS()
 class ACuboid : public AActor
@@ -35,6 +39,15 @@ public:
     UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Mesh Params")
     int32 CuboidZ = 100;
 
+    UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Mesh Params")
+    int32 TexX = 10;
+
+    UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Mesh Params")
+    int32 TexY = 10;
+
+    UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Mesh Params")
+    int32 TexZ = 10;
+    
     UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Mesh Params")
     int32 ConvexX = 100;
 
@@ -79,7 +92,7 @@ private:
 public:     int AccumulatedIndex;
 
 private:    int32       TriangleIndexCounter = 0;
-    FVector     PreDefinedShape[8];
+            FVector     PreDefinedShape[8];
     
     TArray<FVector>             Vertices;
     TArray<int32>               Triangles;
@@ -89,13 +102,28 @@ private:    int32       TriangleIndexCounter = 0;
     TArray<FColor>              Colors;
 
     void GenerateMesh();
-    void CreateQuadrilateral(const FVector& TopRight, const FVector& BottomRight, const FVector& TopLeft, const FVector& BottomLeft, const FProcMeshTangent& Tangent);
+    void CreateVoxel();
+    void CreateVoxelsBasedOnTexture();
+    /**
+     * Adds a quadrilateral to the mesh for the next render sweep.
+     * 
+     * @param V1        Top Right Vertex
+     * @param V2        Bottom Right Vertex
+     * @param V3        Top Left Vertex
+     * @param V4        Bottom Left Vertex
+     * @param Tangent   Non Obligatory Face Tangent,
+     * @param Pixel     Non Obligatory Face Color if Texture is used to generate the mesh.
+     *                  The mesh of this quadrilateral must not be a voxel if set.
+     */
+    void CreateQuadrilateral(const FVector& V1, const FVector& V2, const FVector& V3, const FVector& V4, const FProcMeshTangent& Tangent, const FColor& Pixel);
+    FORCEINLINE void CreateQuadrilateral(const FVector& V1, const FVector& V2, const FVector& V3, const FVector& V4, const FProcMeshTangent& Tangent)
+    { this->CreateQuadrilateral(V1, V2, V3, V4, Tangent, FColor::Transparent); }
     void ApplyMesh() const;
 
 public:
 
-    inline bool GetHasCollisionConvexMesh() const { return this->bHasCollisionConvexMesh; }
-    inline void SetHasCollisionConvexMesh(const bool B) { this->bHasCollisionConvexMesh = B; }
-    inline bool GetHasPawnCollision() const { return this->bHasPawnCollision; }
-    inline void SetHasPawnCollision(const bool B) { this->bHasPawnCollision = B; }
+    FORCEINLINE bool GetHasCollisionConvexMesh() const { return this->bHasCollisionConvexMesh; }
+    FORCEINLINE void SetHasCollisionConvexMesh(const bool B) { this->bHasCollisionConvexMesh = B; }
+    FORCEINLINE bool GetHasPawnCollision() const { return this->bHasPawnCollision; }
+    FORCEINLINE void SetHasPawnCollision(const bool B) { this->bHasPawnCollision = B; }
 };

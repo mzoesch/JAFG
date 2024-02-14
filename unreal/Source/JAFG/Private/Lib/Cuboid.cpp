@@ -3,6 +3,7 @@
 #include "Lib/Cuboid.h"
 
 #include "ProceduralMeshComponent.h"
+#include "Assets/General.h"
 #include "Components/SphereComponent.h"
 
 #include "Core/CH_Master.h"
@@ -10,6 +11,7 @@
 #include "Lib/FAccumulated.h"
 
 #define GI CastChecked<UGI_Master>(this->GetGameInstance())
+#define UIL_LOG(Verbosity, Format, ...) UE_LOG(LogTemp, Verbosity, TEXT("%s: %s"), *FString(__FUNCTION__), *FString::Printf(Format, ##__VA_ARGS__))
 
 ACuboid::ACuboid()
 {
@@ -107,39 +109,133 @@ void ACuboid::GenerateMesh()
         this->ApplyMesh();
         return;
     }
-    
-    this->PreDefinedShape[0] = FVector( this->CuboidX,  this->CuboidY,  this->CuboidZ); /* Forward  Top    Right */
-    this->PreDefinedShape[1] = FVector( this->CuboidX,  this->CuboidY, -this->CuboidZ); /* Forward  Bottom Right */
-    this->PreDefinedShape[2] = FVector( this->CuboidX, -this->CuboidY,  this->CuboidZ); /* Forward  Top    Left  */
-    this->PreDefinedShape[3] = FVector( this->CuboidX, -this->CuboidY, -this->CuboidZ); /* Forward  Bottom Left  */
-    this->PreDefinedShape[4] = FVector(-this->CuboidX, -this->CuboidY,  this->CuboidZ); /* Backward Top    Left  */
-    this->PreDefinedShape[5] = FVector(-this->CuboidX, -this->CuboidY, -this->CuboidZ); /* Backward Bottom Left  */
-    this->PreDefinedShape[6] = FVector(-this->CuboidX,  this->CuboidY,  this->CuboidZ); /* Backward Top    Right */
-    this->PreDefinedShape[7] = FVector(-this->CuboidX,  this->CuboidY, -this->CuboidZ); /* Backward Bottom Right */
-    
-    this->CreateQuadrilateral( this->PreDefinedShape[0], this->PreDefinedShape[1], this->PreDefinedShape[2], this->PreDefinedShape[3], FProcMeshTangent( 0.f,  1.f, 0.f) ); /* Front  */ 
-    this->CreateQuadrilateral( this->PreDefinedShape[2], this->PreDefinedShape[3], this->PreDefinedShape[4], this->PreDefinedShape[5], FProcMeshTangent( 1.f,  0.f, 0.f) ); /* Left   */ 
-    this->CreateQuadrilateral( this->PreDefinedShape[4], this->PreDefinedShape[5], this->PreDefinedShape[6], this->PreDefinedShape[7], FProcMeshTangent( 0.f, -1.f, 0.f) ); /* Back   */ 
-    this->CreateQuadrilateral( this->PreDefinedShape[6], this->PreDefinedShape[7], this->PreDefinedShape[0], this->PreDefinedShape[1], FProcMeshTangent(-1.f,  0.f, 0.f) ); /* Right  */ 
-    this->CreateQuadrilateral( this->PreDefinedShape[6], this->PreDefinedShape[0], this->PreDefinedShape[4], this->PreDefinedShape[2], FProcMeshTangent( 0.f,  1.f, 0.f) ); /* Top    */ 
-    this->CreateQuadrilateral( this->PreDefinedShape[1], this->PreDefinedShape[7], this->PreDefinedShape[3], this->PreDefinedShape[5], FProcMeshTangent( 0.f, -1.f, 0.f) ); /* Bottom */ 
 
+    if (FAccumulated(this->AccumulatedIndex).IsVoxel())
+    {
+        this->CreateVoxel();
+    }
+    else
+    {
+        this->CreateVoxelsBasedOnTexture();
+    }
+    
     this->ApplyMesh();
     
     return;
 }
 
-void ACuboid::CreateQuadrilateral(const FVector& TopRight, const FVector& BottomRight, const FVector& TopLeft, const FVector& BottomLeft, const FProcMeshTangent& Tangent)
+void ACuboid::CreateVoxel()
+{
+    this->PreDefinedShape[0] = FVector( this->CuboidX,  this->CuboidY,  this->CuboidZ ); /* Forward  Top    Right */
+    this->PreDefinedShape[1] = FVector( this->CuboidX,  this->CuboidY, -this->CuboidZ ); /* Forward  Bottom Right */
+    this->PreDefinedShape[2] = FVector( this->CuboidX, -this->CuboidY,  this->CuboidZ ); /* Forward  Top    Left  */
+    this->PreDefinedShape[3] = FVector( this->CuboidX, -this->CuboidY, -this->CuboidZ ); /* Forward  Bottom Left  */
+    this->PreDefinedShape[4] = FVector(-this->CuboidX, -this->CuboidY,  this->CuboidZ ); /* Backward Top    Left  */
+    this->PreDefinedShape[5] = FVector(-this->CuboidX, -this->CuboidY, -this->CuboidZ ); /* Backward Bottom Left  */
+    this->PreDefinedShape[6] = FVector(-this->CuboidX,  this->CuboidY,  this->CuboidZ ); /* Backward Top    Right */
+    this->PreDefinedShape[7] = FVector(-this->CuboidX,  this->CuboidY, -this->CuboidZ ); /* Backward Bottom Right */
+    
+    this->CreateQuadrilateral( this->PreDefinedShape[0], this->PreDefinedShape[1], this->PreDefinedShape[2], this->PreDefinedShape[3], FProcMeshTangent( 0.0f,  1.0f, 0.0f )); /* Front  */ 
+    this->CreateQuadrilateral( this->PreDefinedShape[2], this->PreDefinedShape[3], this->PreDefinedShape[4], this->PreDefinedShape[5], FProcMeshTangent( 1.0f,  0.0f, 0.0f )); /* Left   */ 
+    this->CreateQuadrilateral( this->PreDefinedShape[4], this->PreDefinedShape[5], this->PreDefinedShape[6], this->PreDefinedShape[7], FProcMeshTangent( 0.0f, -1.0f, 0.0f )); /* Back   */ 
+    this->CreateQuadrilateral( this->PreDefinedShape[6], this->PreDefinedShape[7], this->PreDefinedShape[0], this->PreDefinedShape[1], FProcMeshTangent(-1.0f,  0.0f, 0.0f )); /* Right  */ 
+    this->CreateQuadrilateral( this->PreDefinedShape[6], this->PreDefinedShape[0], this->PreDefinedShape[4], this->PreDefinedShape[2], FProcMeshTangent( 0.0f,  1.0f, 0.0f )); /* Top    */ 
+    this->CreateQuadrilateral( this->PreDefinedShape[1], this->PreDefinedShape[7], this->PreDefinedShape[3], this->PreDefinedShape[5], FProcMeshTangent( 0.0f, -1.0f, 0.0f )); /* Bottom */ 
+
+    return;
+}
+
+void ACuboid::CreateVoxelsBasedOnTexture()
+{
+    UTexture2D* Tex = FGeneral::LoadTexture2D(FAccumulated(this->AccumulatedIndex));
+
+    if (Tex == nullptr)
+    {
+        UIL_LOG(Fatal, TEXT("ACuboid::CreateVoxelsBasedOnTexture: Texture is null."));
+        return;
+    }
+
+    TArray<FTexture2DPixelMask> Masks   = TArray<FTexture2DPixelMask>();
+    FTexture2DMipMap*           Mip     = &Tex->GetPlatformData()->Mips[0];
+    const uint32                Width   = Mip->SizeX;
+    const uint32                Height  = Mip->SizeY;
+    FByteBulkData*              Bulk    = &Mip->BulkData;
+    const FColor*               Data    = static_cast<FColor*>(Bulk->Lock(EBulkDataLockFlags::LOCK_READ_ONLY));
+
+    for (uint32 w = 0; w < Width; w++) { for (uint32 h = 0; h < Height; h++)
+    {
+        if (const FColor Pixel = Data[w + h * Width]; Pixel != FColor::Transparent && Pixel.A >= 255)
+        {
+            Masks.Add(FTexture2DPixelMask(FIntVector2(w, h), Pixel));
+        }
+    } }
+
+    Bulk->Unlock();
+
+    for (const auto [Pixel, Color] : Masks)
+    {
+        FVector P1 = FVector( this->TexX,  this->TexY,  this->TexZ ); /* Forward  Top    Right */
+        FVector P2 = FVector( this->TexX,  this->TexY, -this->TexZ ); /* Forward  Bottom Right */
+        FVector P3 = FVector( this->TexX, -this->TexY,  this->TexZ ); /* Forward  Top    Left  */
+        FVector P4 = FVector( this->TexX, -this->TexY, -this->TexZ ); /* Forward  Bottom Left  */
+        FVector P5 = FVector(-this->TexX, -this->TexY,  this->TexZ ); /* Backward Top    Left  */
+        FVector P6 = FVector(-this->TexX, -this->TexY, -this->TexZ ); /* Backward Bottom Left  */
+        FVector P7 = FVector(-this->TexX,  this->TexY,  this->TexZ ); /* Backward Top    Right */
+        FVector P8 = FVector(-this->TexX,  this->TexY, -this->TexZ ); /* Backward Bottom Right */
+
+        P1 += FVector( Pixel.X * this->TexX * 2,  Pixel.Y * this->TexY * 2, 0 ); /* Forward  Top    Right - Space Shift */
+        P2 += FVector( Pixel.X * this->TexX * 2,  Pixel.Y * this->TexY * 2, 0 ); /* Forward  Bottom Right - Space Shift */
+        P3 += FVector( Pixel.X * this->TexX * 2,  Pixel.Y * this->TexY * 2, 0 ); /* Forward  Top    Left  - Space Shift */
+        P4 += FVector( Pixel.X * this->TexX * 2,  Pixel.Y * this->TexY * 2, 0 ); /* Forward  Bottom Left  - Space Shift */
+        P5 += FVector( Pixel.X * this->TexX * 2,  Pixel.Y * this->TexY * 2, 0 ); /* Backward Top    Left  - Space Shift */
+        P6 += FVector( Pixel.X * this->TexX * 2,  Pixel.Y * this->TexY * 2, 0 ); /* Backward Bottom Left  - Space Shift */
+        P7 += FVector( Pixel.X * this->TexX * 2,  Pixel.Y * this->TexY * 2, 0 ); /* Backward Top    Right - Space Shift */
+        P8 += FVector( Pixel.X * this->TexX * 2,  Pixel.Y * this->TexY * 2, 0 ); /* Backward Bottom Right - Space Shift */
+
+        /* Front */
+        if (Masks.ContainsByPredicate( [&] (const FTexture2DPixelMask& Mask) { return Mask.Pixel == Pixel + FIntVector2( 1,  0 ); }) == false)
+        {
+            this->CreateQuadrilateral( P1, P2, P3, P4, FProcMeshTangent( 0.f,  1.f, 0.f ), Color);
+        }
+
+        /* Left */
+        if (Masks.ContainsByPredicate( [&] (const FTexture2DPixelMask& Mask) { return Mask.Pixel == Pixel + FIntVector2( 0, -1 ); }) == false)
+        {
+            this->CreateQuadrilateral( P3, P4, P5, P6, FProcMeshTangent( 1.f,  0.f, 0.f ), Color);
+        }
+
+        /* Back */
+        if (Masks.ContainsByPredicate( [&] (const FTexture2DPixelMask& Mask) { return Mask.Pixel == Pixel + FIntVector2(-1,  0 ); }) == false)
+        {
+            this->CreateQuadrilateral( P5, P6, P7, P8, FProcMeshTangent( 0.f, -1.f, 0.f ), Color);
+        }
+
+        /* Right */
+        if (Masks.ContainsByPredicate( [&] (const FTexture2DPixelMask& Mask) { return Mask.Pixel == Pixel + FIntVector2( 0,  1 ); }) == false)
+        {
+            this->CreateQuadrilateral( P7, P8, P1, P2, FProcMeshTangent(-1.f,  0.f, 0.f ), Color);
+        }
+        
+        this->CreateQuadrilateral( P7, P1, P5, P3, FProcMeshTangent( 0.f,  1.f, 0.f ), Color); /* Top    */
+        this->CreateQuadrilateral( P2, P8, P4, P6, FProcMeshTangent( 0.f, -1.f, 0.f ), Color); /* Bottom */
+        
+        continue;
+    }
+    
+    return;
+}
+
+void ACuboid::CreateQuadrilateral(const FVector& V1, const FVector& V2, const FVector& V3, const FVector& V4, const FProcMeshTangent& Tangent, const FColor& Pixel)
 {
     const int32 P1 = this->TriangleIndexCounter++;
     const int32 P2 = this->TriangleIndexCounter++;
     const int32 P3 = this->TriangleIndexCounter++;
     const int32 P4 = this->TriangleIndexCounter++;
 
-    this->Vertices.Add(TopRight);
-    this->Vertices.Add(BottomRight);
-    this->Vertices.Add(TopLeft);
-    this->Vertices.Add(BottomLeft);
+    this->Vertices.Add(V1);
+    this->Vertices.Add(V2);
+    this->Vertices.Add(V3);
+    this->Vertices.Add(V4);
 
     this->Triangles.Add(P1);
     this->Triangles.Add(P2);
@@ -149,7 +245,7 @@ void ACuboid::CreateQuadrilateral(const FVector& TopRight, const FVector& Bottom
     this->Triangles.Add(P3);
     this->Triangles.Add(P2);
 
-    const FVector Normal = FVector::CrossProduct(TopLeft - BottomRight, TopLeft - TopRight).GetSafeNormal();
+    const FVector Normal = FVector::CrossProduct(V3 - V2, V3 - V1).GetSafeNormal();
     for (int i = 0; i < 4; i++)
     {
         this->Normals.Add(Normal);
@@ -163,15 +259,15 @@ void ACuboid::CreateQuadrilateral(const FVector& TopRight, const FVector& Bottom
         {
             TextureNormal = FVector::UpVector;
         }
-        if (FAccumulated(this->AccumulatedIndex).IsVoxel())
+
+        if (Pixel == FColor::Transparent)
         {
             this->Colors.Add(FColor(0, 0, 0, GI->GetTextureIndex(this->AccumulatedIndex, TextureNormal)));
         }
         else
         {
-            this->Colors.Add(FColor(0, 0, 0, 0));
+            this->Colors.Add(Pixel);
         }
-
         
         continue;
     }
@@ -194,3 +290,4 @@ void ACuboid::ApplyMesh() const
 }
 
 #undef GI
+#undef UIL_LOG
