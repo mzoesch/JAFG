@@ -32,7 +32,7 @@ public:
     
 private:
 
-    static inline const UGI_Master*             GI;
+    static inline const UGI_Master*             GameInstancePtr = nullptr;
     static inline TMap<FString, UTexture2D*>    Cached2DTextures;
 
 public:
@@ -56,6 +56,8 @@ public:
     static ENormalLookup    GetNormalLookup(const FVector& Normal);
     static FString          GetNormalSuffix(const ENormalLookup Normal);
 
+    static void             ClearCached2DTextures();
+    static bool             AddTexture2DToCache(const FAccumulated Key, UTexture2D* Value);
     static UTexture2D*      LoadTexture2D(const FAccumulated Accumulated);
     static bool             ExistsAssetTexture2D(const FString& String, const FString& Name, const ENormalLookup Normal);
     static UTexture2D*      LoadAssetTexture2D(const FString& NameSpace, const FString& Name, const ENormalLookup Normal);

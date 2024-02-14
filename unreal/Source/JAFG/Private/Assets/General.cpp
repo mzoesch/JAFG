@@ -14,8 +14,8 @@
 
 void FGeneral::Init(const UGI_Master* GIPtr)
 {
-    FGeneral::GI = GIPtr;
-    FGeneral::Cached2DTextures.Empty();
+    FGeneral::GameInstancePtr = GIPtr;
+    FGeneral::ClearCached2DTextures();
     return;
 }
 
@@ -129,33 +129,51 @@ FString FGeneral::GetNormalSuffix(const ENormalLookup Normal)
     return "";
 }
 
+void FGeneral::ClearCached2DTextures()
+{
+    FGeneral::Cached2DTextures.Empty();
+    return;
+}
+
+bool FGeneral::AddTexture2DToCache(const FAccumulated Key, UTexture2D* Value)
+{
+    if (FGeneral::Cached2DTextures.Contains(FGeneral::GameInstancePtr->GetVoxelName(Key.Accumulated)))
+    {
+        UIL_LOG(Error, TEXT("FGeneral::AddTexture2DToCache - Texture already exists in cache: %s."), *FGeneral::GameInstancePtr->GetVoxelName(Key.Accumulated));
+        return false;
+    }
+    
+    FGeneral::Cached2DTextures.Add(FGeneral::GameInstancePtr->GetVoxelName(Key.Accumulated), Value);
+    return true;
+}
+
 UTexture2D* FGeneral::LoadTexture2D(const FAccumulated Accumulated)
 {
     if (Accumulated.Accumulated != FAccumulated::NullAccumulated.Accumulated)
     {
-        if (FGeneral::Cached2DTextures.Contains(FGeneral::GI->GetVoxelName(Accumulated.Accumulated)))
+        if (FGeneral::Cached2DTextures.Contains(FGeneral::GameInstancePtr->GetVoxelName(Accumulated.Accumulated)))
         {
-            return FGeneral::Cached2DTextures[FGeneral::GI->GetVoxelName(Accumulated.Accumulated)];
+            return FGeneral::Cached2DTextures[FGeneral::GameInstancePtr->GetVoxelName(Accumulated.Accumulated)];
         }
 
         if (Accumulated.IsVoxel())
         {
-            if (UTexture2D* Tex = FGeneral::LoadTexture2DFromDisk(FString::Printf(TEXT("%s%s.png"), *FGeneral::GeneratedAssetsDirectory, *GI->GetVoxelName(Accumulated.Accumulated))))
+            if (UTexture2D* Tex = FGeneral::LoadTexture2DFromDisk(FString::Printf(TEXT("%s%s.png"), *FGeneral::GeneratedAssetsDirectory, *GameInstancePtr->GetVoxelName(Accumulated.Accumulated))))
             {
-                FGeneral::Cached2DTextures.Add(FGeneral::GI->GetVoxelName(Accumulated.Accumulated), Tex);
+                FGeneral::Cached2DTextures.Add(FGeneral::GameInstancePtr->GetVoxelName(Accumulated.Accumulated), Tex);
                 return Tex;
             }
         }
         else
         {
-            if (UTexture2D* Tex = FGeneral::LoadTexture2DFromDisk(FString::Printf(TEXT("%s%s.png"), *FGeneral::ItemTextureDirectory, *GI->GetVoxelName(Accumulated.Accumulated))))
+            if (UTexture2D* Tex = FGeneral::LoadTexture2DFromDisk(FString::Printf(TEXT("%s%s.png"), *FGeneral::ItemTextureDirectory, *GameInstancePtr->GetVoxelName(Accumulated.Accumulated))))
             {
-                FGeneral::Cached2DTextures.Add(FGeneral::GI->GetVoxelName(Accumulated.Accumulated), Tex);
+                FGeneral::Cached2DTextures.Add(FGeneral::GameInstancePtr->GetVoxelName(Accumulated.Accumulated), Tex);
                 return Tex;
             }
         }
         
-        UIL_LOG(Error, TEXT("FGeneral::LoadTexture2D - Failed to load texture for voxel: %s"), *GI->GetVoxelName(Accumulated.Accumulated));
+        UIL_LOG(Error, TEXT("FGeneral::LoadTexture2D - Failed to load texture for voxel: %s"), *GameInstancePtr->GetVoxelName(Accumulated.Accumulated));
         
         return nullptr;
     }

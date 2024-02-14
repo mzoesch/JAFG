@@ -10,8 +10,8 @@
 #include "Core/GI_Master.h"
 #include "Lib/FAccumulated.h"
 
-#define GI CastChecked<UGI_Master>(this->GetGameInstance())
-#define UIL_LOG(Verbosity, Format, ...) UE_LOG(LogTemp, Verbosity, TEXT("%s: %s"), *FString(__FUNCTION__), *FString::Printf(Format, ##__VA_ARGS__))
+#define GAME_INSTANCE                       CastChecked<UGI_Master>(this->GetGameInstance())
+#define UIL_LOG(Verbosity, Format, ...)     UE_LOG(LogTemp, Verbosity, TEXT("%s: %s"), *FString(__FUNCTION__), *FString::Printf(Format, ##__VA_ARGS__))
 
 ACuboid::ACuboid()
 {
@@ -151,7 +151,7 @@ void ACuboid::CreateVoxelsBasedOnTexture()
 
     if (Tex == nullptr)
     {
-        UIL_LOG(Fatal, TEXT("ACuboid::CreateVoxelsBasedOnTexture: Texture is null."));
+        UIL_LOG(Fatal, TEXT("ACuboid::CreateVoxelsBasedOnTexture: Could not load texture for %s."), *GAME_INSTANCE->GetVoxelName(this->AccumulatedIndex));
         return;
     }
 
@@ -162,7 +162,7 @@ void ACuboid::CreateVoxelsBasedOnTexture()
     FByteBulkData*              Bulk    = &Mip->BulkData;
     const FColor*               Data    = static_cast<FColor*>(Bulk->Lock(EBulkDataLockFlags::LOCK_READ_ONLY));
 
-    for (uint32 w = 0; w < Width; w++) { for (uint32 h = 0; h < Height; h++)
+    for (uint32 w = 0; w < Width; ++w) { for (uint32 h = 0; h < Height; ++h)
     {
         if (const FColor Pixel = Data[w + h * Width]; Pixel != FColor::Transparent && Pixel.A >= 255)
         {
@@ -262,7 +262,7 @@ void ACuboid::CreateQuadrilateral(const FVector& V1, const FVector& V2, const FV
 
         if (Pixel == FColor::Transparent)
         {
-            this->Colors.Add(FColor(0, 0, 0, GI->GetTextureIndex(this->AccumulatedIndex, TextureNormal)));
+            this->Colors.Add(FColor(0, 0, 0, GAME_INSTANCE->GetTextureIndex(this->AccumulatedIndex, TextureNormal)));
         }
         else
         {
@@ -286,11 +286,11 @@ void ACuboid::ApplyMesh() const
 {
     if (FAccumulated(this->AccumulatedIndex).IsVoxel())
     {
-        this->Mesh->SetMaterial(0, GI->MDynamicOpaque);
+        this->Mesh->SetMaterial(0, GAME_INSTANCE->MDynamicOpaque);
     }
     else
     {
-        this->Mesh->SetMaterial(0, GI->MItem);
+        this->Mesh->SetMaterial(0, GAME_INSTANCE->MItem);
     }
     
     this->Mesh->CreateMeshSection(0, this->Vertices, this->Triangles, this->Normals, this->UVs, this->Colors, this->Tangents, false);
@@ -298,5 +298,5 @@ void ACuboid::ApplyMesh() const
     return;
 }
 
-#undef GI
+#undef GAME_INSTANCE
 #undef UIL_LOG
