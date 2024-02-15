@@ -8,6 +8,7 @@
 
 #include "Cuboid.generated.h"
 
+class ACH_Master;
 class USphereComponent;
 class UProceduralMeshComponent;
 
@@ -28,6 +29,11 @@ public:
     
 public:
 
+    /** The time where we ignore sphere components overlaps after AActor creation in seconds. */
+    static constexpr int InvincibleTime { 1 };
+    /** Extra threshold to give other AActors time to enter the sphere component after already overlapping AActors during invincible time. */
+    static constexpr int EpsilonInvincibleThreshold { 1 };
+    
     /* All measurements in Unreal Coordinate System. */
 
     UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Mesh Params")
@@ -71,6 +77,7 @@ protected:
 public:
 
     virtual void BeginPlay() override;
+    virtual void Tick(const float DeltaSeconds) override;
     
 public:
 
@@ -79,9 +86,17 @@ public:
 
     UFUNCTION()
     void OnSphereComponentOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+    UFUNCTION()
+    void OnSphereComponentOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex);
+    
+    void AddForce(const FVector& Force) const;
 
 private:
 
+    int CreationTime;
+    /* Only used at creation during invincible time. */
+    TArray<ACH_Master*> OverlappingCharacters;
+    
     // TODO
     //      Do we have to calculate Tangents? See the Greedy Meshing Algorithm.
     //      Works without this? What are the drawbacks and benefits?

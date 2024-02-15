@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
+#include "Camera/CameraComponent.h"
 
 #include "Lib/FAccumulated.h"
 #include "Lib/PrescriptionSeeker.h"
@@ -79,6 +80,9 @@ public:
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Interaction")
     UInputAction* IASecondary;
 
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Interaction")
+    UInputAction* IADropAccumulated;
+    
     /* Inventory */
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
@@ -134,7 +138,8 @@ private:
     /* Interaction */
     void OnPrimary(const FInputActionValue& Value);
     void OnSecondary(const FInputActionValue& Value);
-
+    void OnDropAccumulated(const FInputActionValue& Value);
+    
     /* Inventory */
     void OnInventoryToggle(const FInputActionValue& Value);
     void OnQuickSlot0(const FInputActionValue& Value);
@@ -165,11 +170,11 @@ private:
     static constexpr int    InventoryCrafterWidth{2};
     static constexpr int    InventoryCrafterSize{4};
 
-            int             SelectedQuickSlotIndex;
+    int             SelectedQuickSlotIndex;
 public:     FAccumulated    CursorHand;
 private:    TArray<FSlot>   Inventory;
-            TArray<FSlot>   InventoryCrafter;
-            FAccumulated    InventoryCrafterProduct;
+    TArray<FSlot>   InventoryCrafter;
+    FAccumulated    InventoryCrafterProduct;
 
 #pragma region Inventory Manipulation
     
@@ -180,6 +185,8 @@ public:
     // a bUpdateHUD parameter boolean will never trigger a re-render.
     //
     
+    bool                        IsInventoryOpen() const;
+
     void                        ClearCursorHand(const bool bUpdateHUD);
     
     FORCEINLINE int             GetInventorySize() const { return this->Inventory.Num(); }
@@ -194,6 +201,7 @@ public:
     
     FORCEINLINE int             GetSelectedQuickSlotIndex() const { return this->SelectedQuickSlotIndex; }
     FORCEINLINE FAccumulated    GetSelectedQuickSlot() const { return this->Inventory[this->SelectedQuickSlotIndex].Content; }
+    FORCEINLINE FSlot*          GetSelectedQuickSlotPtr() { return &this->Inventory[this->SelectedQuickSlotIndex]; }
 
     FORCEINLINE int             GetInventoryCrafterSize() const { return this->InventoryCrafter.Num(); }
     FORCEINLINE FAccumulated    GetInventoryCrafterSlot(const int Slot) const { return this->InventoryCrafter[Slot].Content; }
@@ -224,6 +232,8 @@ private:
 public:
 
     FORCEINLINE UCameraComponent* GetFPSCamera() const { return this->FirstPersonCameraComponent; }
+    FORCEINLINE FVector GetTorsoLocation() const { return this->FirstPersonCameraComponent->GetComponentLocation() - FVector(0, 0, 50); }
+    FORCEINLINE FTransform GetTorsoTransform() const { return FTransform(this->FirstPersonCameraComponent->GetComponentRotation(), this->GetTorsoLocation()); }
     
 #pragma endregion Getters
     

@@ -33,4 +33,6 @@ public:
     void OnClicked(ACH_Master* Trigger, bool& bOutChangedData);
     /** It is always assumed that the slot can be accessed by the local player. */
     void OnSecondaryClicked(ACH_Master* Trigger, bool& bOutChangedData);
+    /** It is always assumed that the slot can be accessed by the local player. */
+    void OnDrop(ACH_Master* Trigger, bool& bOutChangedData);
 };

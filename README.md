@@ -9,5 +9,8 @@ Make Unreal find the Textures on the fly and not set TObject pointer <br />
 Consitent naming <br />
 
 
+Ambiet lighting??
+Allow Static Lighting? Default is on. Do we want to turn this off?
 
 Enums with e prefix on items
+

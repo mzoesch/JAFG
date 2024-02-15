@@ -10,13 +10,15 @@
 #include "Core/GI_Master.h"
 #include "Lib/FAccumulated.h"
 
-#define GAME_INSTANCE                       CastChecked<UGI_Master>(this->GetGameInstance())
 #define UIL_LOG(Verbosity, Format, ...)     UE_LOG(LogTemp, Verbosity, TEXT("%s: %s"), *FString(__FUNCTION__), *FString::Printf(Format, ##__VA_ARGS__))
+#define GAME_INSTANCE                       CastChecked<UGI_Master>(this->GetGameInstance())
 
 ACuboid::ACuboid()
 {
-    this->PrimaryActorTick.bCanEverTick = false;
+    this->PrimaryActorTick.bCanEverTick = true;
 
+    this->OverlappingCharacters = TArray<ACH_Master*>();
+    
     this->Mesh = this->CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("ProceduralMeshComponent"));
     this->Mesh->SetCastShadow(false);
     this->SetRootComponent(this->Mesh);
@@ -31,6 +33,7 @@ ACuboid::ACuboid()
     this->SphereComponent->SetupAttachment(this->Mesh);
     this->SphereComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     this->SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &ACuboid::OnSphereComponentOverlapBegin);
+    this->SphereComponent->OnComponentEndOverlap.AddDynamic(this, &ACuboid::OnSphereComponentOverlapEnd);
     
     return;
 }
@@ -64,7 +67,31 @@ void ACuboid::BeginPlay()
         this->SphereComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
         this->SphereComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
     }
+
+    this->CreationTime = this->GetWorld()->GetTimeSeconds();
     
+    return;
+}
+
+void ACuboid::Tick(const float DeltaSeconds)
+{
+    Super::Tick(DeltaSeconds);
+
+    if (this->CreationTime != 0 && this->GetWorld()->GetTimeSeconds() - this->CreationTime > ACuboid::InvincibleTime + ACuboid::EpsilonInvincibleThreshold)
+    {
+        this->SetActorTickEnabled(false);
+        for (ACH_Master* Character : this->OverlappingCharacters)
+        {
+            if (Character->AddToInventory(FAccumulated(this->AccumulatedIndex), true))
+            {
+                this->Destroy();
+                return;;
+            }
+
+            continue;
+        }
+    }
+
     return;
 }
 
@@ -82,15 +109,45 @@ void ACuboid::OnSphereComponentOverlapBegin(UPrimitiveComponent* OverlappedCompo
         return;
     }
 
+    ACH_Master* Character = CastChecked<ACH_Master>(OtherActor);
+
+    /* We check for zero. Because the overlap event will be called before the Begin Play event. */
+    if (this->CreationTime == 0 || this->GetWorld()->GetTimeSeconds() - this->CreationTime <= ACuboid::InvincibleTime)
+    {
+        this->OverlappingCharacters.AddUnique(Character);
+        return;
+    }
+
     // TODO
     //      This ofc has to move to the AActor class. And then we need to check if
     //      the AActor has a specific interface and calls the method from the interface.
 
-    if (ACH_Master* Character = CastChecked<ACH_Master>(OtherActor); Character->AddToInventory(FAccumulated(this->AccumulatedIndex, 1), true))
+    if (Character->AddToInventory(FAccumulated(this->AccumulatedIndex), true))
     {
         this->Destroy();
     }
 
+    return;
+}
+
+void ACuboid::OnSphereComponentOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex)
+{
+    if (OtherActor->IsA(ACH_Master::StaticClass()) == false)
+    {
+        return;
+    }
+
+    if (ACH_Master* Character = CastChecked<ACH_Master>(OtherActor); this->OverlappingCharacters.Contains(Character))
+    {
+        this->OverlappingCharacters.RemoveSingle(Character);
+    }
+
+    return;
+}
+
+void ACuboid::AddForce(const FVector& Force) const
+{
+    this->Mesh->AddForce(Force);
     return;
 }
 
@@ -298,5 +355,5 @@ void ACuboid::ApplyMesh() const
     return;
 }
 
-#undef GAME_INSTANCE
 #undef UIL_LOG
+#undef GAME_INSTANCE
