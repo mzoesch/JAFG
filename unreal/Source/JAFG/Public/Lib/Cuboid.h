@@ -30,9 +30,12 @@ public:
 public:
 
     /** The time where we ignore sphere components overlaps after AActor creation in seconds. */
-    static constexpr int InvincibleTime { 1 };
-    /** Extra threshold to give other AActors time to enter the sphere component after already overlapping AActors during invincible time. */
-    static constexpr int EpsilonInvincibleThreshold { 1 };
+    static constexpr float InvincibleTime { 0.5f };
+    /**
+     * Extra threshold to give other AActors time to enter the sphere component
+     * after already overlapping AActors during invincible time in seconds.
+     */
+    static constexpr float EpsilonInvincibleThreshold { 1.0f };
     
     /* All measurements in Unreal Coordinate System. */
 

@@ -77,7 +77,7 @@ void ACuboid::Tick(const float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
 
-    if (this->CreationTime != 0 && this->GetWorld()->GetTimeSeconds() - this->CreationTime > ACuboid::InvincibleTime + ACuboid::EpsilonInvincibleThreshold)
+    if (this->CreationTime != 0.0f && this->GetWorld()->GetTimeSeconds() - this->CreationTime > ACuboid::InvincibleTime + ACuboid::EpsilonInvincibleThreshold)
     {
         this->SetActorTickEnabled(false);
         for (ACH_Master* Character : this->OverlappingCharacters)
@@ -112,7 +112,7 @@ void ACuboid::OnSphereComponentOverlapBegin(UPrimitiveComponent* OverlappedCompo
     ACH_Master* Character = CastChecked<ACH_Master>(OtherActor);
 
     /* We check for zero. Because the overlap event will be called before the Begin Play event. */
-    if (this->CreationTime == 0 || this->GetWorld()->GetTimeSeconds() - this->CreationTime <= ACuboid::InvincibleTime)
+    if (this->CreationTime == 0.0f || this->GetWorld()->GetTimeSeconds() - this->CreationTime <= ACuboid::InvincibleTime)
     {
         this->OverlappingCharacters.AddUnique(Character);
         return;
