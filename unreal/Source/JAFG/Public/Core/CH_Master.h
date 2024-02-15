@@ -185,7 +185,12 @@ public:
     FORCEINLINE int             GetInventorySize() const { return this->Inventory.Num(); }
     FORCEINLINE FAccumulated    GetInventorySlot(const int Slot) const { return this->Inventory[Slot].Content; }
     bool                        AddToInventory(const FAccumulated Accumulated, const bool bUpdateHUD);
+
     void                        OnInventorySlotClicked(const int Slot, const bool bUpdateHUD);
+    void                        OnInventorySlotSecondaryClicked(const int Slot, const bool bUpdateHUD);
+    void                        OnInventoryCrafterSlotClicked(const int Slot, const bool bUpdateHUD);
+    void                        OnInventoryCrafterSlotSecondaryClicked(const int Slot, const bool bUpdateHUD);
+    void                        OnInventoryCrafterProductClicked(const bool bUpdateHUD);
     
     FORCEINLINE int             GetSelectedQuickSlotIndex() const { return this->SelectedQuickSlotIndex; }
     FORCEINLINE FAccumulated    GetSelectedQuickSlot() const { return this->Inventory[this->SelectedQuickSlotIndex].Content; }
@@ -196,11 +201,9 @@ public:
     FORCEINLINE FDelivery       GetInventoryCrafterAsDelivery() const
     {
         TArray<FAccumulated> DeliveryContents; for (const FSlot& S : this->InventoryCrafter) { DeliveryContents.Add(S.Content); }
-        return FDelivery{DeliveryContents, ACH_Master::InventoryCrafterWidth};
+        return FDelivery { DeliveryContents, ACH_Master::InventoryCrafterWidth };
     }
     void                        ClearInventoryCrafterSlots(const bool bUpdateHUD);
-    void                        OnInventoryCrafterSlotClicked(const int Slot, const bool bUpdateHUD);
-    void                        OnInventoryCrafterProductClicked(const bool bUpdateHUD);
     
 private:
     

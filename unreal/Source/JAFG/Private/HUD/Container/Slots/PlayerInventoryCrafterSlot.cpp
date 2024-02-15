@@ -5,12 +5,18 @@
 #include "Core/CH_Master.h"
 #include "Lib/HUD/Container/ContainerSlotData.h"
 
-#define CH Cast<ACH_Master>(this->GetOwningPlayerPawn())
+#define CHARACTER Cast<ACH_Master>(this->GetOwningPlayerPawn())
 
 void UW_PlayerInventoryCrafterSlot::OnClicked()
 {
-    CH->OnInventoryCrafterSlotClicked(this->ContainerSlotData->Index, true);
+    CHARACTER->OnInventoryCrafterSlotClicked(this->ContainerSlotData->Index, true);
     return; 
 }
 
-#undef CH
+void UW_PlayerInventoryCrafterSlot::OnSecondaryClicked()
+{
+    CHARACTER->OnInventoryCrafterSlotSecondaryClicked(this->ContainerSlotData->Index, true);
+    return;   
+}
+
+#undef CHARACTER

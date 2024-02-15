@@ -27,6 +27,9 @@ public:
     static const FAccumulated NullAccumulated;
     
 public:
+
+    /** Checks for overflow, underflow and if post add amount is zero NullAccumulated is set. */
+    void SafeAddAmount(const int InAmount, bool& bCouldProcess);
     
     /** Does not compare amount. */
     FORCEINLINE bool operator==(const FAccumulated& O) const { return this->Accumulated == O.Accumulated; }
