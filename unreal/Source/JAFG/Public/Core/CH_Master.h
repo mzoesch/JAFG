@@ -41,11 +41,14 @@ public:
 
 public:
 
+    UPROPERTY(EditDefaultsOnly)
+    FTransform ItemPreviewTransform;
+    
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-    UCameraComponent*   FirstPersonCameraComponent;
+    UCameraComponent* FirstPersonCameraComponent;
     
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-    ACuboid*            ItemPreview;
+    ACuboid* ItemPreview;
     
 #pragma endregion Components
     
@@ -161,10 +164,14 @@ private:
     
 #pragma region Member Methods, Variables
 
+public:
+
+    /** Will update the current item preview with the current selected quick slot.  */
+    void UpdateItemPreview() const;
+    
 #pragma region Inventory
     
 private:
-    
 
     static constexpr int    InventoryStartSize{78};
     static constexpr int    InventoryCrafterWidth{2};

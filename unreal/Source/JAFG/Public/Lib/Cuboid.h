@@ -106,6 +106,7 @@ private:
 
     bool bHasCollisionConvexMesh;
     bool bHasPawnCollision;
+    bool bUsePOVMaterial;
 
 public:     int AccumulatedIndex;
 
@@ -141,7 +142,12 @@ private:    int32       TriangleIndexCounter = 0;
 public:
 
     FORCEINLINE bool GetHasCollisionConvexMesh() const { return this->bHasCollisionConvexMesh; }
+    /** Must be set before Begin Play is run on this Object. */
     FORCEINLINE void SetHasCollisionConvexMesh(const bool B) { this->bHasCollisionConvexMesh = B; }
     FORCEINLINE bool GetHasPawnCollision() const { return this->bHasPawnCollision; }
+    /** Must be set before Begin Play is run on this Object. */
     FORCEINLINE void SetHasPawnCollision(const bool B) { this->bHasPawnCollision = B; }
+    FORCEINLINE bool GetUsePOVMaterial() const { return this->bUsePOVMaterial; }
+    /** Can be set at any time. Changes the material at the next render sweep. */
+    FORCEINLINE void SetUsePOVMaterial(const bool B) { this->bUsePOVMaterial = B; }
 };

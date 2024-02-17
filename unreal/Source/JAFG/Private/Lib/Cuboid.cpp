@@ -25,6 +25,7 @@ ACuboid::ACuboid()
 
     this->bHasCollisionConvexMesh   = false;
     this->bHasPawnCollision         = false;
+    this->bUsePOVMaterial           = false;
     this->AccumulatedIndex          = FAccumulated::NullAccumulated.Accumulated;
     this->TriangleIndexCounter      = 0;
 
@@ -343,11 +344,25 @@ void ACuboid::ApplyMesh() const
 {
     if (FAccumulated(this->AccumulatedIndex).IsVoxel())
     {
-        this->Mesh->SetMaterial(0, GAME_INSTANCE->MDynamicOpaque);
+        if (this->bUsePOVMaterial)
+        {
+            this->Mesh->SetMaterial(0, GAME_INSTANCE->MDynamicOpaquePOV);
+        }
+        else
+        {
+            this->Mesh->SetMaterial(0, GAME_INSTANCE->MDynamicOpaque);
+        }
     }
     else
     {
-        this->Mesh->SetMaterial(0, GAME_INSTANCE->MItem);
+        if (this->bUsePOVMaterial)
+        {
+            this->Mesh->SetMaterial(0, GAME_INSTANCE->MItemPOV);
+        }
+        else
+        {
+            this->Mesh->SetMaterial(0, GAME_INSTANCE->MItem);
+        }
     }
     
     this->Mesh->CreateMeshSection(0, this->Vertices, this->Triangles, this->Normals, this->UVs, this->Colors, this->Tangents, false);
