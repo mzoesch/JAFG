@@ -10,9 +10,11 @@
 #include "Lib/FAccumulated.h"
 #include "Lib/PrescriptionSeeker.h"
 #include "Lib/Container/Slot.h"
+#include "World/Chunk.h"
 
 #include "CH_Master.generated.h"
 
+class AChunk;
 class ACuboid;
 class UInputMappingContext;
 class UInputAction;
@@ -26,11 +28,11 @@ class JAFG_API ACH_Master : public ACharacter
 
 public:
 
-    ACH_Master();
+    ACH_Master(void);
 
 protected:
 
-    virtual void BeginPlay() override;
+    virtual void BeginPlay(void) override;
 
 public:	
 
@@ -140,6 +142,7 @@ private:
 
     /* Interaction */
     void OnPrimary(const FInputActionValue& Value);
+    void OnPrimaryCompleted(const FInputActionValue& Value);
     void OnSecondary(const FInputActionValue& Value);
     void OnDropAccumulated(const FInputActionValue& Value);
     
@@ -168,6 +171,23 @@ public:
 
     /** Will update the current item preview with the current selected quick slot.  */
     void UpdateItemPreview() const;
+
+#pragma region World Interaction
+    
+private:
+
+    /** Equivalent to 128 Voxels. */
+    static constexpr float MaxPOVLineTraceLength { (AChunk::CHUNK_SIZE * 4.0f ) * 100.0f };
+    /** TODO In the future the reach will be determined by various factors. */
+    // ReSharper disable once CppMemberFunctionMayBeStatic
+    FORCEINLINE float GetCharacterReach(void) const { return 4.5f; }
+
+private:    float       CurrentDurationSameVoxelIsMined;
+public:     FORCEINLINE float GetCurrentDurationSameVoxelIsMined(void) const { return this->CurrentDurationSameVoxelIsMined; }
+private:    FIntVector  CurrentlyMiningLocalVoxelLocation;
+public:     FORCEINLINE FIntVector GetCurrentlyMiningLocalVoxelLocation(void) const { return this->CurrentlyMiningLocalVoxelLocation; }
+
+#pragma endregion World Interaction
     
 #pragma region Inventory
     
@@ -192,11 +212,11 @@ public:
     // a bUpdateHUD parameter boolean will never trigger a re-render.
     //
     
-    bool                        IsInventoryOpen() const;
+    bool                        IsInventoryOpen(void) const;
 
     void                        ClearCursorHand(const bool bUpdateHUD);
     
-    FORCEINLINE int             GetInventorySize() const { return this->Inventory.Num(); }
+    FORCEINLINE int             GetInventorySize(void) const { return this->Inventory.Num(); }
     FORCEINLINE FAccumulated    GetInventorySlot(const int Slot) const { return this->Inventory[Slot].Content; }
     bool                        AddToInventory(const FAccumulated Accumulated, const bool bUpdateHUD);
 
@@ -206,14 +226,14 @@ public:
     void                        OnInventoryCrafterSlotSecondaryClicked(const int Slot, const bool bUpdateHUD);
     void                        OnInventoryCrafterProductClicked(const bool bUpdateHUD);
     
-    FORCEINLINE int             GetSelectedQuickSlotIndex() const { return this->SelectedQuickSlotIndex; }
-    FORCEINLINE FAccumulated    GetSelectedQuickSlot() const { return this->Inventory[this->SelectedQuickSlotIndex].Content; }
-    FORCEINLINE FSlot*          GetSelectedQuickSlotPtr() { return &this->Inventory[this->SelectedQuickSlotIndex]; }
+    FORCEINLINE int             GetSelectedQuickSlotIndex(void) const { return this->SelectedQuickSlotIndex; }
+    FORCEINLINE FAccumulated    GetSelectedQuickSlot(void) const { return this->Inventory[this->SelectedQuickSlotIndex].Content; }
+    FORCEINLINE FSlot*          GetSelectedQuickSlotPtr(void) { return &this->Inventory[this->SelectedQuickSlotIndex]; }
 
-    FORCEINLINE int             GetInventoryCrafterSize() const { return this->InventoryCrafter.Num(); }
+    FORCEINLINE int             GetInventoryCrafterSize(void) const { return this->InventoryCrafter.Num(); }
     FORCEINLINE FAccumulated    GetInventoryCrafterSlot(const int Slot) const { return this->InventoryCrafter[Slot].Content; }
-    FAccumulated                GetInventoryCrafterProduct() const;
-    FORCEINLINE FDelivery       GetInventoryCrafterAsDelivery() const
+    FAccumulated                GetInventoryCrafterProduct(void) const;
+    FORCEINLINE FDelivery       GetInventoryCrafterAsDelivery(void) const
     {
         TArray<FAccumulated> DeliveryContents; for (const FSlot& S : this->InventoryCrafter) { DeliveryContents.Add(S.Content); }
         return FDelivery { DeliveryContents, ACH_Master::InventoryCrafterWidth };
@@ -238,9 +258,14 @@ private:
 
 public:
 
-    FORCEINLINE UCameraComponent* GetFPSCamera() const { return this->FirstPersonCameraComponent; }
-    FORCEINLINE FVector GetTorsoLocation() const { return this->FirstPersonCameraComponent->GetComponentLocation() - FVector(0, 0, 50); }
-    FORCEINLINE FTransform GetTorsoTransform() const { return FTransform(this->FirstPersonCameraComponent->GetComponentRotation(), this->GetTorsoLocation()); }
+    FORCEINLINE UCameraComponent* GetFPSCamera(void) const { return this->FirstPersonCameraComponent; }
+    FORCEINLINE FVector GetTorsoLocation(void) const { return this->FirstPersonCameraComponent->GetComponentLocation() - FVector(0.0f, 0.0f, 50.0f); }
+    FORCEINLINE FTransform GetTorsoTransform(void) const { return FTransform(this->FirstPersonCameraComponent->GetComponentRotation(), this->GetTorsoLocation()); }
+    void GetTargetedVoxel(AChunk*& OutChunk, FVector& OutWorldHitLocation, FIntVector& OutLocalHitVoxelLocation, const float UnrealReach = ACH_Master::MaxPOVLineTraceLength) const;
+
+private:
+
+    FORCEINLINE FTransform GetFirstPersonTraceStart(void) const { return this->FirstPersonCameraComponent->GetComponentTransform(); }
     
 #pragma endregion Getters
     
