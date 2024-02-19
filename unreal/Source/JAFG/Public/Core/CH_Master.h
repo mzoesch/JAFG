@@ -14,6 +14,7 @@
 
 #include "CH_Master.generated.h"
 
+class ACharacterReach;
 class UBoxComponent;
 class AChunk;
 class ACuboid;
@@ -45,14 +46,20 @@ public:
 
 public:
     
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     UCameraComponent* FirstPersonCameraComponent;
     
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     ACuboid* ItemPreview;
     
+    // UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    // UBoxComponent* ReachBox;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    TSubclassOf<ACharacterReach> CharacterReachClass;
+    
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-    UBoxComponent* ReachBox;
+    ACharacterReach* CharacterReach;
     
 #pragma endregion Components
     

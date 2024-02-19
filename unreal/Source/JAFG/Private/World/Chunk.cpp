@@ -43,7 +43,7 @@ void AChunk::BeginPlay()
     this->GenerateVoxels();
     if (this->bGenerationFailed)
     {
-        UE_LOG(LogTemp, Error, TEXT("Chunk Generation Failed!"))
+        UIL_LOG(Fatal, TEXT("Chunk Generation Failed!"))
         return;
     }
     this->GenerateMesh();
