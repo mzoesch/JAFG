@@ -14,12 +14,14 @@
 
 #include "CH_Master.generated.h"
 
+class UBoxComponent;
 class AChunk;
 class ACuboid;
 class UInputMappingContext;
 class UInputAction;
 class UCameraComponent;
 class AItemPreview;
+enum ECrosshairState : uint8;
 
 UCLASS()
 class JAFG_API ACH_Master : public ACharacter
@@ -28,7 +30,7 @@ class JAFG_API ACH_Master : public ACharacter
 
 public:
 
-    ACH_Master(void);
+    ACH_Master();
 
 protected:
 
@@ -42,15 +44,15 @@ public:
 #pragma region Components
 
 public:
-
-    UPROPERTY(EditDefaultsOnly)
-    FTransform ItemPreviewTransform;
     
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
     UCameraComponent* FirstPersonCameraComponent;
     
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     ACuboid* ItemPreview;
+    
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    UBoxComponent* ReachBox;
     
 #pragma endregion Components
     
@@ -180,13 +182,14 @@ private:
     static constexpr float MaxPOVLineTraceLength { (AChunk::CHUNK_SIZE * 4.0f ) * 100.0f };
     /** TODO In the future the reach will be determined by various factors. */
     // ReSharper disable once CppMemberFunctionMayBeStatic
-    FORCEINLINE float GetCharacterReach(void) const { return 4.5f; }
+    FORCEINLINE float GetCharacterReachInVoxels(void) const { return 4.5f; }
+    FORCEINLINE float GetCharacterReach(void) const { return this->GetCharacterReachInVoxels() * 100.0f; }
 
 private:    float       CurrentDurationSameVoxelIsMined;
 public:     FORCEINLINE float GetCurrentDurationSameVoxelIsMined(void) const { return this->CurrentDurationSameVoxelIsMined; }
 private:    FIntVector  CurrentlyMiningLocalVoxelLocation;
 public:     FORCEINLINE FIntVector GetCurrentlyMiningLocalVoxelLocation(void) const { return this->CurrentlyMiningLocalVoxelLocation; }
-
+    
 #pragma endregion World Interaction
     
 #pragma region Inventory
@@ -201,7 +204,6 @@ private:
 public:     FAccumulated    CursorHand;
 private:    TArray<FSlot>   Inventory;
     TArray<FSlot>   InventoryCrafter;
-    FAccumulated    InventoryCrafterProduct;
 
 #pragma region Inventory Manipulation
     

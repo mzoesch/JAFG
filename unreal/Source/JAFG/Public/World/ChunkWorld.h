@@ -176,6 +176,7 @@ public:
 public:
 
     static FIntVector WorldToChunkPosition(const FVector& WorldPosition);
+    static FIntVector WorldToWorldVoxelPosition(const FVector& WorldPosition);
     static FIntVector WorldToLocalVoxelPosition(const FVector& WorldPosition);
 
 private:
@@ -184,5 +185,4 @@ private:
     TMap<FIntVector, AChunk*> LoadedChunks;
 
     TQueue<FIntVector> ChunkGenerationQueue;
-
 };

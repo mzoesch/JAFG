@@ -257,6 +257,17 @@ FIntVector AChunkWorld::WorldToChunkPosition(const FVector& WorldPosition)
     return ChunkPosition;
 }
 
+FIntVector AChunkWorld::WorldToWorldVoxelPosition(const FVector& WorldPosition)
+{
+    FIntVector WorldToVoxelPosition = FIntVector(WorldPosition) / 100;
+
+    if (WorldPosition.X < 0) WorldToVoxelPosition.X--;
+    if (WorldPosition.Y < 0) WorldToVoxelPosition.Y--;
+    if (WorldPosition.Z < 0) WorldToVoxelPosition.Z--;
+
+    return WorldToVoxelPosition;
+}
+
 FIntVector AChunkWorld::WorldToLocalVoxelPosition(const FVector& WorldPosition)
 {
     /* WorldToChunkPosition */
