@@ -5,7 +5,6 @@
 #include "ImageUtils.h"
 #include "Serialization/JsonSerializer.h"
 
-#include "World/WorldVoxel.h"
 #include "Core/GI_Master.h"
 
 #define UIL_LOG(Verbosity, Format, ...)                     UE_LOG(LogTemp, Verbosity, Format, ##__VA_ARGS__)
@@ -179,6 +178,25 @@ UTexture2D* FGeneral::LoadTexture2D(const FAccumulated Accumulated)
     }
     
     return nullptr;
+}
+
+UTexture2D* FGeneral::LoadTexture2D(const FString& NameSpace, const FString& Name)
+{
+    return FGeneral::LoadTexture2DFromDisk(FString::Printf(TEXT("%s%s/%s.png"), *FGeneral::VoxelTextureDirectory, *NameSpace, *Name));
+}
+
+TArray<FString> FGeneral::GetAllVoxelTextureNames(const FString& NameSpace)
+{
+    TArray<FString> TextureNames;
+    IFileManager::Get().FindFiles(TextureNames, *FString::Printf(TEXT("%s%s"), *FGeneral::VoxelTextureDirectory, *NameSpace), TEXT("png"));
+
+    for (FString& TextureName : TextureNames)
+    {
+        TextureName.RemoveFromEnd(TEXT(".png"));
+        continue;
+    }
+
+    return TextureNames;
 }
 
 bool FGeneral::ExistsAssetTexture2D(const FString& String, const FString& Name, const ENormalLookup Normal)

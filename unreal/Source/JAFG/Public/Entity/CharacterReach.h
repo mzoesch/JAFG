@@ -35,7 +35,7 @@ public:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     UStaticMeshComponent* Mesh;
-    
+
 public:
 
     void OnUpdate(const bool bVisible) const;

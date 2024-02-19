@@ -59,6 +59,9 @@ public:
     static void             ClearCached2DTextures();
     static bool             AddTexture2DToCache(const FAccumulated Key, UTexture2D* Value);
     static UTexture2D*      LoadTexture2D(const FAccumulated Accumulated);
+    /** Will load any voxel texture without checking the cache if already loaded or safe the new texture to the cache. */
+    static UTexture2D*      LoadTexture2D(const FString& NameSpace, const FString& Name);
+    static TArray<FString>  GetAllVoxelTextureNames(const FString& NameSpace);
     static bool             ExistsAssetTexture2D(const FString& String, const FString& Name, const ENormalLookup Normal);
     static UTexture2D*      LoadAssetTexture2D(const FString& NameSpace, const FString& Name, const ENormalLookup Normal);
 

@@ -2,7 +2,9 @@
 
 #include "Entity/CharacterReach.h"
 
+#include "Assets/General.h"
 #include "Components/BoxComponent.h"
+#include "Engine/Texture2DArray.h"
 
 #include "World/ChunkWorld.h"
 #include "World/JCoordinate.h"
@@ -42,7 +44,9 @@ void ACharacterReach::BeginPlay(void)
     
     this->Mesh->SetStaticMesh(this->CharacterReachStaticMesh);
     this->MDynamicCharacterReachMaterial = UMaterialInstanceDynamic::Create(this->CharacterReachMaterial, this);
+    check( this->MDynamicCharacterReachMaterial )
     this->Mesh->SetMaterial(0, this->MDynamicCharacterReachMaterial);
+
     return;
 }
 
@@ -59,7 +63,7 @@ void ACharacterReach::OnUpdate(const FVector& WorldLocation) const
     {
         this->Box->SetVisibility(true);
         this->Mesh->SetVisibility(true);
-        this->MDynamicCharacterReachMaterial->SetScalarParameterValue(TEXT("TestParam"), 0.0f);
+        this->MDynamicCharacterReachMaterial->SetScalarParameterValue(TEXT("Progress"), 0.0f);
     }
 
     this->Box->SetWorldLocation(FVector(AChunkWorld::WorldToWorldVoxelPosition(WorldLocation) * UJCoordinate::J_TO_U_SCALE) + FVector(50.0f, 50.0f, 50.0f), false);
@@ -70,6 +74,6 @@ void ACharacterReach::OnUpdate(const FVector& WorldLocation) const
 
 void ACharacterReach::UpdateMaterial(const float Progress) const
 {
-    this->MDynamicCharacterReachMaterial->SetScalarParameterValue(TEXT("TestParam"), FMath::Fmod(Progress * 10, 10.0f));
+    this->MDynamicCharacterReachMaterial->SetScalarParameterValue(TEXT("Progress"), FMath::Fmod(Progress * 10, 10.0f));
     return;
 }
