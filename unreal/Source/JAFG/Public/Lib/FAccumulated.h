@@ -37,5 +37,5 @@ public:
     FORCEINLINE static bool Equals(const FAccumulated& A, const FAccumulated& B) { return A == B; }
     /** TODO OFC Very sketchy. There must be a better solution than hard coding this. */
     FORCEINLINE bool IsVoxel() const { return this->Accumulated < 7; }
-    FORCEINLINE FString ToString() const { return FString::Printf(TEXT("FAccumulated{Accumulated:%d,Amount:%d}"), this->Accumulated, this->Amount); }
+    FORCEINLINE FString ToString() const { return FString::Printf(TEXT("{Accumulated:%d, Amount:%d}"), this->Accumulated, this->Amount); }
 };

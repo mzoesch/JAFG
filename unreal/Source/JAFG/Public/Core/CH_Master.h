@@ -52,9 +52,6 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     ACuboid* ItemPreview;
     
-    // UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-    // UBoxComponent* ReachBox;
-
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     TSubclassOf<ACharacterReach> CharacterReachClass;
     
@@ -254,7 +251,14 @@ private:
     void AddToInventoryAtSlot(const int Slot, const int Amount, const bool bUpdateHUD);
     void AddToInventoryCrafterAtSlot(const int Slot, const int Amount, const bool bUpdateHUD);
     
-    /** In the character crafter we obviously have to remove the accumulated items that where needed to craft such item. */
+    /**
+     * In the character crafter we obviously have to remove the accumulated items
+     * that where needed to craft such accumulated item.
+     * 
+     * It is always assumed by the method that the crafter had enough accumulated items to craft the product.
+     * The product must be obtained before calling this method as after this method call the product can no longer
+     * be determined by the crafter.
+     */
     void ReduceInventoryCrafterByProductIngredients(const bool bUpdateHUD);
     
 #pragma endregion Inventory Manipulation
