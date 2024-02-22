@@ -241,7 +241,8 @@ public:
     FAccumulated                GetInventoryCrafterProduct(void) const;
     FORCEINLINE FDelivery       GetInventoryCrafterAsDelivery(void) const
     {
-        TArray<FAccumulated> DeliveryContents; for (const FSlot& S : this->InventoryCrafter) { DeliveryContents.Add(S.Content); }
+        TArray<FAccumulated> DeliveryContents;
+        for (const FSlot& Slot : this->InventoryCrafter) { DeliveryContents.Add(FAccumulated(Slot.Content.Accumulated)); }
         return FDelivery { DeliveryContents, ACH_Master::InventoryCrafterWidth };
     }
     void                        ClearInventoryCrafterSlots(const bool bUpdateHUD);
