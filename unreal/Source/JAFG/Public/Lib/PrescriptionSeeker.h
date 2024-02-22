@@ -76,21 +76,15 @@ public:
     
     inline static constexpr int ShapelessContentWidth = -1;
 
-    FORCEINLINE int GetRequiredAccumulatedAmountOfType(const FAccumulated Accumulated) const
+    FORCEINLINE int GetRequiredAccumulatedAmountOfType(const FAccumulated& Accumulated) const
     {
         int Amount = 0;
         for (int i = 0; i < this->Contents.Num(); ++i)
-        {
-            if (this->Contents[i] == Accumulated)
-            {
-                Amount++;
-            }
-        }
-        
+        { if (this->Contents[i] == Accumulated) { Amount++; } }
         return Amount;
     }
     /** @return True if NullAccumulated and if delivery contents has InAccumulated. */
-    FORCEINLINE bool HasAccumulatedInDelivery(const FAccumulated Accumulated) const
+    FORCEINLINE bool HasAccumulated(const FAccumulated& Accumulated) const
     { return Accumulated == FAccumulated::NullAccumulated || this->Contents.Contains(Accumulated); }
     bool operator==(const FDelivery& O) const;
     FORCEINLINE static bool Equals(const FDelivery& A, const FDelivery& B) { return A == B; }
@@ -118,8 +112,9 @@ public:
     static const FPrescription NullPrescription;
 
 public:
-    
-    FORCEINLINE bool HasAccumulatedInDelivery(const FAccumulated Accumulated) const { return this->Delivery.HasAccumulatedInDelivery(Accumulated); }
+
+    /** @return True if NullAccumulated and if delivery contents has InAccumulated. */
+    FORCEINLINE bool HasAccumulatedInDelivery(const FAccumulated Accumulated) const { return this->Delivery.HasAccumulated(Accumulated); }
     FORCEINLINE bool HasInvalidEntries() const { return this->Name == TEXT("") || this->Type == EPrescriptionType::ERT_Invalid || this->Delivery == FDelivery::NullDelivery || this->Product == FAccumulated::NullAccumulated; }
     /** Will only check for the name. The program will assume that only one prescription with the same name exists. */
     FORCEINLINE bool operator==(const FPrescription& O) const { return this->Name == O.Name; }
