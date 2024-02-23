@@ -2,7 +2,7 @@
   "Type": "Cr_Sl",
   "Delivery": "OakLogVoxel",
   "Product": {
-    "Name": "OakPlanksVoxel",
+    "Content": "OakPlanksVoxel",
     "Amount": 4
   }
 }

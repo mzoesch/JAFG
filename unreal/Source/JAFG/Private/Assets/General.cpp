@@ -229,7 +229,11 @@ TSharedPtr<FJsonObject> FGeneral::LoadPrescriptionFromDisk(const FString& Path)
 
     if (!FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(PrescriptionContent), RetrievedJSONObject) || !RetrievedJSONObject.IsValid())
     {
-        UIL_LOG(Fatal, TEXT("FGeneral::LoadPrescriptionFromDisk - Unable to deserialize prescription from disk: %s. The found content was %s."), *Path, *PrescriptionContent);
+#if WITH_EDITOR
+        UIL_LOG(Error, TEXT("FGeneral::LoadPrescriptionFromDisk: Unable to deserialize prescription from disk: %s. The found content was %s."), *Path, *PrescriptionContent);
+#else
+        UIL_LOG(Fatal, TEXT("FGeneral::LoadPrescriptionFromDisk: Unable to deserialize prescription from disk: %s. The found content was %s."), *Path, *PrescriptionContent);
+#endif /* WITH_EDITOR */
         return nullptr;
     }
 

@@ -31,7 +31,7 @@ inline TMap<FString, EPrescriptionType> PrescriptionTypeMap =
  *   "Delivery": "Name"
  *   "Delivery": ["Name1", null, "Name2"]
  *   "Delivery": { // Shaped crafting
- *     "Accumulates": ["Name1", null, "Name2"],
+ *     "Contents": ["Name1", null, "Name2"],
  *     "Width": 2
  *   }
  * }
@@ -42,22 +42,22 @@ inline TMap<FString, EPrescriptionType> PrescriptionTypeMap =
  * {
  *   "Product": "Name"
  *   "Product": {
- *     "Name": "Name",
+ *     "Content": "Name",
  *     "Amount": 1
  *   }
  * }
  */
 struct FPrescriptionJSON
 {
-    inline static const FString Type                        = "Type";
+    inline static const FString Type                = "Type";
     
-    inline static const FString Delivery                    = "Delivery";
-    inline static const FString DeliveryAccumulates         = "Accumulates";
-    inline static const FString DeliveryWidth               = "Width";
+    inline static const FString Delivery            = "Delivery";
+    inline static const FString DeliveryContents    = "Contents";
+    inline static const FString DeliveryWidth       = "Width";
     
-    inline static const FString Product                     = "Product";
-    inline static const FString ProductAccumulatedName      = "Name";
-    inline static const FString ProductAccumulatedAmount    = "Amount";
+    inline static const FString Product             = "Product";
+    inline static const FString ProductContent      = "Content";
+    inline static const FString ProductAmount       = "Amount";
 };
 
 struct FDelivery

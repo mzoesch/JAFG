@@ -16,7 +16,7 @@ FAccumulated::FAccumulated()
 
 FAccumulated::FAccumulated(const int AccumulatedIndex)
 {
-    this->FAccumulated::FAccumulated(AccumulatedIndex, 1);
+    this->FAccumulated::FAccumulated(AccumulatedIndex, FAccumulated::NullAccumulated.Accumulated == AccumulatedIndex ? 0 : 1);
     return;
 }
 
