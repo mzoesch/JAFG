@@ -129,6 +129,9 @@ public:
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
     UInputAction* IAQuickSlot9;
 
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+    UInputAction* IAQuickSlotBitwise;
+
     /* MISC */
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|MISC")
@@ -164,6 +167,7 @@ private:
     void OnQuickSlot7(const FInputActionValue& Value);
     void OnQuickSlot8(const FInputActionValue& Value);
     void OnQuickSlot9(const FInputActionValue& Value);
+    void OnQuickSlotBitwise(const FInputActionValue& Value);
     void OnQuickSlot(const int Slot);
 
     /* MISC */
