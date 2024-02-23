@@ -128,11 +128,11 @@ FPrescription UPrescriptionSeeker::ParsePrescription(const FString& Name, const 
 #else
         UIL_LOG(Fatal, TEXT("UPrescriptionSeeker::ParsePrescription: Unsupported prescription type: %s. Fault prescription: %s."), *Obj.GetStringField(FPrescriptionJSON::Type), *Name);
 #endif /* WITH_EDITOR */
-        Prescription.Type = EPrescriptionType::ERT_Invalid;
+        Prescription.Type = EPrescriptionType::EPT_Invalid;
         return Prescription;
     }
     Prescription.Type = PrescriptionTypeMap[Obj.GetStringField(FPrescriptionJSON::Type)];
-    if (Prescription.Type == EPrescriptionType::ERT_Invalid)
+    if (Prescription.Type == EPrescriptionType::EPT_Invalid)
     {
         return Prescription;
     }
@@ -142,14 +142,14 @@ FPrescription UPrescriptionSeeker::ParsePrescription(const FString& Name, const 
     /* Assuming { "Delivery": { "Contents": ["Name", "Name"], "Width": 1 } }. */
     if (Obj.HasTypedField<EJson::Object>(FPrescriptionJSON::Delivery))
     {
-        if (Prescription.Type == EPrescriptionType::ERT_CraftingShapeless)
+        if (Prescription.Type == EPrescriptionType::EPT_CraftingShapeless)
         {
 #if WITH_EDITOR
             UIL_LOG(Error, TEXT("UPrescriptionSeeker::ParsePrescription: Object not allowed for shapeless prescription in prescprition delivery. Fault prescription: %s."), *Name);
 #else
             UIL_LOG(Fatal, TEXT("UPrescriptionSeeker::ParsePrescription: Object not allowed for shapeless prescription in prescprition delivery. Fault prescription: %s."), *Name);
 #endif /* WITH_EDITOR */
-            Prescription.Type = EPrescriptionType::ERT_Invalid;
+            Prescription.Type = EPrescriptionType::EPT_Invalid;
             return Prescription;
         }
 
@@ -161,7 +161,7 @@ FPrescription UPrescriptionSeeker::ParsePrescription(const FString& Name, const 
 #else
             UIL_LOG(Fatal, TEXT("UPrescriptionSeeker::ParsePrescription: Field '%s' with type 'Array' not found in prescription delivery. Fault prescription: %s."), *FPrescriptionJSON::DeliveryContents, *Name)
 #endif /* WITH_EDITOR */
-            Prescription.Type = EPrescriptionType::ERT_Invalid;
+            Prescription.Type = EPrescriptionType::EPT_Invalid;
             return Prescription;
         }
         for (const TSharedPtr<FJsonValue>& Accumulated : Obj.GetObjectField(FPrescriptionJSON::Delivery)->GetArrayField(FPrescriptionJSON::DeliveryContents))
@@ -174,7 +174,7 @@ FPrescription UPrescriptionSeeker::ParsePrescription(const FString& Name, const 
             Prescription.Delivery.Contents.Add(this->GIPtr->GetAccumulatedByName(Accumulated->AsString()));
             if (Prescription.Delivery.Contents.Last() == FAccumulated::NullAccumulated)
             {
-                Prescription.Type = EPrescriptionType::ERT_Invalid;
+                Prescription.Type = EPrescriptionType::EPT_Invalid;
                 return Prescription;
             }
         }
@@ -185,7 +185,7 @@ FPrescription UPrescriptionSeeker::ParsePrescription(const FString& Name, const 
 #else
             UIL_LOG(Fatal, TEXT("UPrescriptionSeeker::ParsePrescription: Array field '%s' is empty in prescription delivery. Fault prescription: %s."), *FPrescriptionJSON::DeliveryContents, *Name)
 #endif /* WITH_EDITOR */
-            Prescription.Type = EPrescriptionType::ERT_Invalid;
+            Prescription.Type = EPrescriptionType::EPT_Invalid;
             return Prescription;
         }
         
@@ -196,7 +196,7 @@ FPrescription UPrescriptionSeeker::ParsePrescription(const FString& Name, const 
 #else
             UIL_LOG(Fatal, TEXT("UPrescriptionSeeker::ParsePrescription: Number field '%s' not found in prescription delivery. Fault prescription: %s."), *FPrescriptionJSON::DeliveryWidth, *Name)
 #endif /* WITH_EDITOR */
-            Prescription.Type = EPrescriptionType::ERT_Invalid;
+            Prescription.Type = EPrescriptionType::EPT_Invalid;
             return Prescription;
         }
         Prescription.Delivery.ContentWidth = Obj.GetObjectField(FPrescriptionJSON::Delivery)->GetField<EJson::Number>(FPrescriptionJSON::DeliveryWidth).Get()->AsNumber();
@@ -207,7 +207,7 @@ FPrescription UPrescriptionSeeker::ParsePrescription(const FString& Name, const 
 #else
             UIL_LOG(Fatal, TEXT("UPrescriptionSeeker::ParsePrescription: Field '%s' is less than 1 in shaped prescription delivery. Fault prescription: %s."), *FPrescriptionJSON::DeliveryWidth, *Name)
 #endif /* WITH_EDITOR */
-            Prescription.Type = EPrescriptionType::ERT_Invalid;
+            Prescription.Type = EPrescriptionType::EPT_Invalid;
             return Prescription;
         }
     }
@@ -215,14 +215,14 @@ FPrescription UPrescriptionSeeker::ParsePrescription(const FString& Name, const 
     /* Assuming { "Delivery": ["Name", "Name"] }. */
     else if (Obj.HasTypedField<EJson::Array>(FPrescriptionJSON::Delivery))
     {
-        if (Prescription.Type == EPrescriptionType::ERT_CraftingShaped)
+        if (Prescription.Type == EPrescriptionType::EPT_CraftingShaped)
         {
 #if WITH_EDITOR
             UIL_LOG(Error, TEXT("UPrescriptionSeeker::ParsePrescription: Array not allowed for shaped prescription in prescprition delivery. Fault prescription: %s."), *Name)
 #else
             UIL_LOG(Fatal, TEXT("UPrescriptionSeeker::ParsePrescription: Array not allowed for shaped prescription in prescprition delivery. Fault prescription: %s."), *Name)
 #endif /* WITH_EDITOR */
-            Prescription.Type = EPrescriptionType::ERT_Invalid;
+            Prescription.Type = EPrescriptionType::EPT_Invalid;
             return Prescription;
         }
 
@@ -243,14 +243,14 @@ FPrescription UPrescriptionSeeker::ParsePrescription(const FString& Name, const 
 #else
             UIL_LOG(Fatal, TEXT("UPrescriptionSeeker::ParsePrescription: Array is empty in prescription delivery. Fault prescription: %s."), *Name);
 #endif /* WITH_EDITOR */
-            Prescription.Type = EPrescriptionType::ERT_Invalid;
+            Prescription.Type = EPrescriptionType::EPT_Invalid;
             return Prescription;
         }
         for (const FAccumulated& Accumulated : Prescription.Delivery.Contents)
         {
             if (Accumulated == FAccumulated::NullAccumulated)
             {
-                Prescription.Type = EPrescriptionType::ERT_Invalid;
+                Prescription.Type = EPrescriptionType::EPT_Invalid;
                 return Prescription;
             }
 
@@ -262,7 +262,7 @@ FPrescription UPrescriptionSeeker::ParsePrescription(const FString& Name, const 
     /* Assuming { "Delivery": "Name" }. */
     else if (Obj.HasTypedField<EJson::String>(FPrescriptionJSON::Delivery))
     {
-        if (Prescription.Type == EPrescriptionType::ERT_CraftingShaped)
+        if (Prescription.Type == EPrescriptionType::EPT_CraftingShaped)
         {
 #if WITH_EDITOR
             UIL_LOG(Error, TEXT("UPrescriptionSeeker::ParsePrescription: String not allowed for shaped prescription in prescprition delivery. Fault prescription: %s."), *Name);
@@ -276,7 +276,7 @@ FPrescription UPrescriptionSeeker::ParsePrescription(const FString& Name, const 
         Prescription.Delivery.Contents.Add(this->GIPtr->GetAccumulatedByName(Obj.GetStringField(FPrescriptionJSON::Delivery)));
         if (Prescription.Delivery.Contents.Last() == FAccumulated::NullAccumulated)
         {
-            Prescription.Type = EPrescriptionType::ERT_Invalid;
+            Prescription.Type = EPrescriptionType::EPT_Invalid;
             return Prescription;
         }
         Prescription.Delivery.ContentWidth = FDelivery::ShapelessContentWidth;
@@ -288,7 +288,7 @@ FPrescription UPrescriptionSeeker::ParsePrescription(const FString& Name, const 
 #else
         UIL_LOG(Fatal, TEXT("UPrescriptionSeeker::ParsePrescription: Unsupported type for prescription delivery. Fault prescription: %s."), *Name);
 #endif /* WITH_EDITOR */
-        Prescription.Type = EPrescriptionType::ERT_Invalid;
+        Prescription.Type = EPrescriptionType::EPT_Invalid;
         return Prescription;
     }
 
@@ -306,13 +306,13 @@ FPrescription UPrescriptionSeeker::ParsePrescription(const FString& Name, const 
 #else
             UIL_LOG(Fatal, TEXT("UPrescriptionSeeker::ParsePrescription: Field '%s' with type 'String' not found in prescription product. Fault prescription: %s."), *FPrescriptionJSON::ProductAccumulatedName, *Name)
 #endif /* WITH_EDITOR */
-            Prescription.Type = EPrescriptionType::ERT_Invalid;
+            Prescription.Type = EPrescriptionType::EPT_Invalid;
             return Prescription;
         }
         Prescription.Product = this->GIPtr->GetAccumulatedByName(Obj.GetObjectField(FPrescriptionJSON::Product)->GetStringField(FPrescriptionJSON::ProductContent));
         if (Prescription.Product == FAccumulated::NullAccumulated)
         {
-            Prescription.Type = EPrescriptionType::ERT_Invalid;
+            Prescription.Type = EPrescriptionType::EPT_Invalid;
             return Prescription;
         }
         
@@ -323,7 +323,7 @@ FPrescription UPrescriptionSeeker::ParsePrescription(const FString& Name, const 
 #else
             UIL_LOG(Fatal, TEXT("UPrescriptionSeeker::ParsePrescription: Field '%s' with type 'Number' not found in prescription product. Fault prescription: %s."), *FPrescriptionJSON::ProductAccumulatedAmount, *Name)
 #endif /* WITH_EDITOR */
-            Prescription.Type = EPrescriptionType::ERT_Invalid;
+            Prescription.Type = EPrescriptionType::EPT_Invalid;
             return Prescription;
         }
         Prescription.Product.Amount = Obj.GetObjectField(FPrescriptionJSON::Product)->GetIntegerField(FPrescriptionJSON::ProductAmount);
@@ -335,7 +335,7 @@ FPrescription UPrescriptionSeeker::ParsePrescription(const FString& Name, const 
         Prescription.Product = this->GIPtr->GetAccumulatedByName(Obj.GetStringField(FPrescriptionJSON::Product));
         if (Prescription.Product == FAccumulated::NullAccumulated)
         {
-            Prescription.Type = EPrescriptionType::ERT_Invalid;
+            Prescription.Type = EPrescriptionType::EPT_Invalid;
             return Prescription;
         }
     }
@@ -347,7 +347,7 @@ FPrescription UPrescriptionSeeker::ParsePrescription(const FString& Name, const 
 #else
         UIL_LOG(Fatal, TEXT("UPrescriptionSeeker::ParsePrescription: Unsupported type for prescription product. Fault prescription: %s."), *Name);
 #endif /* WITH_EDITOR */
-        Prescription.Type = EPrescriptionType::ERT_Invalid;
+        Prescription.Type = EPrescriptionType::EPT_Invalid;
         return Prescription;
     }
 
@@ -384,7 +384,7 @@ void UPrescriptionSeeker::GetPrescription(const FDelivery& Delivery, FPrescripti
     /* We might want to find a faster way to implement this? If we have to many prescriptions this may take a while. */
     for (const FPrescription& Prescription : this->Prescriptions)
     {
-        if (Prescription.Type == EPrescriptionType::ERT_CraftingShapeless)
+        if (Prescription.Type == EPrescriptionType::EPT_CraftingShapeless)
         {
             /*
              * Note:
@@ -456,7 +456,12 @@ void UPrescriptionSeeker::GetPrescription(const FDelivery& Delivery, FPrescripti
             return;
         }
 
-        if (Prescription.Type == EPrescriptionType::ERT_CraftingShaped)
+        /*
+         * TODO ...
+         *      We can definitely do some optimization here. We can check if the delivery has even enough indices left
+         *      so it can satisfy the prescription. Open for suggestions.
+         */
+        if (Prescription.Type == EPrescriptionType::EPT_CraftingShaped)
         {
 #define BEGIN_OF_ROW 0
             /*
@@ -498,11 +503,13 @@ void UPrescriptionSeeker::GetPrescription(const FDelivery& Delivery, FPrescripti
                 }
                 
                 check( DeliveryContent.Amount == 1 ) DeliveryContentCounter.Add(DeliveryContent);
+                
                 continue;
             }
             for (const FAccumulated& PrescriptionDeliveryContent : Prescription.Delivery.Contents)
             {
                 /* We intentionally do not sort out NullAccumulates as some shaped description depend on them. */
+                
                 if (Delivery.Contents.Contains(PrescriptionDeliveryContent) == false)
                 {
                     goto NextPrescription;

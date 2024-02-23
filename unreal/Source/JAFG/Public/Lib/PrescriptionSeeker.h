@@ -12,15 +12,15 @@ class UGI_Master;
 
 enum EPrescriptionType : uint8
 {
-    ERT_Invalid,
-    ERT_CraftingShaped,
-    ERT_CraftingShapeless,
+    EPT_Invalid,
+    EPT_CraftingShaped,
+    EPT_CraftingShapeless,
 };
 
 inline TMap<FString, EPrescriptionType> PrescriptionTypeMap =
 {
-    {   "Cr_Sd",  ERT_CraftingShaped      },
-    {   "Cr_Sl",  ERT_CraftingShapeless   },
+    {   "Cr_Sd",  EPT_CraftingShaped      },
+    {   "Cr_Sl",  EPT_CraftingShapeless   },
 };
 
 /**
@@ -107,7 +107,7 @@ struct FPrescription
 
 public:
 
-    FORCEINLINE FPrescription() : Name(), Type(EPrescriptionType::ERT_Invalid), Delivery(), Product(FAccumulated::NullAccumulated) { return; }
+    FORCEINLINE FPrescription() : Name(), Type(EPrescriptionType::EPT_Invalid), Delivery(), Product(FAccumulated::NullAccumulated) { return; }
     
     static const FPrescription NullPrescription;
 
@@ -115,7 +115,7 @@ public:
 
     /** @return True if NullAccumulated and if delivery contents has InAccumulated. */
     FORCEINLINE bool HasAccumulatedInDelivery(const FAccumulated Accumulated) const { return this->Delivery.HasAccumulated(Accumulated); }
-    FORCEINLINE bool HasInvalidEntries() const { return this->Name == TEXT("") || this->Type == EPrescriptionType::ERT_Invalid || this->Delivery == FDelivery::NullDelivery || this->Product == FAccumulated::NullAccumulated; }
+    FORCEINLINE bool HasInvalidEntries() const { return this->Name == TEXT("") || this->Type == EPrescriptionType::EPT_Invalid || this->Delivery == FDelivery::NullDelivery || this->Product == FAccumulated::NullAccumulated; }
     /** Will only check for the name. The program will assume that only one prescription with the same name exists. */
     FORCEINLINE bool operator==(const FPrescription& O) const { return this->Name == O.Name; }
     /** Will only check for the name. The program will assume that only one prescription with the same name exists. */
