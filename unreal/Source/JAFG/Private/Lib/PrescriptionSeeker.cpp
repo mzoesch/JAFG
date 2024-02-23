@@ -200,12 +200,12 @@ FPrescription UPrescriptionSeeker::ParsePrescription(const FString& Name, const 
             return Prescription;
         }
         Prescription.Delivery.ContentWidth = Obj.GetObjectField(FPrescriptionJSON::Delivery)->GetField<EJson::Number>(FPrescriptionJSON::DeliveryWidth).Get()->AsNumber();
-        if (Prescription.Delivery.ContentWidth < 2)
+        if (Prescription.Delivery.ContentWidth < 1)
         {
 #if WITH_EDITOR
-            UIL_LOG(Error, TEXT("UPrescriptionSeeker::ParsePrescription: Field '%s' is less than 2 in shaped prescription delivery. Fault prescription: %s."), *FPrescriptionJSON::DeliveryWidth, *Name)
+            UIL_LOG(Error, TEXT("UPrescriptionSeeker::ParsePrescription: Field '%s' is less than 1 in shaped prescription delivery. Fault prescription: %s."), *FPrescriptionJSON::DeliveryWidth, *Name)
 #else
-            UIL_LOG(Fatal, TEXT("UPrescriptionSeeker::ParsePrescription: Field '%s' is less than 2 in shaped prescription delivery. Fault prescription: %s."), *FPrescriptionJSON::DeliveryWidth, *Name)
+            UIL_LOG(Fatal, TEXT("UPrescriptionSeeker::ParsePrescription: Field '%s' is less than 1 in shaped prescription delivery. Fault prescription: %s."), *FPrescriptionJSON::DeliveryWidth, *Name)
 #endif /* WITH_EDITOR */
             Prescription.Type = EPrescriptionType::ERT_Invalid;
             return Prescription;
@@ -458,13 +458,149 @@ void UPrescriptionSeeker::GetPrescription(const FDelivery& Delivery, FPrescripti
 
         if (Prescription.Type == EPrescriptionType::ERT_CraftingShaped)
         {
-            /* If this is a 3x3 prescription, we ofc cannot craft this in a 2x2 crafting grid. */
-            if (Delivery.ContentWidth > Prescription.Delivery.ContentWidth)
+            /*
+             * If this is a 3x3 prescription, we ofc cannot craft this in a 2x2 crafting grid.
+             * But we ofc can craft a 2x2 prescription in a 3x3 crafting grid.
+             */
+            if (Prescription.Delivery.ContentWidth > Delivery.ContentWidth)
             {
                 goto NextPrescription;
             }
 
+            /* Check if we have a mismatch of accumulated item types in the delivery and prescription. */
+            for (const FAccumulated& DeliveryContent : Delivery.Contents)
+            {
+                /*
+                 * Here ofc we have to neglect NullAccumulates as the delivery grid may
+                 * be bigger than the prescription deliver grid.
+                 */
+                if (DeliveryContent == FAccumulated::NullAccumulated)
+                {
+                    continue;
+                }
+                
+                if (Prescription.Delivery.Contents.Contains(DeliveryContent) == false)
+                {
+                    goto NextPrescription;
+                }
+            }
+            for (const FAccumulated& PrescriptionDeliveryContent : Prescription.Delivery.Contents)
+            {
+                /* We intentionally do not sort out NullAccumulates as some shaped description depend on them. */
+                if (Delivery.Contents.Contains(PrescriptionDeliveryContent) == false)
+                {
+                    goto NextPrescription;
+                }
+            }
+
+            /*
+             * The index that we currently check if it matches with the prescription delivery.
+             * All indices that are below this value are already checked and are not valid.
+             *
+             *
+             * Example:
+             * 
+             * The Hexadecimal numbers in the grids represent the indices,
+             * the symbols are a placeholder for arbitrary accumulated items.
+             * 
+             * The Delivery:            The Prescription:
+             * +---+---+---+---+        +---+---+               If DeliveryStartIndexCursor is five.
+             * |0  |1  |2  |3  |        |0  |1@ |               In this example all indices below five are already
+             * +---+---+---+---+        +---+---+               checked and are invalid.
+             * |4  |5  |6@ |7  |        |2@ |3# |               The first valid index is five.
+             * +---+---+---+---+        +---+---+
+             * |8  |9@ |A# |B  |
+             * +---+---+---+---+
+             * |C  |D  |E  |F  |
+             * +---+---+---+---+
+             * Width: 4                 Width: 2
+             * 
+             * Note that if we have a cursor greater than one, we have to add the width of the cursor to the left side
+             * as we progress to the next row. We do not care about stuff outside of currently seeking subgrid of the
+             * delivery grid.
+             * The same is true for the prescription grid. If the prescription grid progresses to a next row, we have
+             * to add this also to the cursor.
+             * We have to match both grid sizes as there will be size mismatches.
+             */
+            int DeliveryStartIndexCursor = 0;
             
+            while (DeliveryStartIndexCursor < Delivery.Contents.Num())
+            {
+                int DeliveryContentCursor       = DeliveryStartIndexCursor;
+                int PrescriptionContentCursor   = 0;
+
+                while (true)
+                {
+                    /*
+                     * We have to check this because if a prescription row reached to an end we at the indices that
+                     * we expect to be in the delivery content grid. But these can be out of bounds.
+                     */
+                    if (DeliveryContentCursor >= Delivery.Contents.Num())
+                    {
+                        goto NextDeliveryIndex;
+                    }
+                    
+                    if (Delivery.Contents[DeliveryContentCursor] != Prescription.Delivery.Contents[PrescriptionContentCursor])
+                    {
+                        goto NextDeliveryIndex;
+                    }
+
+                    /*
+                     * Both fields are matching. Now we have to carefully go to the next index.
+                     * Note that we cannot just add one, as we have to keep track of the width of the
+                     * grids.
+                     */
+
+                    DeliveryContentCursor++; PrescriptionContentCursor++;
+
+                    if (PrescriptionContentCursor >= Prescription.Delivery.Contents.Num())
+                    {
+                        break;
+                    }
+                    
+                    if (PrescriptionContentCursor % Prescription.Delivery.ContentWidth == 0 /* The beginning of a row. */ )
+                    {
+                        /*
+                         * We have to go to the next line, if not already,
+                         * and add the left margin of the delivery content cursor.
+                         */
+                        if (DeliveryContentCursor % Delivery.ContentWidth == 0 /* The beginning of a row. */ )
+                        {
+                            DeliveryContentCursor += DeliveryStartIndexCursor % Delivery.ContentWidth;
+                        }
+                        else
+                        {
+                            const int IndicesLeftToNextRow = Delivery.ContentWidth - (DeliveryContentCursor % Delivery.ContentWidth);
+                            DeliveryContentCursor += IndicesLeftToNextRow;
+                            DeliveryContentCursor += DeliveryStartIndexCursor % Delivery.ContentWidth; /* Margin */
+                        }
+                        continue;
+                    }
+                    
+                    if (DeliveryContentCursor % Delivery.ContentWidth == 0 /* The beginning of a row. */ )
+                    {
+                        if (PrescriptionContentCursor % Prescription.Delivery.ContentWidth != 0 /* The beginning of a row. */ )
+                        {
+                            goto NextDeliveryIndex;
+                        }
+
+                        UIL_LOG(Error, TEXT("UPrescriptionSeeker::GetPrescription: Invalid cursor state. DeliveryContentCursor: %d, PrescriptionContentCursor: %d. Fault: %s."), DeliveryContentCursor, PrescriptionContentCursor, *Prescription.Name);
+                        continue;
+                    }
+
+                    continue;
+                }
+
+                if (PrescriptionContentCursor >= Prescription.Delivery.Contents.Num())
+                {
+                    OutPrescription = Prescription;
+                    return;
+                }
+                
+                NextDeliveryIndex:
+                    DeliveryStartIndexCursor++;
+                    continue;
+            }
             
             return;
         }

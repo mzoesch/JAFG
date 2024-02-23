@@ -1,0 +1,11 @@
+{
+  "Type": "Cr_Sd",
+  "Delivery": {
+    "Contents": ["OakPlanksVoxel", "OakPlanksVoxel"],
+    "Width": 1
+  },
+  "Product": {
+    "Content": "Stick",
+    "Amount": 4
+  }
+}
