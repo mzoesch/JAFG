@@ -1,0 +1,13 @@
+{
+  "Type": "Cr_Sd",
+  "Delivery": {
+    "Contents": [
+      "OakPlanksVoxel",
+      "OakPlanksVoxel",
+      "OakPlanksVoxel",
+      "OakPlanksVoxel"
+    ],
+    "Width": 2
+  },
+  "Product": "CraftingTableVoxel"
+}

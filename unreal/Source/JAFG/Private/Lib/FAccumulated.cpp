@@ -2,9 +2,16 @@
 
 #include "Lib/FAccumulated.h"
 
+#include "Core/GI_Master.h"
 #include "World/WorldVoxel.h"
 
 const FAccumulated FAccumulated::NullAccumulated = FAccumulated(EWorldVoxel::WV_Null, 0);
+
+void FAccumulated::Init(const UGI_Master* InGIPtr)
+{
+    FAccumulated::ItemIndexStart = InGIPtr->GetItemIndexStart();
+    return;
+}
 
 FAccumulated::FAccumulated()
 {

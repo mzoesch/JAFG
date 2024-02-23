@@ -6,6 +6,8 @@
 
 #include "FAccumulated.generated.h"
 
+class UGI_Master;
+
 USTRUCT()
 struct JAFG_API FAccumulated
 {
@@ -13,6 +15,8 @@ struct JAFG_API FAccumulated
 
 public:
 
+    static void Init(const UGI_Master* InGIPtr);
+    
     FAccumulated();
     explicit FAccumulated(const int AccumulatedIndex);
     explicit FAccumulated(const int AccumulatedIndex, const int InAmount);
@@ -35,7 +39,11 @@ public:
     FORCEINLINE bool operator==(const FAccumulated& O) const { return this->Accumulated == O.Accumulated; }
     /** Does not compare amount. */
     FORCEINLINE static bool Equals(const FAccumulated& A, const FAccumulated& B) { return A == B; }
-    /** TODO OFC Very sketchy. There must be a better solution than hard coding this. */
-    FORCEINLINE bool IsVoxel() const { return this->Accumulated < 7; }
+    /**
+     * Value copied from the game instance for faster access and to not have to deal with UWorld pointers.
+     * Not available during game instance initialization.
+     */
+    inline static int ItemIndexStart = -1;
+    FORCEINLINE bool IsVoxel() const { return this->Accumulated < FAccumulated::ItemIndexStart; }
     FORCEINLINE FString ToString() const { return FString::Printf(TEXT("{Accumulated:%d, Amount:%d}"), this->Accumulated, this->Amount); }
 };
