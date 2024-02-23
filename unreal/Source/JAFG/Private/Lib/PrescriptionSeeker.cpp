@@ -393,7 +393,7 @@ void UPrescriptionSeeker::GetPrescription(const FDelivery& Delivery, FPrescripti
              *          shapeless crafting, we must only care about the amounts and
              *          not the order of the delivery contents.
              */
-            TArray<FAccumulated> DeliveredContentCounter = TArray<FAccumulated>();
+            TArray<FAccumulated> DeliveryContentCounter = TArray<FAccumulated>();
             
             for (const FAccumulated& DeliveryContent : Delivery.Contents)
             {
@@ -407,13 +407,13 @@ void UPrescriptionSeeker::GetPrescription(const FDelivery& Delivery, FPrescripti
                     goto NextPrescription;
                 }
 
-                if (DeliveredContentCounter.Contains(DeliveryContent))
+                if (DeliveryContentCounter.Contains(DeliveryContent))
                 {
-                    DeliveredContentCounter[DeliveredContentCounter.Find(DeliveryContent)].Amount++;
+                    DeliveryContentCounter[DeliveryContentCounter.Find(DeliveryContent)].Amount++;
                     continue;
                 }
 
-                check( DeliveryContent.Amount == 1 ) DeliveredContentCounter.Add(DeliveryContent);
+                check( DeliveryContent.Amount == 1 ) DeliveryContentCounter.Add(DeliveryContent);
                 
                 continue;
             }
@@ -426,7 +426,7 @@ void UPrescriptionSeeker::GetPrescription(const FDelivery& Delivery, FPrescripti
                     continue;
                 }
             
-                if (DeliveredContentCounter.Contains(PrescriptionDeliveryContent) == false)
+                if (DeliveryContentCounter.Contains(PrescriptionDeliveryContent) == false)
                 {
                     goto NextPrescription;
                 }    
@@ -435,7 +435,7 @@ void UPrescriptionSeeker::GetPrescription(const FDelivery& Delivery, FPrescripti
             }
             
             /* Check if we have more or less accumulates of one accumulated item in the delivery. */
-            for (const FAccumulated& DeliveryContent : DeliveredContentCounter)
+            for (const FAccumulated& DeliveryContent : DeliveryContentCounter)
             {
                 /* TODO Do we need this?? */
                 if (Prescription.Delivery.Contents.ContainsByPredicate( [&DeliveryContent] (const FAccumulated& Accumulated) { return Accumulated == DeliveryContent; } ) == false)
@@ -458,6 +458,7 @@ void UPrescriptionSeeker::GetPrescription(const FDelivery& Delivery, FPrescripti
 
         if (Prescription.Type == EPrescriptionType::ERT_CraftingShaped)
         {
+#define BEGIN_OF_ROW 0
             /*
              * If this is a 3x3 prescription, we ofc cannot craft this in a 2x2 crafting grid.
              * But we ofc can craft a 2x2 prescription in a 3x3 crafting grid.
@@ -467,12 +468,18 @@ void UPrescriptionSeeker::GetPrescription(const FDelivery& Delivery, FPrescripti
                 goto NextPrescription;
             }
 
+            /*
+             * Check if we have a mismatch of the amounts of each type basically we treat
+             * the prescription as shapeless and check if it would be a valid prescription.)
+             */
+            /* The same as above. We misuse the amount variable in the FAccumulated struct. */
+            TArray<FAccumulated> DeliveryContentCounter         = TArray<FAccumulated>();
             /* Check if we have a mismatch of accumulated item types in the delivery and prescription. */
             for (const FAccumulated& DeliveryContent : Delivery.Contents)
             {
                 /*
                  * Here ofc we have to neglect NullAccumulates as the delivery grid may
-                 * be bigger than the prescription deliver grid.
+                 * be bigger than the prescription delivery grid.
                  */
                 if (DeliveryContent == FAccumulated::NullAccumulated)
                 {
@@ -483,11 +490,30 @@ void UPrescriptionSeeker::GetPrescription(const FDelivery& Delivery, FPrescripti
                 {
                     goto NextPrescription;
                 }
+
+                if (DeliveryContentCounter.Contains(DeliveryContent))
+                {
+                    DeliveryContentCounter[DeliveryContentCounter.Find(DeliveryContent)].Amount++;
+                    continue;
+                }
+                
+                check( DeliveryContent.Amount == 1 ) DeliveryContentCounter.Add(DeliveryContent);
+                continue;
             }
             for (const FAccumulated& PrescriptionDeliveryContent : Prescription.Delivery.Contents)
             {
                 /* We intentionally do not sort out NullAccumulates as some shaped description depend on them. */
                 if (Delivery.Contents.Contains(PrescriptionDeliveryContent) == false)
+                {
+                    goto NextPrescription;
+                }
+
+                continue;
+            }
+
+            for (const FAccumulated& DeliveryContent : DeliveryContentCounter)
+            {
+                if (DeliveryContent.Amount != Prescription.Delivery.GetRequiredAccumulatedAmountOfType(DeliveryContent))
                 {
                     goto NextPrescription;
                 }
@@ -532,8 +558,8 @@ void UPrescriptionSeeker::GetPrescription(const FDelivery& Delivery, FPrescripti
                 while (true)
                 {
                     /*
-                     * We have to check this because if a prescription row reached to an end we at the indices that
-                     * we expect to be in the delivery content grid. But these can be out of bounds.
+                     * We have to check this because if a prescription row reached to an end we add the indices that
+                     * we expect to be in the delivery content grid cursor. But these can be out of bounds.
                      */
                     if (DeliveryContentCursor >= Delivery.Contents.Num())
                     {
@@ -553,20 +579,17 @@ void UPrescriptionSeeker::GetPrescription(const FDelivery& Delivery, FPrescripti
 
                     DeliveryContentCursor++; PrescriptionContentCursor++;
 
+                    /* We have a winner here, as we reached the end of the prescription without errors :). Yay. */
                     if (PrescriptionContentCursor >= Prescription.Delivery.Contents.Num())
                     {
                         break;
                     }
                     
-                    if (PrescriptionContentCursor % Prescription.Delivery.ContentWidth == 0 /* The beginning of a row. */ )
+                    if (PrescriptionContentCursor % Prescription.Delivery.ContentWidth == BEGIN_OF_ROW)
                     {
-                        /*
-                         * We have to go to the next line, if not already,
-                         * and add the left margin of the delivery content cursor.
-                         */
-                        if (DeliveryContentCursor % Delivery.ContentWidth == 0 /* The beginning of a row. */ )
+                        if (DeliveryContentCursor % Delivery.ContentWidth == BEGIN_OF_ROW)
                         {
-                            DeliveryContentCursor += DeliveryStartIndexCursor % Delivery.ContentWidth;
+                            DeliveryContentCursor += DeliveryStartIndexCursor % Delivery.ContentWidth; /* Margin */
                         }
                         else
                         {
@@ -577,15 +600,20 @@ void UPrescriptionSeeker::GetPrescription(const FDelivery& Delivery, FPrescripti
                         continue;
                     }
                     
-                    if (DeliveryContentCursor % Delivery.ContentWidth == 0 /* The beginning of a row. */ )
+                    if (DeliveryContentCursor % Delivery.ContentWidth == BEGIN_OF_ROW)
                     {
-                        if (PrescriptionContentCursor % Prescription.Delivery.ContentWidth != 0 /* The beginning of a row. */ )
+                        if (PrescriptionContentCursor % Prescription.Delivery.ContentWidth != BEGIN_OF_ROW)
                         {
                             goto NextDeliveryIndex;
                         }
 
-                        UIL_LOG(Error, TEXT("UPrescriptionSeeker::GetPrescription: Invalid cursor state. DeliveryContentCursor: %d, PrescriptionContentCursor: %d. Fault: %s."), DeliveryContentCursor, PrescriptionContentCursor, *Prescription.Name);
-                        continue;
+#if WITH_EDITOR
+                        UIL_LOG(Error, TEXT("UPrescriptionSeeker::GetPrescription: Invalid cursor state. DeliveryContentCursor: %d, PrescriptionContentCursor: %d. Fault: %s."), DeliveryContentCursor, PrescriptionContentCursor, *Prescription.Name)
+#else
+                        UIL_LOG(Fatal, TEXT("UPrescriptionSeeker::GetPrescription: Invalid cursor state. DeliveryContentCursor: %d, PrescriptionContentCursor: %d. Fault: %s."), DeliveryContentCursor, PrescriptionContentCursor, *Prescription.Name)
+#endif /* WITH_EDITOR */
+
+                        return;
                     }
 
                     continue;
@@ -601,7 +629,8 @@ void UPrescriptionSeeker::GetPrescription(const FDelivery& Delivery, FPrescripti
                     DeliveryStartIndexCursor++;
                     continue;
             }
-            
+
+#undef BEGIN_OF_ROW
             return;
         }
 
