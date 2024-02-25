@@ -9,6 +9,7 @@
 #include "CraftingTableVoxel.generated.h"
 
 class UGI_Master;
+class ACH_Master;
 
 UCLASS()
 class JAFG_API UCraftingTableVoxel : public UObject, public IVoxel
@@ -18,4 +19,5 @@ class JAFG_API UCraftingTableVoxel : public UObject, public IVoxel
 public:
 
     virtual void Initialize(UGI_Master* GIPtr) override;
+    virtual void OnCustomSecondaryCharacterEvent(ACH_Master* Caller, bool& bConsumed) override;
 };

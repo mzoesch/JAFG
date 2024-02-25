@@ -10,9 +10,10 @@
 #include "Core/GI_Master.h"
 #include "World/ChunkWorld.h"
 #include "World/WorldVoxel.h"
+#include "World/Voxels/Voxel.h"
 
 #define UIL_LOG(Verbosity, Format, ...)     UE_LOG(LogTemp, Verbosity, Format, ##__VA_ARGS__)
-#define GI                                  Cast<UGI_Master>(this->GetGameInstance())
+#define GAME_INSTANCE                       Cast<UGI_Master>(this->GetGameInstance())
 #define CW                                  this->ChunkWorld
 #define WORLD_X(LocalX)                     (LocalX + this->ChunkPosition.X)
 #define WORLD_Y(LocalY)                     (LocalY + this->ChunkPosition.Y)
@@ -83,7 +84,7 @@ void AChunk::ApplyMesh() const
 {
     for (int i = 0; i < this->MeshDataArray.Num(); i++)
     {
-        this->ProcMesh->SetMaterial(i, GI->MDynamicOpaque);
+        this->ProcMesh->SetMaterial(i, GAME_INSTANCE->MDynamicOpaque);
         this->ProcMesh->CreateMeshSection(
             i,
             this->MeshDataArray[i].Vertices,
@@ -442,7 +443,7 @@ AChunk* AChunk::GetTargetChunk(const FIntVector& LocalVoxelPosition, FIntVector&
 
 int AChunk::GetVoxel(const FIntVector& LocalVoxelPosition) const
 {
-    // TODO
+    // TODO ...
     //      So we must check here if out of bounds for the neighboring
     //      chunk and get, if existing, the voxel data from there.
 
@@ -512,8 +513,37 @@ void AChunk::ModifyVoxelCheckTopChunkOnly(const FIntVector& CallingChunkLocalVox
     return;
 }
 
+//////////////////////////////////////////////////////////////////////////
+// Non Generation Related
+//////////////////////////////////////////////////////////////////////////
+
+bool AChunk::HasCustomSecondaryCharacterEventVoxel(const FIntVector& LocalVoxelPosition, FVoxelMask& OutVoxelMask) const
+{
+    const int Voxel = this->Voxels[AChunk::GetVoxelIndex(LocalVoxelPosition)];
+    
+    if (Voxel == EWorldVoxel::WV_Null || Voxel == EWorldVoxel::WV_Air)
+    {
+        return false;
+    }
+
+    FVoxelMask Mask = GAME_INSTANCE->GetVoxelMask(FAccumulated(Voxel));
+
+    UE_LOG(LogTemp, Warning, TEXT("AChunk::HasCustomSecondaryCharacterEventVoxel: Found %s."), *Mask.ToString());
+
+    /* TODO JUST TEMP */
+    if (Mask.VoxelClass == nullptr)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("AChunk::HasCustomSecondaryCharacterEventVoxel: VoxelClass is nullptr."));
+        return false;
+    }
+
+    OutVoxelMask = Mask;
+    
+    return true;
+}
+
 #undef UIL_LOG
-#undef GI
+#undef GAME_INSTANCE
 #undef CW
 #undef WORLD_X
 #undef WORLD_Y

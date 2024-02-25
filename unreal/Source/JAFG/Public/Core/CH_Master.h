@@ -279,7 +279,7 @@ public:
     FORCEINLINE UCameraComponent* GetFPSCamera(void) const { return this->FirstPersonCameraComponent; }
     FORCEINLINE FVector GetTorsoLocation(void) const { return this->FirstPersonCameraComponent->GetComponentLocation() - FVector(0.0f, 0.0f, 50.0f); }
     FORCEINLINE FTransform GetTorsoTransform(void) const { return FTransform(this->FirstPersonCameraComponent->GetComponentRotation(), this->GetTorsoLocation()); }
-    void GetTargetedVoxel(AChunk*& OutChunk, FVector& OutWorldHitLocation, FIntVector& OutLocalHitVoxelLocation, const float UnrealReach = ACH_Master::MaxPOVLineTraceLength) const;
+    void GetTargetedVoxel(AChunk*& OutChunk, FVector& OutWorldHitLocation, FVector_NetQuantizeNormal& OutWorldNormalHitLocation, FIntVector& OutLocalHitVoxelLocation, const float UnrealReach = ACH_Master::MaxPOVLineTraceLength) const;
 
 private:
 

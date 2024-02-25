@@ -1,16 +1,28 @@
 #include "World/VoxelMask.h"
 
 #include "Assets/General.h"
+#include "World/Voxels/Voxel.h"
 
 #define UIL_LOG(Verbosity, Format, ...) UE_LOG(LogTemp, Verbosity, Format, ##__VA_ARGS__)
 
-FVoxelMask::FVoxelMask(const FString& NameSpace, const FString& Name, const bool bIsTranslucent, const int TextureGroup, class IVoxel* VoxelClass)
+const FVoxelMask FVoxelMask::NullVoxelMask = FVoxelMask("CORE", "NullVoxel", true, -1, nullptr);
+
+FVoxelMask::FVoxelMask(const FString& NameSpace, const FString& Name, const bool bIsTranslucent, const int TextureGroup, TScriptInterface<IVoxel>* VoxelClass)
 {
     this->NameSpace         = NameSpace;
     this->Name              = Name;
     this->bIsTranslucent    = bIsTranslucent;
     this->TextureGroup      = TextureGroup;
-    this->VoxelClass        = VoxelClass;
+
+    if (VoxelClass == nullptr)
+    {
+        this->VoxelClass = nullptr;
+    }
+    else
+    {
+        this->VoxelClass        = VoxelClass->GetObject();
+    }
+
     this->NormalLookup.Empty();
 
     return;

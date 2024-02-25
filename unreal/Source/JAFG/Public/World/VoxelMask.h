@@ -8,6 +8,8 @@
 
 #include "VoxelMask.generated.h"
 
+class IVoxel;
+
 USTRUCT()
 struct JAFG_API FVoxelMask
 {
@@ -16,7 +18,15 @@ struct JAFG_API FVoxelMask
 public:
 
     FVoxelMask() = default;
-    FVoxelMask(const FString& NameSpace, const FString& Name, const bool bIsTranslucent, const int TextureGroup, class IVoxel* VoxelClass);
+    // FVoxelMask(const FString& NameSpace, const FString& Name, const bool bIsTranslucent, const int TextureGroup, IVoxel* VoxelClass);
+    FVoxelMask(const FString& NameSpace, const FString& Name, const bool bIsTranslucent, const int TextureGroup, TScriptInterface<IVoxel>* VoxelClass);
+
+public:
+    /**
+     * This 
+     * 
+     */
+    static const FVoxelMask NullVoxelMask;
     
 public:
     
@@ -24,10 +34,15 @@ public:
     FString                     Name;
     bool                        bIsTranslucent;
     int                         TextureGroup;
-    class IVoxel*               VoxelClass;
+    UPROPERTY()
+    UObject*                    VoxelClass;
+    // UPROPERTY()
+    // TScriptInterface<IVoxel>    VoxelClass;
+    // IVoxel*                     VoxelClass;
     TMap<ENormalLookup, int>    NormalLookup;
 
 public:
     
     int GetTextureIndex(const FVector& Normal) const;
+    FORCEINLINE FString ToString() const { return FString::Printf(TEXT("{Name:%s::%s, bVoxelClass:%hhd}"), *this->NameSpace, *this->Name, this->VoxelClass != nullptr); }
 };

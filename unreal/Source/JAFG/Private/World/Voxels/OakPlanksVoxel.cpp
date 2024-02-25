@@ -5,8 +5,13 @@
 #include "World/VoxelMask.h"
 #include "Core/GI_Master.h"
 
-void UOakPlanksVoxel::Initialize(UGI_Master* GI)
+void UOakPlanksVoxel::Initialize(UGI_Master* GIPtr)
 {
-    GI->AddVoxelMask(FVoxelMask("JAFG", "OakPlanksVoxel", false, 0, nullptr));
+    GIPtr->AddVoxelMask(FVoxelMask("JAFG", "OakPlanksVoxel", false, 0, nullptr));
     return;
+}
+
+void UOakPlanksVoxel::OnCustomSecondaryCharacterEvent(ACH_Master* Caller, bool& bConsumed)
+{
+    UE_LOG(LogTemp, Fatal, TEXT("UOakPlanksVoxel::OnCustomSecondaryCharacterEvent"))
 }
