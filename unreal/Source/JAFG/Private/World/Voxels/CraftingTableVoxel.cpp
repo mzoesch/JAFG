@@ -23,4 +23,5 @@ void UCraftingTableVoxel::Initialize(UGI_Master* GIPtr)
 void UCraftingTableVoxel::OnCustomSecondaryCharacterEvent(ACH_Master* Caller, bool& bConsumed)
 {
     UE_LOG(LogTemp, Error, TEXT("UCraftingTableVoxel::OnCustomSecondaryCharacterEvent"))
+    bConsumed = true;
 }

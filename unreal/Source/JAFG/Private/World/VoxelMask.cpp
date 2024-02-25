@@ -13,16 +13,7 @@ FVoxelMask::FVoxelMask(const FString& NameSpace, const FString& Name, const bool
     this->Name              = Name;
     this->bIsTranslucent    = bIsTranslucent;
     this->TextureGroup      = TextureGroup;
-
-    if (VoxelClass == nullptr)
-    {
-        this->VoxelClass = nullptr;
-    }
-    else
-    {
-        this->VoxelClass        = VoxelClass->GetObject();
-    }
-
+    this->VoxelClass        = VoxelClass ? *VoxelClass : nullptr;
     this->NormalLookup.Empty();
 
     return;

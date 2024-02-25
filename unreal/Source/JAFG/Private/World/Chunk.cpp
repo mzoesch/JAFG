@@ -536,7 +536,7 @@ bool AChunk::HasCustomSecondaryCharacterEventVoxel(const FIntVector& LocalVoxelP
         UE_LOG(LogTemp, Warning, TEXT("AChunk::HasCustomSecondaryCharacterEventVoxel: VoxelClass is nullptr."));
         return false;
     }
-
+    
     OutVoxelMask = Mask;
     
     return true;

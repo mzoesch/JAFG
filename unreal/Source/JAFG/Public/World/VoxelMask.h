@@ -35,10 +35,7 @@ public:
     bool                        bIsTranslucent;
     int                         TextureGroup;
     UPROPERTY()
-    UObject*                    VoxelClass;
-    // UPROPERTY()
-    // TScriptInterface<IVoxel>    VoxelClass;
-    // IVoxel*                     VoxelClass;
+    TScriptInterface<IVoxel>    VoxelClass;
     TMap<ENormalLookup, int>    NormalLookup;
 
 public:
