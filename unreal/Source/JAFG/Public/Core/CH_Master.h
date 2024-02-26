@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
+#include "PC_Master.h"
 #include "Camera/CameraComponent.h"
 
 #include "Lib/FAccumulated.h"
@@ -69,8 +70,9 @@ public:
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IMC")
     UInputMappingContext* IMCFoot;
 
+    /* TODO Rename to IMC_CONTAINER */
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IMC")
-    UInputMappingContext* IMCInventory;
+    UInputMappingContext* IMCContainer;
     
     /* Movement */
 
@@ -178,10 +180,16 @@ private:
 #pragma region Member Methods, Variables
 
 public:
-
+    
     /** Will update the current item preview with the current selected quick slot.  */
-    void UpdateItemPreview() const;
+    void UpdateItemPreview(void) const;
 
+private:
+
+    /** Manages how input mapping context are distributed while containers are open. */
+    void TransitCharacterToContainerState(const bool bOpen) const;
+    friend void APC_Master::TransitToContainerState(const FString& Identifier, const bool bOpen, const bool bDestroy);
+    
 #pragma region World Interaction
     
 private:
@@ -204,9 +212,12 @@ public:     FORCEINLINE FIntVector GetCurrentlyMiningLocalVoxelLocation(void) co
     
 private:
 
-    static constexpr int    InventoryStartSize{78};
-    static constexpr int    InventoryCrafterWidth{2};
-    static constexpr int    InventoryCrafterSize{4};
+    
+    static constexpr int InventoryStartSize    { 78 };
+    static constexpr int InventoryCrafterWidth {  2 };
+    static constexpr int InventoryCrafterSize  {  4 };
+
+    FString InventoryContainerIdentifier;
 
     int             SelectedQuickSlotIndex;
 public:     FAccumulated    CursorHand;
@@ -222,7 +233,7 @@ public:
     // a bUpdateHUD parameter boolean will never trigger a re-render.
     //
     
-    bool                        IsInventoryOpen(void) const;
+    bool                        IsAContainerVisible(void) const;
 
     void                        ClearCursorHand(const bool bUpdateHUD);
     
