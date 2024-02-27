@@ -239,6 +239,10 @@ public:
     // It is generally safe to assume that all methods that do not have
     // a bUpdateHUD parameter boolean will never trigger a re-render.
     //
+    // Note even if the method has Inventory Slot in its name it does not mean that the character
+    // inventory is open and operated on. Any other container can call these methods as well if
+    // they have access to the character inventory.
+    //
     
     bool                        IsAContainerVisible(void) const;
 

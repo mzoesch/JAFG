@@ -28,7 +28,6 @@ void UW_CraftingTableContainer::NativeTick(const FGeometry& MyGeometry, float In
         return;
     }
 
-    UE_LOG(LogTemp, Warning, TEXT("UW_CraftingTableContainer::NativeTick: Container is dirty. Refreshing..."));
     this->RefreshCharacterInventory();
 }
 
@@ -70,7 +69,7 @@ void UCraftingTableVoxel::OnCustomSecondaryCharacterEvent(ACH_Master* Caller, bo
     Cast<AHUD_Master>(Caller->GetWorld()->GetFirstPlayerController()->GetHUD())->AddContainer(Ident, this->GIPtr->DerivedClassHolder->CraftingTableContainer);
 
     /*
-     * This is maybe unnecessary, but for whatever reason the next secondary input action by the user is always
+     * This is maybe unnecessary but for whatever reason the next secondary input action by the user is always
      * discarded by the engine itself?? This also does not fix the issue. Can be removed but is maybe a good
      * first idea?
      */
