@@ -5,13 +5,13 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
-#include "PC_Master.h"
 #include "Camera/CameraComponent.h"
 
 #include "Lib/FAccumulated.h"
 #include "Lib/PrescriptionSeeker.h"
 #include "Lib/Container/Slot.h"
 #include "World/Chunk.h"
+#include "Core/PC_Master.h"
 
 #include "CH_Master.generated.h"
 
@@ -186,7 +186,10 @@ public:
 
 private:
 
-    /** Manages how input mapping context are distributed while containers are open. */
+    /**
+     * Manages how input mapping context are distributed while containers are open.
+     * This method should only be called by the supervising player controller.
+     */
     void TransitCharacterToContainerState(const bool bOpen) const;
     friend void APC_Master::TransitToContainerState(const FString& Identifier, const bool bOpen, const bool bDestroy);
     
@@ -209,6 +212,10 @@ public:     FORCEINLINE FIntVector GetCurrentlyMiningLocalVoxelLocation(void) co
 #pragma endregion World Interaction
     
 #pragma region Inventory
+
+public:
+
+    static constexpr int HotbarSlotCount { 10 };
     
 private:
 

@@ -7,13 +7,50 @@
 #include "Core/GI_Master.h"
 #include "Core/PC_Master.h"
 #include "HUD/HUD_Master.h"
-#include "HUD/UW_Master.h"
 #include "HUD/Container/PlayerInventory.h"
+#include "Lib/DerivedClassHolder.h"
 
-void UCraftingTableVoxel::Initialize(UGI_Master* GIPtr)
+#pragma region Graphical User Interface
+
+void UW_CraftingTableContainer::NativeOnInitialized()
 {
+    Super::NativeOnInitialized();
+    this->MarkAsDirty();
+    return;
+}
+
+void UW_CraftingTableContainer::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+    bool bDiscardTick = false;
+    Super::NativeTickImpl(MyGeometry, InDeltaTime, bDiscardTick);
+    if (bDiscardTick == true)
+    {
+        return;
+    }
+
+    UE_LOG(LogTemp, Warning, TEXT("UW_CraftingTableContainer::NativeTick: Container is dirty. Refreshing..."));
+    this->RefreshCharacterInventory();
+}
+
+void UW_CraftingTableContainer::RefreshCharacterInventory()
+{
+    Super::RefreshCharacterInventory();
+
+    /* TODO Here than update all crafter slots ect. */
+    
+    return;
+}
+
+#pragma endregion Graphical User Interface
+
+#pragma region Voxel
+
+void UCraftingTableVoxel::Initialize(UGI_Master* InGIPtr)
+{
+    this->GIPtr = InGIPtr;
+
     TScriptInterface<IVoxel> VoxelPtr = TScriptInterface<IVoxel>(this);
-    GIPtr->AddVoxelMask(FVoxelMask("JAFG", "CraftingTableVoxel", false, 0, &VoxelPtr));
+    this->GIPtr->AddVoxelMask(FVoxelMask("JAFG", "CraftingTableVoxel", false, 0, &VoxelPtr));
     
     // We need to set some additional vars here.
     // Some examples
@@ -30,12 +67,19 @@ void UCraftingTableVoxel::OnCustomSecondaryCharacterEvent(ACH_Master* Caller, bo
     bConsumed = true;
 
     FString Ident;
-    Cast<AHUD_Master>(Caller->GetWorld()->GetFirstPlayerController()->GetHUD())->AddContainer(Ident,
-        Cast<AHUD_Master>(Caller->GetWorld()->GetFirstPlayerController()->GetHUD())->UWPlayerInventoryClass);
+    Cast<AHUD_Master>(Caller->GetWorld()->GetFirstPlayerController()->GetHUD())->AddContainer(Ident, this->GIPtr->DerivedClassHolder->CraftingTableContainer);
 
-    UE_LOG(LogTemp, Error, TEXT("UCraftingTableVoxel::OnCustomSecondaryCharacterEvent: %s."), *Ident)
-
-    Cast<APC_Master>(Caller->GetWorld()->GetFirstPlayerController())->TransitToContainerState(Ident, true);
+    /*
+     * This is maybe unnecessary, but for whatever reason the next secondary input action by the user is always
+     * discarded by the engine itself?? This also does not fix the issue. Can be removed but is maybe a good
+     * first idea?
+     */
+    this->GIPtr->GetWorld()->GetTimerManager().SetTimerForNextTick(FTimerDelegate::CreateWeakLambda(this, [this, Caller, Ident]()
+    {
+        Cast<APC_Master>(Caller->GetWorld()->GetFirstPlayerController())->TransitToContainerState(Ident, true);
+    }));
     
     return;
 }
+
+#pragma endregion Voxel

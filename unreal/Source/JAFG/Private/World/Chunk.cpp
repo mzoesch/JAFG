@@ -526,14 +526,11 @@ bool AChunk::HasCustomSecondaryCharacterEventVoxel(const FIntVector& LocalVoxelP
         return false;
     }
 
-    FVoxelMask Mask = GAME_INSTANCE->GetVoxelMask(FAccumulated(Voxel));
-
-    UE_LOG(LogTemp, Warning, TEXT("AChunk::HasCustomSecondaryCharacterEventVoxel: Found %s."), *Mask.ToString());
+    const FVoxelMask Mask = GAME_INSTANCE->GetVoxelMask(FAccumulated(Voxel));
 
     /* TODO JUST TEMP */
     if (Mask.VoxelClass == nullptr)
     {
-        UE_LOG(LogTemp, Warning, TEXT("AChunk::HasCustomSecondaryCharacterEventVoxel: VoxelClass is nullptr."));
         return false;
     }
     

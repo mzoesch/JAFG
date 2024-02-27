@@ -27,6 +27,8 @@ void UW_Container::NativeTickImpl(const FGeometry& MyGeometry, const float InDel
     }
     
     this->bDirty = false;
+
+    return;
 }
 
 void UW_Container::RefreshCharacterInventory()
@@ -45,7 +47,7 @@ void UW_Container::RefreshCharacterInventory()
         continue;
     }
 
-    Cast<AHUD_Master>(this->GetOwningPlayer()->GetHUD())->OnHotbarUpdate();
+    Cast<AHUD_Master>(this->GetOwningPlayer()->GetHUD())->RefreshCharacterHotbar();
     
     return;
 }
