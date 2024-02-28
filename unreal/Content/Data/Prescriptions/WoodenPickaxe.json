@@ -1,0 +1,18 @@
+{
+  "Type": "Cr_Sd",
+  "Delivery": {
+    "Contents": [
+      "OakPlanksVoxel",
+      "OakPlanksVoxel",
+      "OakPlanksVoxel",
+      null,
+      "Stick",
+      null,
+      null,
+      "Stick",
+      null
+    ],
+    "Width": 3
+  },
+  "Product": "WoodenPickaxe"
+}

@@ -23,8 +23,8 @@ class JAFG_API UW_CraftingTableCrafterSlot : public UW_ContainerSlot
 
 public:
 
-    virtual void OnClicked() override;
-    virtual void OnSecondaryClicked() override;
+    virtual void OnClicked(void) override;
+    virtual void OnSecondaryClicked(void) override;
 };
 
 UCLASS()
@@ -34,7 +34,7 @@ class JAFG_API UW_CraftingTableCrafterProduct : public UW_ContainerSlot
 
 public:
 
-    virtual void OnClicked() override;
+    virtual void OnClicked(void) override;
 };
 
 UCLASS()
@@ -52,10 +52,10 @@ public:
     
 protected:
 
-    virtual void NativeOnInitialized() override;
-    virtual void OnDestroy() override;
+    virtual void NativeOnInitialized(void) override;
+    virtual void OnDestroy(void) override;
     virtual void NativeTick(const FGeometry& MyGeometry, const float InDeltaTime) override;
-    virtual void RefreshCharacterInventory() override;
+    virtual void RefreshCharacterInventory(void) override;
 
 private:
 

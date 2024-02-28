@@ -477,6 +477,7 @@ void UPrescriptionSeeker::GetPrescription(const FDelivery& Delivery, FPrescripti
              * Check if we have a mismatch of the amounts of each type basically we treat
              * the prescription as shapeless and check if it would be a valid prescription.)
              */
+            
             /* The same as above. We misuse the amount variable in the FAccumulated struct. */
             TArray<FAccumulated> DeliveryContentCounter         = TArray<FAccumulated>();
             /* Check if we have a mismatch of accumulated item types in the delivery and prescription. */
@@ -637,8 +638,8 @@ void UPrescriptionSeeker::GetPrescription(const FDelivery& Delivery, FPrescripti
                     continue;
             }
 
+            goto NextPrescription;
 #undef BEGIN_OF_ROW
-            return;
         }
 
 #if WITH_EDITOR
@@ -647,7 +648,8 @@ void UPrescriptionSeeker::GetPrescription(const FDelivery& Delivery, FPrescripti
         UIL_LOG(Fatal, TEXT("UPrescriptionSeeker::GetPrescription: Unsupported prescription type: %d."), static_cast<int>(Prescription.Type));
 #endif /* WITH_EDITOR */
         
-        NextPrescription: continue;
+        NextPrescription:
+            continue;
     }
 
     return;

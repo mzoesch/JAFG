@@ -1,0 +1,15 @@
+{
+  "Type": "Cr_Sd",
+  "Delivery": {
+    "Contents": [
+      "OakPlanksVoxel",
+      "OakPlanksVoxel",
+      null,
+      "Stick",
+      null,
+      "Stick"
+    ],
+    "Width": 2
+  },
+  "Product": "WoodenHoe"
+}
