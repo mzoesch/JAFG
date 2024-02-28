@@ -8,6 +8,8 @@
 
 #include "ContainerSlotData.generated.h"
 
+class UW_Container;
+
 /** Every container slot should use this or a derived class to store its data. */
 UCLASS()
 class UContainerSlotData : public UObject
@@ -19,5 +21,6 @@ public:
     UPROPERTY(BlueprintReadOnly)
     int32           Index;
     FAccumulated    Accumulated;
-    
+    UPROPERTY()
+    TObjectPtr<UW_Container> OuterContainer;
 };

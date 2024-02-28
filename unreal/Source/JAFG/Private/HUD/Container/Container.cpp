@@ -7,7 +7,19 @@
 #include "HUD/HUD_Master.h"
 #include "Lib/HUD/Container/ContainerSlotData.h"
 
-#define MASTER_CHARACTER Cast<ACH_Master>(GetOwningPlayerPawn())
+#define CHARACTER Cast<ACH_Master>(GetOwningPlayerPawn())
+
+void UW_Container::SetVisibility(ESlateVisibility InVisibility)
+{
+    Super::SetVisibility(InVisibility);
+
+    if (InVisibility == ESlateVisibility::Hidden || InVisibility == ESlateVisibility::Collapsed)
+    {
+        this->OnDestroy();
+    }
+
+    return;
+}
 
 void UW_Container::NativeOnInitialized()
 {
@@ -35,12 +47,12 @@ void UW_Container::RefreshCharacterInventory()
 {
     this->CharacterInventorySlots->ClearListItems();
 
-    for (int i = 0; i < MASTER_CHARACTER->GetInventorySize(); ++i)
+    for (int i = 0; i < CHARACTER->GetInventorySize(); ++i)
     {
         UContainerSlotData* Data = NewObject<UContainerSlotData>(this);
 
         Data->Index        = i;
-        Data->Accumulated  = MASTER_CHARACTER->GetInventorySlot(i);
+        Data->Accumulated  = CHARACTER->GetInventorySlot(i);
 
         this->CharacterInventorySlots->AddItem(Data);
 
@@ -48,8 +60,9 @@ void UW_Container::RefreshCharacterInventory()
     }
 
     Cast<AHUD_Master>(this->GetOwningPlayer()->GetHUD())->RefreshCharacterHotbar();
+    Cast<AHUD_Master>(this->GetOwningPlayer()->GetHUD())->RefreshCursorPreview();
     
     return;
 }
 
-#undef MASTER_CHARACTER
+#undef CHARACTER

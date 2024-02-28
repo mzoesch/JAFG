@@ -16,5 +16,4 @@ class JAFG_API UW_PlayerInventoryCrafterOutput : public UW_ContainerSlot
 public:
 
     virtual void OnClicked() override;
-    
 };

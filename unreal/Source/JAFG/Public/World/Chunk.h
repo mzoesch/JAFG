@@ -48,7 +48,7 @@ private:
 
 protected:
 
-    virtual void GenerateMesh() PURE_VIRTUAL(AChunk::GenerateMesh);
+    virtual void GenerateMesh() PURE_VIRTUAL(AChunk::GenerateMesh)
 
 protected:
 

@@ -39,8 +39,8 @@ public:
     void RenderSlot();
     
     UFUNCTION(BlueprintCallable)
-    virtual void OnClicked() PURE_VIRTUAL(ContainerSlot::OnClicked);
+    virtual void OnClicked() PURE_VIRTUAL(ContainerSlot::OnClicked)
 
     UFUNCTION(BlueprintCallable)
-    virtual void OnSecondaryClicked() PURE_VIRTUAL(ContainerSlot::OnSecondaryClicked);
+    virtual void OnSecondaryClicked() PURE_VIRTUAL(ContainerSlot::OnSecondaryClicked)
 };

@@ -263,6 +263,7 @@ public:
     FORCEINLINE FSlot*          GetSelectedQuickSlotPtr(void) { return &this->Inventory[this->SelectedQuickSlotIndex]; }
 
     FORCEINLINE int             GetInventoryCrafterSize(void) const { return this->InventoryCrafter.Num(); }
+    FORCEINLINE FSlot*          GetInventoryCrafterSlotPtr(const int Slot) { return &this->InventoryCrafter[Slot]; }
     FORCEINLINE FAccumulated    GetInventoryCrafterSlot(const int Slot) const { return this->InventoryCrafter[Slot].Content; }
     FAccumulated                GetInventoryCrafterProduct(void) const;
     FORCEINLINE FDelivery       GetInventoryCrafterAsDelivery(void) const
