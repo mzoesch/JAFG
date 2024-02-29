@@ -15,6 +15,7 @@
 
 #include "CH_Master.generated.h"
 
+class UMasterCameraShake;
 class ACharacterReach;
 class UBoxComponent;
 class AChunk;
@@ -180,9 +181,14 @@ private:
 #pragma region Member Methods, Variables
 
 public:
+
+    inline static const FVector ItemPreviewVoxelLocationOffset   { 48.0f, 33.5f, -30.0f };
+    inline static const FVector ItemPreviewNoVoxelLocationOffset { 55.0f, 24.0f, -10.0f };
     
     /** Will update the current item preview with the current selected quick slot.  */
     void UpdateItemPreview(void) const;
+    /** Will not trigger a rerender of the current applied mesh. */
+    void UpdateItemPreview(const float Bob) const;
 
 private:
 
@@ -292,6 +298,31 @@ private:
 #pragma endregion Inventory Manipulation
     
 #pragma endregion Inventory
+
+#pragma region Camera
+
+private:
+
+    UPROPERTY(EditDefaultsOnly, Category = "Camera", meta = (AllowPrivate))
+    TSubclassOf<UCameraShakeBase> BobClass;
+
+    float BobProgress = 0.0f;
+
+    float OldRealBob = 0.0f;
+    float PreviousDistPct;
+    
+    void TickBob(void);
+    
+#pragma endregion Camera
+
+#pragma region MISC
+    
+private:
+
+    /** The added offset to the First Person Camera Component. */
+    inline static const FVector TorsoOffset { 0.0f, 0.0f, -50.0f };
+
+#pragma endregion MISC
     
 #pragma endregion Member Methods, Variables
 
@@ -300,7 +331,7 @@ private:
 public:
 
     FORCEINLINE UCameraComponent* GetFPSCamera(void) const { return this->FirstPersonCameraComponent; }
-    FORCEINLINE FVector GetTorsoLocation(void) const { return this->FirstPersonCameraComponent->GetComponentLocation() - FVector(0.0f, 0.0f, 50.0f); }
+    FORCEINLINE FVector GetTorsoLocation(void) const { return this->FirstPersonCameraComponent->GetComponentLocation() + ACH_Master::TorsoOffset /* - FVector(0.0f, 0.0f, 50.0f) */; }
     FORCEINLINE FTransform GetTorsoTransform(void) const { return FTransform(this->FirstPersonCameraComponent->GetComponentRotation(), this->GetTorsoLocation()); }
     void GetTargetedVoxel(AChunk*& OutChunk, FVector& OutWorldHitLocation, FVector_NetQuantizeNormal& OutWorldNormalHitLocation, FIntVector& OutLocalHitVoxelLocation, const float UnrealReach = ACH_Master::MaxPOVLineTraceLength) const;
 
