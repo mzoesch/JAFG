@@ -84,7 +84,20 @@ void AChunk::ApplyMesh() const
 {
     for (int i = 0; i < this->MeshDataArray.Num(); i++)
     {
-        this->ProcMesh->SetMaterial(i, GAME_INSTANCE->MDynamicOpaque);
+        if (i == 0)
+        {
+            this->ProcMesh->SetMaterial(0, GAME_INSTANCE->MDynamicOpaque);
+        }
+        else if (i == 1)
+        {
+            this->ProcMesh->SetMaterial(1, GAME_INSTANCE->MDynamicBlendOpaque);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("AChunk::ApplyMesh: Unsupported material mesh section: %d"), i)
+            this->ProcMesh->SetMaterial(i, GAME_INSTANCE->MDynamicOpaque);
+        }
+        
         this->ProcMesh->CreateMeshSection(
             i,
             this->MeshDataArray[i].Vertices,

@@ -18,7 +18,7 @@ void AGreedyChunk::CreateQuad(const FMask Mask, const FIntVector AxisMask, const
 {
     const FVector   Normal          = FVector(AxisMask * Mask.Normal);
     const FColor    Color           = FColor(0, 0, 0, GI->GetTextureIndex(Mask.Voxel, Normal));
-    const int       TextureGroup    = GI->GetTextureGroup(Mask.Voxel);
+    const int       TextureGroup    = GI->GetTextureGroup(Mask.Voxel, Normal);
 
     if (TextureGroup > this->VertexCounts.Num() - 1)
     {
@@ -126,25 +126,7 @@ void AGreedyChunk::GenerateMesh()
 
                     if (CurrentBlockOpaque == CompareBlockOpaque)
                     {
-                        if (CompareBlock == 5)
-                        {
-                            if (CompareBlock == 5 && CurrentBlock == 5)
-                            {
-                                Mask[N++] = FMask{EWorldVoxel::WV_Null, 0};
-                            }
-                            else
-                            {
-                                Mask[N++] = FMask{CurrentBlock, 1};
-                            }
-                        }
-                        else if (CompareBlock == 8)
-                        {
-                            Mask[N++] = FMask{CurrentBlock, 1};
-                        }
-                        else
-                        {
-                            Mask[N++] = FMask{EWorldVoxel::WV_Null, 0};
-                        }
+                        Mask[N++] = FMask{EWorldVoxel::WV_Null, 0};
                     }
                     else if (CurrentBlockOpaque)
                     {

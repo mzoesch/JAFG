@@ -3,10 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "HUD/Container/Container.h"
 #include "HUD/Container/Slots/ContainerSlot.h"
 #include "Lib/PrescriptionSeeker.h"
-
 #include "World/Voxels/Voxel.h"
 
 #include "CraftingTableVoxel.generated.h"
