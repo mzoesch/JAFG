@@ -182,13 +182,14 @@ private:
 
 public:
 
+    /** Designed for 16:9. See ACH_Master#UpdateItemPreviewViewPortRatioOffset for more information. */
     inline static const FVector ItemPreviewVoxelLocationOffset   { 48.0f, 33.5f, -30.0f };
     inline static const FVector ItemPreviewNoVoxelLocationOffset { 55.0f, 24.0f, -10.0f };
     
     /** Will update the current item preview with the current selected quick slot.  */
     void UpdateItemPreview(void) const;
     /** Will not trigger a rerender of the current applied mesh. */
-    void UpdateItemPreview(const float Bob) const;
+    void UpdateItemPreview(const FVector& Bob) const;
 
 private:
 
@@ -303,14 +304,28 @@ private:
 
 private:
 
-    UPROPERTY(EditDefaultsOnly, Category = "Camera", meta = (AllowPrivate))
-    TSubclassOf<UCameraShakeBase> BobClass;
+    FORCEINLINE FTransform GetItemPreviewRelativeTransformNoBob() const
+    {
+        return this->GetSelectedQuickSlot().IsVoxel()
+            ?
+            FTransform(
+                FRotator(180.0f, 40.0f, 0.0f),
+                ACH_Master::ItemPreviewVoxelLocationOffset + this->ItemPreviewViewPortRatioOffset,
+                FVector(0.1f, 0.1f, 0.1f)
+            )
+            :
+            FTransform(
+                FRotator(150.0f, 0.0f, 270.0f),
+                ACH_Master::ItemPreviewNoVoxelLocationOffset + this->ItemPreviewViewPortRatioOffset,
+                FVector(0.1f, 0.1f, 0.1f)
+            );
+    }
+    /** The ratio from the last tick. TODO We may want to generalize this? */
+    float OldRatio;
+    FVector ItemPreviewViewPortRatioOffset { 0.0f, 0.0f, 0.0f };
+    /** @param bOutDirty If the Item Preview must be updated this tick in order to fit a new view port ratio. */
+    void UpdateItemPreviewViewPortRatioOffset(bool& bOutDirty);
 
-    float BobProgress = 0.0f;
-
-    float OldRealBob = 0.0f;
-    float PreviousDistPct;
-    
     void TickBob(void);
     
 #pragma endregion Camera
@@ -332,6 +347,7 @@ public:
 
     FORCEINLINE UCameraComponent* GetFPSCamera(void) const { return this->FirstPersonCameraComponent; }
     FORCEINLINE FVector GetTorsoLocation(void) const { return this->FirstPersonCameraComponent->GetComponentLocation() + ACH_Master::TorsoOffset /* - FVector(0.0f, 0.0f, 50.0f) */; }
+    FORCEINLINE FVector GetTorsoRelativeLocation(void) const { return this->FirstPersonCameraComponent->GetRelativeLocation() + ACH_Master::TorsoOffset; }
     FORCEINLINE FTransform GetTorsoTransform(void) const { return FTransform(this->FirstPersonCameraComponent->GetComponentRotation(), this->GetTorsoLocation()); }
     void GetTargetedVoxel(AChunk*& OutChunk, FVector& OutWorldHitLocation, FVector_NetQuantizeNormal& OutWorldNormalHitLocation, FIntVector& OutLocalHitVoxelLocation, const float UnrealReach = ACH_Master::MaxPOVLineTraceLength) const;
 

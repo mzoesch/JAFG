@@ -266,6 +266,32 @@ TArray<FString> FGeneral::LoadPrescriptionNames()
 
 #pragma endregion Prescriptions
 
+#pragma region Graphics
+
+FVector2D FGeneral::GetApplicationViewPortSize()
+{
+    FVector2D OutViewPortSize = FVector2D::ZeroVector;
+    
+    if (GEngine && GEngine->GameViewport)
+    {
+        GEngine->GameViewport->GetViewportSize(OutViewPortSize);
+    }
+
+    return OutViewPortSize;
+}
+
+FVector2D FGeneral::GetApplicationResolution()
+{
+    FVector2D OutResult;
+
+    OutResult.X = GSystemResolution.ResX;
+    OutResult.Y = GSystemResolution.ResY;
+
+    return OutResult;
+}
+
+#pragma endregion Graphics
+
 #undef UIL_LOG
 #undef VOXEL_TEXTURE_FILE
 #undef UVOXEL_TEXTURE_DIRECTORY

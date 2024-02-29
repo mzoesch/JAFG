@@ -84,4 +84,13 @@ public:
 
 #pragma endregion Prescriptions
 
+#pragma region Graphics
+
+public:
+
+    static FVector2D GetApplicationViewPortSize();
+    static FVector2D GetApplicationResolution();
+    
+#pragma endregion Graphics
+
 };
