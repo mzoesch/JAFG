@@ -5,7 +5,7 @@
 
 #define UIL_LOG(Verbosity, Format, ...) UE_LOG(LogTemp, Verbosity, Format, ##__VA_ARGS__)
 
-const FVoxelMask FVoxelMask::NullVoxelMask = FVoxelMask("CORE", "NullVoxel", -1, nullptr);
+const FVoxelMask FVoxelMask::NullVoxelMask = FVoxelMask("CORE", "NullVoxel", ETextureGroup::ETG_Core, nullptr);
 
 FVoxelMask::FVoxelMask(const FString& NameSpace, const FString& Name, const int TextureGroup, TScriptInterface<IVoxel>* VoxelClass)
 {
@@ -54,14 +54,7 @@ int FVoxelMask::GetTextureGroup(const FVector& Normal) const
         return this->TextureGroup[Value];
     }
 
-    if (this->TextureGroup.Contains(ENormalLookup::NL_Default))
-    {
-        return this->TextureGroup[ENormalLookup::NL_Default];
-    }
-
-    UIL_LOG(Error, TEXT("FVoxelMask::GetTextureGroup: Failed to find texture group for voxel: %s::%s. %s"), *this->NameSpace, *this->Name, *Normal.ToString())
-    return 0;
-    // return this->TextureGroup[ENormalLookup::NL_Default];
+    return this->TextureGroup[ENormalLookup::NL_Default];
 }
 
 #undef UIL_LOG

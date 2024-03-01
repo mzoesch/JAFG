@@ -201,7 +201,7 @@ void UCraftingTableVoxel::Initialize(UGI_Master* InGIPtr)
     this->GIPtr = InGIPtr;
 
     TScriptInterface<IVoxel> VoxelPtr = TScriptInterface<IVoxel>(this);
-    this->GIPtr->AddVoxelMask(FVoxelMask("JAFG", "CraftingTableVoxel", 0, &VoxelPtr));
+    this->GIPtr->AddVoxelMask(FVoxelMask("JAFG", "CraftingTableVoxel", ETextureGroup::ETG_Opaque, &VoxelPtr));
     
     // We need to set some additional vars here.
     // Some examples

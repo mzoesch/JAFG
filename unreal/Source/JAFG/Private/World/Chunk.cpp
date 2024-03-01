@@ -84,17 +84,21 @@ void AChunk::ApplyMesh() const
 {
     for (int i = 0; i < this->MeshDataArray.Num(); i++)
     {
-        if (i == 0)
+        if (i == ETextureGroup::ETG_Opaque)
         {
-            this->ProcMesh->SetMaterial(0, GAME_INSTANCE->MDynamicOpaque);
+            this->ProcMesh->SetMaterial(ETextureGroup::ETG_Opaque, GAME_INSTANCE->MDynamicOpaque);
         }
-        else if (i == 1)
+        else if (i == ETextureGroup::ETG_FullBlendOpaque)
         {
-            this->ProcMesh->SetMaterial(1, GAME_INSTANCE->MDynamicBlendOpaque);
+            this->ProcMesh->SetMaterial(ETextureGroup::ETG_FullBlendOpaque, GAME_INSTANCE->MDynamicFullBlendOpaque);
+        }
+        else if (i == ETextureGroup::ETG_FloraBlendOpaque)
+        {
+            this->ProcMesh->SetMaterial(ETextureGroup::ETG_FloraBlendOpaque, GAME_INSTANCE->MDynamicFloraBlendOpaque);
         }
         else
         {
-            UE_LOG(LogTemp, Error, TEXT("AChunk::ApplyMesh: Unsupported material mesh section: %d"), i)
+            UE_LOG(LogTemp, Error, TEXT("AChunk::ApplyMesh: Unsupported material mesh section: %d."), i)
             this->ProcMesh->SetMaterial(i, GAME_INSTANCE->MDynamicOpaque);
         }
         

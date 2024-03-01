@@ -17,7 +17,7 @@ AGreedyChunk::AGreedyChunk()
 void AGreedyChunk::CreateQuad(const FMask Mask, const FIntVector AxisMask, const int Width, const int Height, const FIntVector V1, const FIntVector V2, const FIntVector V3, const FIntVector V4)
 {
     const FVector   Normal          = FVector(AxisMask * Mask.Normal);
-    const FColor    Color           = FColor(0, 0, 0, GI->GetTextureIndex(Mask.Voxel, Normal));
+    const FColor    Color           = FColor(0, 128, 0, GI->GetTextureIndex(Mask.Voxel, Normal));
     const int       TextureGroup    = GI->GetTextureGroup(Mask.Voxel, Normal);
 
     if (TextureGroup > this->VertexCounts.Num() - 1)

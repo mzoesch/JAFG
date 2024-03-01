@@ -10,6 +10,14 @@
 
 class IVoxel;
 
+enum ETextureGroup : int8_t
+{
+    ETG_Core = -1,
+    ETG_Opaque,
+    ETG_FullBlendOpaque,
+    ETG_FloraBlendOpaque,
+};
+
 USTRUCT()
 struct JAFG_API FVoxelMask
 {
@@ -22,10 +30,7 @@ public:
     FVoxelMask(const FString& NameSpace, const FString& Name, const TMap<ENormalLookup, int>& TextureGroup, TScriptInterface<IVoxel>* VoxelClass);
 
 public:
-    /**
-     * This 
-     * 
-     */
+
     static const FVoxelMask NullVoxelMask;
     
 public:
