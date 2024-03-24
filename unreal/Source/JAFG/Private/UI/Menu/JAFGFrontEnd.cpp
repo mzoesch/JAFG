@@ -3,8 +3,6 @@
 #include "UI/Menu/JAFGFrontEnd.h"
 
 #include "Components/TextBlock.h"
-#include "Components/WidgetSwitcher.h"
-
 #include "Misc/App.h"
 #include "UI/Menu/MenuJoinSessionFrontEnd.h"
 #include "UI/Menu/MenuNewSessionFrontEnd.h"
@@ -31,9 +29,18 @@ void UJAFGFrontEnd::OpenMenuTab(const EMenuTab MenuTab) const
         
         return;
     }
-    
-    this->WS_Menu->SetActiveWidgetIndex(static_cast<int32>(MenuTab));
 
+    if (MenuTab != EMenuTab::Quit)
+    {
+        if (static_cast<int32>(MenuTab) >= this->WS_Menu->GetSlots().Num())
+        {
+            UE_LOG(LogTemp, Fatal, TEXT("UJAFGFrontEnd::OpenMenuTab: MenuTab index = %d is out of range."), static_cast<int32>(MenuTab))
+            return;
+        }
+
+        this->WS_Menu->SetActiveWidgetIndex(static_cast<int32>(MenuTab));
+    }
+    
     switch (MenuTab)
     {
     case EMenuTab::Invalid:
@@ -43,6 +50,15 @@ void UJAFGFrontEnd::OpenMenuTab(const EMenuTab MenuTab) const
         break;
     case EMenuTab::JoinSession:
         this->OnJoinSessionClicked();
+        break;
+    case EMenuTab::OpenEditor:
+        break;
+    case EMenuTab::Options:
+        break;
+    case EMenuTab::Credits:
+        break;
+    case EMenuTab::Quit:
+        UE_LOG(LogTemp, Warning, TEXT("UJAFGFrontEnd::OpenMenuTab: Quitting the game (Not implemented)."))
         break;
     default:
         UE_LOG(LogTemp, Fatal, TEXT("UJAFGFrontEnd::OpenMenuTab: Unknown MenuTab index = %d."), static_cast<int32>(MenuTab))

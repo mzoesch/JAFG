@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/WidgetSwitcher.h"
 #include "UI/JAFGCommonWidget.h"
 
 #include "JAFGFrontEnd.generated.h"
@@ -13,12 +14,16 @@ class UButton;
 class UWidgetSwitcher;
 class UTextBlock;
 
-UENUM()
+UENUM(BlueprintType)
 enum class EMenuTab : uint8
 {
     Invalid         = 0,
     NewSession      = 1,
     JoinSession     = 2,
+    OpenEditor      = 3,
+    Options         = 4,
+    Credits         = 5,
+    Quit            = 6,
 };
 
 UCLASS(Abstract, Blueprintable)
@@ -42,6 +47,9 @@ private:
 
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
     UMenuJoinSessionFrontEnd* WB_TabJoinSession;
+
+    UFUNCTION(BlueprintPure, Category = "Menu", meta = (AllowPrivateAccess = "true"))
+    int32 GetActiveMenuTab() const { return this->WS_Menu->GetActiveWidgetIndex(); }
     
 protected:
 
