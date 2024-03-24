@@ -7,6 +7,7 @@
 
 #include "JAFGFrontEnd.generated.h"
 
+class UMenuJoinSessionFrontEnd;
 class UMenuNewSessionFrontEnd;
 class UButton;
 class UWidgetSwitcher;
@@ -38,6 +39,9 @@ private:
 
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
     UMenuNewSessionFrontEnd* WB_TabNewSession;
+
+    UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
+    UMenuJoinSessionFrontEnd* WB_TabJoinSession;
     
 protected:
 
@@ -49,7 +53,7 @@ protected:
     /* Event only called if widget is visible. Not on hidden tab occurrence changes. */
     void OnNewSessionClicked(void) const;
     /* Event only called if widget is visible. Not on hidden tab occurrence changes. */
-    void OnJoinSessionClicked(void) const { };
+    void OnJoinSessionClicked(void) const;
     
 private:
 

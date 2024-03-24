@@ -6,6 +6,7 @@
 #include "Components/WidgetSwitcher.h"
 
 #include "Misc/App.h"
+#include "UI/Menu/MenuJoinSessionFrontEnd.h"
 #include "UI/Menu/MenuNewSessionFrontEnd.h"
 
 void UJAFGFrontEnd::NativeConstruct(void)
@@ -51,9 +52,14 @@ void UJAFGFrontEnd::OpenMenuTab(const EMenuTab MenuTab) const
     return;
 }
 
-void UJAFGFrontEnd::OnNewSessionClicked() const
+void UJAFGFrontEnd::OnNewSessionClicked(void) const
 {
     this->WB_TabNewSession->ReloadLocalSaves();
+}
+
+void UJAFGFrontEnd::OnJoinSessionClicked() const
+{
+    this->WB_TabJoinSession->ReloadFoundSessions();
 }
 
 void UJAFGFrontEnd::ConstructBuildConfiguration(void) const

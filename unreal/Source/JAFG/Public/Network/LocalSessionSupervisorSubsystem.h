@@ -8,11 +8,49 @@
 #include "LocalSessionSupervisorSubsystem.generated.h"
 
 class UJAFGInstance;
+class ULocalSessionSupervisorSubsystem;
+
+UINTERFACE()
+class UOnlineSessionSearchCallback : public UInterface
+{
+    GENERATED_BODY()
+};
+
+class JAFG_API IOnlineSessionSearchCallback
+{
+    GENERATED_BODY()
+
+public:
+
+    UFUNCTION()
+    virtual void OnOnlineSessionFoundComplete(const bool bSuccess, const ULocalSessionSupervisorSubsystem* Subsystem) = 0;
+};
 
 struct FMyOnlineSessionSettings
 {
     FString Name;
     FOnlineSessionSettings Settings;
+};
+
+struct FMyOnlineSessionSearch
+{
+    bool bSearching;
+
+    // ReSharper disable once CppConstValueFunctionReturnType
+    const TSharedRef<FOnlineSessionSearch> GetOnlineSessionSearch(void) const { return this->OnlineSessionSearch; }
+    TSharedRef<FOnlineSessionSearch> ChangeOnlineSessionSearch(void)
+    {
+        if (this->bSearching)
+        {
+            UE_LOG(LogTemp, Fatal, TEXT("FMyOnlineSessionSearch::ChangeOnlineSessionSearch: Tried to change search while other still pending."))
+        }
+        
+        return this->OnlineSessionSearch;
+    }
+    
+private:
+
+    TSharedRef<FOnlineSessionSearch> OnlineSessionSearch = MakeShared<FOnlineSessionSearch>();
 };
 
 UCLASS()
@@ -33,6 +71,9 @@ public:
      *         as it is the responsibility of the asynchronous delegate to handle that.
      */
     bool HostListenServer(const FString& InSessionName, const int InMaxPublicConnections, const bool bInLAN);
+    void FindSessionsAndSafeDiscardPrevious(const uint32 MaxSearchResults, const bool bLANQuery, TScriptInterface<IOnlineSessionSearchCallback>& InCallback);
+    void FindSessions(const uint32 MaxSearchResults, const bool bLANQuery, TScriptInterface<IOnlineSessionSearchCallback>& InCallback);
+
     bool ForceActiveSessionDestroy(void);
 
 protected:
@@ -42,9 +83,18 @@ protected:
     ////////////////////////////////////////////////////////////////
 
     virtual void OnCreateSessionCompleteDelegate(const FName SessionName, const bool bSuccess);
-
+    virtual void OnFindSessionsCompleteDelegate(const bool bSuccess);
+    
 private:
 
     IOnlineSessionPtr OnlineSessionInterface;
     FMyOnlineSessionSettings* ActiveSessionSettings;
+    FMyOnlineSessionSearch ActiveOnlineSessionSearch;
+
+    TScriptInterface<IOnlineSessionSearchCallback> ActiveOnlineSessionSearchCallback;
+
+public:
+
+    /** Never make changes through this method. */
+    TSharedRef<FOnlineSessionSearch> GetActiveOnlineSessionSearch(void) const { return this->ActiveOnlineSessionSearch.GetOnlineSessionSearch(); }
 };

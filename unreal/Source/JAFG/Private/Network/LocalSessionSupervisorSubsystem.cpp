@@ -2,8 +2,8 @@
 
 #include "Network/LocalSessionSupervisorSubsystem.h"
 
-#include "OnlineSubsystemUtils.h"
 #include "Interfaces/OnlineSessionInterface.h"
+#include "OnlineSubsystemUtils.h"
 
 void ULocalSessionSupervisorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -28,8 +28,10 @@ void ULocalSessionSupervisorSubsystem::Initialize(FSubsystemCollectionBase& Coll
     }
 
     this->OnlineSessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this, &ULocalSessionSupervisorSubsystem::OnCreateSessionCompleteDelegate);
-
+    this->OnlineSessionInterface->OnFindSessionsCompleteDelegates.AddUObject(this, &ULocalSessionSupervisorSubsystem::OnFindSessionsCompleteDelegate);
+    
     this->ActiveSessionSettings = nullptr;
+    this->ActiveOnlineSessionSearch = FMyOnlineSessionSearch();
     
     return;
 }
@@ -54,7 +56,7 @@ void ULocalSessionSupervisorSubsystem::Deinitialize(void)
     {
         UE_LOG(LogTemp, Warning, TEXT("ULocalSessionSupervisor::Deinitialize: Active Session Settings is nullptr. No session to destory."))
     }
-    
+
     return;
 }
 
@@ -72,7 +74,7 @@ bool ULocalSessionSupervisorSubsystem::HostListenServer(const FString& InSession
         return false;
     }
     
-    FOnlineSessionSettings OnlineSessionSettings;
+    FOnlineSessionSettings OnlineSessionSettings = FOnlineSessionSettings();
     OnlineSessionSettings.NumPublicConnections = InMaxPublicConnections;
     OnlineSessionSettings.NumPrivateConnections = 0;
     OnlineSessionSettings.bShouldAdvertise = true;
@@ -99,6 +101,46 @@ bool ULocalSessionSupervisorSubsystem::HostListenServer(const FString& InSession
     UE_LOG(LogTemp, Error, TEXT("ULocalSessionSupervisor::HostListenServer: Failed to create session."))
 
     return false;
+}
+
+void ULocalSessionSupervisorSubsystem::FindSessionsAndSafeDiscardPrevious(const uint32 MaxSearchResults, const bool bLANQuery,  TScriptInterface<IOnlineSessionSearchCallback>& InCallback)
+{
+    if (this->ActiveOnlineSessionSearch.bSearching)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ULocalSessionSupervisor::FindSessionsAndSafeDiscardPrevious: Active session search is still pending. Discarding not implemented yet."))
+        return;
+    }
+
+    this->FindSessions(MaxSearchResults, bLANQuery, InCallback);
+
+    return;
+}
+
+void ULocalSessionSupervisorSubsystem::FindSessions(const uint32 MaxSearchResults, const bool bLANQuery, TScriptInterface<IOnlineSessionSearchCallback>& InCallback)
+{
+    if (InCallback.GetObject() == nullptr || InCallback.GetInterface() == nullptr)
+    {
+        UE_LOG(LogTemp, Error, TEXT("ULocalSessionSupervisor::FindSessions: Callback is nullptr."))
+        return;
+    }
+
+    this->ActiveOnlineSessionSearchCallback = InCallback;
+
+    this->ActiveOnlineSessionSearch.ChangeOnlineSessionSearch()->MaxSearchResults = MaxSearchResults;
+    this->ActiveOnlineSessionSearch.ChangeOnlineSessionSearch()->bIsLanQuery = bLANQuery;
+    /* Do some further settings here. */
+
+    this->ActiveOnlineSessionSearch.bSearching = true;
+    
+    if (this->OnlineSessionInterface->FindSessions(/* No need to be fancy here, as we must always be in the Menu when calling this method. */ 0, this->ActiveOnlineSessionSearch.GetOnlineSessionSearch()))
+    {
+        UE_LOG(LogTemp, Log, TEXT("ULocalSessionSupervisor::FindSession: Successfully initiated session search."))
+        return;
+    }
+
+    UE_LOG(LogTemp, Error, TEXT("ULocalSessionSupervisor::FindSession: Failed to initiate session search."))
+
+    return;
 }
 
 bool ULocalSessionSupervisorSubsystem::ForceActiveSessionDestroy(void)
@@ -136,6 +178,20 @@ void ULocalSessionSupervisorSubsystem::OnCreateSessionCompleteDelegate(const FNa
         return;
     }
 
+#if WITH_EDITOR
+    /*
+     * Safety net if multiple PIE instances are active. As the delegate will be called for all running application
+     * instances.
+     * Maybe we can find a better way to handle this? Like only adding the delegate handler in the correct instance and
+     * not at the start of this subsystems lifetime.
+     */
+    if (this->ActiveSessionSettings == nullptr)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ULocalSessionSupervisor::OnCreateSessionCompleteDelegate: Active Session Settings is nullptr. Cannot proceed. If this is not in the calling PIE instance, this is can be ignored."))
+        return;
+    }
+#endif /* WITH_EDITOR */
+
     /* Shamelessly copied from GameplayStatics.h. There may be safer ways to implement this? */
 
     const FString LevelName          = "L_World";
@@ -166,6 +222,28 @@ void ULocalSessionSupervisorSubsystem::OnCreateSessionCompleteDelegate(const FNa
     UE_LOG(LogTemp, Log, TEXT("ULocalSessionSupervisor::OnCreateSessionCompleteDelegate: Server traveling to %s."), *MyURL.ToString())
     
     this->GetWorld()->ServerTravel(MyURL.ToString());
+    
+    return;
+}
+
+void ULocalSessionSupervisorSubsystem::OnFindSessionsCompleteDelegate(const bool bSuccess)
+{
+    UE_LOG(LogTemp, Log, TEXT("ULocalSessionSupervisor::OnFindSessionsCompleteDelegate: Session search completed with some result: %s."), bSuccess ? TEXT("Success") : TEXT("Failure"))
+
+    this->ActiveOnlineSessionSearch.bSearching = false;
+    
+    if (this->ActiveOnlineSessionSearchCallback.GetObject() == nullptr || this->ActiveOnlineSessionSearchCallback.GetInterface() == nullptr)
+    {
+#if WITH_EDITOR
+        /* Same as in OnCreateSessionCompleteDelegate. This is a safety net for multiple PIE instances. */
+        UE_LOG(LogTemp, Warning, TEXT("ULocalSessionSupervisor::OnFindSessionsCompleteDelegate: Callback is nullptr. Cannot proceed. If this is not in the calling PIE instance, this is can be ignored."))
+#else
+        UE_LOG(LogTemp, Fatal, TEXT("ULocalSessionSupervisor::OnFindSessionsCompleteDelegate: Callback is nullptr."))
+#endif /* WITH_EDITOR */
+        return;
+    }
+
+    this->ActiveOnlineSessionSearchCallback->OnOnlineSessionFoundComplete(bSuccess, this);
     
     return;
 }

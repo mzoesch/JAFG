@@ -52,7 +52,7 @@ void UMenuNewSessionFrontEnd::HostListenServerAsync() const
 
     LSSS->HostListenServer(this->NewSessionName, this->MaxPublicConnections, this->bLAN);
     
-    /* TODO Maybe hit some loading screen? */
+    /* Maybe hit some loading screen? */
     
     return;
 }

@@ -24,7 +24,7 @@ public:
     {
         /* Substituted all nested pure virtual macro calls as it does not define a non-void declared method. */
         static_assert(TIsArrayOrRefOfTypeByPredicate<decltype(L"Pure virtual not implemented (%s)"), TIsCharEncodingCompatibleWithTCHAR>::Value, "Formatting string must be a TCHAR array.");
-        LowLevelFatalErrorHandler("JAFGCommonWidget.h", 21, _ReturnAddress(), (const TCHAR*)L"Pure virtual not implemented (%s)", L"FMyPassData::ToString");
+        LowLevelFatalErrorHandler("JAFGCommonWidget.h", 27, _ReturnAddress(), (const TCHAR*)L"Pure virtual not implemented (%s)", L"FMyPassData::ToString");
         return FString(L"FATAL-ERROR");
     }
 };
