@@ -3,9 +3,7 @@
 #include "UI/Menu/MenuNewSessionFrontEnd.h"
 
 #include "Components/ScrollBox.h"
-#include "Kismet/GameplayStatics.h"
 #include "UI/Menu/LocalSaveEntry.h"
-#include "System/LocalSessionSupervisorSubsystem.h"
 
 void UMenuNewSessionFrontEnd::NativeConstruct(void)
 {

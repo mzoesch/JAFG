@@ -18,7 +18,6 @@ struct FMyOnlineSessionSettings
 UCLASS()
 class JAFG_API ULocalSessionSupervisorSubsystem : public UGameInstanceSubsystem
 {
-public:
     GENERATED_BODY()
     
 public:

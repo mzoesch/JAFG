@@ -1,6 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
-#include "System/LocalSessionSupervisorSubsystem.h"
+#include "Network/LocalSessionSupervisorSubsystem.h"
 
 #include "OnlineSubsystemUtils.h"
 #include "Interfaces/OnlineSessionInterface.h"

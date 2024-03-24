@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UI/JAFGCommonWidget.h"
-#include "System/LocalSessionSupervisorSubsystem.h"
+#include "Network/LocalSessionSupervisorSubsystem.h"
 
 #include "MenuNewSessionFrontEnd.generated.h"
 
@@ -15,7 +15,6 @@ class UButton;
 UCLASS(Abstract, Blueprintable)
 class JAFG_API UMenuNewSessionFrontEnd : public UJAFGCommonWidget
 {
-public:
     GENERATED_BODY()
 
 protected:

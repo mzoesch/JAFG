@@ -30,7 +30,6 @@ struct JAFG_API FLocalSaveEntryData final : FMyPassData
 UCLASS(Abstract, Blueprintable)
 class JAFG_API ULocalSaveEntry : public UJAFGCommonWidget
 {
-public:
     GENERATED_BODY()
 
 protected:
