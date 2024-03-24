@@ -1,5 +1,5 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
-// © 2023 mzoesch. All rights reserved.
+// Copyright 2024 mzoesch. All rights reserved.
 
 #pragma once
 

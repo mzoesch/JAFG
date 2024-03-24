@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "5.3",
+	"EngineAssociation": "{C94C8725-465D-956B-CC0F-25A3CF4E517B}",
 	"Category": "",
 	"Description": "",
 	"Modules": [
@@ -9,12 +9,8 @@
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
 			"AdditionalDependencies": [
-				"Engine",
-				"Slate",
-				"SlateCore",
 				"UMG",
-				"CoreUObject",
-				"GameplayCameras"
+				"Engine"
 			]
 		}
 	],
@@ -26,8 +22,5 @@
 				"Editor"
 			]
 		}
-	],
-	"TargetPlatforms": [
-		"Windows"
 	]
 }

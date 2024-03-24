@@ -1,8 +1,9 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
-// © 2023 mzoesch. All rights reserved.
+// Copyright 2024 mzoesch. All rights reserved.
 
 using UnrealBuildTool;
 
+// ReSharper disable once InconsistentNaming
 public class JAFG : ModuleRules
 {
     public JAFG(ReadOnlyTargetRules Target) : base(Target)
@@ -16,28 +17,23 @@ public class JAFG : ModuleRules
             "Engine",
             "InputCore",
             "EnhancedInput",
-            "UMG"
+            "UMG",
         });
 
         PrivateDependencyModuleNames.AddRange(new string[]
         {
-            "ProceduralMeshComponent",
-            "RenderCore",
-            "ImageWrapper",
-            "EditorScriptingUtilities",
-            "Json",
+            "OnlineSubsystem",
+            "OnlineSubsystemNull",
+            "OnlineSubsystemUtils",
+            "OnlineSubsystemSteam",
         });
 
-        /* Uncomment if you are using Slate UI */
-        PrivateDependencyModuleNames.AddRange(new string[]
-        {
-            "Slate",
-            "SlateCore"
-        });
+        // Uncomment if you are using Slate UI.
+        // PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
 
-        // Uncomment if you are using online features
+        // Uncomment if you are using online features.
         // PrivateDependencyModuleNames.Add("OnlineSubsystem");
 
-        /* To include OnlineSubsystemSteam, add it to the plugins section in your uproject file with the Enabled attribute set to true */
+        // To include OnlineSubsystemSteam, add it to the plugins section in your uproject file with the Enabled attribute set to true.
     }
 }
