@@ -3,11 +3,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Interfaces/OnlineSessionInterface.h"
+#include "OnlineSessionSettings.h"
 
 #include "LocalSessionSupervisorSubsystem.generated.h"
 
 class UJAFGInstance;
+
+struct FMyOnlineSessionSettings
+{
+    FString Name;
+    FOnlineSessionSettings Settings;
+};
 
 UCLASS()
 class JAFG_API ULocalSessionSupervisorSubsystem : public UGameInstanceSubsystem
@@ -21,18 +27,25 @@ public:
     static inline constexpr uint8 MaxPublicConnections = 0x10;
 
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-    virtual void Deinitialize() override;
+    virtual void Deinitialize(void) override;
 
-    void HostListenServer(void);
-    void ForceActiveSessionDestroy(void);
+    /**
+     * @return True, if input was rejected. Will not return false if the session creation failed in some other matter
+     *         as it is the responsibility of the asynchronous delegate to handle that.
+     */
+    bool HostListenServer(const FString& InSessionName, const int InMaxPublicConnections, const bool bInLAN);
+    bool ForceActiveSessionDestroy(void);
 
 protected:
 
-    virtual void OnCreateSessionComplete(const FName SessionName, const bool bSuccess);
+    ////////////////////////////////////////////////////////////////
+    // Delegates
+    ////////////////////////////////////////////////////////////////
+
+    virtual void OnCreateSessionCompleteDelegate(const FName SessionName, const bool bSuccess);
 
 private:
 
-    FName TempName;
-    
     IOnlineSessionPtr OnlineSessionInterface;
+    FMyOnlineSessionSettings* ActiveSessionSettings;
 };

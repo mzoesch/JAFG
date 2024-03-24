@@ -47,7 +47,6 @@ protected:
     ////////////////////////////////////////////////////////////////
 
     inline static const FString   DefaultSessionName          = "Some Generic Session Name";
-    friend void ULocalSessionSupervisorSubsystem::ForceActiveSessionDestroy();
     inline static constexpr int32 DefaultMaxPublicConnections = 1;
     inline static constexpr bool  bDefaultLAN                 = true;
 

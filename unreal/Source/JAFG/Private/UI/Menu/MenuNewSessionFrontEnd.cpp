@@ -3,7 +3,7 @@
 #include "UI/Menu/MenuNewSessionFrontEnd.h"
 
 #include "Components/ScrollBox.h"
-#include "System/JAFGInstance.h"
+#include "Kismet/GameplayStatics.h"
 #include "UI/Menu/LocalSaveEntry.h"
 #include "System/LocalSessionSupervisorSubsystem.h"
 
@@ -48,19 +48,11 @@ void UMenuNewSessionFrontEnd::HostListenServerAsync() const
         UE_LOG(LogTemp, Warning, TEXT("UMenuNewSessionFrontEnd::HostListenServerAsync: Max public connections is greater than %d."), ULocalSessionSupervisorSubsystem::MaxPublicConnections);
         return;
     }
+    
+    const UGameInstance* GameInstance = this->GetGameInstance(); check ( GameInstance )
+    ULocalSessionSupervisorSubsystem* LSSS = GameInstance->GetSubsystem<ULocalSessionSupervisorSubsystem>(); check( LSSS )
 
-    if (this->GetWorld() == nullptr)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("UMenuNewSessionFrontEnd::HostListenServerAsync: World is nullptr."));
-        return;
-    }
-
-    const UGameInstance* GameInstance = this->GetGameInstance();
-    check ( GameInstance )
-    ULocalSessionSupervisorSubsystem* LSSS = GameInstance->GetSubsystem<ULocalSessionSupervisorSubsystem>();
-    check( LSSS )
-
-    LSSS->HostListenServer();
+    LSSS->HostListenServer(this->NewSessionName, this->MaxPublicConnections, this->bLAN);
     
     /* TODO Maybe hit some loading screen? */
     
