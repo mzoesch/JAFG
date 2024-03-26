@@ -19,7 +19,10 @@ void UOnlineSessionEntry::PassDataToWidget(const FMyPassData& MyPassedData)
         this->EntryData = *OnlineSessionEntryData;
     }
 
-    this->TB_OnlineSessionName->SetText(FText::FromString(this->EntryData.OnlineSessionName));
+    this->TB_OnlineSessionName->SetText(FText::FromString(this->EntryData.GetSanitizedSessionName()));
+    this->TB_OnlineSessionConnections->SetText(FText::FromString(FString::Printf(TEXT("%d/%d"), this->EntryData.GetCurrentPublicConnections(), this->EntryData.MaxPublicConnections)));
+
+    this->OnDeferredConstruct();
     
     return;
 }

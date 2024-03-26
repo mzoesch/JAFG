@@ -103,7 +103,7 @@ bool ULocalSessionSupervisorSubsystem::HostListenServer(const FString& InSession
     return false;
 }
 
-void ULocalSessionSupervisorSubsystem::FindSessionsAndSafeDiscardPrevious(const uint32 MaxSearchResults, const bool bLANQuery,  TScriptInterface<IOnlineSessionSearchCallback>& InCallback)
+void ULocalSessionSupervisorSubsystem::FindSessionsAndSafeDiscardPrevious(const uint32 MaxSearchResults, const bool bLANQuery, const TScriptInterface<IOnlineSessionSearchCallback>& InCallback)
 {
     if (this->ActiveOnlineSessionSearch.bSearching)
     {
@@ -116,11 +116,11 @@ void ULocalSessionSupervisorSubsystem::FindSessionsAndSafeDiscardPrevious(const 
     return;
 }
 
-void ULocalSessionSupervisorSubsystem::FindSessions(const uint32 MaxSearchResults, const bool bLANQuery, TScriptInterface<IOnlineSessionSearchCallback>& InCallback)
+void ULocalSessionSupervisorSubsystem::FindSessions(const uint32 MaxSearchResults, const bool bLANQuery, const TScriptInterface<IOnlineSessionSearchCallback>& InCallback)
 {
     if (InCallback.GetObject() == nullptr || InCallback.GetInterface() == nullptr)
     {
-        UE_LOG(LogTemp, Error, TEXT("ULocalSessionSupervisor::FindSessions: Callback is nullptr."))
+        UE_LOG(LogTemp, Fatal, TEXT("ULocalSessionSupervisor::FindSessions: Callback is nullptr."))
         return;
     }
 
@@ -138,7 +138,7 @@ void ULocalSessionSupervisorSubsystem::FindSessions(const uint32 MaxSearchResult
         return;
     }
 
-    UE_LOG(LogTemp, Error, TEXT("ULocalSessionSupervisor::FindSession: Failed to initiate session search."))
+    UE_LOG(LogTemp, Fatal, TEXT("ULocalSessionSupervisor::FindSession: Failed to initiate session search."))
 
     return;
 }
@@ -228,7 +228,7 @@ void ULocalSessionSupervisorSubsystem::OnCreateSessionCompleteDelegate(const FNa
 
 void ULocalSessionSupervisorSubsystem::OnFindSessionsCompleteDelegate(const bool bSuccess)
 {
-    UE_LOG(LogTemp, Log, TEXT("ULocalSessionSupervisor::OnFindSessionsCompleteDelegate: Session search completed with some result: %s."), bSuccess ? TEXT("Success") : TEXT("Failure"))
+    UE_LOG(LogTemp, Log, TEXT("ULocalSessionSupervisor::OnFindSessionsCompleteDelegate: Session search completed: %s."), bSuccess ? TEXT("Success") : TEXT("Failure"))
 
     this->ActiveOnlineSessionSearch.bSearching = false;
     
@@ -243,7 +243,7 @@ void ULocalSessionSupervisorSubsystem::OnFindSessionsCompleteDelegate(const bool
         return;
     }
 
-    this->ActiveOnlineSessionSearchCallback->OnOnlineSessionFoundComplete(bSuccess, this);
+    this->ActiveOnlineSessionSearchCallback->OnOnlineSessionFoundCompleteDelegate(bSuccess, this);
     
     return;
 }

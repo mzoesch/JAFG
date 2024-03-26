@@ -23,7 +23,7 @@ class JAFG_API IOnlineSessionSearchCallback
 public:
 
     UFUNCTION()
-    virtual void OnOnlineSessionFoundComplete(const bool bSuccess, const ULocalSessionSupervisorSubsystem* Subsystem) = 0;
+    virtual void OnOnlineSessionFoundCompleteDelegate(const bool bSuccess, const ULocalSessionSupervisorSubsystem* Subsystem) = 0;
 };
 
 struct FMyOnlineSessionSettings
@@ -71,8 +71,8 @@ public:
      *         as it is the responsibility of the asynchronous delegate to handle that.
      */
     bool HostListenServer(const FString& InSessionName, const int InMaxPublicConnections, const bool bInLAN);
-    void FindSessionsAndSafeDiscardPrevious(const uint32 MaxSearchResults, const bool bLANQuery, TScriptInterface<IOnlineSessionSearchCallback>& InCallback);
-    void FindSessions(const uint32 MaxSearchResults, const bool bLANQuery, TScriptInterface<IOnlineSessionSearchCallback>& InCallback);
+    void FindSessionsAndSafeDiscardPrevious(const uint32 MaxSearchResults, const bool bLANQuery, const TScriptInterface<IOnlineSessionSearchCallback>& InCallback);
+    void FindSessions(const uint32 MaxSearchResults, const bool bLANQuery, const TScriptInterface<IOnlineSessionSearchCallback>& InCallback);
 
     bool ForceActiveSessionDestroy(void);
 
