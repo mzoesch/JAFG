@@ -22,3 +22,12 @@ AWorldGameMode::AWorldGameMode(const FObjectInitializer& ObjectInitializer) : Su
 
     return;
 }
+
+void AWorldGameMode::PostLogin(APlayerController* NewPlayer)
+{
+    Super::PostLogin(NewPlayer);
+
+    UE_LOG(LogTemp, Warning, TEXT("Player %s has joined the game."), *NewPlayer->GetName());
+
+    return;
+}

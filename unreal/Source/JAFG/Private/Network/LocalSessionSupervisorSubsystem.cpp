@@ -4,6 +4,7 @@
 
 #include "Interfaces/OnlineSessionInterface.h"
 #include "OnlineSubsystemUtils.h"
+#include "Kismet/GameplayStatics.h"
 
 void ULocalSessionSupervisorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -29,6 +30,7 @@ void ULocalSessionSupervisorSubsystem::Initialize(FSubsystemCollectionBase& Coll
 
     this->OnlineSessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this, &ULocalSessionSupervisorSubsystem::OnCreateSessionCompleteDelegate);
     this->OnlineSessionInterface->OnFindSessionsCompleteDelegates.AddUObject(this, &ULocalSessionSupervisorSubsystem::OnFindSessionsCompleteDelegate);
+    this->OnlineSessionInterface->OnJoinSessionCompleteDelegates.AddUObject(this, &ULocalSessionSupervisorSubsystem::OnJoinSessionCompleteDelegate);
     
     this->ActiveSessionSettings = nullptr;
     this->ActiveOnlineSessionSearch = FMyOnlineSessionSearch();
@@ -143,6 +145,19 @@ void ULocalSessionSupervisorSubsystem::FindSessions(const uint32 MaxSearchResult
     return;
 }
 
+void ULocalSessionSupervisorSubsystem::JoinSession(const FString& SessionName, const FOnlineSessionSearchResult& SearchResult) const
+{
+    if (this->OnlineSessionInterface->JoinSession(/* No need to be fancy here, as we must always be in the Menu when calling this method. */ 0, FName(SearchResult.GetSessionIdStr()), SearchResult))
+    {
+        UE_LOG(LogTemp, Log, TEXT("ULocalSessionSupervisor::JoinSession: Successfully joined session [%s]."), *SessionName)
+        return;
+    }
+
+    UE_LOG(LogTemp, Fatal, TEXT("ULocalSessionSupervisor::JoinSession: Failed to join session."))
+
+    return;
+}
+
 bool ULocalSessionSupervisorSubsystem::ForceActiveSessionDestroy(void)
 {
     if (this->OnlineSessionInterface->DestroySession(FName(this->ActiveSessionSettings->Name)))
@@ -194,7 +209,7 @@ void ULocalSessionSupervisorSubsystem::OnCreateSessionCompleteDelegate(const FNa
 
     /* Shamelessly copied from GameplayStatics.h. There may be safer ways to implement this? */
 
-    const FString LevelName          = "L_World";
+    const FString LevelName          = "L_World?listen";
     constexpr ETravelType TravelType = ETravelType::TRAVEL_Absolute;
 
     FWorldContext* WorldContextObject = GEngine->GetWorldContextFromWorld(this->GetWorld());
@@ -245,5 +260,47 @@ void ULocalSessionSupervisorSubsystem::OnFindSessionsCompleteDelegate(const bool
 
     this->ActiveOnlineSessionSearchCallback->OnOnlineSessionFoundCompleteDelegate(bSuccess, this);
     
+    return;
+}
+
+void ULocalSessionSupervisorSubsystem::OnJoinSessionCompleteDelegate(const FName SessionName, const EOnJoinSessionCompleteResult::Type Result)
+{
+    if (Result != EOnJoinSessionCompleteResult::Success)
+    {
+        UE_LOG(LogTemp, Fatal, TEXT("ULocalSessionSupervisor::OnJoinSessionCompleteDelegate: Failed to join session [%s]. Result: %s."), *SessionName.ToString(), LexToString(Result))
+        return;
+    }
+
+    FString Address = L"";
+    if (this->OnlineSessionInterface->GetResolvedConnectString(SessionName, Address) == false)
+    {
+        UE_LOG(LogTemp, Fatal, TEXT("ULocalSessionSupervisor::OnJoinSessionCompleteDelegate: Failed to get resolved connect string for session [%s]."), *SessionName.ToString())
+        return;
+    }
+
+    if (Address.IsEmpty())
+    {
+        UE_LOG(LogTemp, Fatal, TEXT("ULocalSessionSupervisor::OnJoinSessionCompleteDelegate: Resolved connect string for session [%s] is empty."), *SessionName.ToString())
+        return;
+    }
+
+    if (this->GetWorld() == nullptr)
+    {
+        UE_LOG(LogTemp, Fatal, TEXT("ULocalSessionSupervisor::OnJoinSessionCompleteDelegate: World is invalid."))
+        return;
+    }
+
+    APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this->GetWorld(), /* No need to be fancy here, as we must always be in the Menu when calling this method. */ 0);
+
+    if (PlayerController == nullptr)
+    {
+        UE_LOG(LogTemp, Fatal, TEXT("ULocalSessionSupervisor::OnJoinSessionCompleteDelegate: Player Controller is invalid."))
+        return;
+    }
+
+    UE_LOG(LogTemp, Log, TEXT("ULocalSessionSupervisor::OnJoinSessionCompleteDelegate: Successfully joined session [%s]. Everything ready. Traveling to server's level at [%s]."), *SessionName.ToString(), *Address)
+    
+    PlayerController->ClientTravel(Address, ETravelType::TRAVEL_Absolute);
+
     return;
 }

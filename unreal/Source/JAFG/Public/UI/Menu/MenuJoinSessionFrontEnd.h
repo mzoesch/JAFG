@@ -72,6 +72,7 @@ protected:
 
     virtual void NativeConstruct(void) override;
 
+    /** @param EntryIndex The index of the scroll box session entry that should be joined. */
     UFUNCTION(BlueprintCallable, Category = "Menu", meta = (AllowPrivateAccess = "true"))
     void JoinSession(const int32 EntryIndex) const;
     

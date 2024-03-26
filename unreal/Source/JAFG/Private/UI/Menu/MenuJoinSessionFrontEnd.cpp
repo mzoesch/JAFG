@@ -57,7 +57,22 @@ void UMenuJoinSessionFrontEnd::JoinSession(const int32 EntryIndex) const
         return;
     }
 
-    UE_LOG(LogTemp, Log, TEXT("UMenuJoinSessionFrontEnd::JoinSession: Joining session %s."), *Entry->GetEntryData().GetFullSessionName())
+    UE_LOG(LogTemp, Log, TEXT("UMenuJoinSessionFrontEnd::JoinSession: Trying to join session %s."), *Entry->GetEntryData().GetFullSessionName())
+
+    /* TODO Here also check if mock */
+    
+    const UGameInstance* GameInstance = this->GetGameInstance(); check ( GameInstance )
+    const ULocalSessionSupervisorSubsystem* LSSS = GameInstance->GetSubsystem<ULocalSessionSupervisorSubsystem>(); check( LSSS )
+
+    const int32 SearchIndex = EntryIndex - UMenuJoinSessionFrontEnd::UsedSBIndices;
+    
+    if (LSSS->GetActiveOnlineSessionSearch()->SearchResults.IsValidIndex(SearchIndex) == false)
+    {
+        UE_LOG(LogTemp, Fatal, TEXT("UMenuJoinSessionFrontEnd::JoinSession: Search index %d is out of range."), SearchIndex)
+        return;
+    }
+    
+    LSSS->JoinSession(Entry->GetEntryData().GetFullSessionName(), LSSS->GetActiveOnlineSessionSearch()->SearchResults[SearchIndex]);
     
     return;
 }

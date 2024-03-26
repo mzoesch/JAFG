@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "OnlineSessionSettings.h"
+#include "Interfaces/OnlineSessionInterface.h"
 
 #include "LocalSessionSupervisorSubsystem.generated.h"
 
@@ -73,7 +74,8 @@ public:
     bool HostListenServer(const FString& InSessionName, const int InMaxPublicConnections, const bool bInLAN);
     void FindSessionsAndSafeDiscardPrevious(const uint32 MaxSearchResults, const bool bLANQuery, const TScriptInterface<IOnlineSessionSearchCallback>& InCallback);
     void FindSessions(const uint32 MaxSearchResults, const bool bLANQuery, const TScriptInterface<IOnlineSessionSearchCallback>& InCallback);
-
+    void JoinSession(const FString& SessionName, const FOnlineSessionSearchResult& SearchResult) const;
+    
     bool ForceActiveSessionDestroy(void);
 
 protected:
@@ -84,6 +86,7 @@ protected:
 
     virtual void OnCreateSessionCompleteDelegate(const FName SessionName, const bool bSuccess);
     virtual void OnFindSessionsCompleteDelegate(const bool bSuccess);
+    virtual void OnJoinSessionCompleteDelegate(const FName SessionName, const EOnJoinSessionCompleteResult::Type Result);
     
 private:
 
