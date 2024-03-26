@@ -1,6 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
-#include "UI/JAFGCommonWidget.h"
+#include "UI/Common/JAFGCommonWidget.h"
 
 void UJAFGCommonWidget::NativeConstruct(void)
 {

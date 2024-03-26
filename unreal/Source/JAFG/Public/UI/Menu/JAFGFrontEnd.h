@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/WidgetSwitcher.h"
-#include "UI/JAFGCommonWidget.h"
+#include "UI/Common/JAFGCommonWidget.h"
 
 #include "JAFGFrontEnd.generated.h"
 
@@ -62,6 +62,8 @@ protected:
     void OnNewSessionClicked(void) const;
     /* Event only called if widget is visible. Not on hidden tab occurrence changes. */
     void OnJoinSessionClicked(void) const;
+    void OnQuitClicked() const;
+    void OnQuitClickedDelegate(const bool bAccepted) const;
     
 private:
 

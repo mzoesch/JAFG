@@ -3,14 +3,16 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/HUD.h"
+#include "UI/Common/CommonHUD.h"
+
 #include "WorldHUD.generated.h"
 
-/**
- * 
- */
 UCLASS(Abstract, Blueprintable)
-class JAFG_API AWorldHUD : public AHUD
+class JAFG_API AWorldHUD : public ACommonHUD
 {
     GENERATED_BODY()
+
+public:
+
+    virtual void BeginPlay() override;
 };

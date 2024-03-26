@@ -158,7 +158,7 @@ bool ULocalSessionSupervisorSubsystem::ForceActiveSessionDestroy(void)
 
 void ULocalSessionSupervisorSubsystem::OnCreateSessionCompleteDelegate(const FName SessionName, const bool bSuccess)
 {
-    UE_LOG(LogTemp, Warning, TEXT("ULocalSessionSupervisor::OnCreateSessionCompleteDelegate: Session [%s] created with some name: %s."), *SessionName.ToString(), bSuccess ? TEXT("Success") : TEXT("Failure"))
+    UE_LOG(LogTemp, Warning, TEXT("ULocalSessionSupervisor::OnCreateSessionCompleteDelegate: Session [%s] created: %s."), *SessionName.ToString(), bSuccess ? TEXT("Success") : TEXT("Failure"))
 
     if (bSuccess == false)
     {

@@ -2,3 +2,8 @@
 
 
 #include "UI/World/WorldHUD.h"
+
+void AWorldHUD::BeginPlay()
+{
+    Super::BeginPlay();
+}

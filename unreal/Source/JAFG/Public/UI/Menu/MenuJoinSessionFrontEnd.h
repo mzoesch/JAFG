@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Network/LocalSessionSupervisorSubsystem.h"
-#include "UI/JAFGCommonWidget.h"
+#include "UI/Common/JAFGCommonWidget.h"
 
 #include "MenuJoinSessionFrontEnd.generated.h"
 

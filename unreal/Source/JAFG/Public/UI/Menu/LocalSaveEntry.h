@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 
-#include "UI/JAFGCommonWidget.h"
+#include "UI/Common/JAFGCommonWidget.h"
 
 #include "LocalSaveEntry.generated.h"
 
@@ -21,7 +21,7 @@ struct JAFG_API FLocalSaveEntryData final : FMyPassData
     uint16  SaveEntryIndex;
     FString SaveEntryName;
 
-    virtual FString ToString() const override
+    inline virtual FString ToString() const override
     {
         return FString::Printf(TEXT("FLocalSaveSlotData{SaveEntryIndex: %d, SaveEntryName: %s}"), this->SaveEntryIndex, *this->SaveEntryName);
     }

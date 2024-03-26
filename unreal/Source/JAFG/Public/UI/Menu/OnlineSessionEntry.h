@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UI/JAFGCommonWidget.h"
+#include "UI/Common/JAFGCommonWidget.h"
 
 #include "OnlineSessionEntry.generated.h"
 

@@ -24,7 +24,7 @@ public:
     {
         /* Substituted all nested pure virtual macro calls as it does not define a non-void declared method. */
         static_assert(TIsArrayOrRefOfTypeByPredicate<decltype(L"Pure virtual not implemented (%s)"), TIsCharEncodingCompatibleWithTCHAR>::Value, "Formatting string must be a TCHAR array.");
-        LowLevelFatalErrorHandler("JAFGCommonWidget.h", 27, _ReturnAddress(), (const TCHAR*)L"Pure virtual not implemented (%s)", L"FMyPassData::ToString");
+        LowLevelFatalErrorHandler("JAFGCommonWidget.h", /* Value should be manually updated. */ 27, _ReturnAddress(), (const TCHAR*)L"Pure virtual not implemented (%s)", L"FMyPassData::ToString");
         return FString(L"FATAL-ERROR");
     }
 };
@@ -75,7 +75,9 @@ public:
      * Generic virtual method declaration that some derived classes may implement to function as a deferred constructor
      * call. Highly sketchy solution as it requires anyone who works with this method, to be extra carefully with
      * types. There is no type checking by the compiler. Any method will never know what type it gets as only the super
-     * class is known. And then it is the job for every derived class to cast to the needed type.
+     * class is known. And then it is the job for every derived class to cast to the needed type. The equivalent
+     * blueprint implementable event must be called manually by the derived class in this method to allow derived
+     * blueprint widgets to implement their own functionality.
      * See FMyPassData for more information.
      */
     virtual void PassDataToWidget(const FMyPassData& MyPassedData) PURE_VIRTUAL(UJAFGCommonWidget::PassDataToWidget)
