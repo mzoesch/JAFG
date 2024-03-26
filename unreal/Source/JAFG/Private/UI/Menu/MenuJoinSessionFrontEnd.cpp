@@ -68,7 +68,7 @@ void UMenuJoinSessionFrontEnd::JoinSession(const int32 EntryIndex) const
     
     if (LSSS->GetActiveOnlineSessionSearch()->SearchResults.IsValidIndex(SearchIndex) == false)
     {
-        UE_LOG(LogTemp, Fatal, TEXT("UMenuJoinSessionFrontEnd::JoinSession: Search index %d is out of range."), SearchIndex)
+        UE_LOG(LogTemp, Fatal, TEXT("UMenuJoinSessionFrontEnd::JoinSession: Online Session Search Result index %d is out of range."), SearchIndex)
         return;
     }
     
@@ -79,6 +79,7 @@ void UMenuJoinSessionFrontEnd::JoinSession(const int32 EntryIndex) const
 
 void UMenuJoinSessionFrontEnd::OnOnlineSessionFoundCompleteDelegate(const bool bSuccess, const ULocalSessionSupervisorSubsystem* Subsystem)
 {
+    /* Just as a backup. Even though this should already be handled by UMenuJoinSessionFrontEnd::ReloadFoundSessions. */
     for (UWidget* Child : this->SB_FoundSessions->GetAllChildren())
     {
         if (Child == nullptr)
@@ -163,6 +164,21 @@ void UMenuJoinSessionFrontEnd::OnOnlineSessionFoundCompleteDelegate(const bool b
 
 void UMenuJoinSessionFrontEnd::ReloadFoundSessions()
 {
+    for (UWidget* Child : this->SB_FoundSessions->GetAllChildren())
+    {
+        if (Child == nullptr)
+        {
+            continue;
+        }
+
+        if (Child->IsA<UOnlineSessionEntry>())
+        {
+            this->SB_FoundSessions->RemoveChild(Child);
+        }
+        
+        continue;
+    }
+    
 #if WITH_EDITOR
 #if WITH_EDITORONLY_DATA
     if (this->bMockOnlineSubsystem)
