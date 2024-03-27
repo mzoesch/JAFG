@@ -92,7 +92,7 @@ void UMenuJoinSessionFrontEnd::JoinSession(const int32 EntryIndex) const
             return;
         }
 
-        const FString LevelName = "L_World";
+        const FString LevelName = "L_WorldDev";
         constexpr ETravelType TravelType = ETravelType::TRAVEL_Absolute;
         
         FURL MyURL = FURL(&WorldContextObject->LastURL, *LevelName, TravelType);
