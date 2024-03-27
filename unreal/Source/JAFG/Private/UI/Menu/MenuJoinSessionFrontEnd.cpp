@@ -59,7 +59,70 @@ void UMenuJoinSessionFrontEnd::JoinSession(const int32 EntryIndex) const
 
     UE_LOG(LogTemp, Log, TEXT("UMenuJoinSessionFrontEnd::JoinSession: Trying to join session %s."), *Entry->GetEntryData().GetFullSessionName())
 
-    /* TODO Here also check if mock */
+#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
+    if (this->bMockOnlineSubsystem)
+    {
+        /*
+         * TODO ...
+         *      This might actually not be what we need.
+         *      Do we have to open a local LAN listen server? We have to comeback to this if we have a working
+         *      world generation. And some communication with client - server.
+         */
+        
+        UE_LOG(LogTemp, Warning, TEXT("UMenuJoinSessionFrontEnd::JoinSession: Mocking online subsystem."))
+
+        if (this->GetWorld() == nullptr)
+        {
+            UE_LOG(LogTemp, Fatal, TEXT("UMenuJoinSessionFrontEnd::JoinSession: World is invalid."))
+            return;
+        }
+
+        if (GEngine == nullptr)
+        {
+            UE_LOG(LogTemp, Fatal, TEXT("UMenuJoinSessionFrontEnd::JoinSession: GEngine is invalid."))
+            return;
+        }
+
+        FWorldContext* WorldContextObject = GEngine->GetWorldContextFromWorld(this->GetWorld());
+
+        if (WorldContextObject == nullptr)
+        {
+            UE_LOG(LogTemp, Fatal, TEXT("UMenuJoinSessionFrontEnd::JoinSession: World Context Object is invalid."))
+            return;
+        }
+
+        const FString LevelName = "L_World";
+        constexpr ETravelType TravelType = ETravelType::TRAVEL_Absolute;
+        
+        FURL MyURL = FURL(&WorldContextObject->LastURL, *LevelName, TravelType);
+
+        if (MyURL.IsLocalInternal() == false)
+        {
+            UE_LOG(LogTemp, Fatal, TEXT("UMenuJoinSessionFrontEnd::JoinSession: URL is not local internal."))
+            return;
+        }
+
+        if (GEngine->MakeSureMapNameIsValid(MyURL.Map) == false)
+        {
+            UE_LOG(LogTemp, Fatal, TEXT("UMenuJoinSessionFrontEnd::JoinSession: Map name is invalid."))
+            return;
+        }
+
+        UE_LOG(LogTemp, Log, TEXT("UMenuJoinSessionFrontEnd::JoinSession: Traveling to mock %s."), *MyURL.Map)
+
+        if (this->GetOwningPlayer() == nullptr)
+        {
+            UE_LOG(LogTemp, Fatal, TEXT("UMenuJoinSessionFrontEnd::JoinSession: Owning Player is invalid."))
+            return;
+        }
+
+        this->GetOwningPlayer()->ClientTravel(MyURL.ToString(), TravelType, false, FGuid::NewGuid());
+        
+        return;
+    }
+#endif /* WITH_EDITORONLY_DATA */
+#endif /* WITH_EDITOR */
     
     const UGameInstance* GameInstance = this->GetGameInstance(); check ( GameInstance )
     const ULocalSessionSupervisorSubsystem* LSSS = GameInstance->GetSubsystem<ULocalSessionSupervisorSubsystem>(); check( LSSS )

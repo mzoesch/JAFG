@@ -46,7 +46,7 @@ protected:
     ////////////////////////////////////////////////////////////////
 
     inline static const FString   DefaultSessionName          = "Some Generic Session Name";
-    inline static constexpr int32 DefaultMaxPublicConnections = 1;
+    inline static constexpr int32 DefaultMaxPublicConnections = 2;
     inline static constexpr bool  bDefaultLAN                 = true;
 
     UFUNCTION(BlueprintPure, Category = "Menu", meta = (AllowPrivateAccess = "true"))
