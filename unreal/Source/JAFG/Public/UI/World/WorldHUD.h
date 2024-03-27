@@ -7,6 +7,7 @@
 
 #include "WorldHUD.generated.h"
 
+class UChatMenu;
 class UEscapeMenu;
 
 UCLASS(Abstract, Blueprintable)
@@ -25,11 +26,18 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widgets")
     TSubclassOf<UEscapeMenu> WEscapeMenuClass;
 
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widgets")
+    TSubclassOf<UChatMenu> WChatMenuClass;
+    
 private:
 
     TObjectPtr<UEscapeMenu> WEscapeMenu;
+    TObjectPtr<UChatMenu> WChatMenu;
     
 public:
 
     void ToggleEscapeMenu(const bool bCollapsed) const;
+
+    void ToggleChatMenu(const bool bCollapsed) const;
+    void AddMessageToChat(const FString& Message);
 };

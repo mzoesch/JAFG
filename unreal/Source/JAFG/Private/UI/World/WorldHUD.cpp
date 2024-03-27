@@ -4,6 +4,7 @@
 
 #include "World/WorldCharacter.h"
 #include "UI/Escape/EscapeMenu.h"
+#include "UI/MISC/ChatMenu.h"
 #include "World/WorldPlayerController.h"
 
 #define PLAYER_CONTROLLER Cast<AWorldPlayerController>(this->GetOwningPlayerController())
@@ -48,6 +49,10 @@ void AWorldHUD::BeginPlay()
     check( this->WEscapeMenuClass )
     this->WEscapeMenu = CreateWidget<UEscapeMenu>(this->GetWorld(), this->WEscapeMenuClass);
     this->WEscapeMenu->AddToViewport();
+
+    check( this->WChatMenuClass )
+    this->WChatMenu = CreateWidget<UChatMenu>(this->GetWorld(), this->WChatMenuClass);
+    this->WChatMenu->AddToViewport();
     
     return;
 }
@@ -56,6 +61,17 @@ void AWorldHUD::ToggleEscapeMenu(const bool bCollapsed) const
 {
     PLAYER_CONTROLLER->ShowMouseCursor(bCollapsed == false, true);
     this->WEscapeMenu->ToggleEscapeMenu(bCollapsed);
+}
+
+void AWorldHUD::ToggleChatMenu(const bool bCollapsed) const
+{
+    PLAYER_CONTROLLER->ShowMouseCursor(bCollapsed == false, true);
+    this->WChatMenu->ToggleChatMenu(bCollapsed);
+}
+
+void AWorldHUD::AddMessageToChat(const FString& Message)
+{
+    this->WChatMenu->AddMessageToChat(Message);
 }
 
 #undef PLAYER_CONTROLLER

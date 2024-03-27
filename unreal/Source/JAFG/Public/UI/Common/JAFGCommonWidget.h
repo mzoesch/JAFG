@@ -39,6 +39,10 @@ public:
     static inline constexpr FLinearColor CommonWidgetForegroundColor = FLinearColor(0.02f, 0.02f, 0.02f, 1.0f);
     UPROPERTY(BlueprintReadOnly, Category = "Common")
     FLinearColor MyCommonWidgetForegroundColor;
+
+    static inline constexpr FLinearColor CommonWidgetForegroundColorReducedAlpha = FLinearColor(UJAFGCommonWidget::CommonWidgetForegroundColor.R, UJAFGCommonWidget::CommonWidgetForegroundColor.G, UJAFGCommonWidget::CommonWidgetForegroundColor.B, 0.5f);
+    UPROPERTY(BlueprintReadOnly, Category = "Common")
+    FLinearColor MyCommonWidgetForegroundColorReducedAlpha;
     
     static inline constexpr FLinearColor CommonWidgetBackgroundColor = FLinearColor(0.2f, 0.2f, 0.2f, 1.0f);
     UPROPERTY(BlueprintReadOnly, Category = "Common")

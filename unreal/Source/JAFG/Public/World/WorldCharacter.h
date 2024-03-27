@@ -7,6 +7,9 @@
 
 #include "WorldCharacter.generated.h"
 
+class UChatComponent;
+class UChatMenu;
+class UEscapeMenu;
 class UCameraComponent;
 class UInputAction;
 class UInputComponent;
@@ -29,6 +32,9 @@ protected:
 private:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    UChatComponent* ChatComponent;
+    
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     UCameraComponent* FirstPersonCameraComponent;
     
 public:
@@ -38,6 +44,9 @@ public:
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IMC")
     UInputMappingContext* IMCMenu;
+
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IMC")
+    UInputMappingContext* IMCChatMenu;
     
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Movement")
     UInputAction* IAJump;
@@ -50,6 +59,9 @@ public:
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|MISC")
     UInputAction* IAToggleEscapeMenu;
+
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|MISC")
+    UInputAction* IAToggleChatMenu;
     
 private:
 
@@ -59,7 +71,9 @@ private:
     void OnMove(const FInputActionValue& Value);
 
     void OnToggleEscapeMenu(const FInputActionValue& Value);
-    friend class UEscapeMenu;
+    friend UEscapeMenu;
+    void OnToggleChatMenu(const FInputActionValue& Value);
+    friend UChatMenu;
     
 public:
 
