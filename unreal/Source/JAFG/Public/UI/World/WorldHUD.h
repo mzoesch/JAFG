@@ -7,6 +7,8 @@
 
 #include "WorldHUD.generated.h"
 
+class UEscapeMenu;
+
 UCLASS(Abstract, Blueprintable)
 class JAFG_API AWorldHUD : public ACommonHUD
 {
@@ -14,5 +16,20 @@ class JAFG_API AWorldHUD : public ACommonHUD
 
 public:
 
-    virtual void BeginPlay() override;
+    explicit AWorldHUD(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+    virtual void BeginPlay(void) override;
+
+public:
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widgets")
+    TSubclassOf<UEscapeMenu> WEscapeMenuClass;
+
+private:
+
+    TObjectPtr<UEscapeMenu> WEscapeMenu;
+    
+public:
+
+    void ToggleEscapeMenu(const bool bCollapsed) const;
 };

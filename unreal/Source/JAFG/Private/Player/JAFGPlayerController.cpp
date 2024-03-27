@@ -15,9 +15,8 @@ void AJAFGPlayerController::ShowMouseCursor(const bool bShow, const bool bCenter
         this->bEnableClickEvents        = true;
         this->bEnableMouseOverEvents    = true;
 
-        /* TODO If we want to move how can we achieve this without the cursor disappearing? */
-        // this->SetInputMode(FInputModeGameAndUI());
-        this->SetInputMode(FInputModeUIOnly());
+        FInputModeGameAndUI InputMode; InputMode.SetHideCursorDuringCapture(false);
+        this->SetInputMode(InputMode);
 
         if (bCenter)
         {

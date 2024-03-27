@@ -7,6 +7,7 @@
 
 #include "WorldCharacter.generated.h"
 
+class UCameraComponent;
 class UInputAction;
 class UInputComponent;
 class UInputMappingContext;
@@ -23,13 +24,21 @@ public:
 
 protected:
 
-    virtual void BeginPlay() override;
+    virtual void BeginPlay(void) override;
+
+private:
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    UCameraComponent* FirstPersonCameraComponent;
     
 public:
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IMC")
     UInputMappingContext* IMCFoot;
 
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IMC")
+    UInputMappingContext* IMCMenu;
+    
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Movement")
     UInputAction* IAJump;
 
@@ -39,12 +48,18 @@ public:
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Movement")
     UInputAction* IAMove;
 
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|MISC")
+    UInputAction* IAToggleEscapeMenu;
+    
 private:
 
     void OnTriggerJump(const FInputActionValue& Value);
     void OnCompleteJump(const FInputActionValue& Value);
     void OnLook(const FInputActionValue& Value);
     void OnMove(const FInputActionValue& Value);
+
+    void OnToggleEscapeMenu(const FInputActionValue& Value);
+    friend class UEscapeMenu;
     
 public:
 

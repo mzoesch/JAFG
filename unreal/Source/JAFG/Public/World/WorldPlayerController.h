@@ -4,11 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Player/JAFGPlayerController.h"
+
 #include "WorldPlayerController.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class JAFG_API AWorldPlayerController : public AJAFGPlayerController
 {

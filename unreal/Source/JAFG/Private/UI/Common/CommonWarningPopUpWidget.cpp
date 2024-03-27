@@ -5,7 +5,7 @@
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 
-void UCommonWarningPopUpWidget::NativeConstruct()
+void UCommonWarningPopUpWidget::NativeConstruct(void)
 {
     Super::NativeConstruct();
     this->B_CloseWarningPopUp->OnClicked.AddDynamic(this, &UCommonWarningPopUpWidget::OnCloseWarningPopUpClicked);
