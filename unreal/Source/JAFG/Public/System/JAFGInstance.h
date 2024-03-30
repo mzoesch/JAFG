@@ -9,13 +9,34 @@
 
 class ULocalSessionSupervisorSubsystem;
 
-UCLASS()
+UCLASS(Abstract, Blueprintable)
 class JAFG_API UJAFGInstance : public UGameInstance
 {
     GENERATED_BODY()
 
 public:
+
+    //////////////////////////////////////////////////////////////////////////
+    // Materials
+    //////////////////////////////////////////////////////////////////////////
+
+    UPROPERTY(EditDefaultsOnly, Category = "Materials")
+    const TObjectPtr<UMaterialInterface> MOpaque;
+
+    // TEMP
+
+    UPROPERTY(EditDefaultsOnly, Category="Material")
+    TObjectPtr<UTexture2D> Stone;
     
-    virtual void Init() override;
-    virtual void Shutdown() override;
+    UPROPERTY(EditDefaultsOnly, Category="Material")
+    TObjectPtr<UTexture2D> Dirt;
+    
+    UPROPERTY(EditDefaultsOnly, Category="Material")
+    TObjectPtr<UTexture2D> GrassTop;
+    
+    UPROPERTY(EditDefaultsOnly, Category="Material")
+    TObjectPtr<UTexture2D> Grass;
+    
+    virtual void Init(void) override;
+    virtual void Shutdown(void) override;
 };

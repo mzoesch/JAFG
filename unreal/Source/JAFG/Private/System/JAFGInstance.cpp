@@ -2,10 +2,12 @@
 
 #include "System/JAFGInstance.h"
 
-void UJAFGInstance::Init()
+void UJAFGInstance::Init(void)
 {
     Super::Init();
 
+    check( this->MOpaque )
+    
     /* Forward initializations */
     
     //// Instance initialization initializations. ////
@@ -17,7 +19,7 @@ void UJAFGInstance::Init()
     return;
 }
 
-void UJAFGInstance::Shutdown()
+void UJAFGInstance::Shutdown(void)
 {
     Super::Shutdown();
 
