@@ -27,19 +27,21 @@ void UMaterialSubsystem::InitializeMaterials(void)
 {
     if (this->GetWorld() == nullptr)
     {
-        UE_LOG(LogTemp, Error, TEXT("UMaterialSubsystem::InitializeMaterials: World is nullptr."))
+        UE_LOG(LogTemp, Fatal, TEXT("UMaterialSubsystem::InitializeMaterials: World is nullptr."))
         return;
     }
     
     const UJAFGInstance* JAFGInstance = Cast<UJAFGInstance>(GetWorld()->GetGameInstance());
-    if (!JAFGInstance)
+    if (JAFGInstance == nullptr)
     {
-        UE_LOG(LogTemp, Error, TEXT("UMaterialSubsystem::InitializeMaterials: Could not cast UJAFGInstance."))
+        UE_LOG(LogTemp, Fatal, TEXT("UMaterialSubsystem::InitializeMaterials: Could not cast UJAFGInstance."))
         return;
     }
 
     this->MDynamicOpaque = UMaterialInstanceDynamic::Create(JAFGInstance->MOpaque, this);
-
+    this->MDynamicFullBlendOpaque = UMaterialInstanceDynamic::Create(JAFGInstance->MFullBlendOpaque, this);
+    this->MDynamicFloraBlendOpaque = UMaterialInstanceDynamic::Create(JAFGInstance->MFloraBlendOpaque, this);
+    
     UTexture2DArray* TextureArray = UTexture2DArray::CreateTransient(UMaterialSubsystem::TextureArrayWidthHorizontal, UMaterialSubsystem::TextureArrayWidthVertical, 1, EPixelFormat::PF_R8G8B8A8);
     TextureArray->Filter = TextureFilter::TF_Nearest;
     TextureArray->SRGB = true;
@@ -74,6 +76,8 @@ void UMaterialSubsystem::InitializeMaterials(void)
     TextureArray->UpdateSourceFromSourceTextures();
 
     this->MDynamicOpaque->SetTextureParameterValue("TexArr", TextureArray);
+    this->MDynamicFullBlendOpaque->SetTextureParameterValue("TexArr", TextureArray);
+    this->MDynamicFloraBlendOpaque->SetTextureParameterValue("TexArr", TextureArray);
 
     UE_LOG(LogTemp, Log, TEXT("UMaterialSubsystem::InitializeMaterials: Texture array size: %d"), TextureArray->SourceTextures.Num());
     

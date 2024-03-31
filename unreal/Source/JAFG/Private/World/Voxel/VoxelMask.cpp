@@ -11,8 +11,26 @@ FVoxelMask::FVoxelMask(const FString& NameSpace, const FString& Name, const ETex
 {
 	this->NameSpace = NameSpace;
 	this->Name      = Name;
+
 	this->TextureGroups.Empty();
 	this->TextureGroups.Add(FTextureGroup(ENormalLookup::Default, TextureGroup));
+
+	this->TextureIndices.Empty();
+}
+
+FVoxelMask::FVoxelMask(const FString& NameSpace, const FString& Name, const TMap<ENormalLookup::Type, ETextureGroup::Type>& TextureGroup)
+{
+	this->NameSpace = NameSpace;
+	this->Name      = Name;
+
+	this->TextureGroups.Empty();
+	const ETextureGroup::Type DefaultGroup = TextureGroup.FindChecked(ENormalLookup::Default);
+	for (const TPair<ENormalLookup::Type, ETextureGroup::Type>& Pair : TextureGroup)
+	{
+		this->TextureGroups.Add(FTextureGroup(Pair.Key, Pair.Value));
+	}
+	this->TextureGroups.Add(FTextureGroup(ENormalLookup::Default, DefaultGroup));
+
 	this->TextureIndices.Empty();
 }
 
@@ -28,7 +46,7 @@ FVoxelMask::FTextureIndex::FTextureIndex(const ENormalLookup::Type Normal, const
 	this->TextureIndex = TextureIndex;
 }
 
-int32 FVoxelMask::GetTextureGroup(const FVector& Normal) const
+ETextureGroup::Type FVoxelMask::GetTextureGroup(const FVector& Normal) const
 {
 	const ENormalLookup::Type NormalLookup = ENormalLookup::FromVector(Normal);
 

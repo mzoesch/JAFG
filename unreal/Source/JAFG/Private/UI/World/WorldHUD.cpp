@@ -20,13 +20,13 @@ void AWorldHUD::BeginPlay()
 #if WITH_EDITOR
     if (PLAYER_CONTROLLER == nullptr)
     {
-        UE_LOG(LogTemp, Warning, TEXT("AWorldHUD::BeginPlay(): Player controller is not valid. Discarding HUD setup."))
+        UE_LOG(LogTemp, Warning, TEXT("AWorldHUD::BeginPlay: Player controller is not valid. Discarding HUD setup."))
         return;
     }
 #else
     if (PLAYER_CONTROLLER == nullptr)
     {
-        UE_LOG(LogTemp, Fatal, TEXT("AWorldHUD::BeginPlay(): Player controller is not valid."))
+        UE_LOG(LogTemp, Fatal, TEXT("AWorldHUD::BeginPlay: Player controller is not valid."))
         return;
     }
 #endif /* WITH_EDITOR */
@@ -35,13 +35,13 @@ void AWorldHUD::BeginPlay()
     /* May often happen if we simulate the game in the editor. But should never happen in a packaged shipping game. */
     if (this->GetOwningPawn() == nullptr || this->GetOwningPawn()->GetClass()->IsChildOf(AWorldCharacter::StaticClass()) == false)
     {
-        UE_LOG(LogTemp, Warning, TEXT("AWorldHUD::BeginPlay(): Owning pawn is not a valid type for this HUD. Discarding HUD setup."))
+        UE_LOG(LogTemp, Warning, TEXT("AWorldHUD::BeginPlay: Owning pawn is not a valid type for this HUD. Discarding HUD setup."))
         return;
     }
 #else
     if (this->GetOwningPawn() == nullptr || this->GetOwningPawn()->GetClass()->IsChildOf(AWorldCharacter::StaticClass()) == false)
     {
-        UE_LOG(LogTemp, Fatal, TEXT("AWorldHUD::BeginPlay(): Owning pawn is not a valid type for this HUD."))
+        UE_LOG(LogTemp, Fatal, TEXT("AWorldHUD::BeginPlay: Owning pawn is not a valid type for this HUD."))
         return;
     }
 #endif /* WITH_EDITOR */

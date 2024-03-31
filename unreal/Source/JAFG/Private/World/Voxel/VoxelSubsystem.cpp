@@ -65,5 +65,11 @@ void UVoxelSubsystem::InitializeOptionalVoxels(void)
 {
 	this->VoxelMasks.Add(FVoxelMask(TEXT("JAFG"), TEXT("Stone"), ETextureGroup::Opaque));
 	this->VoxelMasks.Add(FVoxelMask(TEXT("JAFG"), TEXT("Dirt"), ETextureGroup::Opaque));
-	this->VoxelMasks.Add(FVoxelMask(TEXT("JAFG"), TEXT("Grass"), ETextureGroup::Opaque));
+
+	TMap<ENormalLookup::Type, ETextureGroup::Type> GrassTextureGroups;
+	GrassTextureGroups.Add(ENormalLookup::Default, ETextureGroup::Opaque);
+	GrassTextureGroups.Add(ENormalLookup::Top, ETextureGroup::FullBlendOpaque);
+	GrassTextureGroups.Add(ENormalLookup::Side, ETextureGroup::FloraBlendOpaque);
+	GrassTextureGroups.Add(ENormalLookup::Front, ETextureGroup::FloraBlendOpaque);
+	this->VoxelMasks.Add(FVoxelMask(TEXT("JAFG"), TEXT("Grass"), GrassTextureGroups));
 }

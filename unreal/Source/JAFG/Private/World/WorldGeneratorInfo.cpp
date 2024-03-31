@@ -29,7 +29,7 @@ void AWorldGeneratorInfo::BeginPlay(void)
 
 	this->GenerateWorldAsync();
 
-	UE_LOG(LogTemp, Warning, TEXT("AWorldGeneratorInfo::BeginPlay(): Enqueued all chunks. Predicted chunks in queue: %d"), this->MaxSpiralPoints * (this->ChunksAboveZero + 1))
+	UE_LOG(LogTemp, Warning, TEXT("AWorldGeneratorInfo::BeginPlay: Enqueued all chunks. Predicted chunks in queue: %d"), this->MaxSpiralPoints * (this->ChunksAboveZero + 1))
 
 	return;
 }

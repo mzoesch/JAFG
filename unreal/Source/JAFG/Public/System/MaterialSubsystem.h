@@ -14,6 +14,8 @@ enum Type : int8
 {
 	Core = -1,
 	Opaque,
+	FullBlendOpaque,
+	FloraBlendOpaque,
 };
 
 }
@@ -31,6 +33,12 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Materials", meta = (ToolTip = "Automatically set by the subsystem."))
 	TObjectPtr<UMaterialInstanceDynamic> MDynamicOpaque;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Materials", meta = (ToolTip = "Automatically set by the subsystem."))
+	TObjectPtr<UMaterialInstanceDynamic> MDynamicFullBlendOpaque;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Materials", meta = (ToolTip = "Automatically set by the subsystem."))
+	TObjectPtr<UMaterialInstanceDynamic> MDynamicFloraBlendOpaque;
+	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize(void) override;
 

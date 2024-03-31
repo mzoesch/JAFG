@@ -65,25 +65,42 @@ void ACommonChunk::GenerateVoxels(void)
 	}
 	}
 
-	UE_LOG(LogTemp, Error, TEXT("ACommonChunk::GenerateVoxels(): World Generation of type %s not implemented."), *WorldGeneratorInfo::LexToString(this->WorldGeneratorInfo->WorldGenerationType));
+	UE_LOG(LogTemp, Error, TEXT("ACommonChunk::GenerateVoxels: World Generation of type %s not implemented."), *WorldGeneratorInfo::LexToString(this->WorldGeneratorInfo->WorldGenerationType));
 
 	return;
 }
 
 void ACommonChunk::ApplyProceduralMesh(void) const
 {
-	UMaterialSubsystem* MaterialSubsystem = this->GetGameInstance()->GetSubsystem<UMaterialSubsystem>();
+	const UMaterialSubsystem* MaterialSubsystem = this->GetGameInstance()->GetSubsystem<UMaterialSubsystem>();
 
-	if (!MaterialSubsystem)
+	if (MaterialSubsystem == nullptr)
 	{
-		UE_LOG(LogTemp, Error, TEXT("ACommonChunk::ApplyProceduralMesh(): Could not get UMaterialSubsystem."))
+		UE_LOG(LogTemp, Fatal, TEXT("ACommonChunk::ApplyProceduralMesh: Could not get UMaterialSubsystem."))
 		return;
 	}
 
 	for (int i = 0; i < this->MeshData.Num(); ++i)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::ApplyProceduralMesh(): Applying procedural mesh data to procedural mesh component. Sweep: %d."), i)
-		this->ProceduralMeshComponent->SetMaterial(i, MaterialSubsystem->MDynamicOpaque);
+		UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::ApplyProceduralMesh: Applying procedural mesh data to procedural mesh component. Sweep: %d."), i)
+
+		if (i == ETextureGroup::Opaque)
+		{
+			this->ProceduralMeshComponent->SetMaterial(ETextureGroup::Opaque, MaterialSubsystem->MDynamicOpaque);
+		}
+		else if (i == ETextureGroup::FullBlendOpaque)
+		{
+			this->ProceduralMeshComponent->SetMaterial(ETextureGroup::FullBlendOpaque, MaterialSubsystem->MDynamicFullBlendOpaque);
+		}
+		else if (i == ETextureGroup::FloraBlendOpaque)
+		{
+			this->ProceduralMeshComponent->SetMaterial(ETextureGroup::FloraBlendOpaque, MaterialSubsystem->MDynamicFloraBlendOpaque);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("ACommonChunk::ApplyProceduralMesh: Texture group %d not implemented."), i)
+			this->ProceduralMeshComponent->SetMaterial(i, MaterialSubsystem->MDynamicOpaque);
+		}
 
 		this->ProceduralMeshComponent->CreateMeshSection(
 			i,

@@ -35,7 +35,8 @@ private:
 	void InitializeOptionalVoxels(void);
 
 public:
-
-	FORCEINLINE int32 GetCommonVoxelNum(void) const { return this->CommonVoxelNum; }
-	FORCEINLINE int32 GetTextureIndex(const int32 Voxel, const FVector& Normal) const { return this->VoxelMasks[Voxel].GetTextureIndex(Normal); }
+	
+	FORCEINLINE auto GetCommonVoxelNum(void) const -> int32 { return this->CommonVoxelNum; }
+	FORCEINLINE auto GetTextureIndex(const int32 Voxel, const FVector& Normal) const -> int32 { return this->VoxelMasks[Voxel].GetTextureIndex(Normal); }
+	FORCEINLINE auto GetTextureGroup(const int32 Voxel, const FVector& Vector) const -> ETextureGroup::Type { return this->VoxelMasks[Voxel].GetTextureGroup(Vector); }
 };

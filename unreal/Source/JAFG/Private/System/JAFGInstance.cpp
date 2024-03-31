@@ -7,6 +7,8 @@ void UJAFGInstance::Init(void)
     Super::Init();
 
     check( this->MOpaque )
+    check( this->MFullBlendOpaque )
+    check( this->MFloraBlendOpaque )
     
     /* Forward initializations */
     

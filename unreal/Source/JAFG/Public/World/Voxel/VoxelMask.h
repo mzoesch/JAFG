@@ -55,6 +55,11 @@ FORCEINLINE ENormalLookup::Type FromVector(const FVector& Normal)
 
 }
 
+/**
+ * Has to be a USTRUCT to be used in a an TArray.
+ * If this overhead causes performance issues, the struct should be converted to a c++ struct.
+ * And instead of an TArray we should use a pointer. For a future problem :D.
+ */
 USTRUCT()
 struct JAFG_API FVoxelMask
 {
@@ -64,6 +69,7 @@ public:
 
 	FVoxelMask(void) = default;
 	explicit FVoxelMask(const FString& NameSpace, const FString& Name, const ETextureGroup::Type TextureGroup);
+	explicit FVoxelMask(const FString& NameSpace, const FString& Name, const TMap<ENormalLookup::Type, ETextureGroup::Type>& TextureGroup);
 
 	static const FVoxelMask Null;
 	static const FVoxelMask Air;
@@ -104,6 +110,13 @@ public:
 
 private:
 
+	/*
+	 * We could use a TMap here. But as this is a variable that is heavily used in the chunk generation and may called
+	 * multiple thousand times per frame during generation, we are currently using a TArray. A Map might cause a huge
+	 * unwanted overhead. There will never be more than 6 elements in this array anyway. But we should to some
+	 * performance tests to be sure later on when we run into problems to find the best solution.
+	 */
+	
 	/** The last index must always be the default group of this voxel. */
 	TArray<FTextureGroup> TextureGroups;
 	/** The last index must always be the default texture index of this voxel. */
@@ -120,6 +133,10 @@ private:
 	
 public:
 
-	int32 GetTextureGroup(const FVector& Normal) const;
-	int32 GetTextureIndex(const FVector& Normal) const;
+	/*
+	 * Maybe we can to some caching here? But we should do some performance tests first.
+	 */
+	
+	auto GetTextureGroup(const FVector& Normal) const -> ETextureGroup::Type;
+	auto GetTextureIndex(const FVector& Normal) const -> int32;
 };

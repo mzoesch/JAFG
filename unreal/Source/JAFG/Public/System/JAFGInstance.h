@@ -23,6 +23,11 @@ public:
     UPROPERTY(EditDefaultsOnly, Category = "Materials")
     const TObjectPtr<UMaterialInterface> MOpaque;
 
+    UPROPERTY(EditDefaultsOnly, Category = "Materials")
+    const TObjectPtr<UMaterialInterface> MFullBlendOpaque;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Materials")
+    const TObjectPtr<UMaterialInterface> MFloraBlendOpaque;
     // TEMP
 
     UPROPERTY(EditDefaultsOnly, Category="Material")
