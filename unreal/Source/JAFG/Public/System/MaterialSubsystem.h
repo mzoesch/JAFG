@@ -7,6 +7,17 @@
 
 #include "MaterialSubsystem.generated.h"
 
+namespace ETextureGroup
+{
+
+enum Type : int8
+{
+	Core = -1,
+	Opaque,
+};
+
+}
+
 UCLASS(NotBlueprintable)
 class JAFG_API UMaterialSubsystem : public UGameInstanceSubsystem
 {

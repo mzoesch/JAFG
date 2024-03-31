@@ -3,6 +3,8 @@
 
 #include "World/Voxel/VoxelSubsystem.h"
 
+#include "System/MaterialSubsystem.h"
+
 void UVoxelSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
@@ -61,7 +63,7 @@ void UVoxelSubsystem::InitializeCommonVoxels(void)
 
 void UVoxelSubsystem::InitializeOptionalVoxels(void)
 {
-	this->VoxelMasks.Add(FVoxelMask(TEXT("JAFG"), TEXT("Stone")));
-	this->VoxelMasks.Add(FVoxelMask(TEXT("JAFG"), TEXT("Dirt")));
-	this->VoxelMasks.Add(FVoxelMask(TEXT("JAFG"), TEXT("Grass")));
+	this->VoxelMasks.Add(FVoxelMask(TEXT("JAFG"), TEXT("Stone"), ETextureGroup::Opaque));
+	this->VoxelMasks.Add(FVoxelMask(TEXT("JAFG"), TEXT("Dirt"), ETextureGroup::Opaque));
+	this->VoxelMasks.Add(FVoxelMask(TEXT("JAFG"), TEXT("Grass"), ETextureGroup::Opaque));
 }

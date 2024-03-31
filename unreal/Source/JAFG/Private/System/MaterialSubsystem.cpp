@@ -53,17 +53,20 @@ void UMaterialSubsystem::InitializeMaterials(void)
     }
 
     int TextureIndex = 0;
+    constexpr int StoneVoxelIdx = 2; /* two core voxels */ 
+    constexpr int DirtVoxelIdx = 3;
+    constexpr int GrassVoxelIdx = 4;
 
     TextureArray->SourceTextures.Add(JAFGInstance->Stone);
-    // VoxelSubsystem->VoxelMasks[TextureIndex].NormalLookup.Add(ENormalLookup::Default, TextureIndex++);
+    VoxelSubsystem->VoxelMasks[StoneVoxelIdx].AddTextureIndex(ENormalLookup::Default, TextureIndex++);
     
     TextureArray->SourceTextures.Add(JAFGInstance->Dirt);
-    // VoxelSubsystem->VoxelMasks[TextureIndex].NormalLookup.Add(ENormalLookup::Default, TextureIndex++);
+    VoxelSubsystem->VoxelMasks[DirtVoxelIdx].AddTextureIndex(ENormalLookup::Default, TextureIndex++);
     
     TextureArray->SourceTextures.Add(JAFGInstance->GrassTop);
-    // VoxelSubsystem->VoxelMasks[TextureIndex].NormalLookup.Add(ENormalLookup::Top, TextureIndex++);
+    VoxelSubsystem->VoxelMasks[GrassVoxelIdx].AddTextureIndex(ENormalLookup::Top, TextureIndex++);
     TextureArray->SourceTextures.Add(JAFGInstance->Grass);
-    // VoxelSubsystem->VoxelMasks[TextureIndex].NormalLookup.Add(ENormalLookup::Default, TextureIndex++);
+    VoxelSubsystem->VoxelMasks[GrassVoxelIdx].AddTextureIndex(ENormalLookup::Default, TextureIndex++);
     
     // https://forums.unrealengine.com/t/cant-make-a-a-texture-array-at-runtime/157889/2
     

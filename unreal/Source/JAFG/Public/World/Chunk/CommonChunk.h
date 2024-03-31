@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "World/WorldGeneratorInfo.h"
 #include "World/Voxel/CommonVoxels.h"
+#include "World/Voxel/VoxelSubsystem.h"
 
 #include "CommonChunk.generated.h"
 
@@ -60,7 +61,8 @@ protected:
 	
 	UPROPERTY()
  	TObjectPtr<AWorldGeneratorInfo> WorldGeneratorInfo;
-
+	UPROPERTY()
+	TObjectPtr<UVoxelSubsystem>     VoxelSubsystem;
 
     /** TODO Is this correct?
      * Should be actually an FIntVector.

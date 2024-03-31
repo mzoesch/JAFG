@@ -31,7 +31,8 @@ void ACommonChunk::BeginPlay(void)
     * There might be over a 100 calls per tick to this method when the generation is generation new chunks.
     */
 	this->WorldGeneratorInfo = CastChecked<AWorldGeneratorInfo>(UGameplayStatics::GetActorOfClass(this, AWorldGeneratorInfo::StaticClass()));
-
+	this->VoxelSubsystem = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>(); check( this->VoxelSubsystem )
+	
 	this->Initialize();
 	this->GenerateVoxels();
 	this->GenerateProceduralMesh();

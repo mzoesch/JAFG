@@ -37,4 +37,5 @@ private:
 public:
 
 	FORCEINLINE int32 GetCommonVoxelNum(void) const { return this->CommonVoxelNum; }
+	FORCEINLINE int32 GetTextureIndex(const int32 Voxel, const FVector& Normal) const { return this->VoxelMasks[Voxel].GetTextureIndex(Normal); }
 };
