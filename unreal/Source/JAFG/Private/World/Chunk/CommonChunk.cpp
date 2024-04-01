@@ -4,6 +4,7 @@
 
 #include "ProceduralMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 #include "Network/BackgroundChunkUpdaterComponent.h"
 #include "Network/NetworkStatics.h"
 #include "Player/JAFGPlayerController.h"
@@ -27,9 +28,51 @@ ACommonChunk::ACommonChunk(const FObjectInitializer& ObjectInitializer) : Super(
 	return;
 }
 
+void ACommonChunk::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	FDoRepLifetimeParams SharedParams;
+	SharedParams.bIsPushBased = true;
+
+	DOREPLIFETIME_WITH_PARAMS_FAST(ACommonChunk, RawVoxels, SharedParams);
+	
+}
+
+void ACommonChunk::PreClientBeginPlay()
+{
+	if (bInitializedClientBeginPlay == true)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::PreClientBeginPlay: Already initialized."))
+		return;
+	}
+
+	if (UNetworkStatics::IsSafeServer(this))
+	{
+		UE_LOG(LogTemp, Error, TEXT("ACommonChunk::PreClientBeginPlay: Called on a server instance. This is disallowed."))
+		return;
+	}
+	
+	this->VoxelSubsystem = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>();
+	check( this->VoxelSubsystem )
+	if (this->VoxelSubsystem == nullptr)
+	{
+		UE_LOG(LogTemp, Fatal, TEXT("ACommonChunk::PreClientBeginPlay: Could not get Voxel Subsystem."))
+		return;
+	}
+
+	this->Initialize();
+
+	this->bInitializedClientBeginPlay = true;
+
+	return;
+}
+
 void ACommonChunk::BeginPlay(void)
 {
 	Super::BeginPlay();
+
+	UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::BeginPlay: Called."))
 	
 	if (UNetworkStatics::IsSafeStandalone(this) || UNetworkStatics::IsSafeServer(this))
 	{
@@ -49,43 +92,46 @@ void ACommonChunk::BeginPlay(void)
 	if (UNetworkStatics::IsSafeServer(this))
 	{
 		this->GenerateVoxels();
+		/* We here should of course only do convex meshing in the future. */
+		this->GenerateProceduralMesh();
+		this->ApplyProceduralMesh();
 	}
-	else
-	{
-		this->PreventRawDataMemoryShrinking();
+	// else
+	// {
+	// 	this->PreventRawDataMemoryShrinking();
+	//
+	// 	if (this->GetWorld() == nullptr)
+	// 	{
+	// 		UE_LOG(LogTemp, Error, TEXT("ACommonChunk::BeginPlay: Could not get World."))
+	// 		return;
+	// 	}
+	//
+	// 	if (this->GetWorld()->GetFirstPlayerController() == nullptr)
+	// 	{
+	// 		UE_LOG(LogTemp, Error, TEXT("ACommonChunk::BeginPlay: Could not get First Player Controller."))
+	// 		return;
+	// 	}
+	//
+	// 	if (this->GetWorld()->GetFirstPlayerController()->GetPawn() == nullptr)
+	// 	{
+	// 		UE_LOG(LogTemp, Error, TEXT("ACommonChunk::BeginPlay: Could not get Pawn."))
+	// 		return;
+	// 	}
+	//
+	// 	this->BCHC = Cast<UBackgroundChunkUpdaterComponent>(this->GetWorld()->GetFirstPlayerController()->GetPawn()->GetComponentByClass(UBackgroundChunkUpdaterComponent::StaticClass()));
+	//
+	// 	if (this->BCHC == nullptr)
+	// 	{
+	// 		UE_LOG(LogTemp, Error, TEXT("ACommonChunk::BeginPlay: Could not get Background Chunk Updater Component."))
+	// 		return;
+	// 	}
+	// 	
+	// 	// this->FillDataFromAuthorityAsync();
+	// }
 
-		if (this->GetWorld() == nullptr)
-		{
-			UE_LOG(LogTemp, Error, TEXT("ACommonChunk::BeginPlay: Could not get World."))
-			return;
-		}
-
-		if (this->GetWorld()->GetFirstPlayerController() == nullptr)
-		{
-			UE_LOG(LogTemp, Error, TEXT("ACommonChunk::BeginPlay: Could not get First Player Controller."))
-			return;
-		}
-
-		if (this->GetWorld()->GetFirstPlayerController()->GetPawn() == nullptr)
-		{
-			UE_LOG(LogTemp, Error, TEXT("ACommonChunk::BeginPlay: Could not get Pawn."))
-			return;
-		}
-
-		this->BCHC = Cast<UBackgroundChunkUpdaterComponent>(this->GetWorld()->GetFirstPlayerController()->GetPawn()->GetComponentByClass(UBackgroundChunkUpdaterComponent::StaticClass()));
-
-		if (this->BCHC == nullptr)
-		{
-			UE_LOG(LogTemp, Error, TEXT("ACommonChunk::BeginPlay: Could not get Background Chunk Updater Component."))
-			return;
-		}
-		
-		this->FillDataFromAuthorityAsync();
-	}
-
-	/* We here should of course only do convex meshing in the future. */
-	this->GenerateProceduralMesh();
-	this->ApplyProceduralMesh();
+	// /* We here should of course only do convex meshing in the future. */
+	// this->GenerateProceduralMesh();
+	// this->ApplyProceduralMesh();
 
 	return;
 }
@@ -117,6 +163,34 @@ void ACommonChunk::GenerateVoxels(void)
 	UE_LOG(LogTemp, Error, TEXT("ACommonChunk::GenerateVoxels: World Generation of type %s not implemented."), *WorldGeneratorInfo::LexToString(this->WorldGeneratorInfo->WorldGenerationType));
 
 	return;
+}
+
+void ACommonChunk::OnRep_RawVoxels(void)
+{
+	UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::OnRep_RawVoxels: Called."))
+
+	if (this->bInitializedClientBeginPlay == false)
+	{
+		this->PreClientBeginPlay();
+	}
+	
+	FString ArrayLog;
+	for (int i = 0; i < this->RawVoxels.Num(); ++i)
+	{
+		ArrayLog.Append(FString::Printf(TEXT("%d "), this->RawVoxels[i]));
+	}
+	UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::OnRep_RawVoxels: RawVoxels: %s"), *ArrayLog)
+
+	UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::OnRep_RawVoxels: Num: %d."), this->RawVoxels.Num())
+	
+	UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::OnRep_RawVoxels: Clearing."))
+	this->ClearMesh();
+
+	UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::OnRep_RawVoxels: Generating."))
+	this->GenerateProceduralMesh();
+
+	UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::OnRep_RawVoxels: Applying."))
+	this->ApplyProceduralMesh();
 }
 
 void ACommonChunk::ApplyProceduralMesh(void) const
@@ -160,6 +234,23 @@ void ACommonChunk::ApplyProceduralMesh(void) const
 			true
 		);
 	}
+}
+
+void ACommonChunk::ClearMesh()
+{
+	/* TODO We might want to use arr.empty? */
+
+	for (int i = 0; i < this->MeshData.Num(); ++i)
+	{
+		this->MeshData[i].Clear();
+	}
+
+	for (int i = 0; i < this->VertexCounts.Num(); ++i)
+	{
+		this->VertexCounts[i] = 0;
+	}
+
+	return;
 }
 
 void ACommonChunk::FillDataFromAuthorityAsync()

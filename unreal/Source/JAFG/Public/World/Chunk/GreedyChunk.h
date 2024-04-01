@@ -18,6 +18,10 @@ public:
 
 	explicit AGreedyChunk(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
+protected:
+	
+	// virtual void BeginPlay(void) override;
+
 private:
 
 	/* TODO Can we change the voxel? */

@@ -76,7 +76,7 @@ private:
 
 public:
 	
-	inline static constexpr int   ChunkSize { 32 };
+	inline static constexpr int   ChunkSize { 16 };
 	inline static constexpr float JToUScale { 100.0f };
 	inline static constexpr float UToJScale { 1.0f / AWorldGeneratorInfo::JToUScale };
 	

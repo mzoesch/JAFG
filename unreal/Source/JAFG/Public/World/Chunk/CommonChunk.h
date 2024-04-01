@@ -27,9 +27,15 @@ class JAFG_API ACommonChunk : public AActor
 public:
 
 	explicit ACommonChunk(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
-
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	
 protected:
-
+	
+	/**
+	 * Must only be called on clients never on a server or standalone.
+	 */
+	void PreClientBeginPlay(void);
+	bool bInitializedClientBeginPlay = false;
 	virtual void BeginPlay(void) override;
 
 private:
@@ -45,12 +51,11 @@ protected: /** The derived classes should implement this method. */
 
 private:
 
+	UFUNCTION()
+	void OnRep_RawVoxels();
 	void ApplyProceduralMesh(void) const;
-	FORCEINLINE void ClearMesh(void)
-	{
-		/* TODO We might want to use arr.empty? */
-	}
-
+	void ClearMesh(void);
+	
 	void FillDataFromAuthorityAsync(void);
 	FInitialChunkData MakeInitialChunkData(void) const;
 	
@@ -83,8 +88,13 @@ protected:
 	// Raw Data
 	//////////////////////////////////////////////////////////////////////////
 
+	// ftcplistener 
+	
 	/* Can we change the int? */
+	UPROPERTY(ReplicatedUsing=OnRep_RawVoxels)
 	TArray<int> RawVoxels;
+
+	/* It is up to the client on how to feed these arrays. */
 	TArray<FChunkMeshData> MeshData;
 	TArray<int> VertexCounts; /* Can we change the int? */
 

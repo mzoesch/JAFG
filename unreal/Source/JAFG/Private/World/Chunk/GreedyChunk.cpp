@@ -11,6 +11,20 @@ AGreedyChunk::AGreedyChunk(const FObjectInitializer& ObjectInitializer) : Super(
 	this->PrimaryActorTick.bCanEverTick = false;
 }
 
+// void AGreedyChunk::BeginPlay()
+// {
+//     Super::BeginPlay();
+//
+//     UE_LOG(LogTemp, Warning, TEXT("AGreedyChunk::BeginPlay: Called."))
+//
+//     if (this->VoxelSubsystem == nullptr)
+//     {
+//         UE_LOG(LogTemp, Error, TEXT("AGreedyChunk::BeginPlay: VoxelSubsystem is nullptr."))
+//         return;
+//     }
+//     
+// }
+
 void AGreedyChunk::GenerateProceduralMesh()
 {
 	// Sweep over each axis (X, Y, Z)
@@ -33,7 +47,7 @@ void AGreedyChunk::GenerateProceduralMesh()
         AxisMask[Axis] = 1;
 
         TArray<FMask> Mask;
-        Mask.SetNum(Axis1Limit * Axis2Limit);
+        Mask.SetNum(Axis1Limit * Axis2Limit, false);
 
         // Check each slice of the chunk
         for (ChunkItr[Axis] = -1; ChunkItr[Axis] < MainAxisLimit;)
@@ -143,6 +157,12 @@ void AGreedyChunk::GenerateProceduralMesh()
 void AGreedyChunk::CreateQuadrilateral(const FMask& Mask, const FIntVector& AxisMask, const int Width, const int Height,
 	const FIntVector& V1, const FIntVector& V2, const FIntVector& V3, const FIntVector& V4)
 {
+    if (this->VoxelSubsystem == nullptr)
+    {
+        UE_LOG(LogTemp, Error, TEXT("AGreedyChunk::CreateQuadrilateral: VoxelSubsystem is nullptr."))
+        return;
+    }
+    
 	const FVector   Normal          = FVector(AxisMask * Mask.Normal);
     const FColor    Color           = FColor(0, 96, 0, this->VoxelSubsystem->GetTextureIndex(Mask.Voxel, Normal));
     const int       TextureGroup    = this->VoxelSubsystem->GetTextureGroup(Mask.Voxel, Normal);
