@@ -13,10 +13,10 @@ void UMenuJoinSessionFrontEnd::MakeMockSessionEntryData(const int32 Index, FOnli
 
     /* We do not want to have zeros in the out data. */
     const int32 MyIndex = Index + 1 - UMenuJoinSessionFrontEnd::UsedSBIndices;
-    
+
     OutSessionEntryData.IDStr = FString::Printf(TEXT("MockSessionEntryData_%d"), MyIndex);
     OutSessionEntryData.PingInMs = 0xA * MyIndex;
-    
+
     OutSessionEntryData.OwningUserID = FString::Printf(TEXT("GUID-%d-%s"), /* For Debugging! */ Index, *FGuid::NewGuid().ToString());
     OutSessionEntryData.OwningUserName = OutSessionEntryData.OwningUserID;
     OutSessionEntryData.NumOpenPrivateConnections = 0xB * MyIndex;
@@ -134,9 +134,9 @@ void UMenuJoinSessionFrontEnd::JoinSession(const int32 EntryIndex) const
         UE_LOG(LogTemp, Fatal, TEXT("UMenuJoinSessionFrontEnd::JoinSession: Online Session Search Result index %d is out of range."), SearchIndex)
         return;
     }
-    
+
     LSSS->JoinSession(Entry->GetEntryData().GetFullSessionName(), LSSS->GetActiveOnlineSessionSearch()->SearchResults[SearchIndex]);
-    
+
     return;
 }
 
@@ -154,7 +154,7 @@ void UMenuJoinSessionFrontEnd::OnOnlineSessionFoundCompleteDelegate(const bool b
         {
             this->SB_FoundSessions->RemoveChild(Child);
         }
-        
+
         continue;
     }
 
@@ -261,7 +261,7 @@ void UMenuJoinSessionFrontEnd::ReloadFoundSessions()
         
             continue;
         }
-        
+
         return;
     }
 #endif /* WITH_EDITORONLY_DATA */
@@ -279,6 +279,6 @@ void UMenuJoinSessionFrontEnd::ReloadFoundSessions()
 
     this->O_EmptySessionPlaceholder->SetVisibility(ESlateVisibility::Collapsed);
     this->O_LoadingSessionsPlaceholder->SetVisibility(ESlateVisibility::Visible);
-    
+
     return;
 }

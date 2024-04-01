@@ -7,8 +7,8 @@ namespace ECommonVoxels
 
 enum Type : uint32
 {
-	Null = 0,
-	Air  = 1,
+    Null = 0,
+    Air  = 1,
 };
-	
+
 }

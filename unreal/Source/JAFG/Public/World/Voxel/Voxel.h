@@ -10,10 +10,10 @@
 UINTERFACE()
 class UVoxel : public UInterface
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 };
 
 class JAFG_API IVoxel
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 };

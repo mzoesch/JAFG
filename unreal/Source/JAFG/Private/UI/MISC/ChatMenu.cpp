@@ -182,7 +182,7 @@ void UChatMenu::AddMessageToChat(const FString& Message)
     {
         this->ToggleChatMenu(true, true);
     }
-    
+
     return;
 }
 
@@ -194,7 +194,7 @@ bool UChatMenu::IsStdInValid() const
     }
 
     /* Some more validations have to be added here in the future. */
-    
+
     return true;
 }
 

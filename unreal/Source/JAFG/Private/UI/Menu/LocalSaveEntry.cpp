@@ -19,7 +19,7 @@ void ULocalSaveEntry::PassDataToWidget(const FMyPassData& MyPassedData)
     {
         this->EntryData = *LocalSaveSlotData;
     }
-    
+
     this->TB_SaveName->SetText(FText::FromString(this->EntryData.SaveEntryName));
 
     return;

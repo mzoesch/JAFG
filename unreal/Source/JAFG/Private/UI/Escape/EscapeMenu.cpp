@@ -15,7 +15,7 @@ void UEscapeMenu::NativeConstruct(void)
     this->ToggleEscapeMenu(true);
 
     this->B_Resume->OnClicked.AddDynamic(this, &UEscapeMenu::OnResumeClicked);
-    
+
     return;
 }
 

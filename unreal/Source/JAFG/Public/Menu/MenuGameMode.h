@@ -10,9 +10,9 @@
 UCLASS(Abstract, Blueprintable)
 class JAFG_API AMenuGameMode : public AGameModeBase
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	
-	explicit AMenuGameMode(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+    
+    explicit AMenuGameMode(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 };

@@ -55,7 +55,7 @@ void ACommonHUD::CreateWarningOptionPopUp(FWarningPopUpWidgetData& Data, const T
     }
 
     Data.OnOptionChosenDelegate = OnOptionChosenDelegate;
-    
+
     UJAFGCommonWidget* Widget = CreateWidget<UJAFGCommonWidget>(this->GetWorld(), this->WarningPopUpOptionWidgetClass);
     Widget->PassDataToWidget(Data);
     Widget->AddToViewport();

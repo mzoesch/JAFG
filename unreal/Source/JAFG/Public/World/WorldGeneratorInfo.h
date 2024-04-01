@@ -12,38 +12,38 @@ class ACommonChunk;
 UENUM(BlueprintType)
 enum class EChunkType
 {
-	Naive,
-	Greedy,
-	Marching,
+    Naive,
+    Greedy,
+    Marching,
 };
 
 UENUM(BlueprintType)
 enum class EWorldGenerationType
 {
-	Default,
-	SuperFlat,
+    Default,
+    SuperFlat,
 };
 
 namespace WorldGeneratorInfo
 {
-    
+
 FORCEINLINE FString LexToString(const EWorldGenerationType Type)
 {
-	switch (Type)
-	{
-	case EWorldGenerationType::Default:
-	{
-		return FString(TEXT("Default"));
-	}
-	case EWorldGenerationType::SuperFlat:
-	{
-		return FString(TEXT("SuperFlat"));
-	}
-	default:
-	{
-		return FString(TEXT("Unknown"));
-	}
-	}
+    switch (Type)
+    {
+    case EWorldGenerationType::Default:
+    {
+        return FString(TEXT("Default"));
+    }
+    case EWorldGenerationType::SuperFlat:
+    {
+        return FString(TEXT("SuperFlat"));
+    }
+    default:
+    {
+        return FString(TEXT("Unknown"));
+    }
+    }
 }
 
 }
@@ -58,53 +58,53 @@ FORCEINLINE FString LexToString(const EWorldGenerationType Type)
 UCLASS(Blueprintable)
 class JAFG_API AWorldGeneratorInfo : public AInfo
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
-	friend ACommonChunk;
-	
+    friend ACommonChunk;
+
 public:
-	
-	explicit AWorldGeneratorInfo(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+    
+    explicit AWorldGeneratorInfo(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 private:
-	
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Generation", meta = (AllowPrivateAccess = "true"))
-	EChunkType ChunkType = EChunkType::Greedy;
-
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Generation", meta = (AllowPrivateAccess = "true"))
-	EWorldGenerationType WorldGenerationType = EWorldGenerationType::SuperFlat;
     
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Generation", meta = (AllowPrivateAccess = "true"))
-	int ChunksAboveZero = 3;
+    UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Generation", meta = (AllowPrivateAccess = "true"))
+    EChunkType ChunkType = EChunkType::Greedy;
 
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Generation", meta = (AllowPrivateAccess = "true"))
-	int MaxSpiralPoints = 20;
+    UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Generation", meta = (AllowPrivateAccess = "true"))
+    EWorldGenerationType WorldGenerationType = EWorldGenerationType::SuperFlat;
+
+    UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Generation", meta = (AllowPrivateAccess = "true"))
+    int ChunksAboveZero = 3;
+
+    UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Generation", meta = (AllowPrivateAccess = "true"))
+    int MaxSpiralPoints = 20;
 
 public:
-	
-	/**
-	 * Do not increase this value beyond 16 for now. As we would breach the Bunch size limit of 2^16 = 65.536 bytes.
-	 * See CommonChunk.h for more information.
-	 */
-	inline static constexpr int   ChunkSize { 16 };
-	
-	inline static constexpr float JToUScale { 100.0f };
-	inline static constexpr float UToJScale { 1.0f / AWorldGeneratorInfo::JToUScale };
-	
+
+    /**
+     * Do not increase this value beyond 16 for now. As we would breach the Bunch size limit of 2^16 = 65.536 bytes.
+     * See CommonChunk.h for more information.
+     */
+    inline static constexpr int ChunkSize{16};
+
+    inline static constexpr float JToUScale{100.0f};
+    inline static constexpr float UToJScale{1.0f / AWorldGeneratorInfo::JToUScale};
+
 protected:
 
-	virtual void BeginPlay(void) override;
+    virtual void BeginPlay(void) override;
 
 public:
 
-	virtual void Tick(const float DeltaTime) override;
+    virtual void Tick(const float DeltaTime) override;
 
 private:
+    
+    /** Development method to add some chunks to the queue. */
+    void GenerateWorldAsync(void);
 
-	/** Development method to add some chunks to the queue. */
-	void GenerateWorldAsync(void);
-
-	UPROPERTY()
-	TMap<FIntVector, ACommonChunk*> FullyLoadedChunks;
-	TQueue<FIntVector> ChunkGenerationQueue;
+    UPROPERTY()
+    TMap<FIntVector, ACommonChunk*> FullyLoadedChunks;
+    TQueue<FIntVector> ChunkGenerationQueue;
 };

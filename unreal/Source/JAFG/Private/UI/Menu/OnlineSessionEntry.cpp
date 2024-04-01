@@ -23,6 +23,6 @@ void UOnlineSessionEntry::PassDataToWidget(const FMyPassData& MyPassedData)
     this->TB_OnlineSessionConnections->SetText(FText::FromString(FString::Printf(TEXT("%d/%d"), this->EntryData.GetCurrentPublicConnections(), this->EntryData.MaxPublicConnections)));
 
     this->OnDeferredConstruct();
-    
+
     return;
 }

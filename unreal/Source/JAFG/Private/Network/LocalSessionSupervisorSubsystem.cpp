@@ -9,11 +9,11 @@
 void ULocalSessionSupervisorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     Super::Initialize(Collection);
-    
+
     UE_LOG(LogTemp, Log, TEXT("ULocalSessionSupervisor::Initialize: Initializing Local Session Supervisor Subsystem."))
     
     const IOnlineSubsystem* OSSModule = IOnlineSubsystem::Get();
-    
+
     if (OSSModule == nullptr)
     {
         UE_LOG(LogTemp, Fatal, TEXT("ULocalSessionSupervisor::Initialize: Online Subsystem Module is invalid."))
@@ -31,10 +31,10 @@ void ULocalSessionSupervisorSubsystem::Initialize(FSubsystemCollectionBase& Coll
     this->OnlineSessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this, &ULocalSessionSupervisorSubsystem::OnCreateSessionCompleteDelegate);
     this->OnlineSessionInterface->OnFindSessionsCompleteDelegates.AddUObject(this, &ULocalSessionSupervisorSubsystem::OnFindSessionsCompleteDelegate);
     this->OnlineSessionInterface->OnJoinSessionCompleteDelegates.AddUObject(this, &ULocalSessionSupervisorSubsystem::OnJoinSessionCompleteDelegate);
-    
+
     this->ActiveSessionSettings = nullptr;
     this->ActiveOnlineSessionSearch = FMyOnlineSessionSearch();
-    
+
     return;
 }
 
@@ -75,7 +75,7 @@ bool ULocalSessionSupervisorSubsystem::HostListenServer(const FString& InSession
         UE_LOG(LogTemp, Error, TEXT("ULocalSessionSupervisor::HostListenServer: Session name is too long."))
         return false;
     }
-    
+
     FOnlineSessionSettings OnlineSessionSettings = FOnlineSessionSettings();
     OnlineSessionSettings.NumPublicConnections = InMaxPublicConnections;
     OnlineSessionSettings.NumPrivateConnections = 0;
@@ -93,7 +93,7 @@ bool ULocalSessionSupervisorSubsystem::HostListenServer(const FString& InSession
     OnlineSessionSettings.bUseLobbiesVoiceChatIfAvailable = false;
 
     this->ActiveSessionSettings = new FMyOnlineSessionSettings(SanitizedSessionName, OnlineSessionSettings);
-    
+
     if (this->OnlineSessionInterface->CreateSession(/* No need to be fancy here, as we must always be in the Menu when calling this method. */ 0, *SanitizedSessionName, OnlineSessionSettings))
     {
         UE_LOG(LogTemp, Log, TEXT("ULocalSessionSupervisor::HostListenServer: Successfully created session."))
@@ -219,7 +219,7 @@ void ULocalSessionSupervisorSubsystem::OnCreateSessionCompleteDelegate(const FNa
         UE_LOG(LogTemp, Fatal, TEXT("ULocalSessionSupervisor::OnCreateSessionCompleteDelegate: World Context Object is nullptr."))
         return;
     }
-    
+
     FURL MyURL = FURL(&WorldContextObject->LastURL, *LevelName, TravelType);
     
     if (MyURL.IsLocalInternal() == false)
@@ -227,7 +227,7 @@ void ULocalSessionSupervisorSubsystem::OnCreateSessionCompleteDelegate(const FNa
         UE_LOG(LogTemp, Fatal, TEXT("ULocalSessionSupervisor::OnCreateSessionCompleteDelegate: URL is not local internal. Must be as we are the hosting listen server."))
         return;
     }
-    
+
     if (GEngine->MakeSureMapNameIsValid(MyURL.Map) == false)
     {
         UE_LOG(LogTemp, Fatal, TEXT("ULocalSessionSupervisor::OnCreateSessionCompleteDelegate: Map name is invalid."))
@@ -237,7 +237,7 @@ void ULocalSessionSupervisorSubsystem::OnCreateSessionCompleteDelegate(const FNa
     UE_LOG(LogTemp, Log, TEXT("ULocalSessionSupervisor::OnCreateSessionCompleteDelegate: Server traveling to %s."), *MyURL.ToString())
     
     this->GetWorld()->ServerTravel(MyURL.ToString());
-    
+
     return;
 }
 
@@ -246,7 +246,7 @@ void ULocalSessionSupervisorSubsystem::OnFindSessionsCompleteDelegate(const bool
     UE_LOG(LogTemp, Log, TEXT("ULocalSessionSupervisor::OnFindSessionsCompleteDelegate: Session search completed: %s."), bSuccess ? TEXT("Success") : TEXT("Failure"))
 
     this->ActiveOnlineSessionSearch.bSearching = false;
-    
+
     if (this->ActiveOnlineSessionSearchCallback.GetObject() == nullptr || this->ActiveOnlineSessionSearchCallback.GetInterface() == nullptr)
     {
 #if WITH_EDITOR
@@ -259,7 +259,7 @@ void ULocalSessionSupervisorSubsystem::OnFindSessionsCompleteDelegate(const bool
     }
 
     this->ActiveOnlineSessionSearchCallback->OnOnlineSessionFoundCompleteDelegate(bSuccess, this);
-    
+
     return;
 }
 
@@ -299,7 +299,7 @@ void ULocalSessionSupervisorSubsystem::OnJoinSessionCompleteDelegate(const FName
     }
 
     UE_LOG(LogTemp, Log, TEXT("ULocalSessionSupervisor::OnJoinSessionCompleteDelegate: Successfully joined session [%s]. Everything ready. Traveling to server's level at [%s]."), *SessionName.ToString(), *Address)
-    
+
     PlayerController->ClientTravel(Address, ETravelType::TRAVEL_Absolute);
 
     return;

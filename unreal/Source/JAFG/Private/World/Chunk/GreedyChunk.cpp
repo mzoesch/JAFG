@@ -8,12 +8,12 @@
 
 AGreedyChunk::AGreedyChunk(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-	this->PrimaryActorTick.bCanEverTick = false;
+    this->PrimaryActorTick.bCanEverTick = false;
 }
 
 void AGreedyChunk::GenerateProceduralMesh()
 {
-	// Sweep over each axis (X, Y, Z)
+    // Sweep over each axis (X, Y, Z)
     for (int Axis = 0; Axis < 3; ++Axis)
     {
         // 2 Perpendicular axis
@@ -82,7 +82,8 @@ void AGreedyChunk::GenerateProceduralMesh()
 
                         int Width;
 
-                        for (Width = 1; i + Width < Axis1Limit && AGreedyChunk::CompareMask(Mask[N + Width], CurrentMask); ++Width)
+                        for (Width = 1; i + Width < Axis1Limit && AGreedyChunk::CompareMask(
+                                 Mask[N + Width], CurrentMask); ++Width)
                         {
                         }
 
@@ -141,11 +142,12 @@ void AGreedyChunk::GenerateProceduralMesh()
 }
 
 void AGreedyChunk::CreateQuadrilateral(const FMask& Mask, const FIntVector& AxisMask, const int Width, const int Height,
-	const FIntVector& V1, const FIntVector& V2, const FIntVector& V3, const FIntVector& V4)
+                                       const FIntVector& V1, const FIntVector& V2, const FIntVector& V3,
+                                       const FIntVector& V4)
 {
-	const FVector   Normal          = FVector(AxisMask * Mask.Normal);
-    const FColor    Color           = FColor(0, 96, 0, this->VoxelSubsystem->GetTextureIndex(Mask.Voxel, Normal));
-    const int       TextureGroup    = this->VoxelSubsystem->GetTextureGroup(Mask.Voxel, Normal);
+    const FVector Normal = FVector(AxisMask * Mask.Normal);
+    const FColor Color = FColor(0, 96, 0, this->VoxelSubsystem->GetTextureIndex(Mask.Voxel, Normal));
+    const int TextureGroup = this->VoxelSubsystem->GetTextureGroup(Mask.Voxel, Normal);
 
     if (TextureGroup > this->VertexCounts.Num() - 1)
     {
@@ -166,11 +168,13 @@ void AGreedyChunk::CreateQuadrilateral(const FMask& Mask, const FIntVector& Axis
             continue;
         }
     }
-    
+
     /* TODO Should we calculate tangents for mesh here? Works without it but what are the drawbacks. */
     /* UKismetProceduralMeshLibrary::CalculateTangentsForMesh(MeshData.Vertices, MeshData.Triangles, MeshData.UV0, MeshData.Normals, MeshData.Tangents); */
-    
-    this->MeshData[TextureGroup].Vertices.Append({FVector(V1) * 100, FVector(V2) * 100, FVector(V3) * 100, FVector(V4) * 100});
+
+    this->MeshData[TextureGroup].Vertices.Append({
+        FVector(V1) * 100, FVector(V2) * 100, FVector(V3) * 100, FVector(V4) * 100
+    });
     this->MeshData[TextureGroup].Triangles.Append({
         this->VertexCounts[TextureGroup],
         this->VertexCounts[TextureGroup] + 2 + Mask.Normal,

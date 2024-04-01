@@ -42,7 +42,7 @@ void UJAFGFrontEnd::OpenMenuTab(const EMenuTab MenuTab) const
 
         this->WS_Menu->SetActiveWidgetIndex(static_cast<int32>(MenuTab));
     }
-    
+
     switch (MenuTab)
     {
     case EMenuTab::Invalid:
@@ -100,7 +100,7 @@ void UJAFGFrontEnd::OnQuitClickedDelegate(const bool bAccepted) const
     //
 
     this->GetOwningPlayer()->ConsoleCommand("quit");
-    
+
     return;
 }
 

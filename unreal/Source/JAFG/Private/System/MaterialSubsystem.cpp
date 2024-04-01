@@ -61,17 +61,17 @@ void UMaterialSubsystem::InitializeMaterials(void)
 
     TextureArray->SourceTextures.Add(JAFGInstance->Stone);
     VoxelSubsystem->VoxelMasks[StoneVoxelIdx].AddTextureIndex(ENormalLookup::Default, TextureIndex++);
-    
+
     TextureArray->SourceTextures.Add(JAFGInstance->Dirt);
     VoxelSubsystem->VoxelMasks[DirtVoxelIdx].AddTextureIndex(ENormalLookup::Default, TextureIndex++);
-    
+
     TextureArray->SourceTextures.Add(JAFGInstance->GrassTop);
     VoxelSubsystem->VoxelMasks[GrassVoxelIdx].AddTextureIndex(ENormalLookup::Top, TextureIndex++);
     TextureArray->SourceTextures.Add(JAFGInstance->Grass);
     VoxelSubsystem->VoxelMasks[GrassVoxelIdx].AddTextureIndex(ENormalLookup::Default, TextureIndex++);
-    
+
     // https://forums.unrealengine.com/t/cant-make-a-a-texture-array-at-runtime/157889/2
-    
+
     TextureArray->UpdateResource();
     TextureArray->UpdateSourceFromSourceTextures();
 
@@ -80,6 +80,6 @@ void UMaterialSubsystem::InitializeMaterials(void)
     this->MDynamicFloraBlendOpaque->SetTextureParameterValue("TexArr", TextureArray);
 
     UE_LOG(LogTemp, Log, TEXT("UMaterialSubsystem::InitializeMaterials: Texture array size: %d"), TextureArray->SourceTextures.Num());
-    
+
     return;
 }

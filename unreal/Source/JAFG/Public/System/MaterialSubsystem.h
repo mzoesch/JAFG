@@ -12,10 +12,10 @@ namespace ETextureGroup
 
 enum Type : int8
 {
-	Core = -1,
-	Opaque,
-	FullBlendOpaque,
-	FloraBlendOpaque,
+    Core = -1,
+    Opaque,
+    FullBlendOpaque,
+    FloraBlendOpaque,
 };
 
 }
@@ -23,26 +23,26 @@ enum Type : int8
 UCLASS(NotBlueprintable)
 class JAFG_API UMaterialSubsystem : public UGameInstanceSubsystem
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
 
-	inline static constexpr int TextureArrayWidthHorizontal { 16 };
-	inline static constexpr int TextureArrayWidthVertical   { 16 };
-	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Materials", meta = (ToolTip = "Automatically set by the subsystem."))
-	TObjectPtr<UMaterialInstanceDynamic> MDynamicOpaque;
+    inline static constexpr int TextureArrayWidthHorizontal { 16 };
+    inline static constexpr int TextureArrayWidthVertical   { 16 };
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Materials", meta = (ToolTip = "Automatically set by the subsystem."))
-	TObjectPtr<UMaterialInstanceDynamic> MDynamicFullBlendOpaque;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Materials", meta = (ToolTip = "Automatically set by the subsystem."))
+    TObjectPtr<UMaterialInstanceDynamic> MDynamicOpaque;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Materials", meta = (ToolTip = "Automatically set by the subsystem."))
-	TObjectPtr<UMaterialInstanceDynamic> MDynamicFloraBlendOpaque;
-	
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-	virtual void Deinitialize(void) override;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Materials", meta = (ToolTip = "Automatically set by the subsystem."))
+    TObjectPtr<UMaterialInstanceDynamic> MDynamicFullBlendOpaque;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Materials", meta = (ToolTip = "Automatically set by the subsystem."))
+    TObjectPtr<UMaterialInstanceDynamic> MDynamicFloraBlendOpaque;
+
+    virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+    virtual void Deinitialize(void) override;
 
 private:
-	
-	void InitializeMaterials(void);
+
+    void InitializeMaterials(void);
 };

@@ -10,5 +10,5 @@
 UCLASS()
 class JAFG_API AMenuPlayerController : public AJAFGPlayerController
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 };

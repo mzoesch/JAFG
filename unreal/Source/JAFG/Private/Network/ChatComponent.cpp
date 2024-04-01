@@ -68,5 +68,5 @@ void UChatComponent::QueueMessage_ServerRPC_Implementation(const FString& Messag
 void UChatComponent::AddMessageToChat_ClientRPC_Implementation(const FString& Message)
 {
     Cast<AWorldHUD>(this->GetWorld()->GetFirstPlayerController()->GetHUD())->AddMessageToChat(Message);
-    
+
 }

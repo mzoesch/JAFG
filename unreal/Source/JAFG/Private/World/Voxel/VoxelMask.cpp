@@ -5,73 +5,74 @@
 #include "World/Voxel/CommonVoxels.h"
 
 const FVoxelMask FVoxelMask::Null = FVoxelMask(TEXT("COMMON"), TEXT("NullVoxel"), ETextureGroup::Core);
-const FVoxelMask FVoxelMask::Air  = FVoxelMask(TEXT("COMMON"), TEXT("AirVoxel"), ETextureGroup::Core);
+const FVoxelMask FVoxelMask::Air  = FVoxelMask(TEXT("COMMON"), TEXT("AirVoxel"),  ETextureGroup::Core);
 
 FVoxelMask::FVoxelMask(const FString& NameSpace, const FString& Name, const ETextureGroup::Type TextureGroup)
 {
-	this->NameSpace = NameSpace;
-	this->Name      = Name;
+    this->NameSpace = NameSpace;
+    this->Name      = Name;
 
-	this->TextureGroups.Empty();
-	this->TextureGroups.Add(FTextureGroup(ENormalLookup::Default, TextureGroup));
+    this->TextureGroups.Empty();
+    this->TextureGroups.Add(FTextureGroup(ENormalLookup::Default, TextureGroup));
 
-	this->TextureIndices.Empty();
+    this->TextureIndices.Empty();
 }
 
-FVoxelMask::FVoxelMask(const FString& NameSpace, const FString& Name, const TMap<ENormalLookup::Type, ETextureGroup::Type>& TextureGroup)
+FVoxelMask::FVoxelMask(const FString& NameSpace, const FString& Name,
+                       const TMap<ENormalLookup::Type, ETextureGroup::Type>& TextureGroup)
 {
-	this->NameSpace = NameSpace;
-	this->Name      = Name;
+    this->NameSpace = NameSpace;
+    this->Name      = Name;
 
-	this->TextureGroups.Empty();
-	const ETextureGroup::Type DefaultGroup = TextureGroup.FindChecked(ENormalLookup::Default);
-	for (const TPair<ENormalLookup::Type, ETextureGroup::Type>& Pair : TextureGroup)
-	{
-		this->TextureGroups.Add(FTextureGroup(Pair.Key, Pair.Value));
-	}
-	this->TextureGroups.Add(FTextureGroup(ENormalLookup::Default, DefaultGroup));
+    this->TextureGroups.Empty();
+    const ETextureGroup::Type DefaultGroup = TextureGroup.FindChecked(ENormalLookup::Default);
+    for (const TPair<ENormalLookup::Type, ETextureGroup::Type>& Pair : TextureGroup)
+    {
+        this->TextureGroups.Add(FTextureGroup(Pair.Key, Pair.Value));
+    }
+    this->TextureGroups.Add(FTextureGroup(ENormalLookup::Default, DefaultGroup));
 
-	this->TextureIndices.Empty();
+    this->TextureIndices.Empty();
 }
 
 FVoxelMask::FTextureGroup::FTextureGroup(const ENormalLookup::Type Normal, const ETextureGroup::Type TextureGroup)
 {
-	this->Normal       = Normal;
-	this->TextureGroup = TextureGroup;
+    this->Normal       = Normal;
+    this->TextureGroup = TextureGroup;
 }
 
 FVoxelMask::FTextureIndex::FTextureIndex(const ENormalLookup::Type Normal, const int32 TextureIndex)
 {
-	this->Normal       = Normal;
-	this->TextureIndex = TextureIndex;
+    this->Normal = Normal;
+    this->TextureIndex = TextureIndex;
 }
 
 ETextureGroup::Type FVoxelMask::GetTextureGroup(const FVector& Normal) const
 {
-	const ENormalLookup::Type NormalLookup = ENormalLookup::FromVector(Normal);
+    const ENormalLookup::Type NormalLookup = ENormalLookup::FromVector(Normal);
 
-	for (const FTextureGroup& TextureGroup : this->TextureGroups)
-	{
-		if (TextureGroup.Normal == NormalLookup)
-		{
-			return TextureGroup.TextureGroup;
-		}
-	}
+    for (const FTextureGroup& TextureGroup : this->TextureGroups)
+    {
+        if (TextureGroup.Normal == NormalLookup)
+        {
+            return TextureGroup.TextureGroup;
+        }
+    }
 
-	return this->TextureGroups[this->TextureGroups.Num() - 1].TextureGroup;
+    return this->TextureGroups[this->TextureGroups.Num() - 1].TextureGroup;
 }
 
 int32 FVoxelMask::GetTextureIndex(const FVector& Normal) const
 {
-	const ENormalLookup::Type NormalLookup = ENormalLookup::FromVector(Normal);
+    const ENormalLookup::Type NormalLookup = ENormalLookup::FromVector(Normal);
 
-	for (const FTextureIndex& TextureIndex : this->TextureIndices)
-	{
-		if (TextureIndex.Normal == NormalLookup)
-		{
-			return TextureIndex.TextureIndex;
-		}
-	}
+    for (const FTextureIndex& TextureIndex : this->TextureIndices)
+    {
+        if (TextureIndex.Normal == NormalLookup)
+        {
+            return TextureIndex.TextureIndex;
+        }
+    }
 
-	return this->TextureIndices[this->TextureIndices.Num() - 1].TextureIndex;
+    return this->TextureIndices[this->TextureIndices.Num() - 1].TextureIndex;
 }
