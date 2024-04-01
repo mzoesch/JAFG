@@ -37,15 +37,6 @@ private:
 public:
 	
 	FORCEINLINE auto GetCommonVoxelNum(void) const -> int32 { return this->CommonVoxelNum; }
-	FORCEINLINE auto GetTextureIndex(const int32 Voxel, const FVector& Normal) const -> int32
-	{
-		if (Voxel < 0 || Voxel >= this->VoxelMasks.Num())
-		{
-			UE_LOG(LogTemp, Error, TEXT("Voxel index out of bounds: %d"), Voxel);
-			return 0;
-		}
-		
-		return this->VoxelMasks[Voxel].GetTextureIndex(Normal);
-	}
+	FORCEINLINE auto GetTextureIndex(const int32 Voxel, const FVector& Normal) const -> int32 { return this->VoxelMasks[Voxel].GetTextureIndex(Normal); }
 	FORCEINLINE auto GetTextureGroup(const int32 Voxel, const FVector& Vector) const -> ETextureGroup::Type { return this->VoxelMasks[Voxel].GetTextureGroup(Vector); }
 };

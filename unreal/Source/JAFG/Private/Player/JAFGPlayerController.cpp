@@ -43,16 +43,3 @@ void AJAFGPlayerController::ShowMouseCursor(const bool bShow, const bool bCenter
 
     return;
 }
-
-void AJAFGPlayerController::SetInitialChunkDataForClientAsync(ACommonChunk* TargetChunk)
-{
-    FInitialChunkData Data = TargetChunk->MakeInitialChunkData();
-
-    UE_LOG(LogTemp, Warning, TEXT("AJAFGPlayerController::SetInitialChunkDataForClientAsync: Called. Data: %d."), Data.RawVoxels.Num())
-    this->SetInitialChunkDataForClient_ClientRPC(Data);
-}
-
-void AJAFGPlayerController::SetInitialChunkDataForClient_ClientRPC_Implementation(const FInitialChunkData& InitialChunkData)
-{
-    UE_LOG(LogTemp, Warning, TEXT("AJAFGPlayerController::SetInitialChunkDataForClient_ClientRPC_Implementation: Called."))
-}

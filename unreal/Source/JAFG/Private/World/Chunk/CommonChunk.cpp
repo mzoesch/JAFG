@@ -5,9 +5,7 @@
 #include "ProceduralMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
-#include "Network/BackgroundChunkUpdaterComponent.h"
 #include "Network/NetworkStatics.h"
-#include "Player/JAFGPlayerController.h"
 #include "System/MaterialSubsystem.h"
 #include "World/WorldGeneratorInfo.h"
 #include "World/Chunk/ChunkMeshData.h"
@@ -32,38 +30,14 @@ void ACommonChunk::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	/*
+	 * Can we optimise this?
+	 */
+	
 	FDoRepLifetimeParams SharedParams;
 	SharedParams.bIsPushBased = true;
 
 	DOREPLIFETIME_WITH_PARAMS_FAST(ACommonChunk, RawVoxels, SharedParams);
-	
-}
-
-void ACommonChunk::PreClientBeginPlay()
-{
-	if (bInitializedClientBeginPlay == true)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::PreClientBeginPlay: Already initialized."))
-		return;
-	}
-
-	if (UNetworkStatics::IsSafeServer(this))
-	{
-		UE_LOG(LogTemp, Error, TEXT("ACommonChunk::PreClientBeginPlay: Called on a server instance. This is disallowed."))
-		return;
-	}
-	
-	this->VoxelSubsystem = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>();
-	check( this->VoxelSubsystem )
-	if (this->VoxelSubsystem == nullptr)
-	{
-		UE_LOG(LogTemp, Fatal, TEXT("ACommonChunk::PreClientBeginPlay: Could not get Voxel Subsystem."))
-		return;
-	}
-
-	this->Initialize();
-
-	this->bInitializedClientBeginPlay = true;
 
 	return;
 }
@@ -72,8 +46,6 @@ void ACommonChunk::BeginPlay(void)
 {
 	Super::BeginPlay();
 
-	UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::BeginPlay: Called."))
-	
 	if (UNetworkStatics::IsSafeStandalone(this) || UNetworkStatics::IsSafeServer(this))
 	{
 		this->WorldGeneratorInfo = CastChecked<AWorldGeneratorInfo>(UGameplayStatics::GetActorOfClass(this, AWorldGeneratorInfo::StaticClass()));
@@ -92,46 +64,26 @@ void ACommonChunk::BeginPlay(void)
 	if (UNetworkStatics::IsSafeServer(this))
 	{
 		this->GenerateVoxels();
+		
 		/* We here should of course only do convex meshing in the future. */
 		this->GenerateProceduralMesh();
 		this->ApplyProceduralMesh();
-	}
-	// else
-	// {
-	// 	this->PreventRawDataMemoryShrinking();
-	//
-	// 	if (this->GetWorld() == nullptr)
-	// 	{
-	// 		UE_LOG(LogTemp, Error, TEXT("ACommonChunk::BeginPlay: Could not get World."))
-	// 		return;
-	// 	}
-	//
-	// 	if (this->GetWorld()->GetFirstPlayerController() == nullptr)
-	// 	{
-	// 		UE_LOG(LogTemp, Error, TEXT("ACommonChunk::BeginPlay: Could not get First Player Controller."))
-	// 		return;
-	// 	}
-	//
-	// 	if (this->GetWorld()->GetFirstPlayerController()->GetPawn() == nullptr)
-	// 	{
-	// 		UE_LOG(LogTemp, Error, TEXT("ACommonChunk::BeginPlay: Could not get Pawn."))
-	// 		return;
-	// 	}
-	//
-	// 	this->BCHC = Cast<UBackgroundChunkUpdaterComponent>(this->GetWorld()->GetFirstPlayerController()->GetPawn()->GetComponentByClass(UBackgroundChunkUpdaterComponent::StaticClass()));
-	//
-	// 	if (this->BCHC == nullptr)
-	// 	{
-	// 		UE_LOG(LogTemp, Error, TEXT("ACommonChunk::BeginPlay: Could not get Background Chunk Updater Component."))
-	// 		return;
-	// 	}
-	// 	
-	// 	// this->FillDataFromAuthorityAsync();
-	// }
 
-	// /* We here should of course only do convex meshing in the future. */
-	// this->GenerateProceduralMesh();
-	// this->ApplyProceduralMesh();
+		return;
+	}
+
+	/*
+	 * Voxels are generated on the server and replicated to the client.
+	 * We do not have to care about that here.
+	 */
+
+	this->bInitializedClientBeginPlay = true;
+	
+	/* Just a safety net. */
+	this->ClearMesh();
+
+	this->GenerateProceduralMesh();
+	this->ApplyProceduralMesh();
 
 	return;
 }
@@ -167,30 +119,17 @@ void ACommonChunk::GenerateVoxels(void)
 
 void ACommonChunk::OnRep_RawVoxels(void)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::OnRep_RawVoxels: Called."))
-
 	if (this->bInitializedClientBeginPlay == false)
 	{
-		this->PreClientBeginPlay();
+		UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::OnRep_RawVoxels: Discarding Raw Voxels replication post behavior as this chunk has not yet be marked as initialized."))
+		return;
 	}
-	
-	FString ArrayLog;
-	for (int i = 0; i < this->RawVoxels.Num(); ++i)
-	{
-		ArrayLog.Append(FString::Printf(TEXT("%d "), this->RawVoxels[i]));
-	}
-	UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::OnRep_RawVoxels: RawVoxels: %s"), *ArrayLog)
 
-	UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::OnRep_RawVoxels: Num: %d."), this->RawVoxels.Num())
-	
-	UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::OnRep_RawVoxels: Clearing."))
 	this->ClearMesh();
-
-	UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::OnRep_RawVoxels: Generating."))
 	this->GenerateProceduralMesh();
-
-	UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::OnRep_RawVoxels: Applying."))
 	this->ApplyProceduralMesh();
+
+	return;
 }
 
 void ACommonChunk::ApplyProceduralMesh(void) const
@@ -251,45 +190,6 @@ void ACommonChunk::ClearMesh()
 	}
 
 	return;
-}
-
-void ACommonChunk::FillDataFromAuthorityAsync()
-{
-	this->BCHC->FillDataFromAuthorityAsync(this);
-}
-
-FInitialChunkData ACommonChunk::MakeInitialChunkData() const
-{
-	FInitialChunkData Data;
-
-	for (int i = 0; i < this->RawVoxels.Num(); ++i)
-	{
-		Data.RawVoxels.Add(this->RawVoxels[i]);
-	}
-	
-	return Data;
-}
-
-void ACommonChunk::PreventRawDataMemoryShrinking(void)
-{
-	if (UNetworkStatics::IsSafeServer(this))
-	{
-		UE_LOG(LogTemp, Fatal, TEXT("ACommonChunk::PreventRawDataMemoryShrinking: Disallowed while functioning as a server."))
-		return;
-	}
-	
-	constexpr int StoneVoxel { 2 };
-
-	for (int X = 0; X < AWorldGeneratorInfo::ChunkSize; ++X)
-	{
-		for (int Y = 0; Y < AWorldGeneratorInfo::ChunkSize; ++Y)
-		{
-			for (int Z = 0; Z < AWorldGeneratorInfo::ChunkSize; ++Z)
-			{
-				this->RawVoxels[ACommonChunk::GetVoxelIndex(FIntVector(X, Y, Z))] = StoneVoxel;
-			}
-		}
-	}
 }
 
 void ACommonChunk::GenerateSuperFlatWorld()

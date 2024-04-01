@@ -7,7 +7,6 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "Network/BackgroundChunkUpdaterComponent.h"
 #include "Network/ChatComponent.h"
 #include "UI/World/WorldHUD.h"
 #include "World/WorldPlayerController.h"
@@ -26,7 +25,6 @@ IMCFoot(nullptr), IMCMenu(nullptr), IAJump(nullptr), IALook(nullptr), IAMove(nul
     this->GetCapsuleComponent()->InitCapsuleSize(40.0f, 90.0f);
 
     this->ChatComponent = CreateDefaultSubobject<UChatComponent>(TEXT("ChatComponent"));
-    this->BackgroundChunkUpdaterComponent = CreateDefaultSubobject<UBackgroundChunkUpdaterComponent>(TEXT("BackgroundChunkUpdaterComponent"));
     
     this->FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
     this->FirstPersonCameraComponent->SetupAttachment(this->GetCapsuleComponent());

@@ -10,18 +10,16 @@
 
 #include "CommonChunk.generated.h"
 
-struct FInitialChunkData;
 class AJAFGPlayerController;
-class UBackgroundChunkUpdaterComponent;
 class UProceduralMeshComponent;
 struct FChunkMeshData;
+struct FInitialChunkData;
 
 UCLASS(Abstract, NotBlueprintable)
 class JAFG_API ACommonChunk : public AActor
 {
 	GENERATED_BODY()
 
-	friend UBackgroundChunkUpdaterComponent;
 	friend AJAFGPlayerController;
 	
 public:
@@ -30,12 +28,13 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 protected:
-	
+
 	/**
-	 * Must only be called on clients never on a server or standalone.
+	 * Variables may not have been initialized yet on the client.
+	 * This variable must never be true on any server type.
 	 */
-	void PreClientBeginPlay(void);
 	bool bInitializedClientBeginPlay = false;
+	
 	virtual void BeginPlay(void) override;
 
 private:
@@ -56,29 +55,6 @@ private:
 	void ApplyProceduralMesh(void) const;
 	void ClearMesh(void);
 	
-	void FillDataFromAuthorityAsync(void);
-	FInitialChunkData MakeInitialChunkData(void) const;
-	
-	// /**
-	//  * Called from a client to get the initial voxel data from the server that was generated on it.
-	//  */
-	// UFUNCTION(Server, Reliable)
-	// void FillDataWithAuthorityData_ServerRPC();
-	// /**
-	//  * Called from the server to set minimal initial voxel data on the client. So that the chunk can be generated
-	//  * on the client.
-	//  */
-	// UFUNCTION(Client, Reliable)
-	// void FillDataWithAuthorityData_ClientRPC(const FInitialMinimalVoxelData& InitialMinimalVoxelData);
-	
-	/**
-	 * Must be called on the client during the Begin Play phase as some data may shrink after initialization on the
-	 * client if it is not directly used.
-	 * This is kind of a workaround and later on we should look into the proper way to handle this. Disallow shrinking
-	 * in the first place.
-	 */
-	void PreventRawDataMemoryShrinking(void);
-	
 protected:
 
 	UPROPERTY()
@@ -88,11 +64,21 @@ protected:
 	// Raw Data
 	//////////////////////////////////////////////////////////////////////////
 
-	// ftcplistener 
-	
-	/* Can we change the int? */
+	/**
+	 * Currently using the unreal replication system. But is this the best way? We may run into performance issues very
+	 * fast in the future. We may need to implement our own replication system.
+	 * Besides the main problem is that we are limited to a maximum Bunch size of 2^16 = 65.536 bytes. If we want to
+	 * have int32 arrays with a size of (32x32x32) * 4 bytes = 32.768 * 4 bytes = 131.072 bytes, we are already over
+	 * the limit.
+	 *
+	 * Have a look at PushMode.h for more information.
+	 *
+	 * Maybe we can take a look at TTcpListener later on.
+	 * 
+	 * Can we change the int type?
+	 */
 	UPROPERTY(ReplicatedUsing=OnRep_RawVoxels)
-	TArray<int> RawVoxels;
+	TArray<int32> RawVoxels;
 
 	/* It is up to the client on how to feed these arrays. */
 	TArray<FChunkMeshData> MeshData;
@@ -106,8 +92,6 @@ protected:
  	TObjectPtr<AWorldGeneratorInfo> WorldGeneratorInfo;
 	UPROPERTY()
 	TObjectPtr<UVoxelSubsystem> VoxelSubsystem;
-	UPROPERTY()
-	TObjectPtr<UBackgroundChunkUpdaterComponent> BCHC;
 	
     /** TODO Is this correct?
      * Should be actually an FIntVector.

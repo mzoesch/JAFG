@@ -32,11 +32,17 @@ FORCEINLINE FString LexToString(const EWorldGenerationType Type)
 	switch (Type)
 	{
 	case EWorldGenerationType::Default:
-	{ return FString(TEXT("Default")); }
+	{
+		return FString(TEXT("Default"));
+	}
 	case EWorldGenerationType::SuperFlat:
-	{ return FString(TEXT("SuperFlat")); }
+	{
+		return FString(TEXT("SuperFlat"));
+	}
 	default:
-	{ return FString(TEXT("Unknown")); }
+	{
+		return FString(TEXT("Unknown"));
+	}
 	}
 }
 
@@ -76,7 +82,12 @@ private:
 
 public:
 	
+	/**
+	 * Do not increase this value beyond 16 for now. As we would breach the Bunch size limit of 2^16 = 65.536 bytes.
+	 * See CommonChunk.h for more information.
+	 */
 	inline static constexpr int   ChunkSize { 16 };
+	
 	inline static constexpr float JToUScale { 100.0f };
 	inline static constexpr float UToJScale { 1.0f / AWorldGeneratorInfo::JToUScale };
 	
