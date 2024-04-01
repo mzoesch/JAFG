@@ -4,6 +4,9 @@
 
 #include "ProceduralMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Network/BackgroundChunkUpdaterComponent.h"
+#include "Network/NetworkStatics.h"
+#include "Player/JAFGPlayerController.h"
 #include "System/MaterialSubsystem.h"
 #include "World/WorldGeneratorInfo.h"
 #include "World/Chunk/ChunkMeshData.h"
@@ -13,6 +16,8 @@ ACommonChunk::ACommonChunk(const FObjectInitializer& ObjectInitializer) : Super(
 {
 	this->PrimaryActorTick.bCanEverTick = false;
 
+	this->bReplicates = true;
+	
 	this->ProceduralMeshComponent = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("ProceduralMeshComponent"));
 	this->SetRootComponent(this->ProceduralMeshComponent);
 	// We can do this for far away chunks maybe?
@@ -25,16 +30,60 @@ ACommonChunk::ACommonChunk(const FObjectInitializer& ObjectInitializer) : Super(
 void ACommonChunk::BeginPlay(void)
 {
 	Super::BeginPlay();
+	
+	if (UNetworkStatics::IsSafeStandalone(this) || UNetworkStatics::IsSafeServer(this))
+	{
+		this->WorldGeneratorInfo = CastChecked<AWorldGeneratorInfo>(UGameplayStatics::GetActorOfClass(this, AWorldGeneratorInfo::StaticClass()));
+	}
 
-   /*
-    * To access some faster generation we might want to pass this as a reference by the generator.
-    * There might be over a 100 calls per tick to this method when the generation is generation new chunks.
-    */
-	this->WorldGeneratorInfo = CastChecked<AWorldGeneratorInfo>(UGameplayStatics::GetActorOfClass(this, AWorldGeneratorInfo::StaticClass()));
-	this->VoxelSubsystem = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>(); check( this->VoxelSubsystem )
+	this->VoxelSubsystem = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>();
+	check( this->VoxelSubsystem )
+	if (this->VoxelSubsystem == nullptr)
+	{
+		UE_LOG(LogTemp, Fatal, TEXT("ACommonChunk::BeginPlay: Could not get Voxel Subsystem."))
+		return;
+	}
 	
 	this->Initialize();
-	this->GenerateVoxels();
+
+	if (UNetworkStatics::IsSafeServer(this))
+	{
+		this->GenerateVoxels();
+	}
+	else
+	{
+		this->PreventRawDataMemoryShrinking();
+
+		if (this->GetWorld() == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("ACommonChunk::BeginPlay: Could not get World."))
+			return;
+		}
+
+		if (this->GetWorld()->GetFirstPlayerController() == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("ACommonChunk::BeginPlay: Could not get First Player Controller."))
+			return;
+		}
+
+		if (this->GetWorld()->GetFirstPlayerController()->GetPawn() == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("ACommonChunk::BeginPlay: Could not get Pawn."))
+			return;
+		}
+
+		this->BCHC = Cast<UBackgroundChunkUpdaterComponent>(this->GetWorld()->GetFirstPlayerController()->GetPawn()->GetComponentByClass(UBackgroundChunkUpdaterComponent::StaticClass()));
+
+		if (this->BCHC == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("ACommonChunk::BeginPlay: Could not get Background Chunk Updater Component."))
+			return;
+		}
+		
+		this->FillDataFromAuthorityAsync();
+	}
+
+	/* We here should of course only do convex meshing in the future. */
 	this->GenerateProceduralMesh();
 	this->ApplyProceduralMesh();
 
@@ -64,7 +113,7 @@ void ACommonChunk::GenerateVoxels(void)
 	{
 	}
 	}
-
+	
 	UE_LOG(LogTemp, Error, TEXT("ACommonChunk::GenerateVoxels: World Generation of type %s not implemented."), *WorldGeneratorInfo::LexToString(this->WorldGeneratorInfo->WorldGenerationType));
 
 	return;
@@ -76,14 +125,12 @@ void ACommonChunk::ApplyProceduralMesh(void) const
 
 	if (MaterialSubsystem == nullptr)
 	{
-		UE_LOG(LogTemp, Fatal, TEXT("ACommonChunk::ApplyProceduralMesh: Could not get UMaterialSubsystem."))
+		UE_LOG(LogTemp, Fatal, TEXT("ACommonChunk::ApplyProceduralMesh: Could not get Material Subsystem."))
 		return;
 	}
 
 	for (int i = 0; i < this->MeshData.Num(); ++i)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::ApplyProceduralMesh: Applying procedural mesh data to procedural mesh component. Sweep: %d."), i)
-
 		if (i == ETextureGroup::Opaque)
 		{
 			this->ProceduralMeshComponent->SetMaterial(ETextureGroup::Opaque, MaterialSubsystem->MDynamicOpaque);
@@ -112,6 +159,45 @@ void ACommonChunk::ApplyProceduralMesh(void) const
 			this->MeshData[i].Tangents,
 			true
 		);
+	}
+}
+
+void ACommonChunk::FillDataFromAuthorityAsync()
+{
+	this->BCHC->FillDataFromAuthorityAsync(this);
+}
+
+FInitialChunkData ACommonChunk::MakeInitialChunkData() const
+{
+	FInitialChunkData Data;
+
+	for (int i = 0; i < this->RawVoxels.Num(); ++i)
+	{
+		Data.RawVoxels.Add(this->RawVoxels[i]);
+	}
+	
+	return Data;
+}
+
+void ACommonChunk::PreventRawDataMemoryShrinking(void)
+{
+	if (UNetworkStatics::IsSafeServer(this))
+	{
+		UE_LOG(LogTemp, Fatal, TEXT("ACommonChunk::PreventRawDataMemoryShrinking: Disallowed while functioning as a server."))
+		return;
+	}
+	
+	constexpr int StoneVoxel { 2 };
+
+	for (int X = 0; X < AWorldGeneratorInfo::ChunkSize; ++X)
+	{
+		for (int Y = 0; Y < AWorldGeneratorInfo::ChunkSize; ++Y)
+		{
+			for (int Z = 0; Z < AWorldGeneratorInfo::ChunkSize; ++Z)
+			{
+				this->RawVoxels[ACommonChunk::GetVoxelIndex(FIntVector(X, Y, Z))] = StoneVoxel;
+			}
+		}
 	}
 }
 

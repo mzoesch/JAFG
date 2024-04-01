@@ -7,7 +7,7 @@
 
 #include "ChatComponent.generated.h"
 
-UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
+UCLASS(ClassGroup=(Custom))
 class JAFG_API UChatComponent : public UActorComponent
 {
     GENERATED_BODY()

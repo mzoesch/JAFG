@@ -2,6 +2,8 @@
 
 #include "Player/JAFGPlayerController.h"
 
+#include "World/Chunk/CommonChunk.h"
+
 AJAFGPlayerController::AJAFGPlayerController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
     return;
@@ -40,4 +42,17 @@ void AJAFGPlayerController::ShowMouseCursor(const bool bShow, const bool bCenter
     this->SetInputMode(FInputModeGameOnly());
 
     return;
+}
+
+void AJAFGPlayerController::SetInitialChunkDataForClientAsync(ACommonChunk* TargetChunk)
+{
+    FInitialChunkData Data = TargetChunk->MakeInitialChunkData();
+    Data.RawVoxels.byte
+    UE_LOG(LogTemp, Warning, TEXT("AJAFGPlayerController::SetInitialChunkDataForClientAsync: Called. Data: %d."), Data.RawVoxels.Num())
+    this->SetInitialChunkDataForClient_ClientRPC(Data);
+}
+
+void AJAFGPlayerController::SetInitialChunkDataForClient_ClientRPC_Implementation(const FInitialChunkData& InitialChunkData)
+{
+    UE_LOG(LogTemp, Warning, TEXT("AJAFGPlayerController::SetInitialChunkDataForClient_ClientRPC_Implementation: Called."))
 }

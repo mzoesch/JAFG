@@ -7,6 +7,7 @@
 
 #include "WorldCharacter.generated.h"
 
+class UBackgroundChunkUpdaterComponent;
 class UChatComponent;
 class UChatMenu;
 class UEscapeMenu;
@@ -33,6 +34,9 @@ private:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     UChatComponent* ChatComponent;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    UBackgroundChunkUpdaterComponent* BackgroundChunkUpdaterComponent;
     
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     UCameraComponent* FirstPersonCameraComponent;

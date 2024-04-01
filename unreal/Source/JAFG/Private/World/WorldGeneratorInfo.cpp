@@ -2,6 +2,8 @@
 
 #include "World/WorldGeneratorInfo.h"
 
+#include "Kismet/GameplayStatics.h"
+#include "Network/NetworkStatics.h"
 #include "World/Chunk/GreedyChunk.h"
 
 AWorldGeneratorInfo::AWorldGeneratorInfo(const FObjectInitializer& ObjectInitializer)
@@ -27,17 +29,23 @@ void AWorldGeneratorInfo::BeginPlay(void)
 	this->FullyLoadedChunks.Empty();
 	this->ChunkGenerationQueue.Empty();
 
+	if (UNetworkStatics::IsSafeClient(this))
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWorldGeneratorInfo::BeginPlay: Running in client mode. Discarding chunk generation."))
+		return;
+	}
+	
 	this->GenerateWorldAsync();
 
 	UE_LOG(LogTemp, Warning, TEXT("AWorldGeneratorInfo::BeginPlay: Enqueued all chunks. Predicted chunks in queue: %d"), this->MaxSpiralPoints * (this->ChunksAboveZero + 1))
-
+	
 	return;
 }
 
 void AWorldGeneratorInfo::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	
 	if (this->ChunkGenerationQueue.IsEmpty())
 	{
 		return;
@@ -48,7 +56,7 @@ void AWorldGeneratorInfo::Tick(const float DeltaTime)
 		FIntVector Key;
 		if (this->ChunkGenerationQueue.Dequeue(Key) == false)
 		{
-			UE_LOG(LogTemp, Log, TEXT("AWorldGeneratorInfo::Tick(): Dequeue failed. World generation is complete for this tick."))
+			UE_LOG(LogTemp, Warning, TEXT("AWorldGeneratorInfo::Tick(): Dequeue failed. World generation is complete for this tick."))
 			return;
 		}
 

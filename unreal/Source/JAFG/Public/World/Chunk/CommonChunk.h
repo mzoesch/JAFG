@@ -10,14 +10,20 @@
 
 #include "CommonChunk.generated.h"
 
-struct FChunkMeshData;
+struct FInitialChunkData;
+class AJAFGPlayerController;
+class UBackgroundChunkUpdaterComponent;
 class UProceduralMeshComponent;
+struct FChunkMeshData;
 
 UCLASS(Abstract, NotBlueprintable)
 class JAFG_API ACommonChunk : public AActor
 {
 	GENERATED_BODY()
 
+	friend UBackgroundChunkUpdaterComponent;
+	friend AJAFGPlayerController;
+	
 public:
 
 	explicit ACommonChunk(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
@@ -32,14 +38,41 @@ private:
 
 	void Initialize(void);
 	void GenerateVoxels(void);
+
 protected: /** The derived classes should implement this method. */
+
 	virtual void GenerateProceduralMesh(void) PURE_VIRTUAL(ACommonChunk::GenerateProceduralMesh)
+
 private:
+
 	void ApplyProceduralMesh(void) const;
 	FORCEINLINE void ClearMesh(void)
 	{
 		/* TODO We might want to use arr.empty? */
 	}
+
+	void FillDataFromAuthorityAsync(void);
+	FInitialChunkData MakeInitialChunkData(void) const;
+	
+	// /**
+	//  * Called from a client to get the initial voxel data from the server that was generated on it.
+	//  */
+	// UFUNCTION(Server, Reliable)
+	// void FillDataWithAuthorityData_ServerRPC();
+	// /**
+	//  * Called from the server to set minimal initial voxel data on the client. So that the chunk can be generated
+	//  * on the client.
+	//  */
+	// UFUNCTION(Client, Reliable)
+	// void FillDataWithAuthorityData_ClientRPC(const FInitialMinimalVoxelData& InitialMinimalVoxelData);
+	
+	/**
+	 * Must be called on the client during the Begin Play phase as some data may shrink after initialization on the
+	 * client if it is not directly used.
+	 * This is kind of a workaround and later on we should look into the proper way to handle this. Disallow shrinking
+	 * in the first place.
+	 */
+	void PreventRawDataMemoryShrinking(void);
 	
 protected:
 
@@ -62,8 +95,10 @@ protected:
 	UPROPERTY()
  	TObjectPtr<AWorldGeneratorInfo> WorldGeneratorInfo;
 	UPROPERTY()
-	TObjectPtr<UVoxelSubsystem>     VoxelSubsystem;
-
+	TObjectPtr<UVoxelSubsystem> VoxelSubsystem;
+	UPROPERTY()
+	TObjectPtr<UBackgroundChunkUpdaterComponent> BCHC;
+	
     /** TODO Is this correct?
      * Should be actually an FIntVector.
      * But because we often calculate with floats we use the normal
