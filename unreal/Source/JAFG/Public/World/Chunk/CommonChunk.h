@@ -76,7 +76,7 @@ protected:
      * Possible solutions:
      *
      * Custom UDP TCP socket system?
-     * Maybe we can take a look at TTcpListener later on.
+     * Maybe we can take a look at FTcpListener later on.
      * For anyone else who finds this, I’ve concluded that using RPC/Replication to send large amounts of data is not preferable so I’m gonna try using the built in UDP Socket system to send this information
      * FFastArraySerializer
      *

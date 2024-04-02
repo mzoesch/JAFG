@@ -8,7 +8,7 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Network/ChatComponent.h"
-#include "Network/NetworkStatics.h"
+#include "System/HyperlaneComponent.h"
 #include "UI/World/WorldHUD.h"
 #include "World/WorldPlayerController.h"
 #include "World/Chunk/CommonChunk.h"
@@ -27,6 +27,7 @@ IMCFoot(nullptr), IMCMenu(nullptr), IAJump(nullptr), IALook(nullptr), IAMove(nul
     this->GetCapsuleComponent()->InitCapsuleSize(40.0f, 90.0f);
 
     this->ChatComponent = CreateDefaultSubobject<UChatComponent>(TEXT("ChatComponent"));
+    this->HyperlaneComponent = CreateDefaultSubobject<UHyperlaneComponent>(TEXT("HyperlaneComponent"));
 
     this->FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
     this->FirstPersonCameraComponent->SetupAttachment(this->GetCapsuleComponent());

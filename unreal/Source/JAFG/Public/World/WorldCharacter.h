@@ -9,6 +9,7 @@
 
 #include "WorldCharacter.generated.h"
 
+class UHyperlaneComponent;
 class UChatComponent;
 class UChatMenu;
 class UEscapeMenu;
@@ -38,6 +39,9 @@ private:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     UChatComponent* ChatComponent;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    UHyperlaneComponent* HyperlaneComponent;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     UCameraComponent* FirstPersonCameraComponent;
