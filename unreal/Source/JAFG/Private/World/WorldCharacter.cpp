@@ -8,6 +8,7 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Network/ChatComponent.h"
+#include "Network/NetworkStatics.h"
 #include "UI/World/WorldHUD.h"
 #include "World/WorldPlayerController.h"
 #include "World/Chunk/CommonChunk.h"
@@ -42,7 +43,7 @@ IMCFoot(nullptr), IMCMenu(nullptr), IAJump(nullptr), IALook(nullptr), IAMove(nul
     return;
 }
 
-void AWorldCharacter::BeginPlay()
+void AWorldCharacter::BeginPlay(void)
 {
     Super::BeginPlay();
 }
@@ -158,6 +159,64 @@ void AWorldCharacter::OnPrimary_ServerRPC_Implementation(const FInputActionValue
 
 void AWorldCharacter::OnSecondary(const FInputActionValue& Value)
 {
+    ACommonChunk*             TargetedChunk = nullptr;
+    FVector                   TargetedWorldHitLocation = FVector::ZeroVector;
+    FVector_NetQuantizeNormal TargetedWorldNormalHitLocation = FVector_NetQuantizeNormal::ZeroVector;
+    FIntVector                TargetedLocalHitVoxelLocation = FIntVector::ZeroValue;
+    this->GetTargetedVoxel(TargetedChunk, TargetedWorldHitLocation, TargetedWorldNormalHitLocation, TargetedLocalHitVoxelLocation, this->GetCharacterReach());
+
+    if (TargetedChunk == nullptr)
+    {
+        return;
+    }
+
+    FVector             WorldTargetVoxelLocation    = TargetedWorldHitLocation + TargetedWorldNormalHitLocation * 50.0f;
+    const FIntVector    LocalTargetVoxelLocation    = FIntVector(TargetedWorldNormalHitLocation + FVector(TargetedLocalHitVoxelLocation));
+    WorldTargetVoxelLocation    = FVector(WorldTargetVoxelLocation.X - FMath::Fmod(WorldTargetVoxelLocation.X, 100.0f), WorldTargetVoxelLocation.Y - FMath::Fmod(WorldTargetVoxelLocation.Y, 100.0f), WorldTargetVoxelLocation.Z - FMath::Fmod(WorldTargetVoxelLocation.Z, 100.0f));
+    /* This is kinda sketchy as it does not work around the x|y|z == 0 border. */
+    WorldTargetVoxelLocation    = FVector(WorldTargetVoxelLocation.X + 50.0f * FMath::Sign(WorldTargetVoxelLocation.X), WorldTargetVoxelLocation.Y + 50.0f * FMath::Sign(WorldTargetVoxelLocation.Y), WorldTargetVoxelLocation.Z + 50.0f * FMath::Sign(WorldTargetVoxelLocation.Z));
+
+    /* Only checking ourself currently maybe we want to do some more checks before sending the RPC. */
+    if (FVector::Dist(this->GetTorsoLocation(), WorldTargetVoxelLocation) < 100.0f)
+    {
+        return;
+    }
+
+    this->OnSecondary_ServerRPC(Value);
+
+    return;
+}
+
+void AWorldCharacter::OnSecondary_ServerRPC_Implementation(const FInputActionValue& Value)
+{
+    ACommonChunk*             TargetedChunk = nullptr;
+    FVector                   TargetedWorldHitLocation = FVector::ZeroVector;
+    FVector_NetQuantizeNormal TargetedWorldNormalHitLocation = FVector_NetQuantizeNormal::ZeroVector;
+    FIntVector                TargetedLocalHitVoxelLocation = FIntVector::ZeroValue;
+    this->GetTargetedVoxel(TargetedChunk, TargetedWorldHitLocation, TargetedWorldNormalHitLocation, TargetedLocalHitVoxelLocation, this->GetCharacterReach());
+
+    if (TargetedChunk == nullptr)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("AWorldCharacter::OnSecondary_ServerRPC: TargetedChunk is nullptr."))
+        return;
+    }
+
+    FVector             WorldTargetVoxelLocation    = TargetedWorldHitLocation + TargetedWorldNormalHitLocation * 50.0f;
+    const FIntVector    LocalTargetVoxelLocation    = FIntVector(TargetedWorldNormalHitLocation + FVector(TargetedLocalHitVoxelLocation));
+    WorldTargetVoxelLocation    = FVector(WorldTargetVoxelLocation.X - FMath::Fmod(WorldTargetVoxelLocation.X, 100.0f), WorldTargetVoxelLocation.Y - FMath::Fmod(WorldTargetVoxelLocation.Y, 100.0f), WorldTargetVoxelLocation.Z - FMath::Fmod(WorldTargetVoxelLocation.Z, 100.0f));
+    /* This is kinda sketchy as it does not work around the x|y|z == 0 border. */
+    WorldTargetVoxelLocation    = FVector(WorldTargetVoxelLocation.X + 50.0f * FMath::Sign(WorldTargetVoxelLocation.X), WorldTargetVoxelLocation.Y + 50.0f * FMath::Sign(WorldTargetVoxelLocation.Y), WorldTargetVoxelLocation.Z + 50.0f * FMath::Sign(WorldTargetVoxelLocation.Z));
+
+    /* Only checking ourself currently maybe we want to do some more checks before sending the RPC. */
+    if (FVector::Dist(this->GetTorsoLocation(), WorldTargetVoxelLocation) < 100.0f)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("AWorldCharacter::OnSecondary_ServerRPC: Distance is less than 100."))
+        return;
+    }
+
+    TargetedChunk->ModifySingleVoxel(LocalTargetVoxelLocation, /* Stone */ 2);
+
+    return;
 }
 
 /** Do NOT convert to const method, as this is a Rider IDEA false positive error. */
@@ -264,6 +323,35 @@ void AWorldCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
         EnhancedInputComponent->BindAction(this->IAToggleEscapeMenu, ETriggerEvent::Started, this, &AWorldCharacter::OnToggleEscapeMenu);
         EnhancedInputComponent->BindAction(this->IAToggleChatMenu, ETriggerEvent::Started, this, &AWorldCharacter::OnToggleChatMenu);
+    }
+
+    return;
+}
+
+void AWorldCharacter::GetTargetedVoxel(ACommonChunk*& OutChunk, FVector& OutWorldHitLocation, FVector_NetQuantizeNormal& OutWorldNormalHitLocation, FIntVector& OutLocalHitVoxelLocation, const float UnrealReach) const
+{
+    OutChunk = nullptr;
+    OutLocalHitVoxelLocation = FIntVector::ZeroValue;
+
+    const FTransform TraceStart = UNetworkStatics::IsSafeServer(this) ? this->GetFirstPersonTraceStart_DedServer() : this->GetFirstPersonTraceStart();
+    const FVector TraceEnd = TraceStart.GetLocation() + (TraceStart.GetRotation().Vector() * UnrealReach);
+
+    FCollisionQueryParams QueryParams = FCollisionQueryParams(FName(TEXT("CommonTrace")), false, this->GetOwner());
+
+    FHitResult HitResult = FHitResult(ForceInit);
+    this->GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart.GetLocation(), TraceEnd, ECollisionChannel::ECC_Visibility, QueryParams);
+
+    if (HitResult.GetActor() == nullptr)
+    {
+        return;
+    }
+
+    if ((OutChunk = Cast<ACommonChunk>(HitResult.GetActor())) != nullptr)
+    {
+        OutWorldHitLocation = HitResult.Location - HitResult.Normal;
+        OutWorldNormalHitLocation = HitResult.Normal;
+        OutLocalHitVoxelLocation = ACommonChunk::WorldToLocalVoxelLocation(OutWorldHitLocation);
+        return;
     }
 
     return;

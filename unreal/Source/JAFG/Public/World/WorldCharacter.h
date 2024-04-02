@@ -85,6 +85,8 @@ private:
     UFUNCTION(Server, Reliable)
     void OnPrimary_ServerRPC(const FInputActionValue& Value);
     void OnSecondary(const FInputActionValue& Value);
+    UFUNCTION(Server, Reliable)
+    void OnSecondary_ServerRPC(const FInputActionValue& Value);
 
     void OnToggleEscapeMenu(const FInputActionValue& Value);
     friend UEscapeMenu;
@@ -97,15 +99,37 @@ public:
 
 private:
 
+    /** The added offset to the First Person Camera Component. */
+    inline static const FVector TorsoOffset { 0.0f, 0.0f, -50.0f };
+
     /**
      * APawn#RemoteViewPitch is a uint8 and represents the pitch of the remote view replicated back to the server.
      * This method converts the pitch to degrees.
      */
-    FORCEINLINE float GetRemoteViewPitchAsDeg(void) const { return this->RemoteViewPitch * 360.0f / 255.0f; }
+    FORCEINLINE auto GetRemoteViewPitchAsDeg(void) const -> float { return this->RemoteViewPitch * 360.0f / 255.0f; }
 
+    /** Equivalent to 4 x Chunk => 4 x 16 Voxels => 64 Voxels. */
+    static constexpr float MaxPOVLineTraceLength { (AWorldGeneratorInfo::ChunkSize * 4.0f ) * AWorldGeneratorInfo::JToUScale };
     // ReSharper disable once CppMemberFunctionMayBeStatic
-    FORCEINLINE float GetCharacterReachInVoxels(void) const { return 4.5f; }
-    FORCEINLINE float GetCharacterReach(void) const { return this->GetCharacterReachInVoxels() * AWorldGeneratorInfo::JToUScale; }
+    FORCEINLINE auto GetCharacterReachInVoxels(void) const -> float { return 4.5f; }
+    FORCEINLINE auto GetCharacterReach(void) const -> float { return this->GetCharacterReachInVoxels() * AWorldGeneratorInfo::JToUScale; }
 
-    FORCEINLINE FTransform GetFirstPersonTraceStart(void) const { return this->FirstPersonCameraComponent->GetComponentTransform(); }
+    FORCEINLINE auto GetFirstPersonTraceStart(void) const -> FTransform { return this->FirstPersonCameraComponent->GetComponentTransform(); }
+    FORCEINLINE auto GetFirstPersonTraceStart_DedServer(void) const -> FTransform
+    {
+        return FTransform(
+            FQuat(FRotator(
+                this->GetRemoteViewPitchAsDeg(),
+                this->GetFirstPersonTraceStart().Rotator().Yaw,
+                this->GetFirstPersonTraceStart().Rotator().Roll
+            )),
+            this->GetFirstPersonTraceStart().GetLocation(),
+            FVector::OneVector
+        );
+    }
+    void GetTargetedVoxel(ACommonChunk*& OutChunk, FVector& OutWorldHitLocation, FVector_NetQuantizeNormal& OutWorldNormalHitLocation, FIntVector& OutLocalHitVoxelLocation, const float UnrealReach = AWorldCharacter::MaxPOVLineTraceLength) const;
+
+public:
+
+    FORCEINLINE auto GetTorsoLocation(void) const -> FVector { return this->FirstPersonCameraComponent->GetComponentLocation() + AWorldCharacter::TorsoOffset; }
 };
