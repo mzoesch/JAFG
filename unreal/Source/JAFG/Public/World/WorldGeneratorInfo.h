@@ -63,11 +63,11 @@ class JAFG_API AWorldGeneratorInfo : public AInfo
     friend ACommonChunk;
 
 public:
-    
+
     explicit AWorldGeneratorInfo(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 private:
-    
+
     UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Generation", meta = (AllowPrivateAccess = "true"))
     EChunkType ChunkType = EChunkType::Greedy;
 
@@ -86,10 +86,10 @@ public:
      * Do not increase this value beyond 16 for now. As we would breach the Bunch size limit of 2^16 = 65.536 bytes.
      * See CommonChunk.h for more information.
      */
-    inline static constexpr int ChunkSize{16};
+    inline static constexpr int ChunkSize { 16 };
 
-    inline static constexpr float JToUScale{100.0f};
-    inline static constexpr float UToJScale{1.0f / AWorldGeneratorInfo::JToUScale};
+    inline static constexpr float JToUScale { 100.0f };
+    inline static constexpr float UToJScale { 1.0f / AWorldGeneratorInfo::JToUScale };
 
 protected:
 
@@ -100,7 +100,7 @@ public:
     virtual void Tick(const float DeltaTime) override;
 
 private:
-    
+
     /** Development method to add some chunks to the queue. */
     void GenerateWorldAsync(void);
 

@@ -250,3 +250,82 @@ void ACommonChunk::GenerateSuperFlatWorld()
 
     return;
 }
+
+ACommonChunk* ACommonChunk::GetTargetChunk(const FIntVector& LocalVoxelPosition, FIntVector& OutTransformedLocalVoxelPosition)
+{
+
+    if (
+               LocalVoxelPosition.X >= AWorldGeneratorInfo::ChunkSize
+            || LocalVoxelPosition.Y >= AWorldGeneratorInfo::ChunkSize
+            || LocalVoxelPosition.Z >= AWorldGeneratorInfo::ChunkSize
+            || LocalVoxelPosition.X < 0
+            || LocalVoxelPosition.Y < 0
+            || LocalVoxelPosition.Z < 0
+        )
+    {
+        /* TODO Get neighboring chunk. */
+        return nullptr;
+    }
+
+    return this;
+}
+
+void ACommonChunk::ModifySingleVoxel(const FIntVector& LocalVoxelPosition, int NewVoxel)
+{
+    if (UNetworkStatics::IsSafeServer(this) == false)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::ModifySingleVoxel: Only the server can modify voxels."))
+        return;
+    }
+
+    FIntVector TransformedLocalVoxelPosition = LocalVoxelPosition;
+    ACommonChunk* TargetChunk = this->GetTargetChunk(LocalVoxelPosition, TransformedLocalVoxelPosition);
+
+    if (TargetChunk == nullptr)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::ModifySingleVoxel: Could not get target chunk for local voxel position %s."), *LocalVoxelPosition.ToString())
+        return;
+    }
+
+    TargetChunk->ModifyRawVoxelData(TransformedLocalVoxelPosition, NewVoxel);
+
+    /*
+     * In the future we might want to look at this one more time
+     * and try to only update a small percentage of the mesh.
+     */
+    /*
+     * Here we of course should only do convex meshing.
+     */
+    TargetChunk->ClearMesh();
+    TargetChunk->GenerateProceduralMesh();
+    TargetChunk->ApplyProceduralMesh();
+
+    return;
+}
+
+FIntVector ACommonChunk::WorldToLocalVoxelLocation(const FVector& WorldLocation)
+{
+    FIntVector WorldToChunkPosition;
+
+    const int Factor = AWorldGeneratorInfo::ChunkSize * 100;
+    const auto IntPosition = FIntVector(WorldLocation);
+
+    if (IntPosition.X < 0) WorldToChunkPosition.X = (int) (WorldLocation.X / Factor) - 1;
+    else WorldToChunkPosition.X = (int) (WorldLocation.X / Factor);
+
+    if (IntPosition.Y < 0) WorldToChunkPosition.Y = (int) (WorldLocation.Y / Factor) - 1;
+    else WorldToChunkPosition.Y = (int) (WorldLocation.Y / Factor);
+
+    if (IntPosition.Z < 0) WorldToChunkPosition.Z = (int) (WorldLocation.Z / Factor) - 1;
+    else WorldToChunkPosition.Z = (int) (WorldLocation.Z / Factor);
+
+    /* WorldToBlockPosition */
+    FIntVector WorldToBlockPosition = FIntVector(WorldLocation) / 100 - WorldToChunkPosition * AWorldGeneratorInfo::ChunkSize;
+
+    /* Negative Normalization */
+    if (WorldToChunkPosition.X < 0) WorldToBlockPosition.X--;
+    if (WorldToChunkPosition.Y < 0) WorldToBlockPosition.Y--;
+    if (WorldToChunkPosition.Z < 0) WorldToBlockPosition.Z--;
+
+    return WorldToBlockPosition;
+}
