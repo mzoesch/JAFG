@@ -105,8 +105,12 @@ private:
     /**
      * APawn#RemoteViewPitch is a uint8 and represents the pitch of the remote view replicated back to the server.
      * This method converts the pitch to degrees.
+     * Does not work on listens servers.
      */
-    FORCEINLINE auto GetRemoteViewPitchAsDeg(void) const -> float { return this->RemoteViewPitch * 360.0f / 255.0f; }
+    FORCEINLINE auto GetRemoteViewPitchAsDeg(void) const -> float
+    {
+        return this->RemoteViewPitch * 360.0f / /* 2^8 - 1 = */ 255.0f;
+    }
 
     /** Equivalent to 4 x Chunk => 4 x 16 Voxels => 64 Voxels. */
     static constexpr float MaxPOVLineTraceLength { (AWorldGeneratorInfo::ChunkSize * 4.0f ) * AWorldGeneratorInfo::JToUScale };
@@ -127,7 +131,7 @@ private:
             FVector::OneVector
         );
     }
-    void GetTargetedVoxel(ACommonChunk*& OutChunk, FVector& OutWorldHitLocation, FVector_NetQuantizeNormal& OutWorldNormalHitLocation, FIntVector& OutLocalHitVoxelLocation, const float UnrealReach = AWorldCharacter::MaxPOVLineTraceLength) const;
+    void GetTargetedVoxel(ACommonChunk*& OutChunk, FVector& OutWorldHitLocation, FVector_NetQuantizeNormal& OutWorldNormalHitLocation, FIntVector& OutLocalHitVoxelLocation, const bool bUseRemotePitch, const float UnrealReach = AWorldCharacter::MaxPOVLineTraceLength) const;
 
 public:
 

@@ -117,8 +117,22 @@ void AWorldCharacter::OnPrimary_ServerRPC_Implementation(const FInputActionValue
 {
     const FTransform TraceNoPitchStart = this->GetFirstPersonTraceStart();
     const FTransform TraceStart = FTransform(
-        FQuat(FRotator(this->GetRemoteViewPitchAsDeg(), TraceNoPitchStart.Rotator().Yaw, TraceNoPitchStart.Rotator().Roll)),
-        TraceNoPitchStart.GetLocation()
+        FQuat(FRotator(
+            /*
+             * This is super sketchy. But currently we cannot determine if this pawn is the listen server's pawn
+             * or not. In the future we should check with that.
+             * Also see AWorldCharacter::GetRemoteViewPitchAsDeg.
+             */
+            TraceNoPitchStart.Rotator().Pitch == 0.0f
+                ?
+                    this->GetRemoteViewPitchAsDeg()
+                :
+                    TraceNoPitchStart.Rotator().Pitch,
+            TraceNoPitchStart.Rotator().Yaw,
+            TraceNoPitchStart.Rotator().Roll
+        )),
+        TraceNoPitchStart.GetLocation(),
+        FVector::OneVector
     );
     const FVector TraceEnd = TraceStart.GetLocation() + (TraceStart.GetRotation().Vector() * this->GetCharacterReach());
 
@@ -163,7 +177,7 @@ void AWorldCharacter::OnSecondary(const FInputActionValue& Value)
     FVector                   TargetedWorldHitLocation = FVector::ZeroVector;
     FVector_NetQuantizeNormal TargetedWorldNormalHitLocation = FVector_NetQuantizeNormal::ZeroVector;
     FIntVector                TargetedLocalHitVoxelLocation = FIntVector::ZeroValue;
-    this->GetTargetedVoxel(TargetedChunk, TargetedWorldHitLocation, TargetedWorldNormalHitLocation, TargetedLocalHitVoxelLocation, this->GetCharacterReach());
+    this->GetTargetedVoxel(TargetedChunk, TargetedWorldHitLocation, TargetedWorldNormalHitLocation, TargetedLocalHitVoxelLocation, false, this->GetCharacterReach());
 
     if (TargetedChunk == nullptr)
     {
@@ -189,11 +203,23 @@ void AWorldCharacter::OnSecondary(const FInputActionValue& Value)
 
 void AWorldCharacter::OnSecondary_ServerRPC_Implementation(const FInputActionValue& Value)
 {
+
     ACommonChunk*             TargetedChunk = nullptr;
     FVector                   TargetedWorldHitLocation = FVector::ZeroVector;
     FVector_NetQuantizeNormal TargetedWorldNormalHitLocation = FVector_NetQuantizeNormal::ZeroVector;
     FIntVector                TargetedLocalHitVoxelLocation = FIntVector::ZeroValue;
-    this->GetTargetedVoxel(TargetedChunk, TargetedWorldHitLocation, TargetedWorldNormalHitLocation, TargetedLocalHitVoxelLocation, this->GetCharacterReach());
+    this->GetTargetedVoxel(
+        TargetedChunk,
+        TargetedWorldHitLocation,
+        TargetedWorldNormalHitLocation,
+        TargetedLocalHitVoxelLocation,
+        /*
+         * This is super sketchy. But currently we cannot determine if this pawn is the listen server's pawn or not.
+         * In the future we should check with that.
+         */
+        this->GetRemoteViewPitchAsDeg() != 0.0f,
+        this->GetCharacterReach()
+    );
 
     if (TargetedChunk == nullptr)
     {
@@ -328,12 +354,12 @@ void AWorldCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
     return;
 }
 
-void AWorldCharacter::GetTargetedVoxel(ACommonChunk*& OutChunk, FVector& OutWorldHitLocation, FVector_NetQuantizeNormal& OutWorldNormalHitLocation, FIntVector& OutLocalHitVoxelLocation, const float UnrealReach) const
+void AWorldCharacter::GetTargetedVoxel(ACommonChunk*& OutChunk, FVector& OutWorldHitLocation, FVector_NetQuantizeNormal& OutWorldNormalHitLocation, FIntVector& OutLocalHitVoxelLocation, const bool bUseRemotePitch, const float UnrealReach) const
 {
     OutChunk = nullptr;
     OutLocalHitVoxelLocation = FIntVector::ZeroValue;
 
-    const FTransform TraceStart = UNetworkStatics::IsSafeServer(this) ? this->GetFirstPersonTraceStart_DedServer() : this->GetFirstPersonTraceStart();
+    const FTransform TraceStart = bUseRemotePitch ? this->GetFirstPersonTraceStart_DedServer() : this->GetFirstPersonTraceStart();
     const FVector TraceEnd = TraceStart.GetLocation() + (TraceStart.GetRotation().Vector() * UnrealReach);
 
     FCollisionQueryParams QueryParams = FCollisionQueryParams(FName(TEXT("CommonTrace")), false, this->GetOwner());
