@@ -1,6 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
-#include "System/HyperlaneWorker.h"
+#include "Network/HyperlaneWorker.h"
 
 #include "IPAddressAsyncResolve.h"
 #include "Sockets.h"

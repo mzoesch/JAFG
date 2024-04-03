@@ -3,7 +3,7 @@
 #include "System/HyperlaneComponent.h"
 
 #include "Network/NetworkStatics.h"
-#include "System/HyperlaneWorker.h"
+#include "Network/HyperlaneWorker.h"
 
 UHyperlaneComponent::UHyperlaneComponent(const FObjectInitializer& ObjectInitializer)
 {
