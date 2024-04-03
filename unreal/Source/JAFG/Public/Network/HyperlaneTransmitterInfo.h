@@ -8,15 +8,16 @@
 #include "HyperlaneTransmitterInfo.generated.h"
 
 DECLARE_DELEGATE(FTCPTransmitterEventSignature)
-DECLARE_DELEGATE_OneParam(FTCPTransmitterClientEventSignature, const FString& /* address */)
+DECLARE_DELEGATE_OneParam(FTCPTransmitterClientEventSignature, const FString& /* Address */)
+DECLARE_DELEGATE_TwoParams(FTCPTransmitterSocketEventSignature, const FString& /* Address */, const uint16& /* Port */)
 
 /**
  * A client connection to the transmitter.
  */
 struct FTCPTransmitterClient
 {
-    FSocket* Socket = nullptr;
-    FString Address = L"";
+    FSocket* Socket  = nullptr;
+    FString  Address = L"";
 
     bool operator==(const FTCPTransmitterClient& Other) const
     {
@@ -40,44 +41,49 @@ protected:
 
 private:
 
-    TMap<FString, TSharedPtr<FTCPTransmitterClient>> Clients;
-
-    FThreadSafeBool bShouldListen;
-
-    FTCPTransmitterEventSignature OnListenBegin;
-    FTCPTransmitterEventSignature OnListenEnd;
-    FTCPTransmitterClientEventSignature OnClientConnected;
-    FTCPTransmitterClientEventSignature OnClientDisconnected;
-
-    bool bShouldPingCheck = true;
-    float PingCheckInterval = 3.0f;
-
-    FString DisconnectAllClientsMessage = L"<DISCONNECT-ALL>";
-    void DisconnectAllClients(void) { this->DisconnectClient(DisconnectAllClientsMessage); }
-    void DisconnectClient(const FString& ClientAddress);
-
-    FString PingMessage = L"<PING>";
-    TArray<uint8> PingData;
-
-    uint16 Port = 0;
-    FString SocketName = L"";
-
-    int32 BufferMaxSizeInBytes = 0;
+    /**
+     * If false the main transmitter loop will stop. And safely disconnect all clients.
+     */
+    FThreadSafeBool bShouldListen = false;
 
     /**
-     * The listen socket.
+     * All current connected clients.
      */
+    TMap<FString, TSharedPtr<FTCPTransmitterClient>> Clients;
+
+    FTCPTransmitterSocketEventSignature OnListenBeginDelegate;
+    FTCPTransmitterSocketEventSignature OnListenBeginFailureDelegate;
+    FTCPTransmitterEventSignature OnListenEndDelegate;
+    FTCPTransmitterClientEventSignature OnClientConnectedDelegate;
+    FTCPTransmitterClientEventSignature OnClientDisconnectedDelegate;
+
+    void OnListenBeginDelegateHandler(const FString& InAddress, const uint16& InPort);
+    void OnListenBeginFailureDelegateHandler(const FString& InAddress, const uint16& InPort);
+    void OnListenEndDelegateHandler(void);
+    void OnClientConnectedDelegateHandler(const FString& Address);
+    void OnClientDisconnectedDelegateHandler(const FString& Address);
+
+    FThreadSafeBool bShouldPingCheck = false;
+    float PingCheckInterval = 0.0f;
+    FString PingMessage = L"";
+    TArray<uint8> PingData;
+    const FString DisconnectAllClientsMessage = TEXT("<DISCONNECT-ALL>");
+    FORCEINLINE auto DisconnectAllClients(void) -> void { this->DisconnectSingleClient(DisconnectAllClientsMessage); }
+    /**
+     * @param ClientAddress Give AHyperlaneTransmitterInfo#DisconnectAllClientsMessage
+     *                      to disconnect all clients at once.
+     */
+    void DisconnectSingleClient(const FString& ClientAddress);
+
+    uint16 Port = 0x0;
+    FString SocketName = L"";
+
+    int32 BufferMaxSizeInBytes = 0x0;
+
     FSocket* Socket = nullptr;
 
-    TFuture<void> ServerFinishedFuture;
+    int32 MaxBacklog = 0x0;
 
-    static TFuture<void> RunLambdaOnBackGroundThread(TFunction< void()> InFunction)
-    {
-        return Async(EAsyncExecution::Thread, InFunction);
-    }
-
-    static TFuture<void> RunLambdaOnGameThread(TFunction< void()> InFunction)
-    {
-        return Async(EAsyncExecution::TaskGraphMainThread, InFunction);
-    }
+    TFuture<void> ServerEndFuture;
+    void CreateServerEndFuture(void);
 };
