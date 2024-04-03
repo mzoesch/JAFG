@@ -32,11 +32,11 @@ AHyperlaneTransmitterInfo::AHyperlaneTransmitterInfo(const FObjectInitializer& O
     this->bShouldListen = false;
     this->Clients.Empty();
 
-    OnListenBeginDelegate.Unbind();
-    OnListenBeginFailureDelegate.Unbind();
-    OnListenEndDelegate.Unbind();
-    OnClientConnectedDelegate.Unbind();
-    OnClientDisconnectedDelegate.Unbind();
+    this->OnListenBeginDelegate.Unbind();
+    this->OnListenBeginFailureDelegate.Unbind();
+    this->OnListenEndDelegate.Unbind();
+    this->OnClientConnectedDelegate.Unbind();
+    this->OnClientDisconnectedDelegate.Unbind();
 
     this->bShouldPingCheck = false;
     this->PingCheckInterval = 0.0f;
@@ -45,7 +45,7 @@ AHyperlaneTransmitterInfo::AHyperlaneTransmitterInfo(const FObjectInitializer& O
     this->PingData.Empty();
 
     this->Port = 0x0;
-    this->SocketName = FString(TEXT(""));
+    this->SocketName = L"";
 
     this->BufferMaxSizeInBytes = 0x0;
 
@@ -86,18 +86,22 @@ void AHyperlaneTransmitterInfo::BeginPlay(void)
     {
         this->OnListenBeginDelegateHandler(Address, Port);
     });
+
     OnListenBeginFailureDelegate.BindLambda( [&] (const FString& Address, const uint16& Port)
     {
         this->OnListenBeginFailureDelegateHandler(Address, Port);
     });
+
     OnListenEndDelegate.BindLambda( [&] (void)
     {
         this->OnListenEndDelegateHandler();
     });
+
     OnClientConnectedDelegate.BindLambda( [&] (const FString& Address)
     {
         this->OnClientConnectedDelegateHandler(Address);
     });
+
     OnClientDisconnectedDelegate.BindLambda( [&] (const FString& Address)
     {
         this->OnClientDisconnectedDelegateHandler(Address);
@@ -153,9 +157,9 @@ void AHyperlaneTransmitterInfo::EndPlay(const EEndPlayReason::Type EndPlayReason
         this->bShouldListen = false;
         this->bShouldPingCheck = false;
 
-        UE_LOG(LogTemp, Warning, TEXT("AHyperlaneTransmitterInfo::EndPlay: Waiting for server end future."))
+        UE_LOG(LogTemp, Warning, TEXT("AHyperlaneTransmitterInfo::EndPlay: Waiting for Server End Future."))
         ServerEndFuture.Wait();
-        UE_LOG(LogTemp, Warning, TEXT("AHyperlaneTransmitterInfo::EndPlay: Finished waiting for server end future."))
+        UE_LOG(LogTemp, Warning, TEXT("AHyperlaneTransmitterInfo::EndPlay: Finished waiting for Server End Future."))
 
         Socket->Close();
         ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->DestroySocket(Socket);
@@ -319,6 +323,11 @@ void AHyperlaneTransmitterInfo::CreateServerEndFuture(void)
                     if (Client->Socket->Recv(ReceiveBuffer.GetData(), ReceiveBuffer.Num(), Read) == false)
                     {
                         UE_LOG(LogTemp, Error, TEXT("AHyperlaneTransmitterInfo::CreateServerEndFuture: Failed to receive data from %s."), *Client->Address)
+
+                        /*
+                         * Note that we can't call the disconnect method here as it would change the iterator that
+                         * we are currently iterating over.
+                         */
 
                         if (Client->Socket->Close())
                         {

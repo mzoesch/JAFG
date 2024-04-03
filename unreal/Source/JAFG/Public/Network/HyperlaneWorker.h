@@ -6,8 +6,8 @@
 
 class UHyperlaneComponent;
 
-DECLARE_DELEGATE(FTCPEventSignature)
-DECLARE_MULTICAST_DELEGATE_OneParam(FTCPMessageSignature, const TArray<uint8>& /* bytes */)
+DECLARE_DELEGATE(FTCPHyperlaneWorkerEventSignature)
+DECLARE_DELEGATE_TwoParams(FTCPHyperlaneWorkerMessageSignature, const TArray<uint8>& /* Bytes */, const int32& /* BytesRead */)
 
 class JAFG_API FHyperlaneWorker final : public FRunnable
 {
@@ -15,7 +15,6 @@ class JAFG_API FHyperlaneWorker final : public FRunnable
      * Kinda cheeky but we need to access the UWorld somehow.
      */
     UHyperlaneComponent* Owner = nullptr;
-
 
 public:
 
@@ -31,35 +30,36 @@ public:
 
 private:
 
+    // FRunnable members
     FRunnableThread* Thread;
     bool bShutdownRequested = false;
+    // ~FRunnable members
 
+    // Network members
+    inline static constexpr float ExhaustedConnectionTimeInSeconds { 5.0f };
 
+    FTCPHyperlaneWorkerEventSignature OnConnectedDelegate;
+    FTCPHyperlaneWorkerEventSignature OnDisconnectedDelegate;
+    FTCPHyperlaneWorkerMessageSignature OnBytesReceivedDelegate;
 
-    FString Address = L"";
-    int32 Port = 0;
-    int32 BufferMaxSizeInBytes = 0;
+    void OnConnectedDelegateHandler(void);
+    void OnDisconnectedDelegateHandler(void);
+    void OnBytesReceivedDelegateHandler(const TArray<uint8>& Bytes, const int32& BytesRead);
 
-    FThreadSafeBool bShouldReceiveData;
-    FThreadSafeBool bShouldAttemptConnection;
+    FString Address = FString(TEXT("127.0.0.1"));
+    int32 Port = 8080;
+    /** Roughly 4 MB. */
+    int32 BufferMaxSizeInBytes = 4 * 1024 * 1024;
+
+    FThreadSafeBool bShouldReceiveData = true;
+    FThreadSafeBool bShouldAttemptConnection = true;
 
     FSocket* Socket = nullptr;
     TSharedPtr<FInternetAddr> RemoteAddress = nullptr;
 
-    TFuture<void> ConnectionFinishedFuture;
-
-    FTCPEventSignature OnConnected;
-    FTCPEventSignature OnDisconnected;
+    TFuture<void> ConnectionEndFuture;
+    void CreateConnectionEndFuture(void);
 
     bool IsConnected(void) const;
-
-    static TFuture<void> RunLambdaOnBackGroundThread(TFunction< void()> InFunction)
-    {
-        return Async(EAsyncExecution::Thread, InFunction);
-    }
-
-    static TFuture<void> RunLambdaOnGameThread(TFunction< void()> InFunction)
-    {
-        return Async(EAsyncExecution::TaskGraphMainThread, InFunction);
-    }
+    // ~Network members
 };
