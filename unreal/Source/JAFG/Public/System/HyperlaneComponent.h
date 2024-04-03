@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+
 #include "HyperlaneComponent.generated.h"
 
 class FHyperlaneWorker;
@@ -21,6 +22,7 @@ public:
 protected:
 
     virtual void BeginPlay(void) override;
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 public:
 

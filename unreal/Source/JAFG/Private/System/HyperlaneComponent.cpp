@@ -12,6 +12,28 @@ UHyperlaneComponent::UHyperlaneComponent(const FObjectInitializer& ObjectInitial
 
 UHyperlaneComponent::~UHyperlaneComponent()
 {
+    return;
+}
+
+void UHyperlaneComponent::BeginPlay(void)
+{
+    Super::BeginPlay();
+
+    if (UNetworkStatics::IsSafeClient(this) == false)
+    {
+        UE_LOG(LogTemp, Log, TEXT("HyperlaneComponent::BeginPlay: No replication needed on a non client instance. Discarding hyperlane creation."))
+        return;
+    }
+
+    this->Worker = new FHyperlaneWorker(this);
+
+    return;
+}
+
+void UHyperlaneComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    Super::EndPlay(EndPlayReason);
+
     if (this->Worker)
     {
         if (this->GetWorld() != nullptr)
@@ -40,21 +62,6 @@ UHyperlaneComponent::~UHyperlaneComponent()
             UE_LOG(LogTemp, Fatal, TEXT("HyperlaneComponent::~UHyperlaneComponent: Could not destry hyperlane."))
         }
     }
-
-    return;
-}
-
-void UHyperlaneComponent::BeginPlay(void)
-{
-    Super::BeginPlay();
-
-    if (UNetworkStatics::IsSafeClient(this) == false)
-    {
-        UE_LOG(LogTemp, Log, TEXT("HyperlaneComponent::BeginPlay: No replication needed on a non client instance. Discarding hyperlane creation."))
-        return;
-    }
-
-    this->Worker = new FHyperlaneWorker();
 
     return;
 }

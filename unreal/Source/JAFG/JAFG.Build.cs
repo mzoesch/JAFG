@@ -22,9 +22,15 @@ public class JAFG : ModuleRules
 
         PrivateDependencyModuleNames.AddRange(new string[]
         {
+            "Sockets",
+            "Networking",
+        });
+
+        PrivateDependencyModuleNames.AddRange(new string[]
+        {
             "ProceduralMeshComponent",
         });
-        
+
         PrivateDependencyModuleNames.AddRange(new string[]
         {
             "OnlineSubsystem",
