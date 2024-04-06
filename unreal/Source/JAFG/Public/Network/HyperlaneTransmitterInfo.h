@@ -7,6 +7,7 @@
 
 #include "HyperlaneTransmitterInfo.generated.h"
 
+class FHyperlaneWorker;
 DECLARE_DELEGATE(FTCPTransmitterEventSignature)
 DECLARE_DELEGATE_OneParam(FTCPTransmitterClientEventSignature, const FString& /* Address */)
 DECLARE_DELEGATE_TwoParams(FTCPTransmitterSocketEventSignature, const FString& /* Address */, const uint16& /* Port */)
@@ -29,6 +30,8 @@ UCLASS(NotBlueprintable)
 class JAFG_API AHyperlaneTransmitterInfo : public AInfo
 {
     GENERATED_BODY()
+
+    friend FHyperlaneWorker;
 
 public:
 
@@ -65,8 +68,10 @@ private:
 
     FThreadSafeBool bShouldPingCheck = false;
     float PingCheckInterval = 0.0f;
-    FString PingMessage = L"";
+    inline static const FString PingMessage = L"<PING>";
+    /* Initialized with the ping message. But as bytes to be easily emitted by the transmitter. */
     TArray<uint8> PingData;
+
     const FString DisconnectAllClientsMessage = TEXT("<DISCONNECT-ALL>");
     FORCEINLINE auto DisconnectAllClients(void) -> void { this->DisconnectSingleClient(DisconnectAllClientsMessage); }
     /**

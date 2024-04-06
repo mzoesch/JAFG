@@ -5,12 +5,13 @@
 #include "IPAddressAsyncResolve.h"
 #include "Sockets.h"
 #include "SocketSubsystem.h"
+#include "Network/HyperlaneTransmitterInfo.h"
 
 /*
  * Just for the sake of it.
  * Is UE_LOG thread safe?
  * If not we might want to look into something like that:
- *   AsyncTask(ENamedThreads::GameThread, []() {	UE_LOG(LogTemp, Log, TEXT("")); });
+ *   AsyncTask(ENamedThreads::GameThread, [] (void) { UE_LOG(LogTemp, Log, TEXT("")); });
  */
 
 #define RETURN_CODE_OK    0x0
@@ -79,9 +80,9 @@ bool FHyperlaneWorker::Init(void)
         this->OnDisconnectedDelegateHandler();
     });
 
-    this->OnBytesReceivedDelegate.BindLambda( [&] (const TArray<uint8>& Bytes, const int32& BytesRead)
+    this->OnBytesReceivedDelegate.BindLambda( [&] (const TArray<uint8>& Bytes)
     {
-        this->OnBytesReceivedDelegateHandler(Bytes, BytesRead);
+        this->OnBytesReceivedDelegateHandler(Bytes);
     });
 
     if (this->IsConnected())
@@ -216,9 +217,9 @@ void FHyperlaneWorker::OnDisconnectedDelegateHandler()
     UE_LOG(LogTemp, Warning, TEXT("FHyperlaneWorker::OnDisconnectedDelegateHandler: fired."))
 }
 
-void FHyperlaneWorker::OnBytesReceivedDelegateHandler(const TArray<uint8>& Bytes, const int32& BytesRead)
+void FHyperlaneWorker::OnBytesReceivedDelegateHandler(const TArray<uint8>& Bytes)
 {
-    UE_LOG(LogTemp, Warning, TEXT("FHyperlaneWorker::OnBytesReceivedDelegateHandler: Received %d bytes."), BytesRead)
+    UE_LOG(LogTemp, Warning, TEXT("FHyperlaneWorker::OnBytesReceivedDelegateHandler: Received %d bytes."), Bytes.Num())
 }
 
 void FHyperlaneWorker::CreateConnectionEndFuture()
@@ -277,7 +278,18 @@ void FHyperlaneWorker::CreateConnectionEndFuture()
                 int32 Read = 0;
                 this->Socket->Recv(ReceiveBuffer.GetData(), ReceiveBuffer.Num(), Read);
 
-                this->OnBytesReceivedDelegate.Execute(ReceiveBuffer, Read);
+                /*
+                 * Kinda sketchy but we probably will never send a message that is so small that it will trigger this
+                 * if-statement - as then we should use unreals replication system or remote procedure calls.
+                 */
+                if (Read == AHyperlaneTransmitterInfo::PingMessage.Len())
+                {
+                    UE_LOG(LogTemp, Warning, TEXT("FHyperlaneWorker::CreateConnectionEndFuture: Received ping message."))
+                }
+                else
+                {
+                    this->OnBytesReceivedDelegate.Execute(ReceiveBuffer);
+                }
             }
 
             /*

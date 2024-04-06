@@ -41,7 +41,6 @@ AHyperlaneTransmitterInfo::AHyperlaneTransmitterInfo(const FObjectInitializer& O
     this->bShouldPingCheck = false;
     this->PingCheckInterval = 0.0f;
 
-    this->PingMessage = L"";
     this->PingData.Empty();
 
     this->Port = 0x0;
@@ -110,8 +109,7 @@ void AHyperlaneTransmitterInfo::BeginPlay(void)
     this->bShouldPingCheck = true;
     this->PingCheckInterval = 5.0f;
 
-    this->PingMessage = L"<PING>";
-    this->PingData.Append( /* (uint8*) */ reinterpret_cast<uint8*>(TCHAR_TO_UTF8(*PingMessage)), PingMessage.Len());
+    this->PingData.Append( /* (uint8*) */ reinterpret_cast<uint8*>(TCHAR_TO_UTF8(*this->PingMessage)), this->PingMessage.Len());
 
     FIPv4Address HostAddress;
     FIPv4Address::Parse(TEXT("0.0.0.0"), HostAddress);

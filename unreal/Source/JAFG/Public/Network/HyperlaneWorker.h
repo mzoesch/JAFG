@@ -7,7 +7,7 @@
 class UHyperlaneComponent;
 
 DECLARE_DELEGATE(FTCPHyperlaneWorkerEventSignature)
-DECLARE_DELEGATE_TwoParams(FTCPHyperlaneWorkerMessageSignature, const TArray<uint8>& /* Bytes */, const int32& /* BytesRead */)
+DECLARE_DELEGATE_OneParam(FTCPHyperlaneWorkerMessageSignature, const TArray<uint8>& /* Bytes */)
 
 class JAFG_API FHyperlaneWorker final : public FRunnable
 {
@@ -44,7 +44,7 @@ private:
 
     void OnConnectedDelegateHandler(void);
     void OnDisconnectedDelegateHandler(void);
-    void OnBytesReceivedDelegateHandler(const TArray<uint8>& Bytes, const int32& BytesRead);
+    void OnBytesReceivedDelegateHandler(const TArray<uint8>& Bytes);
 
     FString Address = FString(TEXT("127.0.0.1"));
     int32 Port = 8080;
