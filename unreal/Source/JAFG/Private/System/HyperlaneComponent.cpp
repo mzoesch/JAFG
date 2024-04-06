@@ -2,8 +2,12 @@
 
 #include "System/HyperlaneComponent.h"
 
+#include "Kismet/GameplayStatics.h"
 #include "Network/NetworkStatics.h"
 #include "Network/HyperlaneWorker.h"
+#include "World/WorldGeneratorInfo.h"
+
+class AWorldGeneratorInfo;
 
 UHyperlaneComponent::UHyperlaneComponent(const FObjectInitializer& ObjectInitializer)
 {
@@ -69,4 +73,16 @@ void UHyperlaneComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void UHyperlaneComponent::TickComponent(const float DeltaTime, const ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+}
+
+void UHyperlaneComponent::InitializeChunkWithAuthorityData(FIntVector ChunkKey, TArray<int32> Voxels)
+{
+    AsyncTask(ENamedThreads::GameThread, [this, ChunkKey, Voxels]()
+    {
+        AWorldGeneratorInfo* Info = Cast<AWorldGeneratorInfo>(UGameplayStatics::GetActorOfClass(this, AWorldGeneratorInfo::StaticClass()));
+        check( Info )
+        Info->InitializeChunkWithAuthorityData(ChunkKey, Voxels);
+
+        return;
+    });
 }

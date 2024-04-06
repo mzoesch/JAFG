@@ -6,6 +6,7 @@
 #include "Interfaces/IPv4/IPv4Address.h"
 #include "Interfaces/IPv4/IPv4Endpoint.h"
 #include "Network/NetworkStatics.h"
+#include "Serialization/BufferArchive.h"
 
 namespace CommonTransmitterStatics
 {
@@ -20,6 +21,42 @@ static TFuture<void> RunLambdaOnGameThread(TFunction<void(void)> InFunction)
     return Async(EAsyncExecution::TaskGraphMainThread, InFunction);
 }
 
+}
+
+void TransmittableData::FChunkInitializationData::SerializeToBytes(TArray<uint8>& OutBytes)
+{
+    UE_LOG(LogTemp, Warning, TEXT("TransmittableData::FChunkInitializationData::SerializeToBytes: Serializing: %s."), *ChunkKey.ToString())
+
+    FBufferArchive Ar = FBufferArchive();
+    Ar.Seek(0b0);
+
+    Ar << ChunkKey;
+    Ar << Voxels;
+
+    OutBytes.Empty();
+    OutBytes.Append(Ar.GetData(), Ar.Num());
+
+    Ar.FlushCache();
+    Ar.Empty();
+}
+
+TransmittableData::FChunkInitializationData TransmittableData::FChunkInitializationData::DeserializeFromBytes(const TArray<uint8>& InBytes)
+{
+    TransmittableData::FChunkInitializationData Data;
+
+    FMemoryReader Ar = FMemoryReader(InBytes, true);
+    Ar.Seek(0b0);
+
+    Ar << Data.ChunkKey;
+    Ar << Data.Voxels;
+
+    Ar.FlushCache();
+    if (Ar.Close() == false)
+    {
+        UE_LOG(LogTemp, Error, TEXT("TransmittableData::FChunkInitializationData::DeserializeFromBytes: Failed to close memory reader."))
+    }
+
+    return Data;
 }
 
 AHyperlaneTransmitterInfo::AHyperlaneTransmitterInfo(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -166,6 +203,21 @@ void AHyperlaneTransmitterInfo::EndPlay(const EEndPlayReason::Type EndPlayReason
     }
 
     return;
+}
+
+void AHyperlaneTransmitterInfo::SendChunkInitializationData(TransmittableData::FChunkInitializationData& Data)
+{
+    if (this->Clients.Num() != 1)
+    {
+        check( 0 && "AHyperlaneTransmitterInfo::SendChunkInitializationData: There is not exactly one client connected." )
+        return;
+    }
+
+    TArray<uint8> Bytes = TArray<uint8>();
+    Data.SerializeToBytes(Bytes);
+
+    this->Emit(Bytes, this->Clients.begin().Key());
+
 }
 
 void AHyperlaneTransmitterInfo::OnListenBeginDelegateHandler(const FString& InAddress, const uint16& InPort)
@@ -410,6 +462,34 @@ void AHyperlaneTransmitterInfo::CreateServerEndFuture(void)
 
         return;
     });
+
+    return;
+}
+
+void AHyperlaneTransmitterInfo::Emit(const TArray<uint8>& InBytes, const FString& InClientAddress)
+{
+    const TSharedPtr<FTCPTransmitterClient> Client = Clients.Contains(InClientAddress) ? Clients[InClientAddress] : nullptr;
+
+    if (Client == nullptr || Client.IsValid() == false)
+    {
+        UE_LOG(LogTemp, Fatal, TEXT("AHyperlaneTransmitterInfo::Emit: Client %s is invalid."), *InClientAddress)
+        return;
+    }
+
+    int32 BytesSent = 0;
+    if (Client->Socket->Send(InBytes.GetData(), InBytes.Num(), BytesSent) == false)
+    {
+        UE_LOG(LogTemp, Fatal, TEXT("AHyperlaneTransmitterInfo::Emit: Failed to send data to %s."), *InClientAddress)
+        this->DisconnectSingleClient(InClientAddress);
+        return;
+    }
+
+    if (BytesSent != InBytes.Num())
+    {
+        UE_LOG(LogTemp, Fatal, TEXT("AHyperlaneTransmitterInfo::Emit: Failed to send all data to %s."), *InClientAddress)
+        this->DisconnectSingleClient(InClientAddress);
+        return;
+    }
 
     return;
 }

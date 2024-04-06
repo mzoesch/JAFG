@@ -28,6 +28,8 @@ public:
 
     virtual void TickComponent(const float DeltaTime, const ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+    void InitializeChunkWithAuthorityData(FIntVector ChunkKey, TArray<int32> Voxels);
+
 private:
 
     FHyperlaneWorker* Worker = nullptr;

@@ -219,9 +219,19 @@ void ACommonChunk::SendInitializationDataToClient(UBackgroundChunkUpdaterCompone
     AHyperlaneTransmitterInfo* Transmitter = Cast<AHyperlaneTransmitterInfo>(UGameplayStatics::GetActorOfClass(this, AHyperlaneTransmitterInfo::StaticClass()));
     check( Transmitter )
 
-    // TransmittableData::FChunkInitializationData Data = TransmittableData::FChunkInitializationData(this->ChunkKey, this->RawVoxels);
-    // Transmitter->SendChunkInitializationData(Data);
+    TransmittableData::FChunkInitializationData Data = TransmittableData::FChunkInitializationData(this->ChunkKey, this->RawVoxels);
+    Transmitter->SendChunkInitializationData(Data);
 
+}
+
+void ACommonChunk::InitializeWithAuthorityData(const TArray<int32> Array)
+{
+    this->RawVoxels = Array;
+
+    UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::InitializeWithAuthorityData: Initializing chunk %s with authority data."), *this->ChunkKey.ToString())
+    this->ClearMesh();
+    this->GenerateProceduralMesh();
+    this->ApplyProceduralMesh();
 }
 
 ACommonChunk* ACommonChunk::GetTargetChunk(const FIntVector& LocalVoxelPosition, FIntVector& OutTransformedLocalVoxelPosition)

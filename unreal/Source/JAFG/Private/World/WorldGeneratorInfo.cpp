@@ -132,6 +132,13 @@ void AWorldGeneratorInfo::GenerateChunkForClient(FIntVector ChunkKey, UBackgroun
     return;
 }
 
+void AWorldGeneratorInfo::InitializeChunkWithAuthorityData(FIntVector ChunkKey, const TArray<int32> Array)
+{
+    ACommonChunk* Chunk = this->GetChunkBy(ChunkKey);
+    check( Chunk )
+    Chunk->InitializeWithAuthorityData(Array);
+}
+
 void AWorldGeneratorInfo::SetBackgroundChunkUpdaterComponent(UBackgroundChunkUpdaterComponent* InBackgroundChunkUpdaterComponent)
 {
     check( InBackgroundChunkUpdaterComponent )

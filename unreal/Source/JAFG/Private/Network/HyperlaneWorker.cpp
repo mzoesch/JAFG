@@ -6,6 +6,7 @@
 #include "Sockets.h"
 #include "SocketSubsystem.h"
 #include "Network/HyperlaneTransmitterInfo.h"
+#include "System/HyperlaneComponent.h"
 
 /*
  * Just for the sake of it.
@@ -219,7 +220,16 @@ void FHyperlaneWorker::OnDisconnectedDelegateHandler()
 
 void FHyperlaneWorker::OnBytesReceivedDelegateHandler(const TArray<uint8>& Bytes)
 {
+    check(this->Owner)
     UE_LOG(LogTemp, Warning, TEXT("FHyperlaneWorker::OnBytesReceivedDelegateHandler: Received %d bytes."), Bytes.Num())
+
+    TransmittableData::FChunkInitializationData Data = TransmittableData::FChunkInitializationData::DeserializeFromBytes(Bytes);
+
+    UE_LOG(LogTemp, Warning, TEXT("FHyperlaneWorker::OnBytesReceivedDelegateHandler: Chunk Key: %s"), *Data.ChunkKey.ToString())
+
+    this->Owner->InitializeChunkWithAuthorityData(Data.ChunkKey, Data.Voxels);
+
+
 }
 
 void FHyperlaneWorker::CreateConnectionEndFuture()

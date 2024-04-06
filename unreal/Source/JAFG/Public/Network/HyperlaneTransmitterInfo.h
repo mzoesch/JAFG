@@ -8,6 +8,7 @@
 #include "HyperlaneTransmitterInfo.generated.h"
 
 class FHyperlaneWorker;
+
 DECLARE_DELEGATE(FTCPTransmitterEventSignature)
 DECLARE_DELEGATE_OneParam(FTCPTransmitterClientEventSignature, const FString& /* Address */)
 DECLARE_DELEGATE_TwoParams(FTCPTransmitterSocketEventSignature, const FString& /* Address */, const uint16& /* Port */)
@@ -26,6 +27,21 @@ struct FTCPTransmitterClient
     }
 };
 
+namespace TransmittableData
+{
+
+struct FChunkInitializationData
+{
+    FIntVector ChunkKey;
+    TArray<int32> Voxels;
+
+    void SerializeToBytes(TArray<uint8>& OutBytes);
+
+    static TransmittableData::FChunkInitializationData DeserializeFromBytes(const TArray<uint8>& InBytes);
+};
+
+}
+
 UCLASS(NotBlueprintable)
 class JAFG_API AHyperlaneTransmitterInfo : public AInfo
 {
@@ -41,6 +57,10 @@ protected:
 
     virtual void BeginPlay(void) override;
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+public:
+
+    void SendChunkInitializationData(TransmittableData::FChunkInitializationData& Data);
 
 private:
 
@@ -91,4 +111,6 @@ private:
 
     TFuture<void> ServerEndFuture;
     void CreateServerEndFuture(void);
+
+    void Emit(const TArray<uint8>& InBytes, const FString& InClientAddress);
 };

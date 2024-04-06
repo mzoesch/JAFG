@@ -114,6 +114,12 @@ public:
      */
     void GenerateChunkForClient(FIntVector ChunkKey, UBackgroundChunkUpdaterComponent* Callback);
 
+    /*
+     * Called on the client with the voxels from the hyperlane
+     */
+    void InitializeChunkWithAuthorityData(FIntVector ChunkKey, const TArray<int32> Array);
+
+
     void SetBackgroundChunkUpdaterComponent(UBackgroundChunkUpdaterComponent* InBackgroundChunkUpdaterComponent);
     FORCEINLINE UBackgroundChunkUpdaterComponent* GetBackgroundChunkUpdaterComponent(void) const
     {

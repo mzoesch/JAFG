@@ -106,6 +106,8 @@ public:
 
     void SendInitializationDataToClient(UBackgroundChunkUpdaterComponent* Target) const;
 
+    void InitializeWithAuthorityData(const TArray<int32> Array);
+
     //////////////////////////////////////////////////////////////////////////
     // Public interaction
 
