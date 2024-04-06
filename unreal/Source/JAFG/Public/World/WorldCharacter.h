@@ -9,6 +9,7 @@
 
 #include "WorldCharacter.generated.h"
 
+class UBackgroundChunkUpdaterComponent;
 class UHyperlaneComponent;
 class UChatComponent;
 class UChatMenu;
@@ -39,6 +40,9 @@ private:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     UChatComponent* ChatComponent;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    UBackgroundChunkUpdaterComponent* BackgroundChunkUpdaterComponent;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     UHyperlaneComponent* HyperlaneComponent;

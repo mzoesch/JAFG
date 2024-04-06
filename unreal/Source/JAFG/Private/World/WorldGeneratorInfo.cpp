@@ -2,6 +2,7 @@
 
 #include "World/WorldGeneratorInfo.h"
 
+#include "Network/BackgroundChunkUpdaterComponent.h"
 #include "Network/NetworkStatics.h"
 #include "World/Chunk/GreedyChunk.h"
 
@@ -13,7 +14,7 @@ AWorldGeneratorInfo::AWorldGeneratorInfo(const FObjectInitializer& ObjectInitial
     this->PrimaryActorTick.TickInterval = 1.0f;
 
     this->bReplicates = false;
-    this->bNetLoadOnClient = false;
+    this->bNetLoadOnClient = true;
 
     this->FullyLoadedChunks = TMap<FIntVector, ACommonChunk*>();
     this->ChunkGenerationQueue.Empty();
@@ -25,18 +26,28 @@ void AWorldGeneratorInfo::BeginPlay(void)
 {
     Super::BeginPlay();
 
-    this->FullyLoadedChunks.Empty();
-    this->ChunkGenerationQueue.Empty();
-
     if (UNetworkStatics::IsSafeClient(this))
     {
-        UE_LOG(LogTemp, Error, TEXT("AWorldGeneratorInfo::BeginPlay: Running in client mode. Discarding chunk generation."))
-        return;
+        UE_LOG(LogTemp, Warning, TEXT("AWorldGeneratorInfo::BeginPlay(): Running in client mode."))
+        this->bClientMode = true;
+    }
+    else
+    {
+        this->bClientMode = false;
     }
 
-    this->GenerateWorldAsync();
+    this->FullyLoadedChunks.Empty();
+    this->ChunkGenerationQueue.Empty();
+    this->PreBackgroundChunkUpdaterComponentInitializationQueue.Empty();
 
-    UE_LOG(LogTemp, Warning, TEXT("AWorldGeneratorInfo::BeginPlay: Enqueued all chunks. Predicted chunks in queue: %d"), this->MaxSpiralPoints * (this->ChunksAboveZero + 1))
+    if (this->bClientMode)
+    {
+        this->GenerateWorldAsync();
+    }
+
+    /*
+     * The server will generate the chunks based on the needs of a client.
+     */
 
     return;
 }
@@ -80,24 +91,118 @@ void AWorldGeneratorInfo::Tick(const float DeltaTime)
     return;
 }
 
+void AWorldGeneratorInfo::EnqueueInitializationChunk(FIntVector ChunkKey)
+{
+    if (this->BackgroundChunkUpdaterComponent == nullptr)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("AWorldGeneratorInfo::EnqueueInitializationChunk: BackgroundChunkUpdaterComponent is nullptr. Adding to pre initialization queue."))
+        this->PreBackgroundChunkUpdaterComponentInitializationQueue.Enqueue(ChunkKey);
+        return;
+    }
+
+    this->BackgroundChunkUpdaterComponent->ChunkInitializationQueue.Enqueue(ChunkKey);
+
+}
+
+void AWorldGeneratorInfo::GenerateChunkForClient(FIntVector ChunkKey, UBackgroundChunkUpdaterComponent* Callback)
+{
+    check ( Callback )
+
+    const ACommonChunk* Chunk = this->FullyLoadedChunks.Contains(ChunkKey) ? this->FullyLoadedChunks[ChunkKey] : nullptr;
+
+    if (Chunk == nullptr)
+    {
+        const FTransform TargetedChunkTransform = FTransform(
+            FRotator::ZeroRotator,
+            FVector(
+                ChunkKey.X * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale,
+                ChunkKey.Y * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale,
+                ChunkKey.Z * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale
+            ),
+            FVector::OneVector
+        );
+
+        Chunk = this->GetWorld()->SpawnActor<ACommonChunk>(AGreedyChunk::StaticClass(), TargetedChunkTransform);
+    }
+
+    check( Chunk )
+
+    Chunk->SendInitializationDataToClient(Callback);
+
+    return;
+}
+
+void AWorldGeneratorInfo::SetBackgroundChunkUpdaterComponent(UBackgroundChunkUpdaterComponent* InBackgroundChunkUpdaterComponent)
+{
+    check( InBackgroundChunkUpdaterComponent )
+
+    if (UNetworkStatics::IsSafeClient(this) == false)
+    {
+        UE_LOG(LogTemp, Fatal, TEXT("AWorldGeneratorInfo::SetBackgroundChunkUpdaterComponent: Tried to set on a server."))
+        return;
+    }
+
+    if (InBackgroundChunkUpdaterComponent == nullptr)
+    {
+        UE_LOG(LogTemp, Fatal, TEXT("AWorldGeneratorInfo::SetBackgroundChunkUpdaterComponent: Tried to set a nullptr."))
+        return;
+    }
+
+    if (this->BackgroundChunkUpdaterComponent != nullptr)
+    {
+        UE_LOG(LogTemp, Fatal, TEXT("AWorldGeneratorInfo::SetBackgroundChunkUpdaterComponent: Tried to set a non nullptr."))
+        return;
+    }
+
+    this->BackgroundChunkUpdaterComponent = InBackgroundChunkUpdaterComponent;
+
+    if (this->PreBackgroundChunkUpdaterComponentInitializationQueue.IsEmpty())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("AWorldGeneratorInfo::OnBackgroundChunkUpdaterComponentSet: PreBackgroundChunkUpdaterComponentInitializationQueue is empty. Nothing to add."))
+        return;
+    }
+
+    UE_LOG(LogTemp, Warning, TEXT("AWorldGeneratorInfo::OnBackgroundChunkUpdaterComponentSet: Adding pre initialization queue to BackgroundChunkUpdaterComponent."))
+
+    while (this->PreBackgroundChunkUpdaterComponentInitializationQueue.IsEmpty() == false)
+    {
+        FIntVector Item;
+        if (this->PreBackgroundChunkUpdaterComponentInitializationQueue.Dequeue(Item) == false)
+        {
+            UE_LOG(LogTemp, Error, TEXT("AWorldGeneratorInfo::OnBackgroundChunkUpdaterComponentSet: Dequeue failed."))
+            return;
+        }
+
+        this->BackgroundChunkUpdaterComponent->ChunkInitializationQueue.Enqueue(Item);
+
+        continue;
+    }
+
+    return;
+}
+
 void AWorldGeneratorInfo::GenerateWorldAsync()
 {
-    auto MoveCursorRight = [](const FIntVector2& CursorLocation)
+    auto MoveCursorRight = [] (const FIntVector2& CursorLocation)
     {
         return FIntVector2(CursorLocation.X + 1, CursorLocation.Y);
     };
-    auto MoveCursorDown = [](const FIntVector2& CursorLocation)
+
+    auto MoveCursorDown = [] (const FIntVector2& CursorLocation)
     {
         return FIntVector2(CursorLocation.X, CursorLocation.Y - 1);
     };
-    auto MoveCursorLeft = [](const FIntVector2& CursorLocation)
+
+    auto MoveCursorLeft = [] (const FIntVector2& CursorLocation)
     {
         return FIntVector2(CursorLocation.X - 1, CursorLocation.Y);
     };
-    auto MoveCursorUp = [](const FIntVector2& CursorLocation)
+
+    auto MoveCursorUp = [] (const FIntVector2& CursorLocation)
     {
         return FIntVector2(CursorLocation.X, CursorLocation.Y + 1);
     };
+
     const auto Moves = TArray<FIntVector2(*)(const FIntVector2&)>(
     {
         MoveCursorRight, MoveCursorDown, MoveCursorLeft, MoveCursorUp

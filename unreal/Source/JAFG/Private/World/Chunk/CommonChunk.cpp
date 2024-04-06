@@ -5,6 +5,7 @@
 #include "ProceduralMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "Network/HyperlaneTransmitterInfo.h"
 #include "Network/NetworkStatics.h"
 #include "System/MaterialSubsystem.h"
 #include "World/WorldGeneratorInfo.h"
@@ -15,7 +16,7 @@ ACommonChunk::ACommonChunk(const FObjectInitializer& ObjectInitializer) : Super(
 {
     this->PrimaryActorTick.bCanEverTick = false;
 
-    this->bReplicates = true;
+    this->bReplicates = false;
 
     this->ProceduralMeshComponent = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("ProceduralMeshComponent"));
     this->SetRootComponent(this->ProceduralMeshComponent);
@@ -26,31 +27,12 @@ ACommonChunk::ACommonChunk(const FObjectInitializer& ObjectInitializer) : Super(
     return;
 }
 
-void ACommonChunk::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-    /*
-     * Can we optimise this?
-     */
-
-    FDoRepLifetimeParams SharedParams;
-    SharedParams.bIsPushBased = true;
-
-    DOREPLIFETIME_WITH_PARAMS_FAST(ACommonChunk, RawVoxels, SharedParams);
-
-    return;
-}
-
 void ACommonChunk::BeginPlay(void)
 {
     Super::BeginPlay();
 
-    if (UNetworkStatics::IsSafeStandalone(this) || UNetworkStatics::IsSafeServer(this))
-    {
-        this->WorldGeneratorInfo = CastChecked<AWorldGeneratorInfo>(
-            UGameplayStatics::GetActorOfClass(this, AWorldGeneratorInfo::StaticClass()));
-    }
+    this->WorldGeneratorInfo = Cast<AWorldGeneratorInfo>(UGameplayStatics::GetActorOfClass(this, AWorldGeneratorInfo::StaticClass()));
+    check (this->WorldGeneratorInfo )
 
     this->VoxelSubsystem = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>();
     check(this->VoxelSubsystem)
@@ -78,13 +60,8 @@ void ACommonChunk::BeginPlay(void)
      * We do not have to care about that here.
      */
 
-    this->bInitializedClientBeginPlay = true;
-
-    /* Just a safety net. */
-    this->ClearMesh();
-
-    this->GenerateProceduralMesh();
-    this->ApplyProceduralMesh();
+    UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::BeginPlay: Client spawned chunk %s. Now notifying server to generate the appropiate voxels."), *this->ChunkKey.ToString())
+    this->WorldGeneratorInfo->EnqueueInitializationChunk(this->ChunkKey);
 
     return;
 }
@@ -117,24 +94,6 @@ void ACommonChunk::GenerateVoxels(void)
 
     UE_LOG(LogTemp, Error, TEXT("ACommonChunk::GenerateVoxels: World Generation of type %s not implemented."),
            *WorldGeneratorInfo::LexToString(this->WorldGeneratorInfo->WorldGenerationType));
-
-    return;
-}
-
-void ACommonChunk::OnRep_RawVoxels(void)
-{
-    if (this->bInitializedClientBeginPlay == false)
-    {
-        UE_LOG(LogTemp, Warning,
-               TEXT(
-                   "ACommonChunk::OnRep_RawVoxels: Discarding Raw Voxels replication post behavior as this chunk has not yet be marked as initialized."
-               ))
-        return;
-    }
-
-    this->ClearMesh();
-    this->GenerateProceduralMesh();
-    this->ApplyProceduralMesh();
 
     return;
 }
@@ -249,6 +208,20 @@ void ACommonChunk::GenerateSuperFlatWorld()
     }
 
     return;
+}
+
+void ACommonChunk::SendInitializationDataToClient(UBackgroundChunkUpdaterComponent* Target) const
+{
+    check ( Target )
+
+    UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::SendInitializationDataToClient: Sending initialization data to client for chunk %s."), *this->ChunkKey.ToString())
+
+    AHyperlaneTransmitterInfo* Transmitter = Cast<AHyperlaneTransmitterInfo>(UGameplayStatics::GetActorOfClass(this, AHyperlaneTransmitterInfo::StaticClass()));
+    check( Transmitter )
+
+    // TransmittableData::FChunkInitializationData Data = TransmittableData::FChunkInitializationData(this->ChunkKey, this->RawVoxels);
+    // Transmitter->SendChunkInitializationData(Data);
+
 }
 
 ACommonChunk* ACommonChunk::GetTargetChunk(const FIntVector& LocalVoxelPosition, FIntVector& OutTransformedLocalVoxelPosition)

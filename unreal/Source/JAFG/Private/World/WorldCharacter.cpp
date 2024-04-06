@@ -7,6 +7,8 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Network/BackgroundChunkUpdaterComponent.h"
 #include "Network/ChatComponent.h"
 #include "System/HyperlaneComponent.h"
 #include "UI/World/WorldHUD.h"
@@ -27,6 +29,7 @@ IMCFoot(nullptr), IMCMenu(nullptr), IAJump(nullptr), IALook(nullptr), IAMove(nul
     this->GetCapsuleComponent()->InitCapsuleSize(40.0f, 90.0f);
 
     this->ChatComponent = CreateDefaultSubobject<UChatComponent>(TEXT("ChatComponent"));
+    this->BackgroundChunkUpdaterComponent = CreateDefaultSubobject<UBackgroundChunkUpdaterComponent>(TEXT("BackgroundChunkUpdaterComponent"));
     this->HyperlaneComponent = CreateDefaultSubobject<UHyperlaneComponent>(TEXT("HyperlaneComponent"));
 
     this->FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
@@ -47,6 +50,18 @@ IMCFoot(nullptr), IMCMenu(nullptr), IAJump(nullptr), IALook(nullptr), IAMove(nul
 void AWorldCharacter::BeginPlay(void)
 {
     Super::BeginPlay();
+
+    check( this->ChatComponent )
+    check( this->BackgroundChunkUpdaterComponent )
+    check( this->HyperlaneComponent )
+
+    if (UNetworkStatics::IsSafeClient(this))
+    {
+        AWorldGeneratorInfo* WorldGeneratorInfo = Cast<AWorldGeneratorInfo>(UGameplayStatics::GetActorOfClass(this, AWorldGeneratorInfo::StaticClass()));
+        check( WorldGeneratorInfo )
+        WorldGeneratorInfo->SetBackgroundChunkUpdaterComponent(this->BackgroundChunkUpdaterComponent);
+    }
+
 }
 
 void AWorldCharacter::Tick(const float DeltaTime)
@@ -384,4 +399,6 @@ void AWorldCharacter::GetTargetedVoxel(ACommonChunk*& OutChunk, FVector& OutWorl
     return;
 }
 
+#undef PLAYER_CONTROLLER
+#undef HEAD_UP_DISPLAY
 #undef ENHANCED_INPUT_SUBSYSTEM

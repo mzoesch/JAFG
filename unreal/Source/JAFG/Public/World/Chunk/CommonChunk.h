@@ -25,15 +25,8 @@ class JAFG_API ACommonChunk : public AActor
 public:
 
     explicit ACommonChunk(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
-    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 protected:
-
-    /**
-     * Variables may not have been initialized yet on the client.
-     * This variable must never be true on any server type.
-     */
-    bool bInitializedClientBeginPlay = false;
 
     virtual void BeginPlay(void) override;
 
@@ -50,8 +43,6 @@ protected:
 
 private:
 
-    UFUNCTION()
-    void OnRep_RawVoxels();
     void ApplyProceduralMesh(void) const;
     void ClearMesh(void);
 
@@ -65,24 +56,8 @@ protected:
     //////////////////////////////////////////////////////////////////////////
 
     /**
-     * Currently using the unreal replication system. But is this the best way? We may run into performance issues very
-     * fast in the future. We may need to implement our own replication system.
-     * Besides the main problem is that we are limited to a maximum Bunch size of 2^16 = 65.536 bytes. If we want to
-     * have int32 arrays with a size of (32x32x32) * 4 bytes = 32.768 * 4 bytes = 131.072 bytes, we are already over
-     * the limit.
-     *
-     * Have a look at PushMode.h for more information.
-     *
-     * Possible solutions:
-     *
-     * Custom UDP TCP socket system?
-     * Maybe we can take a look at FTcpListener later on.
-     * For anyone else who finds this, I’ve concluded that using RPC/Replication to send large amounts of data is not preferable so I’m gonna try using the built in UDP Socket system to send this information
-     * FFastArraySerializer
-     *
      * Can we change the int type?
      */
-    UPROPERTY(ReplicatedUsing=OnRep_RawVoxels)
     TArray<int32> RawVoxels;
 
     FORCEINLINE void ModifyRawVoxelData(const FIntVector& LocalVoxelPosition, const int NewVoxel)
@@ -128,6 +103,8 @@ private:
     void GenerateSuperFlatWorld(void);
 
 public:
+
+    void SendInitializationDataToClient(UBackgroundChunkUpdaterComponent* Target) const;
 
     //////////////////////////////////////////////////////////////////////////
     // Public interaction
