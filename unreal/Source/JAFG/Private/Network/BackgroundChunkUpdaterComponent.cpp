@@ -36,17 +36,19 @@ void UBackgroundChunkUpdaterComponent::TickComponent(float DeltaTime, ELevelTick
         return;
     }
 
-    FIntVector ChunkKey;
-    if (this->ChunkInitializationQueue.Dequeue(ChunkKey) == false)
+    while (this->ChunkInitializationQueue.IsEmpty() == false)
     {
-        UE_LOG(LogTemp, Fatal, TEXT("UBackgroundChunkUpdaterComponent::TickComponent: Could not dequeue chunk key."))
-        return;
+        FIntVector ChunkKey;
+        if (this->ChunkInitializationQueue.Dequeue(ChunkKey) == false)
+        {
+            UE_LOG(LogTemp, Fatal, TEXT("UBackgroundChunkUpdaterComponent::TickComponent: Could not dequeue chunk key."))
+            return;
+        }
+
+        UE_LOG(LogTemp, Warning, TEXT("UBackgroundChunkUpdaterComponent::TickComponent: Dequeued chunk key %s."), *ChunkKey.ToString())
+
+        this->AskServerToGenerateChunkForClient_ServerRPC(ChunkKey);
     }
-
-    UE_LOG(LogTemp, Warning, TEXT("UBackgroundChunkUpdaterComponent::TickComponent: Dequeued chunk key %s."), *ChunkKey.ToString())
-
-    this->AskServerToGenerateChunkForClient_ServerRPC(ChunkKey);
-
 }
 
 void UBackgroundChunkUpdaterComponent::AskServerToGenerateChunkForClient_ServerRPC_Implementation(const FIntVector& ChunkKey)

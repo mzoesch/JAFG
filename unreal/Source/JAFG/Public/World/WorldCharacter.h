@@ -43,6 +43,7 @@ private:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     UBackgroundChunkUpdaterComponent* BackgroundChunkUpdaterComponent;
+    friend class AWorldGeneratorInfo;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     UHyperlaneComponent* HyperlaneComponent;

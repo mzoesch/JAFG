@@ -209,6 +209,7 @@ void AHyperlaneTransmitterInfo::SendChunkInitializationData(TransmittableData::F
 {
     if (this->Clients.Num() != 1)
     {
+        UE_LOG(LogTemp, Error, TEXT("Num clients: %d"), this->Clients.Num())
         check( 0 && "AHyperlaneTransmitterInfo::SendChunkInitializationData: There is not exactly one client connected." )
         return;
     }

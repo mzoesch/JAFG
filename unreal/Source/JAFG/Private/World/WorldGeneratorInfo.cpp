@@ -4,9 +4,10 @@
 
 #include "Network/BackgroundChunkUpdaterComponent.h"
 #include "Network/NetworkStatics.h"
+#include "World/WorldCharacter.h"
 #include "World/Chunk/GreedyChunk.h"
 
-AWorldGeneratorInfo::AWorldGeneratorInfo(const FObjectInitializer& ObjectInitializer)
+AWorldGeneratorInfo::AWorldGeneratorInfo(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
     this->PrimaryActorTick.bCanEverTick = true;
     this->PrimaryActorTick.bStartWithTickEnabled = true;
@@ -61,7 +62,8 @@ void AWorldGeneratorInfo::Tick(const float DeltaTime)
         return;
     }
 
-    for (int i = 0; i < 20; ++i)
+    constexpr int MaxNewChunksPerTick = 100;
+    for (int i = 0; i < MaxNewChunksPerTick; ++i)
     {
         FIntVector Key;
         if (this->ChunkGenerationQueue.Dequeue(Key) == false)
