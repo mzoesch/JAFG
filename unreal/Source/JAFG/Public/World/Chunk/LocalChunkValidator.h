@@ -33,7 +33,7 @@ private:
      */
     TMap<FIntVector, FDelegateHandle> ChunkHandles;
 
-    UFUNCTION(Server, Reliable)
+    UFUNCTION(Server, Reliable, WithValidation)
     void AskServerToSpawnChunk_ServerRPC(const FIntVector& ChunkKey);
 
     /**

@@ -25,8 +25,6 @@ static TFuture<void> RunLambdaOnGameThread(TFunction<void(void)> InFunction)
 
 void TransmittableData::FChunkInitializationData::SerializeToBytes(TArray<uint8>& OutBytes)
 {
-    UE_LOG(LogTemp, Warning, TEXT("TransmittableData::FChunkInitializationData::SerializeToBytes: Serializing: %s."), *ChunkKey.ToString())
-
     FBufferArchive Ar = FBufferArchive();
     Ar.Seek(0b0);
 
@@ -38,6 +36,8 @@ void TransmittableData::FChunkInitializationData::SerializeToBytes(TArray<uint8>
 
     Ar.FlushCache();
     Ar.Empty();
+
+    return;
 }
 
 TransmittableData::FChunkInitializationData TransmittableData::FChunkInitializationData::DeserializeFromBytes(const TArray<uint8>& InBytes)
@@ -53,7 +53,7 @@ TransmittableData::FChunkInitializationData TransmittableData::FChunkInitializat
     Ar.FlushCache();
     if (Ar.Close() == false)
     {
-        UE_LOG(LogTemp, Error, TEXT("TransmittableData::FChunkInitializationData::DeserializeFromBytes: Failed to close memory reader."))
+        UE_LOG(LogTemp, Fatal, TEXT("TransmittableData::FChunkInitializationData::DeserializeFromBytes: Failed to close memory reader."))
     }
 
     return Data;
@@ -480,7 +480,7 @@ void AHyperlaneTransmitterInfo::Emit(const TArray<uint8>& InBytes, const FString
     int32 BytesSent = 0;
     if (Client->Socket->Send(InBytes.GetData(), InBytes.Num(), BytesSent) == false)
     {
-        UE_LOG(LogTemp, Fatal, TEXT("AHyperlaneTransmitterInfo::Emit: Failed to send data to %s."), *InClientAddress)
+        UE_LOG(LogTemp, Error, TEXT("AHyperlaneTransmitterInfo::Emit: Failed to send data to %s."), *InClientAddress)
         this->DisconnectSingleClient(InClientAddress);
         return;
     }

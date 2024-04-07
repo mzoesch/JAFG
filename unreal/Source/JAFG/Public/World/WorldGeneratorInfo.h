@@ -111,7 +111,7 @@ private:
 
     UPROPERTY()
     TMap<FIntVector, ACommonChunk*> FullyLoadedChunks;
-    /*
+    /**
      * The requested chunks, that a client wants to load into the world.
      */
     TQueue<FIntVector> ChunkGenerationQueue;

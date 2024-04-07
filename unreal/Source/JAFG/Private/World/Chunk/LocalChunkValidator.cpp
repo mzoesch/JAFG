@@ -52,18 +52,23 @@ void ULocalChunkValidator::TickComponent(const float DeltaTime, const ELevelTick
     return;
 }
 
+bool ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC_Validate(const FIntVector& ChunkKey)
+{
+    if (this->ChunkHandles.Contains(ChunkKey))
+    {
+        UE_LOG(LogTemp, Error, TEXT("ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC: Chunk already requested by this client."))
+        return false;
+    }
+
+    return true;
+}
+
 void ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC_Implementation(const FIntVector& ChunkKey)
 {
     AActor* _ = UGameplayStatics::GetActorOfClass(this, AWorldGeneratorInfo::StaticClass());
     check( _ )
     AWorldGeneratorInfo* WorldGeneratorInfo = Cast<AWorldGeneratorInfo>(_);
     check( WorldGeneratorInfo )
-
-    if (this->ChunkHandles.Contains(ChunkKey))
-    {
-        UE_LOG(LogTemp, Fatal, TEXT("ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC: Chunk already requested by client. Not implemented yet."))
-        return;
-    }
 
     if (WorldGeneratorInfo->HasFullyLoadedChunk(ChunkKey))
     {
@@ -77,7 +82,10 @@ void ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC_Implementation(const 
 
         if (ChunkKey != Chunk->GetChunkKey())
         {
-            UE_LOG(LogTemp, Error, TEXT("ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC: Chunk key mismatch."))
+            /*
+             * All deletes are called if any chunk finishes generating.
+             * Maybe we can implement a better way to handle this in the future.
+             */
             return;
         }
 
@@ -85,18 +93,14 @@ void ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC_Implementation(const 
 
         if (this->ChunkHandles.Contains(ChunkKey) == false)
         {
-            UE_LOG(LogTemp, Fatal, TEXT("ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC: Chunk handle not found."))
+            UE_LOG(LogTemp, Fatal, TEXT("ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC: Chunk handle not found for %s."), *ChunkKey.ToString())
             return;
         }
 
-        FDelegateHandle MyHandle = this->ChunkHandles[ChunkKey];
-        if (MyHandle.IsValid() == false)
+        if (WorldGeneratorInfo->OnChunkFinishedGeneratingDelegate.Remove(this->ChunkHandles[ChunkKey]) == false)
         {
-            UE_LOG(LogTemp, Error, TEXT("ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC: Handle is invalid for %s."), *ChunkKey.ToString())
-        }
-        if (WorldGeneratorInfo->OnChunkFinishedGeneratingDelegate.Remove(MyHandle) == false)
-        {
-            UE_LOG(LogTemp, Error, TEXT("ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC: Error while removing delegate for %s."), *ChunkKey.ToString())
+            UE_LOG(LogTemp, Fatal, TEXT("ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC: Error while removing delegate handle for %s."), *ChunkKey.ToString())
+            return;
         }
         this->ChunkHandles.Remove(ChunkKey);
 
@@ -112,7 +116,7 @@ void ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC_Implementation(const 
 
     if (WorldGeneratorInfo->AddChunkToGenerationQueue(ChunkKey) == false)
     {
-        UE_LOG(LogTemp, Fatal, TEXT("ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC: Error while adding item to queue.."))
+        UE_LOG(LogTemp, Fatal, TEXT("ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC: Error while adding item [%s] to queue."), *ChunkKey.ToString())
         return;
     }
 
