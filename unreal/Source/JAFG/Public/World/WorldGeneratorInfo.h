@@ -7,10 +7,9 @@
 
 #include "WorldGeneratorInfo.generated.h"
 
-class UBackgroundChunkUpdaterComponent;
 class ACommonChunk;
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnChunkFinishedGenerating, ACommonChunk* /* Chunk */);
+DECLARE_MULTICAST_DELEGATE_OneParam(FChunkEventSignature, ACommonChunk* /* Chunk */);
 
 UENUM(BlueprintType)
 enum class EChunkType
@@ -119,7 +118,7 @@ private:
 
 public:
 
-    FOnChunkFinishedGenerating OnChunkFinishedGeneratingDelegate;
+    FChunkEventSignature OnChunkFinishedGeneratingDelegate;
 
     FORCEINLINE bool HasFullyLoadedChunk(const FIntVector& ChunkKey) const
     {

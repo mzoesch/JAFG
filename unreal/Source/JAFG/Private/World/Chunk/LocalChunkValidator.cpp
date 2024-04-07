@@ -6,6 +6,7 @@
 #include "Network/NetworkStatics.h"
 #include "System/LocalPlayerChunkGeneratorSubsystem.h"
 #include "World/WorldGeneratorInfo.h"
+#include "World/WorldPlayerController.h"
 #include "World/Chunk/GreedyChunk.h"
 
 ULocalChunkValidator::ULocalChunkValidator(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -100,6 +101,8 @@ void ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC_Implementation(const 
 
     FDelegateHandle Handle = WorldGeneratorInfo->OnChunkFinishedGeneratingDelegate.AddLambda( [&, WorldGeneratorInfo, ChunkKey] (const ACommonChunk* Chunk)
     {
+        check( Chunk )
+
         if (ChunkKey != Chunk->GetChunkKey())
         {
             UE_LOG(LogTemp, Error, TEXT("ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC: Chunk key mismatch."))
@@ -116,6 +119,11 @@ void ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC_Implementation(const 
 
         WorldGeneratorInfo->OnChunkFinishedGeneratingDelegate.Remove(*this->ChunkHandles[ChunkKey]);
         this->ChunkHandles.Remove(ChunkKey);
+
+        check( this->GetOwner() )
+        check( Cast<APawn>(this->GetOwner()) )
+        check( Cast<APawn>(this->GetOwner())->Controller )
+        Chunk->SendInitializationDataToClient(Cast<AWorldPlayerController>(Cast<APawn>(this->GetOwner())->Controller));
 
         return;
     });

@@ -24,6 +24,8 @@ public:
     /** Automatically called if deinitialized. */
     void DisconnectFromHyperlane(void);
 
+    void InitializeChunkWithAuthorityData(const FIntVector& InChunkKey, const TArray<int32>& InRawVoxels);
+
     TQueue<FIntVector> WaitForAuthorityQueue;
     /*
      * The AActors are loaded, not necessarily generated.
@@ -32,5 +34,5 @@ public:
 
 private:
 
-    TObjectPtr<FHyperlaneWorker> Worker = nullptr;
+    FHyperlaneWorker* Worker = nullptr;
 };

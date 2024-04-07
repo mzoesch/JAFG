@@ -10,6 +10,7 @@
 
 #include "CommonChunk.generated.h"
 
+class AWorldPlayerController;
 class AJAFGPlayerController;
 class UProceduralMeshComponent;
 struct FChunkMeshData;
@@ -109,9 +110,9 @@ public:
         return this->ChunkKey;
     }
 
-    void SendInitializationDataToClient(UBackgroundChunkUpdaterComponent* Target) const;
+    void SendInitializationDataToClient(AWorldPlayerController* Target) const;
 
-    void InitializeWithAuthorityData(const TArray<int32> Array);
+    void InitializeWithAuthorityData(const TArray<int32>& InRawVoxels);
 
     //////////////////////////////////////////////////////////////////////////
     // Public interaction

@@ -4,7 +4,6 @@
 
 #include "ProceduralMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "Net/UnrealNetwork.h"
 #include "Network/HyperlaneTransmitterInfo.h"
 #include "Network/NetworkStatics.h"
 #include "System/MaterialSubsystem.h"
@@ -216,7 +215,7 @@ void ACommonChunk::GenerateSuperFlatWorld()
     return;
 }
 
-void ACommonChunk::SendInitializationDataToClient(UBackgroundChunkUpdaterComponent* Target) const
+void ACommonChunk::SendInitializationDataToClient(AWorldPlayerController* Target) const
 {
     check ( Target )
 
@@ -230,9 +229,9 @@ void ACommonChunk::SendInitializationDataToClient(UBackgroundChunkUpdaterCompone
 
 }
 
-void ACommonChunk::InitializeWithAuthorityData(const TArray<int32> Array)
+void ACommonChunk::InitializeWithAuthorityData(const TArray<int32>& InRawVoxels)
 {
-    this->RawVoxels = Array;
+    this->RawVoxels = InRawVoxels;
 
     UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::InitializeWithAuthorityData: Initializing chunk %s with authority data."), *this->ChunkKey.ToString())
     this->ClearMesh();

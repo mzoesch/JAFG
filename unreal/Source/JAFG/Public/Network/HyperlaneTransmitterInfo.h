@@ -42,6 +42,7 @@ struct FChunkInitializationData
 
 }
 
+// TODO Make subsystem
 UCLASS(NotBlueprintable)
 class JAFG_API AHyperlaneTransmitterInfo : public AInfo
 {

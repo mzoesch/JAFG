@@ -4,6 +4,7 @@
 
 #include "Network/HyperlaneWorker.h"
 #include "Network/NetworkStatics.h"
+#include "World/Chunk/CommonChunk.h"
 
 void ULocalPlayerChunkGeneratorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -52,6 +53,21 @@ void ULocalPlayerChunkGeneratorSubsystem::DisconnectFromHyperlane()
     }
 
     delete this->Worker;
+
+    return;
+}
+
+void ULocalPlayerChunkGeneratorSubsystem::InitializeChunkWithAuthorityData(const FIntVector& InChunkKey, const TArray<int32>& InRawVoxels)
+{
+    ACommonChunk* Chunk = this->LoadedChunks[InChunkKey];
+    if (Chunk == nullptr)
+    {
+        /* Necessary to also crash the game in shipping builds. */
+        UE_LOG(LogTemp, Fatal, TEXT("ULocalPlayerChunkGeneratorSubsystem::InitializeChunkWithAuthorityData: Chunk not found."))
+        return;
+    }
+
+    Chunk->InitializeWithAuthorityData(InRawVoxels);
 
     return;
 }
