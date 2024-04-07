@@ -6,7 +6,7 @@
 #include "Sockets.h"
 #include "SocketSubsystem.h"
 #include "Network/HyperlaneTransmitterInfo.h"
-#include "System/LocalPlayerChunkGeneratorSubsystem.h"
+#include "World/Chunk/LocalPlayerChunkGeneratorSubsystem.h"
 
 /*
  * Just for the sake of it.

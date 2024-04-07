@@ -4,7 +4,7 @@
 
 #include "Kismet/GameplayStatics.h"
 #include "Network/NetworkStatics.h"
-#include "System/LocalPlayerChunkGeneratorSubsystem.h"
+#include "World/Chunk/LocalPlayerChunkGeneratorSubsystem.h"
 #include "World/WorldGeneratorInfo.h"
 #include "World/WorldPlayerController.h"
 #include "World/Chunk/GreedyChunk.h"

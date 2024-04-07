@@ -9,7 +9,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Network/ChatComponent.h"
 #include "Network/NetworkStatics.h"
-#include "System/LocalPlayerChunkGeneratorSubsystem.h"
+#include "World/Chunk/LocalPlayerChunkGeneratorSubsystem.h"
 #include "UI/World/WorldHUD.h"
 #include "World/WorldPlayerController.h"
 #include "World/Chunk/CommonChunk.h"

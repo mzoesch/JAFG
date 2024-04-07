@@ -1,6 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
-#include "System/LocalPlayerChunkGeneratorSubsystem.h"
+#include "World/Chunk/LocalPlayerChunkGeneratorSubsystem.h"
 
 #include "Network/HyperlaneWorker.h"
 #include "Network/NetworkStatics.h"
