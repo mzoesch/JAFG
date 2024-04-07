@@ -42,7 +42,7 @@ private:
     FTCPHyperlaneWorkerEventSignature OnDisconnectedDelegate;
     FTCPHyperlaneWorkerMessageSignature OnBytesReceivedDelegate;
 
-    void OnConnectedDelegateHandler(void);
+    void OnConnectedDelegateHandler(void) const;
     void OnDisconnectedDelegateHandler(void);
     void OnBytesReceivedDelegateHandler(const TArray<uint8>& Bytes);
 
@@ -59,6 +59,13 @@ private:
 
     TFuture<void> ConnectionEndFuture;
     void CreateConnectionEndFuture(void);
+
+    /**
+     * Once we are connected to the Hyperlane, we have to verify quickly that we are connected and tell the Hyperlane
+     * Transmitter who we are.
+     */
+    bool SendValidation(void) const;
+    bool Emit(const TArray<uint8>& Bytes) const;
 
     bool IsConnected(void) const;
     // ~Network members

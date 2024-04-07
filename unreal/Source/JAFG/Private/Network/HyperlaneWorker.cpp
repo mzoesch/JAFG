@@ -6,6 +6,7 @@
 #include "Sockets.h"
 #include "SocketSubsystem.h"
 #include "Network/HyperlaneTransmitterInfo.h"
+#include "World/WorldPlayerController.h"
 #include "World/Chunk/LocalPlayerChunkGeneratorSubsystem.h"
 
 /*
@@ -208,9 +209,18 @@ void FHyperlaneWorker::Exit(void)
     return;
 }
 
-void FHyperlaneWorker::OnConnectedDelegateHandler()
+void FHyperlaneWorker::OnConnectedDelegateHandler(void) const
 {
-    UE_LOG(LogTemp, Warning, TEXT("FHyperlaneWorker::OnConnectedDelegateHandler: fired."))
+    UE_LOG(LogTemp, Warning, TEXT("FHyperlaneWorker::OnConnectedDelegateHandler: fired. Validating connection with Hyperlane Transmitter."))
+
+    if (this->SendValidation())
+    {
+        return;
+    }
+
+    UE_LOG(LogTemp, Fatal, TEXT("FHyperlaneWorker::OnConnectedDelegateHandler: Failed to send validation to Hyperlane Transmitter."))
+
+    return;
 }
 
 void FHyperlaneWorker::OnDisconnectedDelegateHandler()
@@ -256,7 +266,7 @@ void FHyperlaneWorker::CreateConnectionEndFuture()
 
             if (this->Socket->Connect(*this->RemoteAddress))
             {
-                CommonHyperlaneWorkerStatics::RunLambdaOnGameThread( [&] (void)
+                CommonHyperlaneWorkerStatics::RunLambdaOnBackGroundThread( [&] (void)
                 {
                     this->OnConnectedDelegate.Execute();
                 });
@@ -274,7 +284,7 @@ void FHyperlaneWorker::CreateConnectionEndFuture()
 
         if (this->IsConnected() == false)
         {
-            UE_LOG(LogTemp, Error, TEXT("FHyperlaneWorker::CreateConnectionEndFuture: Hyperlane Worker failed to connect."))
+            UE_LOG(LogTemp, Fatal, TEXT("FHyperlaneWorker::CreateConnectionEndFuture: Hyperlane Worker failed to connect."))
             return;
         }
 
@@ -319,6 +329,47 @@ void FHyperlaneWorker::CreateConnectionEndFuture()
     });
 
     return;
+}
+
+bool FHyperlaneWorker::SendValidation(void) const
+{
+    check( this->Owner )
+    check( this->Owner->GetWorld() )
+    check( this->Owner->GetWorld()->GetFirstPlayerController() )
+    check( Cast<AWorldPlayerController>(this->Owner->GetWorld()->GetFirstPlayerController()) )
+
+    const FString HyperlaneIdentifier = Cast<AWorldPlayerController>(this->Owner->GetWorld()->GetFirstPlayerController())->GetHyperlaneIdentifier();
+
+    TArray<uint8> Bytes = TArray<uint8>();
+    Bytes.Append( /* (uint8*) */ reinterpret_cast<uint8*>(TCHAR_TO_UTF8(*HyperlaneIdentifier)), HyperlaneIdentifier.Len() );
+
+    if (Bytes.Num() != HyperlaneIdentifier.Len())
+    {
+        UE_LOG(LogTemp, Error, TEXT("FHyperlaneWorker::SendValidation: Failed to convert Hyperlane Identifier [%s] to bytes."), *HyperlaneIdentifier)
+        return false;
+    }
+
+    return this->Emit(Bytes);
+}
+
+bool FHyperlaneWorker::Emit(const TArray<uint8>& Bytes) const
+{
+    if (this->IsConnected() == false)
+    {
+        UE_LOG(LogTemp, Fatal, TEXT("FHyperlaneWorker::Emit: Hyperlane Worker is not connected."))
+        return false;
+    }
+
+    int32 BytesSent = 0;
+    if (this->Socket->Send(Bytes.GetData(), Bytes.Num(), BytesSent))
+    {
+        UE_LOG(LogTemp, Log, TEXT("FHyperlaneWorker::Emit: Sent %d bytes."), BytesSent)
+        return true;
+    }
+
+    UE_LOG(LogTemp, Error, TEXT("FHyperlaneWorker::Emit: Failed to send %d bytes. Actually sent: %d."), Bytes.Num(), BytesSent)
+
+    return false;
 }
 
 bool FHyperlaneWorker::IsConnected(void) const

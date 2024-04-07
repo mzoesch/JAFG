@@ -27,6 +27,17 @@ void AWorldGameMode::PostLogin(APlayerController* NewPlayer)
 {
     Super::PostLogin(NewPlayer);
 
+    check( NewPlayer )
+
+    AWorldPlayerController* WorldPlayerController = Cast<AWorldPlayerController>(NewPlayer);
+    if (WorldPlayerController == nullptr)
+    {
+        UE_LOG(LogTemp, Fatal, TEXT("Player %s is not a AWorldPlayerController."), *NewPlayer->GetName());
+        return;
+    }
+
+    WorldPlayerController->OnPostLogin();
+
     UE_LOG(LogTemp, Warning, TEXT("Player %s has joined the game."), *NewPlayer->GetName());
 
     return;

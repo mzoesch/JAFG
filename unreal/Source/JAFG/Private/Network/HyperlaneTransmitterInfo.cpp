@@ -7,6 +7,7 @@
 #include "Interfaces/IPv4/IPv4Endpoint.h"
 #include "Network/NetworkStatics.h"
 #include "Serialization/BufferArchive.h"
+#include "World/WorldPlayerController.h"
 
 namespace CommonTransmitterStatics
 {
@@ -207,10 +208,11 @@ void AHyperlaneTransmitterInfo::EndPlay(const EEndPlayReason::Type EndPlayReason
 
 void AHyperlaneTransmitterInfo::SendChunkInitializationData(TransmittableData::FChunkInitializationData& Data)
 {
+    // TODO Make Set the client as parameter.
     if (this->Clients.Num() != 1)
     {
-        UE_LOG(LogTemp, Error, TEXT("Num clients: %d"), this->Clients.Num())
-        check( 0 && "AHyperlaneTransmitterInfo::SendChunkInitializationData: There is not exactly one client connected." )
+        UE_LOG(LogTemp, Warning, TEXT("Num clients: %d"), this->Clients.Num())
+        // check( 0 && "AHyperlaneTransmitterInfo::SendChunkInitializationData: There is not exactly one client connected." )
         return;
     }
 
@@ -219,6 +221,31 @@ void AHyperlaneTransmitterInfo::SendChunkInitializationData(TransmittableData::F
 
     this->Emit(Bytes, this->Clients.begin().Key());
 
+    return;
+}
+
+bool AHyperlaneTransmitterInfo::IsHyperlaneWorkerValid(const FString& HyperlaneIdentifier) const
+{
+    check( this->GetWorld() )
+    FConstPlayerControllerIterator It = this->GetWorld()->GetPlayerControllerIterator();
+    check( It )
+
+    for (; It; ++It)
+    {
+        if (AWorldPlayerController* PlayerController = Cast<AWorldPlayerController>(*It); PlayerController != nullptr)
+        {
+            if (PlayerController->GetHyperlaneIdentifier() == HyperlaneIdentifier)
+            {
+                return true;
+            }
+
+            continue;
+        }
+
+        continue;
+    }
+
+    return false;
 }
 
 void AHyperlaneTransmitterInfo::OnListenBeginDelegateHandler(const FString& InAddress, const uint16& InPort)
@@ -254,7 +281,7 @@ void AHyperlaneTransmitterInfo::DisconnectSingleClient(const FString& ClientAddr
     {
         UE_LOG(LogTemp, Warning, TEXT("AHyperlaneTransmitterInfo::DisconnectClient: Disconnecting all clients. Current client connections: %d."), Clients.Num())
 
-        for (const TPair<FString, TSharedPtr<FTCPTransmitterClient>>& ClientPair : Clients)
+        for (const TPair<FString, TSharedPtr<FTCPTransmitterClient>>& ClientPair : this->Clients)
         {
             if (const TSharedPtr<FTCPTransmitterClient> Client = ClientPair.Value; Client->Socket != nullptr)
             {
@@ -270,7 +297,7 @@ void AHyperlaneTransmitterInfo::DisconnectSingleClient(const FString& ClientAddr
             continue;
         }
 
-        Clients.Empty();
+        this->Clients.Empty();
 
         return;
     }
@@ -304,6 +331,7 @@ void AHyperlaneTransmitterInfo::CreateServerEndFuture(void)
     {
         uint32 BufferSize = 0;
         TArray<uint8> ReceiveBuffer = TArray<uint8>();
+        TArray<FString> NowValidatedClients = TArray<FString>();
         TArray<TSharedPtr<FTCPTransmitterClient>> ClientsDisconnected = TArray<TSharedPtr<FTCPTransmitterClient>>();
         ISocketSubsystem* SocketSubsystem = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
 
@@ -312,42 +340,54 @@ void AHyperlaneTransmitterInfo::CreateServerEndFuture(void)
         while (this->bShouldListen)
         {
             bool bHasPendingConnection = false;
-            Socket->HasPendingConnection(bHasPendingConnection);
+            this->Socket->HasPendingConnection(bHasPendingConnection);
             if (bHasPendingConnection)
             {
                 TSharedPtr<FInternetAddr> InternetAddr = SocketSubsystem->CreateInternetAddr();
-                FSocket* NewSocket = Socket->Accept(*InternetAddr, TEXT("HyperlaneTransmitterInfo-Clients"));
+                FSocket* NewSocket = this->Socket->Accept(*InternetAddr, TEXT("HyperlaneTransmitterInfo-Clients"));
 
                 const FString AddressString = InternetAddr->ToString(true);
 
                 TSharedPtr<FTCPTransmitterClient> NewClientItem = MakeShareable(new FTCPTransmitterClient());
-                NewClientItem->Socket  = NewSocket;
-                NewClientItem->Address = AddressString;
+                NewClientItem->Timestamp = FDateTime::Now();
+                NewClientItem->Socket    = NewSocket;
+                NewClientItem->Address   = AddressString;
 
-                if (Clients.FindRef(AddressString) != nullptr)
+                if (this->Clients.Contains(AddressString) || this->UnvalidatedClients.Contains(AddressString))
                 {
                     UE_LOG(LogTemp, Fatal, TEXT("AHyperlaneTransmitterInfo::CreateServerEndFuture: Client %s already exists. Cannot add."), *AddressString)
                     return;
                 }
 
-                Clients.Add(AddressString, NewClientItem);
-
-                AsyncTask(ENamedThreads::GameThread, [&, AddressString] (void)
-                {
-                    OnClientConnectedDelegate.Execute(AddressString);
-                });
+                this->UnvalidatedClients.Add(AddressString, NewClientItem);
             }
 
-            const float TimeSinceLastPing = (FDateTime::Now() - LastPing).GetTotalSeconds();
-            const bool bPingThisIteration = this->bShouldPingCheck && TimeSinceLastPing > this->PingCheckInterval;
-            if (bPingThisIteration)
-            {
-                LastPing = FDateTime::Now();
-            }
-
-            for (const TPair<FString, TSharedPtr<FTCPTransmitterClient>>& ClientPair : Clients)
+            for (const TPair<FString, TSharedPtr<FTCPTransmitterClient>>& ClientPair : this->UnvalidatedClients)
             {
                 TSharedPtr<FTCPTransmitterClient> Client = ClientPair.Value;
+
+                if (const float TimeSinceConnected = (FDateTime::Now() - Client->Timestamp).GetTotalSeconds(); TimeSinceConnected > AHyperlaneTransmitterInfo::DisconnectUnvalidatedClientsTimeout)
+                {
+                    UE_LOG(LogTemp, Error, TEXT("AHyperlaneTransmitterInfo::CreateServerEndFuture: Disconnecting unvalidated client %s."), *Client->Address)
+
+                    /*
+                     * Note that we can't call the disconnect method here as it would change the iterator that
+                     * we are currently iterating over.
+                     */
+
+                    if (Client->Socket->Close())
+                    {
+                        UE_LOG(LogTemp, Warning, TEXT("AHyperlaneTransmitterInfo::CreateServerEndFuture: Closed socket for %s."), *Client->Address)
+                    }
+                    else
+                    {
+                        UE_LOG(LogTemp, Error, TEXT("AHyperlaneTransmitterInfo::CreateServerEndFuture: Closed socket for %s with errors."), *Client->Address)
+                    }
+
+                    ClientsDisconnected.Add(Client);
+
+                    continue;
+                }
 
                 /*
                  * Why is this always SCS_Connected even if we are not connected? Is this a bug in the engine?
@@ -366,14 +406,40 @@ void AHyperlaneTransmitterInfo::CreateServerEndFuture(void)
                     continue;
                 }
 
+                BufferSize = 0;
+                ReceiveBuffer.Empty();
                 if (Client->Socket->HasPendingData(BufferSize))
                 {
                     ReceiveBuffer.SetNumUninitialized(BufferSize);
                     int32 Read = 0;
 
-                    if (Client->Socket->Recv(ReceiveBuffer.GetData(), ReceiveBuffer.Num(), Read) == false)
+                    if (Client->Socket->Recv(ReceiveBuffer.GetData(), ReceiveBuffer.Num(), Read))
                     {
-                        UE_LOG(LogTemp, Error, TEXT("AHyperlaneTransmitterInfo::CreateServerEndFuture: Failed to receive data from %s."), *Client->Address)
+                        ReceiveBuffer.Append(&AHyperlaneTransmitterInfo::UTF8Terminator, 1);
+                        FString ReceivedData = FString(UTF8_TO_TCHAR(ReceiveBuffer.GetData()));
+                        UE_LOG(LogTemp, Warning, TEXT("AHyperlaneTransmitterInfo::CreateServerEndFuture: Received data from %s: %s. Combining with unreals client connection if valid."), *Client->Address, *ReceivedData)
+
+                        if (this->IsHyperlaneWorkerValid(ReceivedData))
+                        {
+                            if (this->Clients.Contains(Client->Address))
+                            {
+                                UE_LOG(LogTemp, Fatal, TEXT("AHyperlaneTransmitterInfo::CreateServerEndFuture: Client %s is already validated."), *Client->Address)
+                                return;
+                            }
+
+                            this->Clients.Add(Client->Address, Client);
+
+                            /*
+                             * Note that we remove the client item here as it would change the iterator that
+                             * we are currently iterating over.
+                             */
+
+                            NowValidatedClients.Add(Client->Address);
+
+                            continue;
+                        }
+
+                        UE_LOG(LogTemp, Error, TEXT("AHyperlaneTransmitterInfo::CreateServerEndFuture: Received invalid data from %s. Disconnecting them."), *Client->Address)
 
                         /*
                          * Note that we can't call the disconnect method here as it would change the iterator that
@@ -394,11 +460,70 @@ void AHyperlaneTransmitterInfo::CreateServerEndFuture(void)
                         continue;
                     }
 
-                    UE_LOG(LogTemp, Warning, TEXT("AHyperlaneTransmitterInfo::CreateServerEndFuture: Received %d bytes from %s."), Read, *Client->Address)
+                    UE_LOG(LogTemp, Error, TEXT("AHyperlaneTransmitterInfo::CreateServerEndFuture: Failed to receive data from %s. Tried reading %d but only got %d."), *Client->Address, BufferSize, Read)
+
+                    /*
+                     * Note that we can't call the disconnect method here as it would change the iterator that
+                     * we are currently iterating over.
+                     */
+
+                    if (Client->Socket->Close())
+                    {
+                        UE_LOG(LogTemp, Warning, TEXT("AHyperlaneTransmitterInfo::CreateServerEndFuture: Closed socket for %s."), *Client->Address)
+                    }
+                    else
+                    {
+                        UE_LOG(LogTemp, Error, TEXT("AHyperlaneTransmitterInfo::CreateServerEndFuture: Closed socket for %s with errors."), *Client->Address)
+                    }
+
+                    ClientsDisconnected.Add(Client);
+
+                    continue;
                 }
 
-                if (bPingThisIteration)
+                continue;
+            }
+
+            if (NowValidatedClients.Num() > 0)
+            {
+                for (const FString& ClientAddress : NowValidatedClients)
                 {
+                    this->UnvalidatedClients.Remove(ClientAddress);
+
+                    AsyncTask(ENamedThreads::GameThread, [&, ClientAddress] (void)
+                    {
+                        this->OnClientConnectedDelegate.Execute(ClientAddress);
+                    });
+                }
+
+                NowValidatedClients.Empty();
+            }
+
+            if (this->bShouldPingCheck && ((FDateTime::Now() - LastPing).GetTotalSeconds() > this->PingCheckInterval))
+            {
+                LastPing = FDateTime::Now();
+
+                for (const TPair<FString, TSharedPtr<FTCPTransmitterClient>>& ClientPair : this->Clients)
+                {
+                    TSharedPtr<FTCPTransmitterClient> Client = ClientPair.Value;
+
+                    /*
+                     * Why is this always SCS_Connected even if we are not connected? Is this a bug in the engine?
+                     * Either way when we ping the client we will know if he is not connected.
+                     * Just a safety check here but essentially unnecessary.
+                     */
+                    ESocketConnectionState ConnectionState = ESocketConnectionState::SCS_NotConnected;
+                    if (Client->Socket != nullptr)
+                    {
+                        ConnectionState = Client->Socket->GetConnectionState();
+                    }
+
+                    if (ConnectionState != ESocketConnectionState::SCS_Connected)
+                    {
+                        ClientsDisconnected.Add(Client);
+                        continue;
+                    }
+
                     int32 BytesSent = 0;
                     /*
                      * We probably should send a new line?
@@ -423,9 +548,9 @@ void AHyperlaneTransmitterInfo::CreateServerEndFuture(void)
 
                         ClientsDisconnected.Add(Client);
                     }
-                }
 
-                continue;
+                    continue;
+                }
             }
 
             if (ClientsDisconnected.Num() > 0)
@@ -434,11 +559,12 @@ void AHyperlaneTransmitterInfo::CreateServerEndFuture(void)
                 {
                     const FString AddrFromDeadClient = ClientToRemove->Address;
 
-                    Clients.Remove(AddrFromDeadClient);
+                    this->UnvalidatedClients.Remove(AddrFromDeadClient);
+                    this->Clients.Remove(AddrFromDeadClient);
 
                     AsyncTask(ENamedThreads::GameThread, [&, AddrFromDeadClient]()
                     {
-                        OnClientDisconnectedDelegate.Execute(AddrFromDeadClient);
+                        this->OnClientDisconnectedDelegate.Execute(AddrFromDeadClient);
                     });
                 }
 
@@ -449,7 +575,7 @@ void AHyperlaneTransmitterInfo::CreateServerEndFuture(void)
              * Wait for a bit to not consume all CPU time.
              * We should take a look here again in the future for a better solution.
              */
-            FPlatformProcess::Sleep(0.03f);
+            FPlatformProcess::Sleep(0.3f);
         }
 
         this->DisconnectAllClients();
@@ -458,7 +584,7 @@ void AHyperlaneTransmitterInfo::CreateServerEndFuture(void)
 
         AsyncTask(ENamedThreads::GameThread, [&] (void)
         {
-            OnListenEndDelegate.Execute();
+            this->OnListenEndDelegate.Execute();
         });
 
         return;
@@ -469,7 +595,7 @@ void AHyperlaneTransmitterInfo::CreateServerEndFuture(void)
 
 void AHyperlaneTransmitterInfo::Emit(const TArray<uint8>& InBytes, const FString& InClientAddress)
 {
-    const TSharedPtr<FTCPTransmitterClient> Client = Clients.Contains(InClientAddress) ? Clients[InClientAddress] : nullptr;
+    const TSharedPtr<FTCPTransmitterClient> Client = this->Clients.Contains(InClientAddress) ? this->Clients[InClientAddress] : nullptr;
 
     if (Client == nullptr || Client.IsValid() == false)
     {

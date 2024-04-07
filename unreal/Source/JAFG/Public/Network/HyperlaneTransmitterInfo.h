@@ -18,6 +18,7 @@ DECLARE_DELEGATE_TwoParams(FTCPTransmitterSocketEventSignature, const FString& /
  */
 struct FTCPTransmitterClient
 {
+    FDateTime Timestamp;
     FSocket* Socket  = nullptr;
     FString  Address = L"";
 
@@ -70,10 +71,20 @@ private:
      */
     FThreadSafeBool bShouldListen = false;
 
+    inline static constexpr uint8 UTF8Terminator = 0x00;
+    /** In seconds. */
+    inline static constexpr float DisconnectUnvalidatedClientsTimeout { 5.0f };
+    /**
+     * All current unvalidated clients.
+     * Will be disconnected if they don't send the validation message and moved to the
+     * AHyperlaneTransmitterInfo#Clients map if they do.
+     */
+    TMap<FString, TSharedPtr<FTCPTransmitterClient>> UnvalidatedClients;
     /**
      * All current connected clients.
      */
     TMap<FString, TSharedPtr<FTCPTransmitterClient>> Clients;
+    bool IsHyperlaneWorkerValid(const FString& HyperlaneIdentifier) const;
 
     FTCPTransmitterSocketEventSignature OnListenBeginDelegate;
     FTCPTransmitterSocketEventSignature OnListenBeginFailureDelegate;
