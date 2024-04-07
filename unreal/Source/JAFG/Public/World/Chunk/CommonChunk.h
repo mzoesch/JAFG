@@ -11,7 +11,6 @@
 #include "CommonChunk.generated.h"
 
 class AWorldPlayerController;
-class AJAFGPlayerController;
 class UProceduralMeshComponent;
 struct FChunkMeshData;
 struct FInitialChunkData;
@@ -20,8 +19,6 @@ UCLASS(Abstract, NotBlueprintable)
 class JAFG_API ACommonChunk : public AActor
 {
     GENERATED_BODY()
-
-    friend AJAFGPlayerController;
 
 public:
 
@@ -35,22 +32,28 @@ private:
 
     /* Note to self, Nanite with static meshes on far away chunks. */
 
-    void Initialize(void);
-    void GenerateVoxels(void);
+    /**
+     * Sets up data that is valid throughout the lifetime of a chunk and needed for the chunk to be able to
+     * generate itself.
+     */
+    void PreInitialize(void);
 
 protected:
 
-    virtual void GenerateProceduralMesh(void) PURE_VIRTUAL(ACommonChunk::GenerateProceduralMesh)
-
-private:
-
-    void ApplyProceduralMesh(void) const;
-    void ClearMesh(void);
-
-protected:
+    //////////////////////////////////////////////////////////////////////////
+    // Procedural Mesh
+    //////////////////////////////////////////////////////////////////////////
 
     UPROPERTY()
     TObjectPtr<UProceduralMeshComponent> ProceduralMeshComponent;
+
+    /**
+     * Must be overriden by the derived class to generate the procedural mesh.
+     */
+    virtual void GenerateProceduralMesh(void) PURE_VIRTUAL(ACommonChunk::GenerateProceduralMesh)
+    void ApplyProceduralMesh(void) const;
+    /* make inline? */
+    void ClearMesh(void);
 
     //////////////////////////////////////////////////////////////////////////
     // Raw Data
@@ -66,7 +69,7 @@ protected:
         this->RawVoxels[ACommonChunk::GetVoxelIndex(LocalVoxelPosition)] = NewVoxel;
     }
 
-    /* It is up to the client on how to feed these arrays. */
+    /** It is up to the client on how to feed these arrays. */
     TArray<FChunkMeshData> MeshData;
     TArray<int> VertexCounts; /* Can we change the int? */
 
@@ -101,21 +104,34 @@ private:
     // Chunk World Generation
     //////////////////////////////////////////////////////////////////////////
 
+    void GenerateVoxels(void);
+
     void GenerateSuperFlatWorld(void);
 
 public:
 
-    FORCEINLINE const FIntVector& GetChunkKey(void) const
-    {
-        return this->ChunkKey;
-    }
+    //////////////////////////////////////////////////////////////////////////
+    // Server Client Interaction
+    //////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Server only.
+     *
+     * Called to package the initial chunk data that is needed to initialize the chunk on the client and send it to the
+     * targeted client via the Hyperlane.
+     */
     void SendInitializationDataToClient(AWorldPlayerController* Target) const;
 
+    /**
+     * Client only.
+     *
+     * Called to override all voxels in the chunk with the given data and generate the procedural mesh accordingly.
+     */
     void InitializeWithAuthorityData(const TArray<int32>& InRawVoxels);
 
     //////////////////////////////////////////////////////////////////////////
     // Public interaction
+    //////////////////////////////////////////////////////////////////////////
 
     /**
      * Server only.
@@ -146,6 +162,12 @@ public:
 
     //////////////////////////////////////////////////////////////////////////
     // Getters
+    //////////////////////////////////////////////////////////////////////////
+
+    FORCEINLINE const FIntVector& GetChunkKey(void) const
+    {
+        return this->ChunkKey;
+    }
 
     /**
      * Does not check for out of bounds. The callee must ensure that the

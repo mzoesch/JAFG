@@ -26,8 +26,20 @@ public:
 
 private:
 
-    TMap<FIntVector, FDelegateHandle*> ChunkHandles;
+    /**
+     * Server only.
+     *
+     * All chunk generation finished delegate callbacks for this client are stored here.
+     */
+    TMap<FIntVector, FDelegateHandle> ChunkHandles;
 
     UFUNCTION(Server, Reliable)
     void AskServerToSpawnChunk_ServerRPC(const FIntVector& ChunkKey);
+
+    /**
+     * Development only.
+     */
+    void GenerateMockChunks(void);
+    int MockChunksAdded = 0;
+    bool bFinishedMockingChunkGeneration = false;
 };

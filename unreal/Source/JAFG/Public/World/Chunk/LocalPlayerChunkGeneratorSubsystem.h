@@ -17,13 +17,18 @@ class JAFG_API ULocalPlayerChunkGeneratorSubsystem : public ULocalPlayerSubsyste
 
 public:
 
+    // ULocalPlayerSubsystem interface
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
     virtual void Deinitialize(void) override;
+    // ~ULocalPlayerSubsystem interface
 
     void ConnectWithHyperlane(void);
     /** Automatically called if deinitialized. */
     void DisconnectFromHyperlane(void);
 
+    /**
+     * Overrides all voxels in a given chunk with the given data. Must only be called in the client.
+     */
     void InitializeChunkWithAuthorityData(const FIntVector& InChunkKey, const TArray<int32>& InRawVoxels);
 
     TQueue<FIntVector> WaitForAuthorityQueue;

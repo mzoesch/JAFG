@@ -47,35 +47,7 @@ void ULocalChunkValidator::TickComponent(const float DeltaTime, const ELevelTick
 
     UE_LOG(LogTemp, Log, TEXT("ULocalChunkValidator::TickComponent: Validating local chunks."))
 
-    check( GEngine )
-    check( this->GetWorld() )
-    ULocalPlayer* LocalPlayer = GEngine->GetFirstGamePlayer(this->GetWorld());
-    check( LocalPlayer )
-    ULocalPlayerChunkGeneratorSubsystem* ChunkGeneratorSubsystem = LocalPlayer->GetSubsystem<ULocalPlayerChunkGeneratorSubsystem>();
-    check( ChunkGeneratorSubsystem )
-
-
-    const FIntVector Key = FIntVector::ZeroValue;
-    if (ChunkGeneratorSubsystem->LoadedChunks.Contains(Key))
-    {
-        return;
-    }
-
-    const FTransform TargetedChunkTransform = FTransform(
-            FRotator::ZeroRotator,
-            FVector(
-                Key.X * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale,
-                Key.Y * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale,
-                Key.Z * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale
-            ),
-            FVector::OneVector
-        );
-
-    ACommonChunk* Chunk = this->GetWorld()->SpawnActor<ACommonChunk>(AGreedyChunk::StaticClass(), TargetedChunkTransform);
-
-    ChunkGeneratorSubsystem->LoadedChunks.Add(Key, Chunk);
-
-    this->AskServerToSpawnChunk_ServerRPC(Key);
+    this->GenerateMockChunks();
 
     return;
 }
@@ -99,7 +71,7 @@ void ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC_Implementation(const 
         return;
     }
 
-    FDelegateHandle Handle = WorldGeneratorInfo->OnChunkFinishedGeneratingDelegate.AddLambda( [&, WorldGeneratorInfo, ChunkKey] (const ACommonChunk* Chunk)
+    const FDelegateHandle Handle = WorldGeneratorInfo->OnChunkFinishedGeneratingDelegate.AddLambda( [&, WorldGeneratorInfo, ChunkKey] (const ACommonChunk* Chunk)
     {
         check( Chunk )
 
@@ -117,7 +89,15 @@ void ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC_Implementation(const 
             return;
         }
 
-        WorldGeneratorInfo->OnChunkFinishedGeneratingDelegate.Remove(*this->ChunkHandles[ChunkKey]);
+        FDelegateHandle MyHandle = this->ChunkHandles[ChunkKey];
+        if (MyHandle.IsValid() == false)
+        {
+            UE_LOG(LogTemp, Error, TEXT("ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC: Handle is invalid for %s."), *ChunkKey.ToString())
+        }
+        if (WorldGeneratorInfo->OnChunkFinishedGeneratingDelegate.Remove(MyHandle) == false)
+        {
+            UE_LOG(LogTemp, Error, TEXT("ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC: Error while removing delegate for %s."), *ChunkKey.ToString())
+        }
         this->ChunkHandles.Remove(ChunkKey);
 
         check( this->GetOwner() )
@@ -128,12 +108,153 @@ void ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC_Implementation(const 
         return;
     });
 
-    this->ChunkHandles.Add(ChunkKey, &Handle);
+    this->ChunkHandles.Add(ChunkKey, Handle);
 
     if (WorldGeneratorInfo->AddChunkToGenerationQueue(ChunkKey) == false)
     {
         UE_LOG(LogTemp, Fatal, TEXT("ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC: Error while adding item to queue.."))
         return;
+    }
+
+    return;
+}
+
+void ULocalChunkValidator::GenerateMockChunks(void)
+{
+    if (this->bFinishedMockingChunkGeneration)
+    {
+        return;
+    }
+
+    // ReSharper disable once CppTooWideScopeInitStatement
+    constexpr int MaxSpiralPoints = 200;
+    constexpr int ChunksAboveZero = 5;
+    constexpr int MaxPerTick = 20;
+    int AddedThisTick = 0;
+
+    check( GEngine )
+    check( this->GetWorld() )
+    const ULocalPlayer* LocalPlayer = GEngine->GetFirstGamePlayer(this->GetWorld());
+    check( LocalPlayer )
+    ULocalPlayerChunkGeneratorSubsystem* ChunkGeneratorSubsystem = LocalPlayer->GetSubsystem<ULocalPlayerChunkGeneratorSubsystem>();
+    check( ChunkGeneratorSubsystem )
+
+    auto MoveCursorRight = [] (const FIntVector2& CursorLocation)
+    {
+        return FIntVector2(CursorLocation.X + 1, CursorLocation.Y);
+    };
+
+    auto MoveCursorDown = [] (const FIntVector2& CursorLocation)
+    {
+        return FIntVector2(CursorLocation.X, CursorLocation.Y - 1);
+    };
+
+    auto MoveCursorLeft = [] (const FIntVector2& CursorLocation)
+    {
+        return FIntVector2(CursorLocation.X - 1, CursorLocation.Y);
+    };
+
+    auto MoveCursorUp = [] (const FIntVector2& CursorLocation)
+    {
+        return FIntVector2(CursorLocation.X, CursorLocation.Y + 1);
+    };
+
+    const auto Moves = TArray<FIntVector2(*)(const FIntVector2&)>(
+    {
+        MoveCursorRight, MoveCursorDown, MoveCursorLeft, MoveCursorUp
+    });
+
+    int CurrentMoveIndex = 0;
+
+    int n = 1;
+    FIntVector2 TargetPoint = FIntVector2(0, 0);
+    int TimesToMove = 1;
+
+    for (int Z = ChunksAboveZero; Z >= 0; --Z)
+    {
+        const FIntVector Key = FIntVector(0, 0, Z);
+        if (ChunkGeneratorSubsystem->LoadedChunks.Contains(Key) == false)
+        {
+            const FTransform TargetedChunkTransform = FTransform(
+                FRotator::ZeroRotator,
+                FVector(
+                    Key.X * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale,
+                    Key.Y * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale,
+                    Key.Z * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale
+                ),
+                FVector::OneVector
+            );
+
+            ACommonChunk* Chunk = this->GetWorld()->SpawnActor<ACommonChunk>(AGreedyChunk::StaticClass(), TargetedChunkTransform);
+
+            ChunkGeneratorSubsystem->LoadedChunks.Add(Key, Chunk);
+            this->AskServerToSpawnChunk_ServerRPC(Key);
+
+            AddedThisTick++;
+            this->MockChunksAdded++;
+
+            if (AddedThisTick >= MaxPerTick)
+            {
+                return;
+            }
+        }
+    }
+
+    while (true)
+    {
+        for (int _ = 0; _ < 2; ++_)
+        {
+            CurrentMoveIndex = (CurrentMoveIndex + 1) % Moves.Num();
+            for (int __ = 0; __ < TimesToMove; ++__)
+            {
+                if (n >= MaxSpiralPoints)
+                {
+                    this->bFinishedMockingChunkGeneration = true;
+                    return;
+                }
+
+                TargetPoint = Moves[CurrentMoveIndex](TargetPoint);
+
+                ++n;
+                for (int Z = ChunksAboveZero; Z >= 0; --Z)
+                {
+                    const FIntVector Key = FIntVector(TargetPoint.X, TargetPoint.Y, Z);
+                    if (ChunkGeneratorSubsystem->LoadedChunks.Contains(Key) == false)
+                    {
+                        const FTransform TargetedChunkTransform = FTransform(
+                            FRotator::ZeroRotator,
+                            FVector(
+                                Key.X * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale,
+                                Key.Y * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale,
+                                Key.Z * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale
+                            ),
+                            FVector::OneVector
+                        );
+
+                        ACommonChunk* Chunk = this->GetWorld()->SpawnActor<ACommonChunk>(AGreedyChunk::StaticClass(), TargetedChunkTransform);
+
+                        ChunkGeneratorSubsystem->LoadedChunks.Add(Key, Chunk);
+                        this->AskServerToSpawnChunk_ServerRPC(Key);
+
+                        AddedThisTick++;
+                        this->MockChunksAdded++;
+
+                        if (AddedThisTick >= MaxPerTick)
+                        {
+                            return;
+                        }
+                    }
+                }
+
+                continue;
+            }
+
+            continue;
+        }
+
+        ++TimesToMove;
+
+        continue;
     }
 
     return;

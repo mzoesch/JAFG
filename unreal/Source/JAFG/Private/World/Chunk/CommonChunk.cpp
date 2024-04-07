@@ -52,7 +52,7 @@ void ACommonChunk::BeginPlay(void)
         return;
     }
 
-    this->Initialize();
+    this->PreInitialize();
 
     if (UNetworkStatics::IsSafeServer(this))
     {
@@ -73,34 +73,11 @@ void ACommonChunk::BeginPlay(void)
     return;
 }
 
-void ACommonChunk::Initialize(void)
+void ACommonChunk::PreInitialize(void)
 {
     this->RawVoxels.SetNum(AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::ChunkSize, false);
     this->JChunkPosition = this->GetActorLocation() * AWorldGeneratorInfo::UToJScale;
     this->ChunkKey = FIntVector(this->JChunkPosition / (AWorldGeneratorInfo::ChunkSize - 1));
-}
-
-void ACommonChunk::GenerateVoxels(void)
-{
-    switch (this->WorldGeneratorInfo->WorldGenerationType)
-    {
-    case EWorldGenerationType::Default:
-        {
-        }
-    case EWorldGenerationType::SuperFlat:
-        {
-            this->GenerateSuperFlatWorld();
-            return;
-        }
-    default:
-        {
-        }
-    }
-
-    UE_LOG(LogTemp, Error, TEXT("ACommonChunk::GenerateVoxels: World Generation of type %s not implemented."),
-           *WorldGeneratorInfo::LexToString(this->WorldGeneratorInfo->WorldGenerationType));
-
-    return;
 }
 
 void ACommonChunk::ApplyProceduralMesh(void) const
@@ -165,6 +142,29 @@ void ACommonChunk::ClearMesh()
     return;
 }
 
+void ACommonChunk::GenerateVoxels(void)
+{
+    switch (this->WorldGeneratorInfo->WorldGenerationType)
+    {
+    case EWorldGenerationType::Default:
+        {
+        }
+    case EWorldGenerationType::SuperFlat:
+        {
+            this->GenerateSuperFlatWorld();
+            return;
+        }
+    default:
+        {
+        }
+    }
+
+    UE_LOG(LogTemp, Error, TEXT("ACommonChunk::GenerateVoxels: World Generation of type %s not implemented."),
+           *WorldGeneratorInfo::LexToString(this->WorldGeneratorInfo->WorldGenerationType));
+
+    return;
+}
+
 void ACommonChunk::GenerateSuperFlatWorld()
 {
     /*
@@ -219,7 +219,7 @@ void ACommonChunk::SendInitializationDataToClient(AWorldPlayerController* Target
 {
     check ( Target )
 
-    UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::SendInitializationDataToClient: Sending initialization data to client for chunk %s."), *this->ChunkKey.ToString())
+    UE_LOG(LogTemp, Log, TEXT("ACommonChunk::SendInitializationDataToClient: Sending packaged initialization data to client for chunk %s."), *this->ChunkKey.ToString())
 
     AHyperlaneTransmitterInfo* Transmitter = Cast<AHyperlaneTransmitterInfo>(UGameplayStatics::GetActorOfClass(this, AHyperlaneTransmitterInfo::StaticClass()));
     check( Transmitter )
@@ -227,16 +227,20 @@ void ACommonChunk::SendInitializationDataToClient(AWorldPlayerController* Target
     TransmittableData::FChunkInitializationData Data = TransmittableData::FChunkInitializationData(this->ChunkKey, this->RawVoxels);
     Transmitter->SendChunkInitializationData(Data);
 
+    return;
 }
 
 void ACommonChunk::InitializeWithAuthorityData(const TArray<int32>& InRawVoxels)
 {
     this->RawVoxels = InRawVoxels;
 
-    UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::InitializeWithAuthorityData: Initializing chunk %s with authority data."), *this->ChunkKey.ToString())
+    UE_LOG(LogTemp, Log, TEXT("ACommonChunk::InitializeWithAuthorityData: Generating chunk %s with authority data."), *this->ChunkKey.ToString())
+
     this->ClearMesh();
     this->GenerateProceduralMesh();
     this->ApplyProceduralMesh();
+
+    return;
 }
 
 ACommonChunk* ACommonChunk::GetTargetChunk(const FIntVector& LocalVoxelPosition, FIntVector& OutTransformedLocalVoxelPosition)

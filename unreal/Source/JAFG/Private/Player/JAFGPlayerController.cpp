@@ -2,8 +2,6 @@
 
 #include "Player/JAFGPlayerController.h"
 
-#include "World/Chunk/CommonChunk.h"
-
 AJAFGPlayerController::AJAFGPlayerController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
     return;
@@ -31,7 +29,7 @@ void AJAFGPlayerController::ShowMouseCursor(const bool bShow, const bool bCenter
                 this->SetMouseLocation(LocalPlayer->ViewportClient->Viewport->GetSizeXY().X / 2, LocalPlayer->ViewportClient->Viewport->GetSizeXY().Y / 2);
             }
         }
-        
+
         return;
     }
 
