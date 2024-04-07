@@ -6,7 +6,6 @@
 #include "Sockets.h"
 #include "SocketSubsystem.h"
 #include "Network/HyperlaneTransmitterInfo.h"
-#include "System/HyperlaneComponent.h"
 
 /*
  * Just for the sake of it.
@@ -33,7 +32,7 @@ static TFuture<void> RunLambdaOnGameThread(TFunction<void(void)> InFunction)
 
 }
 
-FHyperlaneWorker::FHyperlaneWorker(UHyperlaneComponent* InOwner) : Thread(nullptr), bShutdownRequested(false)
+FHyperlaneWorker::FHyperlaneWorker(ULocalPlayerChunkGeneratorSubsystem* InOwner) : Thread(nullptr), bShutdownRequested(false)
 {
     this->Owner = InOwner;
 
@@ -225,9 +224,9 @@ void FHyperlaneWorker::OnBytesReceivedDelegateHandler(const TArray<uint8>& Bytes
 
     TransmittableData::FChunkInitializationData Data = TransmittableData::FChunkInitializationData::DeserializeFromBytes(Bytes);
 
-    UE_LOG(LogTemp, Warning, TEXT("FHyperlaneWorker::OnBytesReceivedDelegateHandler: Chunk Key: %s"), *Data.ChunkKey.ToString())
+    UE_LOG(LogTemp, Fatal, TEXT("FHyperlaneWorker::OnBytesReceivedDelegateHandler: Chunk Key: %s"), *Data.ChunkKey.ToString())
 
-    this->Owner->InitializeChunkWithAuthorityData(Data.ChunkKey, Data.Voxels);
+    // this->Owner->InitializeChunkWithAuthorityData(Data.ChunkKey, Data.Voxels);
 
 
 }

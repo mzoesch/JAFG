@@ -9,8 +9,7 @@
 
 #include "WorldCharacter.generated.h"
 
-class UBackgroundChunkUpdaterComponent;
-class UHyperlaneComponent;
+class ULocalChunkValidator;
 class UChatComponent;
 class UChatMenu;
 class UEscapeMenu;
@@ -42,11 +41,7 @@ private:
     UChatComponent* ChatComponent;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-    UBackgroundChunkUpdaterComponent* BackgroundChunkUpdaterComponent;
-    friend class AWorldGeneratorInfo;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-    UHyperlaneComponent* HyperlaneComponent;
+    TObjectPtr<ULocalChunkValidator> LocalChunkValidator;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     UCameraComponent* FirstPersonCameraComponent;

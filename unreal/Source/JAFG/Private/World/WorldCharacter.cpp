@@ -7,13 +7,13 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "Kismet/GameplayStatics.h"
-#include "Network/BackgroundChunkUpdaterComponent.h"
 #include "Network/ChatComponent.h"
-#include "System/HyperlaneComponent.h"
+#include "Network/NetworkStatics.h"
+#include "System/LocalPlayerChunkGeneratorSubsystem.h"
 #include "UI/World/WorldHUD.h"
 #include "World/WorldPlayerController.h"
 #include "World/Chunk/CommonChunk.h"
+#include "World/Chunk/LocalChunkValidator.h"
 
 #define PLAYER_CONTROLLER        Cast<AWorldPlayerController>(this->GetWorld()->GetFirstPlayerController())
 #define HEAD_UP_DISPLAY          Cast<AWorldHUD>(this->GetWorld()->GetFirstPlayerController()->GetHUD())
@@ -29,8 +29,7 @@ IMCFoot(nullptr), IMCMenu(nullptr), IAJump(nullptr), IALook(nullptr), IAMove(nul
     this->GetCapsuleComponent()->InitCapsuleSize(40.0f, 90.0f);
 
     this->ChatComponent = CreateDefaultSubobject<UChatComponent>(TEXT("ChatComponent"));
-    this->BackgroundChunkUpdaterComponent = CreateDefaultSubobject<UBackgroundChunkUpdaterComponent>(TEXT("BackgroundChunkUpdaterComponent"));
-    this->HyperlaneComponent = CreateDefaultSubobject<UHyperlaneComponent>(TEXT("HyperlaneComponent"));
+    this->LocalChunkValidator = CreateDefaultSubobject<ULocalChunkValidator>(TEXT("LocalChunkValidator"));
 
     this->FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
     this->FirstPersonCameraComponent->SetupAttachment(this->GetCapsuleComponent());
@@ -51,17 +50,20 @@ void AWorldCharacter::BeginPlay(void)
 {
     Super::BeginPlay();
 
-    check( this->ChatComponent )
-    check( this->BackgroundChunkUpdaterComponent )
-    check( this->HyperlaneComponent )
-
-    if (UNetworkStatics::IsSafeClient(this))
+    if (UNetworkStatics::IsSafeClient(this) && this->IsLocallyControlled())
     {
-        AWorldGeneratorInfo* WorldGeneratorInfo = Cast<AWorldGeneratorInfo>(UGameplayStatics::GetActorOfClass(this, AWorldGeneratorInfo::StaticClass()));
-        check( WorldGeneratorInfo )
-        WorldGeneratorInfo->SetBackgroundChunkUpdaterComponent(this->BackgroundChunkUpdaterComponent);
+        check( GEngine )
+        check( this->GetWorld() )
+        check( this->ChatComponent )
+
+        const ULocalPlayer* LocalPlayer = GEngine->GetFirstGamePlayer(this->GetWorld());
+        check( LocalPlayer )
+
+        check( LocalPlayer->GetSubsystem<ULocalPlayerChunkGeneratorSubsystem>() )
+        LocalPlayer->GetSubsystem<ULocalPlayerChunkGeneratorSubsystem>()->ConnectWithHyperlane();
     }
 
+    return;
 }
 
 void AWorldCharacter::Tick(const float DeltaTime)

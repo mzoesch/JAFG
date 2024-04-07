@@ -4,12 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Info.h"
-#include "Network/NetworkStatics.h"
 
 #include "WorldGeneratorInfo.generated.h"
 
 class UBackgroundChunkUpdaterComponent;
 class ACommonChunk;
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnChunkFinishedGenerating, ACommonChunk* /* Chunk */);
 
 UENUM(BlueprintType)
 enum class EChunkType
@@ -50,6 +51,7 @@ FORCEINLINE FString LexToString(const EWorldGenerationType Type)
 
 }
 
+// TODO Make this a subsystem
 /**
  * Singleton information non-replicated boundless super AActor class sitting in the UWorld responsible for generating
  * the world. It handles the creation and destroying of AChunks depending on the Player States data. Not responsible
@@ -106,53 +108,27 @@ public:
 
     virtual void Tick(const float DeltaTime) override;
 
-    void EnqueueInitializationChunk(FIntVector ChunkKey);
-
-    /*
-     * Called on the server to generate a chunk, load it into the world and then replicate all voxels
-     * to the client via the Hyperlane.
-     */
-    void GenerateChunkForClient(FIntVector ChunkKey, UBackgroundChunkUpdaterComponent* Callback);
-
-    /*
-     * Called on the client with the voxels from the hyperlane
-     */
-    void InitializeChunkWithAuthorityData(FIntVector ChunkKey, const TArray<int32> Array);
-
-
-    void SetBackgroundChunkUpdaterComponent(UBackgroundChunkUpdaterComponent* InBackgroundChunkUpdaterComponent);
-    FORCEINLINE UBackgroundChunkUpdaterComponent* GetBackgroundChunkUpdaterComponent(void) const
-    {
-        if (UNetworkStatics::IsSafeClient(this) == false)
-        {
-            UE_LOG(LogTemp, Fatal, TEXT("AWorldGeneratorInfo::GetBackgroundChunkUpdaterComponent: Tried to get on a server."))
-            return nullptr;
-        }
-
-        return this->BackgroundChunkUpdaterComponent;
-    }
-
 private:
-
-    /**
-     * Suggest if this AWorldGeneratorInfo is running in client mode. Must be set at Begin Play.
-     */
-    bool bClientMode = false;
-    /** Only valid on clients. */
-    UPROPERTY()
-    TObjectPtr<UBackgroundChunkUpdaterComponent> BackgroundChunkUpdaterComponent = nullptr;
-    /** Only use if the character has yet not been spawned by the server. */
-    TQueue<FIntVector> PreBackgroundChunkUpdaterComponentInitializationQueue;
-
-    /** Development method to add some chunks to the queue. */
-    void GenerateWorldAsync(void);
 
     UPROPERTY()
     TMap<FIntVector, ACommonChunk*> FullyLoadedChunks;
+    /*
+     * The requested chunks, that a client wants to load into the world.
+     */
     TQueue<FIntVector> ChunkGenerationQueue;
 
-
 public:
+
+    FOnChunkFinishedGenerating OnChunkFinishedGeneratingDelegate;
+
+    FORCEINLINE bool HasFullyLoadedChunk(const FIntVector& ChunkKey) const
+    {
+        return this->FullyLoadedChunks.Contains(ChunkKey);
+    }
+    FORCEINLINE bool AddChunkToGenerationQueue(const FIntVector& ChunkKey)
+    {
+        return this->ChunkGenerationQueue.Enqueue(ChunkKey);
+    }
 
     FORCEINLINE ACommonChunk* GetChunkBy(const FIntVector& ChunkKey) const
     {

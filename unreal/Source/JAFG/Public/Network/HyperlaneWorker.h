@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 
-class UHyperlaneComponent;
+class ULocalPlayerChunkGeneratorSubsystem;
 
 DECLARE_DELEGATE(FTCPHyperlaneWorkerEventSignature)
 DECLARE_DELEGATE_OneParam(FTCPHyperlaneWorkerMessageSignature, const TArray<uint8>& /* Bytes */)
@@ -14,11 +14,11 @@ class JAFG_API FHyperlaneWorker final : public FRunnable
     /**
      * Kinda cheeky but we need to access the UWorld somehow.
      */
-    UHyperlaneComponent* Owner = nullptr;
+    ULocalPlayerChunkGeneratorSubsystem* Owner = nullptr;
 
 public:
 
-    explicit FHyperlaneWorker(UHyperlaneComponent* InOwner);
+    explicit FHyperlaneWorker(ULocalPlayerChunkGeneratorSubsystem* InOwner);
     virtual ~FHyperlaneWorker(void) override;
 
     // FRunnable interface

@@ -31,8 +31,19 @@ void ACommonChunk::BeginPlay(void)
 {
     Super::BeginPlay();
 
-    this->WorldGeneratorInfo = Cast<AWorldGeneratorInfo>(UGameplayStatics::GetActorOfClass(this, AWorldGeneratorInfo::StaticClass()));
-    check (this->WorldGeneratorInfo )
+    if (UNetworkStatics::IsSafeServer(this))
+    {
+        this->WorldGeneratorInfo = Cast<AWorldGeneratorInfo>(UGameplayStatics::GetActorOfClass(this, AWorldGeneratorInfo::StaticClass()));
+        check (this->WorldGeneratorInfo )
+    }
+    else
+    {
+        if (Cast<AWorldGeneratorInfo>(UGameplayStatics::GetActorOfClass(this, AWorldGeneratorInfo::StaticClass())))
+        {
+            UE_LOG(LogTemp, Fatal, TEXT("ACommonChunk::BeginPlay: Found World Generator Info on a client. This is disallowed."))
+            return;
+        }
+    }
 
     this->VoxelSubsystem = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>();
     check(this->VoxelSubsystem)
@@ -60,17 +71,12 @@ void ACommonChunk::BeginPlay(void)
      * We do not have to care about that here.
      */
 
-    UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::BeginPlay: Client spawned chunk %s. Now notifying server to generate the appropiate voxels."), *this->ChunkKey.ToString())
-    this->WorldGeneratorInfo->EnqueueInitializationChunk(this->ChunkKey);
-
     return;
 }
 
 void ACommonChunk::Initialize(void)
 {
-    this->RawVoxels.SetNum(
-        /* cubic */ AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::ChunkSize,
-                    false);
+    this->RawVoxels.SetNum(AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::ChunkSize, false);
     this->JChunkPosition = this->GetActorLocation() * AWorldGeneratorInfo::UToJScale;
     this->ChunkKey = FIntVector(this->JChunkPosition / (AWorldGeneratorInfo::ChunkSize - 1));
 }

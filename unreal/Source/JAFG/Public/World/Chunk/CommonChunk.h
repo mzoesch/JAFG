@@ -104,6 +104,11 @@ private:
 
 public:
 
+    FORCEINLINE const FIntVector& GetChunkKey(void) const
+    {
+        return this->ChunkKey;
+    }
+
     void SendInitializationDataToClient(UBackgroundChunkUpdaterComponent* Target) const;
 
     void InitializeWithAuthorityData(const TArray<int32> Array);
