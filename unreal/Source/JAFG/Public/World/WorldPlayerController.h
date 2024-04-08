@@ -31,6 +31,7 @@ private:
     FString HyperlaneWorkerAddress = L"";
     /** Generated on server and replicated to the client on Post Login.  */
     FString HyperlaneIdentifier = L"";
+    bool bListenServerController = false;
 
     UFUNCTION(Client, Reliable)
     void SetHyperlaneIdentifier_ClientRPC(const FString& InHyperlaneIdentifier);
@@ -75,6 +76,9 @@ public:
 
     FORCEINLINE FString GetHyperlaneIdentifier(void) const
     {
+        /*
+         * We probably should move this to the callee and check if the string is empty there.
+         */
         if (this->HyperlaneIdentifier.IsEmpty())
         {
             UE_LOG(LogTemp, Fatal, TEXT("AWorldPlayerController::GetHyperlaneIdentifier: Hyperlane Identifier has yet not been set."))

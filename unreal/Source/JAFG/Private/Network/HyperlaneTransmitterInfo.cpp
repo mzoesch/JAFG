@@ -8,6 +8,7 @@
 #include "Network/NetworkStatics.h"
 #include "Serialization/BufferArchive.h"
 #include "World/WorldPlayerController.h"
+#include "World/Chunk/LocalPlayerChunkGeneratorSubsystem.h"
 
 namespace CommonTransmitterStatics
 {
@@ -208,6 +209,22 @@ void AHyperlaneTransmitterInfo::EndPlay(const EEndPlayReason::Type EndPlayReason
 
 void AHyperlaneTransmitterInfo::SendChunkInitializationData(const AWorldPlayerController* Target, TransmittableData::FChunkInitializationData& Data)
 {
+    /*
+     * Mocking the Hyperlane as a local controlled player controller will not have a worker for him on the
+     * Hyperlane.
+     */
+    if (Target->IsLocalController())
+    {
+        check( GEngine )
+        check( this->GetWorld() )
+        check( GEngine->GetFirstGamePlayer(this->GetWorld()) )
+        check( GEngine->GetFirstGamePlayer(this->GetWorld())->GetSubsystem<ULocalPlayerChunkGeneratorSubsystem>() )
+
+        GEngine->GetFirstGamePlayer(this->GetWorld())->GetSubsystem<ULocalPlayerChunkGeneratorSubsystem>()->InitializeChunkWithAuthorityData(Data.ChunkKey, Data.Voxels);
+
+        return;
+    }
+
     TArray<uint8> Bytes = TArray<uint8>();
     Data.SerializeToBytes(Bytes);
 

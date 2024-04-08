@@ -63,6 +63,11 @@ void AWorldCharacter::BeginPlay(void)
         LocalPlayer->GetSubsystem<ULocalPlayerChunkGeneratorSubsystem>()->ConnectWithHyperlane();
     }
 
+    if (UNetworkStatics::IsSafeListenServer(this) && this->IsLocallyControlled())
+    {
+
+    }
+
     return;
 }
 

@@ -20,7 +20,24 @@ void ULocalChunkValidator::BeginPlay(void)
     Super::BeginPlay();
 
     check( this->GetOwner() && Cast<APawn>(this->GetOwner()) && "ULocalChunkValidator::BeginPlay: Owner is not a pawn." )
+
     if (UNetworkStatics::IsSafeClient(this) && Cast<APawn>(this->GetOwner())->IsLocallyControlled())
+    {
+        this->SetComponentTickEnabled(true);
+
+        check( GEngine )
+        check( this->GetWorld() )
+        ULocalPlayer* LocalPlayer = GEngine->GetFirstGamePlayer(this->GetWorld());
+        check( LocalPlayer )
+        ULocalPlayerChunkGeneratorSubsystem* ChunkGeneratorSubsystem = LocalPlayer->GetSubsystem<ULocalPlayerChunkGeneratorSubsystem>();
+        check( ChunkGeneratorSubsystem )
+
+        ChunkGeneratorSubsystem->LoadedChunks.Empty();
+
+        return;
+    }
+
+    if (UNetworkStatics::IsSafeListenServer(this) && Cast<APawn>(this->GetOwner())->IsLocallyControlled())
     {
         this->SetComponentTickEnabled(true);
 
