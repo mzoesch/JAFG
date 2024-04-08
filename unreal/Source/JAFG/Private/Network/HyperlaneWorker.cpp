@@ -139,13 +139,25 @@ uint32 FHyperlaneWorker::Run(void)
         return RETURN_CODE_ERROR;
     }
 
+    int i = 10;
     while (this->bShutdownRequested == false)
     {
-        UE_LOG(LogTemp, Log, TEXT("Hyperlane Worker Running"))
+        if (++i > 10)
+        {
+            i = 0;
+            /*
+             * We currently have this just to check if everything is rightfully destroyed and no threads are
+             * running stale in the background.
+             */
+            UE_LOG(LogTemp, Log, TEXT("FHyperlaneWorker::Run: Hyperlane Worker is running."))
+        }
+
         /*
          * Here do heavy lifting.
          */
         FPlatformProcess::Sleep(2.0f);
+
+        continue;
     }
 
     return RETURN_CODE_OK;
@@ -231,11 +243,11 @@ void FHyperlaneWorker::OnDisconnectedDelegateHandler()
 void FHyperlaneWorker::OnBytesReceivedDelegateHandler(const TArray<uint8>& Bytes)
 {
     check(this->Owner)
-    UE_LOG(LogTemp, Warning, TEXT("FHyperlaneWorker::OnBytesReceivedDelegateHandler: Received %d bytes."), Bytes.Num())
+    UE_LOG(LogTemp, Verbose, TEXT("FHyperlaneWorker::OnBytesReceivedDelegateHandler: Received %d bytes."), Bytes.Num())
 
     TransmittableData::FChunkInitializationData Data = TransmittableData::FChunkInitializationData::DeserializeFromBytes(Bytes);
 
-    UE_LOG(LogTemp, Warning, TEXT("FHyperlaneWorker::OnBytesReceivedDelegateHandler: Chunk Key: %s"), *Data.ChunkKey.ToString())
+    UE_LOG(LogTemp, Verbose, TEXT("FHyperlaneWorker::OnBytesReceivedDelegateHandler: Chunk Key: %s"), *Data.ChunkKey.ToString())
 
     CommonHyperlaneWorkerStatics::RunLambdaOnGameThread( [&, Data] (void)
     {
@@ -249,7 +261,7 @@ void FHyperlaneWorker::CreateConnectionEndFuture()
 {
     this->ConnectionEndFuture = CommonHyperlaneWorkerStatics::RunLambdaOnBackGroundThread( [&] (void)
     {
-        UE_LOG(LogTemp, Warning, TEXT("FHyperlaneWorker::CreateConnectionEndFuture: Hyperlane Worker connecting on background thread."))
+        UE_LOG(LogTemp, Display, TEXT("FHyperlaneWorker::CreateConnectionEndFuture: Hyperlane Worker connecting on background thread."))
 
         uint32 BufferSize = 0;
         TArray<uint8> ReceiveBuffer;
@@ -290,7 +302,7 @@ void FHyperlaneWorker::CreateConnectionEndFuture()
 
         this->bShouldReceiveData = true;
 
-        UE_LOG(LogTemp, Warning, TEXT("FHyperlaneWorker::CreateConnectionEndFuture: Hyperlane Worker now receiveing data."))
+        UE_LOG(LogTemp, Display, TEXT("FHyperlaneWorker::CreateConnectionEndFuture: Hyperlane Worker ready, now receiveing data."))
 
         while (this->bShouldReceiveData)
         {
@@ -307,7 +319,7 @@ void FHyperlaneWorker::CreateConnectionEndFuture()
                  */
                 if (Read == AHyperlaneTransmitterInfo::PingMessage.Len())
                 {
-                    UE_LOG(LogTemp, Warning, TEXT("FHyperlaneWorker::CreateConnectionEndFuture: Received ping message."))
+                    UE_LOG(LogTemp, Verbose, TEXT("FHyperlaneWorker::CreateConnectionEndFuture: Received ping message."))
                 }
                 else
                 {
@@ -323,7 +335,7 @@ void FHyperlaneWorker::CreateConnectionEndFuture()
             continue;
         }
 
-        UE_LOG(LogTemp, Warning, TEXT("FHyperlaneWorker::CreateConnectionEndFuture: Hyperlane Worker stopped receiving data."))
+        UE_LOG(LogTemp, Display, TEXT("FHyperlaneWorker::CreateConnectionEndFuture: Hyperlane Worker stopped receiving data."))
 
         return;
     });
@@ -363,11 +375,12 @@ bool FHyperlaneWorker::Emit(const TArray<uint8>& Bytes) const
     int32 BytesSent = 0;
     if (this->Socket->Send(Bytes.GetData(), Bytes.Num(), BytesSent))
     {
-        UE_LOG(LogTemp, Log, TEXT("FHyperlaneWorker::Emit: Sent %d bytes."), BytesSent)
+        UE_LOG(LogTemp, Verbose, TEXT("FHyperlaneWorker::Emit: Sent %d bytes."), BytesSent)
         return true;
     }
 
     UE_LOG(LogTemp, Error, TEXT("FHyperlaneWorker::Emit: Failed to send %d bytes. Actually sent: %d."), Bytes.Num(), BytesSent)
+
 
     return false;
 }

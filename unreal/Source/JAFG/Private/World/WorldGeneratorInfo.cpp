@@ -56,7 +56,7 @@ void AWorldGeneratorInfo::Tick(const float DeltaTime)
         FIntVector Key;
         if (this->ChunkGenerationQueue.Dequeue(Key) == false)
         {
-            UE_LOG(LogTemp, Warning, TEXT("AWorldGeneratorInfo::Tick(): Dequeue failed. World generation is complete for this tick."))
+            UE_LOG(LogTemp, Verbose, TEXT("AWorldGeneratorInfo::Tick(): Dequeue failed. World generation is complete for this tick."))
             return;
         }
 

@@ -45,7 +45,7 @@ void ULocalChunkValidator::TickComponent(const float DeltaTime, const ELevelTick
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-    UE_LOG(LogTemp, Log, TEXT("ULocalChunkValidator::TickComponent: Validating local chunks."))
+    UE_LOG(LogTemp, Verbose, TEXT("ULocalChunkValidator::TickComponent: Validating local chunks."))
 
     this->GenerateMockChunks();
 
@@ -72,7 +72,7 @@ void ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC_Implementation(const 
 
     if (WorldGeneratorInfo->HasFullyLoadedChunk(ChunkKey))
     {
-        UE_LOG(LogTemp, Fatal, TEXT("ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC: Chunk already loaded. Not implemented yet.s"))
+        UE_LOG(LogTemp, Fatal, TEXT("ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC: Chunk already loaded. Not implemented yet."))
         return;
     }
 
@@ -89,7 +89,7 @@ void ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC_Implementation(const 
             return;
         }
 
-        UE_LOG(LogTemp, Log, TEXT("ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC: Chunk %s finished generating. Asking the Hyperlane Transmitter to give the authority data to the asking client."), *Chunk->GetChunkKey().ToString())
+        UE_LOG(LogTemp, Verbose, TEXT("ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC: Chunk %s finished generating. Asking the Hyperlane Transmitter to give the authority data to the asking client."), *Chunk->GetChunkKey().ToString())
 
         if (this->ChunkHandles.Contains(ChunkKey) == false)
         {

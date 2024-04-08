@@ -10,7 +10,7 @@ void ULocalPlayerChunkGeneratorSubsystem::Initialize(FSubsystemCollectionBase& C
 {
     Super::Initialize(Collection);
 
-    UE_LOG(LogTemp, Log, TEXT("ULocalPlayerChunkGenerator::Initialize: Initialized subsystem."))
+    UE_LOG(LogTemp, Verbose, TEXT("ULocalPlayerChunkGenerator::Initialize: Initialized subsystem."))
 
     return;
 }
@@ -21,7 +21,7 @@ void ULocalPlayerChunkGeneratorSubsystem::Deinitialize(void)
 
     this->DisconnectFromHyperlane();
 
-    UE_LOG(LogTemp, Log, TEXT("ULocalPlayerChunkGenerator::Deinitialize: Deinitialized subsystem."))
+    UE_LOG(LogTemp, Verbose, TEXT("ULocalPlayerChunkGenerator::Deinitialize: Deinitialized subsystem."))
 
     return;
 }
@@ -34,7 +34,7 @@ void ULocalPlayerChunkGeneratorSubsystem::ConnectWithHyperlane(void)
         return;
     }
 
-    UE_LOG(LogTemp, Error, TEXT("ULocalPlayerChunkGenerator::ConnectWithHyperlane: Connecting to hyperlane."))
+    UE_LOG(LogTemp, Log, TEXT("ULocalPlayerChunkGenerator::ConnectWithHyperlane: Connecting to hyperlane."))
     this->Worker = new FHyperlaneWorker(this);
 
     return;

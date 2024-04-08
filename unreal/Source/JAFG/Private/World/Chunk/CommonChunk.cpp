@@ -147,20 +147,19 @@ void ACommonChunk::GenerateVoxels(void)
     switch (this->WorldGeneratorInfo->WorldGenerationType)
     {
     case EWorldGenerationType::Default:
-        {
-        }
+    {
+    }
     case EWorldGenerationType::SuperFlat:
-        {
-            this->GenerateSuperFlatWorld();
-            return;
-        }
+    {
+        this->GenerateSuperFlatWorld();
+        return;
+    }
     default:
-        {
-        }
+    {
+    }
     }
 
-    UE_LOG(LogTemp, Error, TEXT("ACommonChunk::GenerateVoxels: World Generation of type %s not implemented."),
-           *WorldGeneratorInfo::LexToString(this->WorldGeneratorInfo->WorldGenerationType));
+    UE_LOG(LogTemp, Error, TEXT("ACommonChunk::GenerateVoxels: World Generation of type %s not implemented."), *WorldGeneratorInfo::LexToString(this->WorldGeneratorInfo->WorldGenerationType));
 
     return;
 }
@@ -219,7 +218,7 @@ void ACommonChunk::SendInitializationDataToClient(AWorldPlayerController* Target
 {
     check ( Target )
 
-    UE_LOG(LogTemp, Log, TEXT("ACommonChunk::SendInitializationDataToClient: Sending packaged initialization data to client for chunk %s."), *this->ChunkKey.ToString())
+    UE_LOG(LogTemp, Verbose, TEXT("ACommonChunk::SendInitializationDataToClient: Sending packaged initialization data to client for chunk %s."), *this->ChunkKey.ToString())
 
     AHyperlaneTransmitterInfo* Transmitter = Cast<AHyperlaneTransmitterInfo>(UGameplayStatics::GetActorOfClass(this, AHyperlaneTransmitterInfo::StaticClass()));
     check( Transmitter )
@@ -234,7 +233,7 @@ void ACommonChunk::InitializeWithAuthorityData(const TArray<int32>& InRawVoxels)
 {
     this->RawVoxels = InRawVoxels;
 
-    UE_LOG(LogTemp, Log, TEXT("ACommonChunk::InitializeWithAuthorityData: Generating chunk %s with authority data."), *this->ChunkKey.ToString())
+    UE_LOG(LogTemp, Verbose, TEXT("ACommonChunk::InitializeWithAuthorityData: Generating chunk %s with authority data."), *this->ChunkKey.ToString())
 
     this->ClearMesh();
     this->GenerateProceduralMesh();
