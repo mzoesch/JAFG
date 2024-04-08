@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Info.h"
+#include "World/WorldPlayerController.h"
 
 #include "HyperlaneTransmitterInfo.generated.h"
 
@@ -62,7 +63,7 @@ protected:
 
 public:
 
-    void SendChunkInitializationData(TransmittableData::FChunkInitializationData& Data);
+    void SendChunkInitializationData(const AWorldPlayerController* Target, TransmittableData::FChunkInitializationData& Data);
 
 private:
 
@@ -84,7 +85,7 @@ private:
      * All current connected clients.
      */
     TMap<FString, TSharedPtr<FTCPTransmitterClient>> Clients;
-    bool IsHyperlaneWorkerValid(const FString& HyperlaneIdentifier) const;
+    bool IsHyperlaneWorkerValid(const FString& HyperlaneIdentifier, AWorldPlayerController*& OutPlayerController) const;
 
     FTCPTransmitterSocketEventSignature OnListenBeginDelegate;
     FTCPTransmitterSocketEventSignature OnListenBeginFailureDelegate;

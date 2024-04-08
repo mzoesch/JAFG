@@ -206,26 +206,20 @@ void AHyperlaneTransmitterInfo::EndPlay(const EEndPlayReason::Type EndPlayReason
     return;
 }
 
-void AHyperlaneTransmitterInfo::SendChunkInitializationData(TransmittableData::FChunkInitializationData& Data)
+void AHyperlaneTransmitterInfo::SendChunkInitializationData(const AWorldPlayerController* Target, TransmittableData::FChunkInitializationData& Data)
 {
-    // TODO Make Set the client as parameter.
-    if (this->Clients.Num() != 1)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Num clients: %d"), this->Clients.Num())
-        // check( 0 && "AHyperlaneTransmitterInfo::SendChunkInitializationData: There is not exactly one client connected." )
-        return;
-    }
-
     TArray<uint8> Bytes = TArray<uint8>();
     Data.SerializeToBytes(Bytes);
 
-    this->Emit(Bytes, this->Clients.begin().Key());
+    this->Emit(Bytes, Target->GetHyperlaneWorkerAddress());
 
     return;
 }
 
-bool AHyperlaneTransmitterInfo::IsHyperlaneWorkerValid(const FString& HyperlaneIdentifier) const
+bool AHyperlaneTransmitterInfo::IsHyperlaneWorkerValid(const FString& HyperlaneIdentifier, AWorldPlayerController*& OutPlayerController) const
 {
+    OutPlayerController = nullptr;
+
     check( this->GetWorld() )
     FConstPlayerControllerIterator It = this->GetWorld()->GetPlayerControllerIterator();
     check( It )
@@ -236,6 +230,7 @@ bool AHyperlaneTransmitterInfo::IsHyperlaneWorkerValid(const FString& HyperlaneI
         {
             if (PlayerController->GetHyperlaneIdentifier() == HyperlaneIdentifier)
             {
+                OutPlayerController = PlayerController;
                 return true;
             }
 
@@ -419,14 +414,18 @@ void AHyperlaneTransmitterInfo::CreateServerEndFuture(void)
                         FString ReceivedData = FString(UTF8_TO_TCHAR(ReceiveBuffer.GetData()));
                         UE_LOG(LogTemp, Warning, TEXT("AHyperlaneTransmitterInfo::CreateServerEndFuture: Received data from %s: %s. Combining with unreals client connection if valid."), *Client->Address, *ReceivedData)
 
-                        if (this->IsHyperlaneWorkerValid(ReceivedData))
+                        AWorldPlayerController* CorrespondingPlayerController = nullptr;
+                        if (this->IsHyperlaneWorkerValid(ReceivedData, CorrespondingPlayerController))
                         {
+                            check( CorrespondingPlayerController )
+
                             if (this->Clients.Contains(Client->Address))
                             {
                                 UE_LOG(LogTemp, Fatal, TEXT("AHyperlaneTransmitterInfo::CreateServerEndFuture: Client %s is already validated."), *Client->Address)
                                 return;
                             }
 
+                            CorrespondingPlayerController->SetHyperlaneWorkerAddress(Client->Address);
                             this->Clients.Add(Client->Address, Client);
 
                             /*

@@ -225,7 +225,7 @@ void ACommonChunk::SendInitializationDataToClient(AWorldPlayerController* Target
     check( Transmitter )
 
     TransmittableData::FChunkInitializationData Data = TransmittableData::FChunkInitializationData(this->ChunkKey, this->RawVoxels);
-    Transmitter->SendChunkInitializationData(Data);
+    Transmitter->SendChunkInitializationData(Target, Data);
 
     return;
 }
