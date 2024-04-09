@@ -146,7 +146,13 @@ FString UDebugScreen::GetSectionTargetVoxelData(void) const
         FVector                     TargetedWorldHitLocation;
         FVector_NetQuantizeNormal   TargetedWorldNormalHitLocation;
         FIntVector                  TargetedLocalHitVoxelLocation;
-        Character->GetTargetedVoxel(TargetedChunk, TargetedWorldHitLocation, TargetedWorldNormalHitLocation, TargetedLocalHitVoxelLocation, false);
+        Character->GetTargetedVoxel(
+            TargetedChunk,
+            TargetedWorldHitLocation,
+            TargetedWorldNormalHitLocation,
+            TargetedLocalHitVoxelLocation,
+            false
+        );
 
         if (TargetedChunk == nullptr)
         {

@@ -50,26 +50,26 @@ void AWorldHUD::BeginPlay(void)
     }
 #endif /* WITH_EDITOR */
 
-    check( this->WEscapeMenuClass )
-    this->WEscapeMenu = CreateWidget<UEscapeMenu>(this->GetWorld(), this->WEscapeMenuClass);
-    check( this->WEscapeMenu )
-    this->WEscapeMenu->AddToViewport();
+    check( this->WDebugScreenClass)
+    this->WDebugScreen = CreateWidget<UDebugScreen>(this->GetWorld(), this->WDebugScreenClass);
+    check( this->WDebugScreen )
+    this->WDebugScreen->AddToViewport();
+    this->WDebugScreen->SetVisibility(ESlateVisibility::Collapsed);
 
     check( this->WChatMenuClass )
     this->WChatMenu = CreateWidget<UChatMenu>(this->GetWorld(), this->WChatMenuClass);
     check( this->WChatMenu )
     this->WChatMenu->AddToViewport();
 
+    check( this->WEscapeMenuClass )
+    this->WEscapeMenu = CreateWidget<UEscapeMenu>(this->GetWorld(), this->WEscapeMenuClass);
+    check( this->WEscapeMenu )
+    this->WEscapeMenu->AddToViewport();
+
     check( this->WCrosshairClass )
     this->WCrosshair = CreateWidget<UCrosshair>(this->GetWorld(), this->WCrosshairClass);
     check( this->WCrosshair )
     this->WCrosshair->AddToViewport();
-
-    check( this->WDebugScreenClass)
-    this->WDebugScreen = CreateWidget<UDebugScreen>(this->GetWorld(), this->WDebugScreenClass);
-    check( this->WDebugScreen )
-    this->WDebugScreen->AddToViewport();
-    this->WDebugScreen->SetVisibility(ESlateVisibility::Collapsed);
 
     return;
 }
@@ -78,6 +78,16 @@ void AWorldHUD::ToggleEscapeMenu(const bool bCollapsed) const
 {
     check( PLAYER_CONTROLLER )
     PLAYER_CONTROLLER->ShowMouseCursor(bCollapsed == false, true);
+
+    check( this->WCrosshair )
+    if (bCollapsed)
+    {
+        this->WCrosshair->SetVisibility(ESlateVisibility::Visible);
+    }
+    else
+    {
+        this->WCrosshair->SetVisibility(ESlateVisibility::Collapsed);
+    }
 
     this->WEscapeMenu->ToggleEscapeMenu(bCollapsed);
     check( this->WEscapeMenu )
