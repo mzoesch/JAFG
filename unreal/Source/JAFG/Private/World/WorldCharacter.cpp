@@ -17,6 +17,11 @@
 
 #define PLAYER_CONTROLLER        Cast<AWorldPlayerController>(this->GetWorld()->GetFirstPlayerController())
 #define HEAD_UP_DISPLAY          Cast<AWorldHUD>(this->GetWorld()->GetFirstPlayerController()->GetHUD())
+#define CHECKED_HEAD_UP_DISPLAY  check( this->GetWorld() ) \
+    check( this->GetWorld()->GetFirstPlayerController() ) \
+    check( this->GetWorld()->GetFirstPlayerController()->GetHUD() ) \
+    check( Cast<AWorldHUD>(this->GetWorld()->GetFirstPlayerController()->GetHUD()) ) \
+    HEAD_UP_DISPLAY
 #define ENHANCED_INPUT_SUBSYSTEM ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(Cast<APlayerController>(this->GetWorld()->GetFirstPlayerController())->GetLocalPlayer())
 
 AWorldCharacter::AWorldCharacter(const FObjectInitializer& ObjectInitializer):
@@ -334,6 +339,13 @@ void AWorldCharacter::OnToggleChatMenu(const FInputActionValue& Value)
     return;
 }
 
+/** Do NOT convert to const method, as this is a Rider IDEA false positive error. */
+// ReSharper disable once CppMemberFunctionMayBeConst
+void AWorldCharacter::OnToggleDebugScreen(const FInputActionValue& Value)
+{
+    CHECKED_HEAD_UP_DISPLAY->ToggleDebugScreen();
+}
+
 void AWorldCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -365,6 +377,7 @@ void AWorldCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
         check( this->IAToggleEscapeMenu )
         check( this->IAToggleChatMenu )
+        check( this->IAToggleDebugScreen )
 
         Subsystem->ClearAllMappings();
         Subsystem->AddMappingContext(this->IMCFoot, 0);
@@ -380,6 +393,7 @@ void AWorldCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
         EnhancedInputComponent->BindAction(this->IAToggleEscapeMenu, ETriggerEvent::Started, this, &AWorldCharacter::OnToggleEscapeMenu);
         EnhancedInputComponent->BindAction(this->IAToggleChatMenu, ETriggerEvent::Started, this, &AWorldCharacter::OnToggleChatMenu);
+        EnhancedInputComponent->BindAction(this->IAToggleDebugScreen, ETriggerEvent::Started, this, &AWorldCharacter::OnToggleDebugScreen);
     }
 
     return;

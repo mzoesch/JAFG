@@ -140,6 +140,8 @@ public:
     //////////////////////////////////////////////////////////////////////////
 
     /**
+     * TODO DO NOT USE in critical system areas. As this method currently contains bugs.
+     *
      * Server only.
      *
      * Gets itself if inbounds or an existing outbounding chunk from the relative local voxel
@@ -206,8 +208,13 @@ public:
     }
 
     /**
-     * Converts any unreal vector to a local voxel int location.
-     * XYZ reaching from zero to AWorldGeneratorInfo::ChunkSize.
+     * Converts any unreal vector in world space to a Chunk Key.
+     * See ACommonChunk#ChunkKey for more information about Chunk Keys.
+     */
+    static FIntVector WorldToChunkPosition(const FVector& WorldPosition);
+    /**
+     * Converts any unreal vector in world space to a local voxel int location.
+     * XYZ reaching from inclusively zero to exclusively AWorldGeneratorInfo::ChunkSize.
      */
     static FIntVector WorldToLocalVoxelLocation(const FVector& WorldLocation);
 };

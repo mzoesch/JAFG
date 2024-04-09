@@ -2,6 +2,7 @@
 
 #include "UI/World/WorldHUD.h"
 
+#include "UI/Debug/DebugScreen.h"
 #include "World/WorldCharacter.h"
 #include "UI/Escape/EscapeMenu.h"
 #include "UI/HUD/Crosshair.h"
@@ -51,34 +52,60 @@ void AWorldHUD::BeginPlay(void)
 
     check( this->WEscapeMenuClass )
     this->WEscapeMenu = CreateWidget<UEscapeMenu>(this->GetWorld(), this->WEscapeMenuClass);
+    check( this->WEscapeMenu )
     this->WEscapeMenu->AddToViewport();
 
     check( this->WChatMenuClass )
     this->WChatMenu = CreateWidget<UChatMenu>(this->GetWorld(), this->WChatMenuClass);
+    check( this->WChatMenu )
     this->WChatMenu->AddToViewport();
 
     check( this->WCrosshairClass )
     this->WCrosshair = CreateWidget<UCrosshair>(this->GetWorld(), this->WCrosshairClass);
+    check( this->WCrosshair )
     this->WCrosshair->AddToViewport();
+
+    check( this->WDebugScreenClass)
+    this->WDebugScreen = CreateWidget<UDebugScreen>(this->GetWorld(), this->WDebugScreenClass);
+    check( this->WDebugScreen )
+    this->WDebugScreen->AddToViewport();
+    this->WDebugScreen->SetVisibility(ESlateVisibility::Collapsed);
 
     return;
 }
 
 void AWorldHUD::ToggleEscapeMenu(const bool bCollapsed) const
 {
+    check( PLAYER_CONTROLLER )
     PLAYER_CONTROLLER->ShowMouseCursor(bCollapsed == false, true);
+
     this->WEscapeMenu->ToggleEscapeMenu(bCollapsed);
+    check( this->WEscapeMenu )
+
+    return;
 }
 
 void AWorldHUD::ToggleChatMenu(const bool bCollapsed) const
 {
+    check( PLAYER_CONTROLLER )
     PLAYER_CONTROLLER->ShowMouseCursor(bCollapsed == false, true);
+
+    check( this->WChatMenu )
     this->WChatMenu->ToggleChatMenu(bCollapsed);
+
+    return;
 }
 
-void AWorldHUD::AddMessageToChat(const FString& Message)
+void AWorldHUD::AddMessageToChat(const FString& Message) const
 {
+    check( this->WChatMenu )
     this->WChatMenu->AddMessageToChat(Message);
+}
+
+void AWorldHUD::ToggleDebugScreen(void) const
+{
+    check( this->WDebugScreen )
+    this->WDebugScreen->Toggle();
 }
 
 #undef PLAYER_CONTROLLER

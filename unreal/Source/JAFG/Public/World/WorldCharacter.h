@@ -80,6 +80,9 @@ public:
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|MISC")
     UInputAction* IAToggleChatMenu;
 
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|MISC")
+    UInputAction* IAToggleDebugScreen;
+
 private:
 
     void OnTriggerJump(const FInputActionValue& Value);
@@ -98,6 +101,7 @@ private:
     friend UEscapeMenu;
     void OnToggleChatMenu(const FInputActionValue& Value);
     friend UChatMenu;
+    void OnToggleDebugScreen(const FInputActionValue& Value);
 
 public:
 
@@ -118,7 +122,10 @@ private:
         return this->RemoteViewPitch * 360.0f / /* 2^8 - 1 = */ 255.0f;
     }
 
-    /** Equivalent to 4 x Chunk => 4 x 16 Voxels => 64 Voxels. */
+    /**
+     * The maximum distance where we trace for voxels and other hit objects.
+     * Equivalent to 4 x Chunk => 4 x 16 Voxels => 64 Voxels.
+     */
     static constexpr float MaxPOVLineTraceLength { (AWorldGeneratorInfo::ChunkSize * 4.0f ) * AWorldGeneratorInfo::JToUScale };
     // ReSharper disable once CppMemberFunctionMayBeStatic
     FORCEINLINE auto GetCharacterReachInVoxels(void) const -> float { return 4.5f; }
@@ -137,9 +144,20 @@ private:
             FVector::OneVector
         );
     }
-    void GetTargetedVoxel(ACommonChunk*& OutChunk, FVector& OutWorldHitLocation, FVector_NetQuantizeNormal& OutWorldNormalHitLocation, FIntVector& OutLocalHitVoxelLocation, const bool bUseRemotePitch, const float UnrealReach = AWorldCharacter::MaxPOVLineTraceLength) const;
 
 public:
 
+    void GetTargetedVoxel(
+        ACommonChunk*& OutChunk,
+        FVector& OutWorldHitLocation,
+        FVector_NetQuantizeNormal& OutWorldNormalHitLocation,
+        FIntVector& OutLocalHitVoxelLocation,
+        const bool bUseRemotePitch,
+        const float UnrealReach = AWorldCharacter::MaxPOVLineTraceLength
+    ) const;
+
+    FORCEINLINE auto GetFPSCamera(void) const -> UCameraComponent* { return this->FirstPersonCameraComponent; }
     FORCEINLINE auto GetTorsoLocation(void) const -> FVector { return this->FirstPersonCameraComponent->GetComponentLocation() + AWorldCharacter::TorsoOffset; }
+
+    FORCEINLINE auto GetCurrentDurationSameVoxelIsMined(void) const -> float { return 0.0f; }
 };

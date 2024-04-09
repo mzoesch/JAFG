@@ -24,6 +24,7 @@
 
 DECLARE_LOG_CATEGORY_EXTERN(LogChunkManipulation, Log, All)
 DECLARE_LOG_CATEGORY_EXTERN(LogChunkValidation, Log, All)
+DECLARE_LOG_CATEGORY_EXTERN(LogCommonSlate, Log, All)
 DECLARE_LOG_CATEGORY_EXTERN(LogHyperlane, Log, All)
 DECLARE_LOG_CATEGORY_EXTERN(LogWorldChar, Log, All)
 

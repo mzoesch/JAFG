@@ -7,6 +7,7 @@
 
 #include "WorldHUD.generated.h"
 
+class UDebugScreen;
 class UCrosshair;
 JAFG_VOID
 
@@ -35,16 +36,22 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widgets")
     TSubclassOf<UCrosshair> WCrosshairClass;
 
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widgets")
+    TSubclassOf<UDebugScreen> WDebugScreenClass;
+
 private:
 
-    TObjectPtr<UEscapeMenu> WEscapeMenu;
-    TObjectPtr<UChatMenu> WChatMenu;
-    TObjectPtr<UCrosshair> WCrosshair;
+    TObjectPtr<UEscapeMenu>  WEscapeMenu;
+    TObjectPtr<UChatMenu>    WChatMenu;
+    TObjectPtr<UCrosshair>   WCrosshair;
+    TObjectPtr<UDebugScreen> WDebugScreen;
 
 public:
 
     void ToggleEscapeMenu(const bool bCollapsed) const;
 
     void ToggleChatMenu(const bool bCollapsed) const;
-    void AddMessageToChat(const FString& Message);
+    void AddMessageToChat(const FString& Message) const;
+
+    void ToggleDebugScreen(void) const;
 };

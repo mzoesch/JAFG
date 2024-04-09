@@ -312,7 +312,7 @@ ACommonChunk* ACommonChunk::GetTargetChunk(const FIntVector& LocalVoxelPosition,
 void ACommonChunk::ModifySingleVoxel(const FIntVector& LocalVoxelPosition, const int NewVoxel)
 {
     LOG_VERY_VERBOSE(LogChunkManipulation, "Requested to modify single voxel at %s to %d int %s.",
-        *LocalVoxelPosition.ToString(), NewVoxel, *this->GetName())
+        *LocalVoxelPosition.ToString(), NewVoxel, *this->ChunkKey.ToString())
 
     if (UNetworkStatics::IsSafeServer(this) == false)
     {
@@ -351,6 +351,24 @@ void ACommonChunk::ModifySingleVoxel(const FIntVector& LocalVoxelPosition, const
     TargetChunk->ApplyProceduralMesh();
 
     return;
+}
+
+FIntVector ACommonChunk::WorldToChunkPosition(const FVector& WorldPosition)
+{
+    FIntVector       ChunkPosition;
+    const FIntVector IntPosition     = FIntVector(WorldPosition);
+    constexpr int    Factor          = AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale;
+
+    if (IntPosition.X < 0) ChunkPosition.X = (int) (WorldPosition.X / Factor) - 1;
+    else ChunkPosition.X = (int) (WorldPosition.X / Factor);
+
+    if (IntPosition.Y < 0) ChunkPosition.Y = (int) (WorldPosition.Y / Factor) - 1;
+    else ChunkPosition.Y = (int) (WorldPosition.Y / Factor);
+
+    if (IntPosition.Z < 0) ChunkPosition.Z = (int) (WorldPosition.Z / Factor) - 1;
+    else ChunkPosition.Z = (int) (WorldPosition.Z / Factor);
+
+    return ChunkPosition;
 }
 
 FIntVector ACommonChunk::WorldToLocalVoxelLocation(const FVector& WorldLocation)
