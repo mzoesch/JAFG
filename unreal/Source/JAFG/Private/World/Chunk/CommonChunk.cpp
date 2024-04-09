@@ -244,28 +244,79 @@ void ACommonChunk::InitializeWithAuthorityData(const TArray<int32>& InRawVoxels)
 
 ACommonChunk* ACommonChunk::GetTargetChunk(const FIntVector& LocalVoxelPosition, FIntVector& OutTransformedLocalVoxelPosition)
 {
-
-    if (
-               LocalVoxelPosition.X >= AWorldGeneratorInfo::ChunkSize
-            || LocalVoxelPosition.Y >= AWorldGeneratorInfo::ChunkSize
-            || LocalVoxelPosition.Z >= AWorldGeneratorInfo::ChunkSize
-            || LocalVoxelPosition.X < 0
-            || LocalVoxelPosition.Y < 0
-            || LocalVoxelPosition.Z < 0
-        )
+    if (UNetworkStatics::IsSafeServer(this) == false)
     {
-        /* TODO Get neighboring chunk. */
+        LOG_FATAL(LogChunkManipulation, "Only the server can get target chunks.")
         return nullptr;
     }
 
-    return this;
+    FIntVector TransformedChunkKey   = this->ChunkKey;
+    OutTransformedLocalVoxelPosition = LocalVoxelPosition;
+
+    if (LocalVoxelPosition.X >= AWorldGeneratorInfo::ChunkSize)
+    {
+        TransformedChunkKey.X++;
+        OutTransformedLocalVoxelPosition.X -= AWorldGeneratorInfo::ChunkSize;
+    }
+
+    else if (LocalVoxelPosition.X < 0)
+    {
+        TransformedChunkKey.X--;
+        OutTransformedLocalVoxelPosition.X += AWorldGeneratorInfo::ChunkSize;
+    }
+
+    if (LocalVoxelPosition.Y >= AWorldGeneratorInfo::ChunkSize)
+    {
+        TransformedChunkKey.Y++;
+        OutTransformedLocalVoxelPosition.Y -= AWorldGeneratorInfo::ChunkSize;
+    }
+
+    else if (LocalVoxelPosition.Y < 0)
+    {
+        TransformedChunkKey.Y--;
+        OutTransformedLocalVoxelPosition.Y += AWorldGeneratorInfo::ChunkSize;
+    }
+
+    if (LocalVoxelPosition.Z >= AWorldGeneratorInfo::ChunkSize)
+    {
+        TransformedChunkKey.Z++;
+        OutTransformedLocalVoxelPosition.Z -= AWorldGeneratorInfo::ChunkSize;
+    }
+
+    else if (LocalVoxelPosition.Z < 0)
+    {
+        TransformedChunkKey.Z--;
+        OutTransformedLocalVoxelPosition.Z += AWorldGeneratorInfo::ChunkSize;
+    }
+
+    if (OutTransformedLocalVoxelPosition == LocalVoxelPosition)
+    {
+        return this;
+    }
+
+    LOG_VERBOSE(LogChunkManipulation, "Transformed local voxel position from %s to %s. Key change from %s to %s.",
+        *LocalVoxelPosition.ToString(), *OutTransformedLocalVoxelPosition.ToString(), *this->ChunkKey.ToString(), *TransformedChunkKey.ToString())
+
+    check( this->WorldGeneratorInfo )
+    ACommonChunk* TargetChunk = this->WorldGeneratorInfo->GetChunkBy(TransformedChunkKey);
+
+    if (TargetChunk == nullptr)
+    {
+        return nullptr;
+    }
+
+    const FIntVector Temp = OutTransformedLocalVoxelPosition;
+    return TargetChunk->GetTargetChunk(Temp, OutTransformedLocalVoxelPosition);
 }
 
-void ACommonChunk::ModifySingleVoxel(const FIntVector& LocalVoxelPosition, int NewVoxel)
+void ACommonChunk::ModifySingleVoxel(const FIntVector& LocalVoxelPosition, const int NewVoxel)
 {
+    LOG_VERY_VERBOSE(LogChunkManipulation, "Requested to modify single voxel at %s to %d int %s.",
+        *LocalVoxelPosition.ToString(), NewVoxel, *this->GetName())
+
     if (UNetworkStatics::IsSafeServer(this) == false)
     {
-        UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::ModifySingleVoxel: Only the server can modify voxels."))
+        LOG_FATAL(LogChunkManipulation, "Only the server can modify voxels.")
         return;
     }
 
@@ -274,7 +325,15 @@ void ACommonChunk::ModifySingleVoxel(const FIntVector& LocalVoxelPosition, int N
 
     if (TargetChunk == nullptr)
     {
-        UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::ModifySingleVoxel: Could not get target chunk for local voxel position %s."), *LocalVoxelPosition.ToString())
+        LOG_ERROR(LogChunkManipulation, "Could not get target chunk for local voxel position %s (pivot: %s). Modfied to %s.",
+            *LocalVoxelPosition.ToString(), *this->GetName(), *TransformedLocalVoxelPosition.ToString())
+        return;
+    }
+
+    if (TargetChunk->GetRawVoxelData(TransformedLocalVoxelPosition) == NewVoxel)
+    {
+        LOG_WARNING(LogChunkManipulation, "Voxel at %s already has the value %d. No need to modify.",
+            *TransformedLocalVoxelPosition.ToString(), NewVoxel)
         return;
     }
 

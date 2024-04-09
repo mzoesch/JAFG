@@ -66,6 +66,10 @@ protected:
      */
     TArray<int32> RawVoxels;
 
+    FORCEINLINE int GetRawVoxelData(const FIntVector& LocalVoxelPosition) const
+    {
+        return this->RawVoxels[ACommonChunk::GetVoxelIndex(LocalVoxelPosition)];
+    }
     FORCEINLINE void ModifyRawVoxelData(const FIntVector& LocalVoxelPosition, const int NewVoxel)
     {
         this->RawVoxels[ACommonChunk::GetVoxelIndex(LocalVoxelPosition)] = NewVoxel;
@@ -142,7 +146,12 @@ public:
      * position that is also a neighbor from this (the called) chunk.
      *
      * Warning: This method is extremely slow.
-     * Large amounts of calls in one frame will cause a significant performance hit.
+     *          Large amounts of calls in one frame will cause a significant performance hit.
+     *
+     * @param LocalVoxelPosition               The local voxel position within the chunk. This chunk acts as the
+     *                                         pivot (0, 0, 0) of the FIntVector.
+     * @param OutTransformedLocalVoxelPosition The new local voxel position of the target chunk. Stays the same if the
+     *                                         target chunk is the called chunk.
      */
     ACommonChunk* GetTargetChunk(const FIntVector& LocalVoxelPosition, FIntVector& OutTransformedLocalVoxelPosition);
 
@@ -160,7 +169,7 @@ public:
      *                           the method will assume that the initial called chunk object acts as the pivot of the
      *                           FIntVector.
      */
-    void ModifySingleVoxel(const FIntVector& LocalVoxelPosition, int NewVoxel);
+    void ModifySingleVoxel(const FIntVector& LocalVoxelPosition, const int NewVoxel);
 
     //////////////////////////////////////////////////////////////////////////
     // Getters
