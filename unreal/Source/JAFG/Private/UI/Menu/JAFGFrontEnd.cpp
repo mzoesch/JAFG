@@ -28,7 +28,7 @@ void UJAFGFrontEnd::OpenMenuTab(const EMenuTab MenuTab) const
         }
 
         this->OpenMenuTab(EMenuTab::Invalid);
-        
+
         return;
     }
 

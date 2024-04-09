@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "CommonCore.h"
 #include "Engine/GameInstance.h"
 
 #include "JAFGInstance.generated.h"
@@ -32,16 +32,16 @@ public:
 
     UPROPERTY(EditDefaultsOnly, Category="Material")
     TObjectPtr<UTexture2D> Stone;
-    
+
     UPROPERTY(EditDefaultsOnly, Category="Material")
     TObjectPtr<UTexture2D> Dirt;
-    
+
     UPROPERTY(EditDefaultsOnly, Category="Material")
     TObjectPtr<UTexture2D> GrassTop;
-    
+
     UPROPERTY(EditDefaultsOnly, Category="Material")
     TObjectPtr<UTexture2D> Grass;
-    
+
     virtual void Init(void) override;
     virtual void Shutdown(void) override;
 };

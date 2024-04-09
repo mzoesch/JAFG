@@ -15,7 +15,7 @@ void AWorldPlayerController::BeginPlay(void)
 
     if (UNetworkStatics::IsSafeServer(this))
     {
-        /* Replicated after client has connected in post login.  */
+        /* Replicated after client has connected in Post Login.  */
         this->HyperlaneIdentifier = FGuid::NewGuid().ToString();
         UE_LOG(LogTemp, Display, TEXT("AWorldPlayerController::BeginPlay: Creating new GUID for %s: [%s]."), *this->GetName(), *this->HyperlaneIdentifier)
     }
@@ -49,7 +49,7 @@ void AWorldPlayerController::BeginPlay(void)
     return;
 }
 
-void AWorldPlayerController::OnPostLogin()
+void AWorldPlayerController::OnPostLogin(void)
 {
     if (UNetworkStatics::IsSafeServer(this) == false)
     {
