@@ -91,7 +91,7 @@ FString UDebugScreen::GetSectionClientCharacterChunkLocation(void) const
 {
     if (const AWorldCharacter* Character = OWNING_CHARACTER)
     {
-        const FIntVector ChunkPosition = ACommonChunk::WorldToChunkPosition(Character->GetActorLocation());
+        const FIntVector ChunkPosition = ACommonChunk::WorldToChunkKey(Character->GetActorLocation());
         return FString::Printf(TEXT("Chunk: %d %d %d"), ChunkPosition.X, ChunkPosition.Y, ChunkPosition.Z);
     }
 

@@ -399,7 +399,14 @@ void AWorldCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
     return;
 }
 
-void AWorldCharacter::GetTargetedVoxel(ACommonChunk*& OutChunk, FVector& OutWorldHitLocation, FVector_NetQuantizeNormal& OutWorldNormalHitLocation, FIntVector& OutLocalHitVoxelLocation, const bool bUseRemotePitch, const float UnrealReach) const
+void AWorldCharacter::GetTargetedVoxel(
+    ACommonChunk*& OutChunk,
+    FVector& OutWorldHitLocation,
+    FVector_NetQuantizeNormal& OutWorldNormalHitLocation,
+    FIntVector& OutLocalHitVoxelLocation,
+    const bool bUseRemotePitch,
+    const float UnrealReach
+) const
 {
     OutChunk = nullptr;
     OutLocalHitVoxelLocation = FIntVector::ZeroValue;
@@ -419,9 +426,28 @@ void AWorldCharacter::GetTargetedVoxel(ACommonChunk*& OutChunk, FVector& OutWorl
 
     if ((OutChunk = Cast<ACommonChunk>(HitResult.GetActor())) != nullptr)
     {
-        OutWorldHitLocation = HitResult.Location - HitResult.Normal;
+        FVector FixedVector = HitResult.Location;
+        if (FMath::IsNearlyZero(FixedVector.X, UE_DOUBLE_KINDA_SMALL_NUMBER))
+        {
+            FixedVector.X = 0.0;
+        }
+
+        if (FMath::IsNearlyZero(FixedVector.Y, UE_DOUBLE_KINDA_SMALL_NUMBER))
+        {
+            FixedVector.Y = 0.0;
+        }
+
+        if (FMath::IsNearlyZero(FixedVector.Z, UE_DOUBLE_KINDA_SMALL_NUMBER))
+        {
+            FixedVector.Z = 0.0;
+        }
+
+        FixedVector -= HitResult.Normal;
+
+        OutWorldHitLocation =  FixedVector;
         OutWorldNormalHitLocation = HitResult.Normal;
         OutLocalHitVoxelLocation = ACommonChunk::WorldToLocalVoxelLocation(OutWorldHitLocation);
+
         return;
     }
 

@@ -353,47 +353,93 @@ void ACommonChunk::ModifySingleVoxel(const FIntVector& LocalVoxelPosition, const
     return;
 }
 
-FIntVector ACommonChunk::WorldToChunkPosition(const FVector& WorldPosition)
+FIntVector ACommonChunk::WorldToChunkKey(const FVector& WorldLocation)
 {
-    FIntVector       ChunkPosition;
-    const FIntVector IntPosition     = FIntVector(WorldPosition);
-    constexpr int    Factor          = AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale;
+    constexpr double Factor { AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScaleDouble };
 
-    if (IntPosition.X < 0) ChunkPosition.X = (int) (WorldPosition.X / Factor) - 1;
-    else ChunkPosition.X = (int) (WorldPosition.X / Factor);
+    FIntVector ChunkKey;
 
-    if (IntPosition.Y < 0) ChunkPosition.Y = (int) (WorldPosition.Y / Factor) - 1;
-    else ChunkPosition.Y = (int) (WorldPosition.Y / Factor);
+    if (WorldLocation.X < 0)
+    {
+        ChunkKey.X = static_cast<int>(WorldLocation.X / Factor) - 1;
+    }
+    else
+    {
+        ChunkKey.X = static_cast<int>(WorldLocation.X / Factor);
+    }
 
-    if (IntPosition.Z < 0) ChunkPosition.Z = (int) (WorldPosition.Z / Factor) - 1;
-    else ChunkPosition.Z = (int) (WorldPosition.Z / Factor);
+    if (WorldLocation.Y < 0)
+    {
+        ChunkKey.Y = static_cast<int>(WorldLocation.Y / Factor) - 1;
+    }
+    else
+    {
+        ChunkKey.Y = static_cast<int>(WorldLocation.Y / Factor);
+    }
 
-    return ChunkPosition;
+    if (WorldLocation.Z < 0)
+    {
+        ChunkKey.Z = static_cast<int>(WorldLocation.Z / Factor) - 1;
+    }
+    else
+    {
+        ChunkKey.Z = static_cast<int>(WorldLocation.Z / Factor);
+    }
+
+    return ChunkKey;
 }
 
 FIntVector ACommonChunk::WorldToLocalVoxelLocation(const FVector& WorldLocation)
 {
-    FIntVector WorldToChunkPosition;
+    constexpr double Factor { AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScaleDouble };
 
-    const int Factor = AWorldGeneratorInfo::ChunkSize * 100;
-    const auto IntPosition = FIntVector(WorldLocation);
+    FIntVector ChunkLocation;
 
-    if (IntPosition.X < 0) WorldToChunkPosition.X = (int) (WorldLocation.X / Factor) - 1;
-    else WorldToChunkPosition.X = (int) (WorldLocation.X / Factor);
+    if (WorldLocation.X < 0)
+    {
+        ChunkLocation.X = static_cast<int>(WorldLocation.X / Factor) - 1;
+    }
+    else
+    {
+        ChunkLocation.X = static_cast<int>(WorldLocation.X / Factor);
+    }
 
-    if (IntPosition.Y < 0) WorldToChunkPosition.Y = (int) (WorldLocation.Y / Factor) - 1;
-    else WorldToChunkPosition.Y = (int) (WorldLocation.Y / Factor);
+    if (WorldLocation.Y < 0)
+    {
+        ChunkLocation.Y = static_cast<int>(WorldLocation.Y / Factor) - 1;
+    }
+    else
+    {
+        ChunkLocation.Y = static_cast<int>(WorldLocation.Y / Factor);
+    }
 
-    if (IntPosition.Z < 0) WorldToChunkPosition.Z = (int) (WorldLocation.Z / Factor) - 1;
-    else WorldToChunkPosition.Z = (int) (WorldLocation.Z / Factor);
+    if (WorldLocation.Z < 0)
+    {
+        ChunkLocation.Z = static_cast<int>(WorldLocation.Z / Factor) - 1;
+    }
+    else
+    {
+        ChunkLocation.Z = static_cast<int>(WorldLocation.Z / Factor);
+    }
 
-    /* WorldToBlockPosition */
-    FIntVector WorldToBlockPosition = FIntVector(WorldLocation) / 100 - WorldToChunkPosition * AWorldGeneratorInfo::ChunkSize;
+    FIntVector LocalVoxelLocation =
+          FIntVector(WorldLocation) / AWorldGeneratorInfo::JToUScaleInteger
+        - ChunkLocation * AWorldGeneratorInfo::ChunkSize;
 
     /* Negative Normalization */
-    if (WorldToChunkPosition.X < 0) WorldToBlockPosition.X--;
-    if (WorldToChunkPosition.Y < 0) WorldToBlockPosition.Y--;
-    if (WorldToChunkPosition.Z < 0) WorldToBlockPosition.Z--;
 
-    return WorldToBlockPosition;
+    if (ChunkLocation.X < 0)
+    {
+        --LocalVoxelLocation.X;
+    }
+    if (ChunkLocation.Y < 0)
+    {
+        --LocalVoxelLocation.Y;
+    }
+    if (ChunkLocation.Z < 0)
+    {
+        --LocalVoxelLocation.Z;
+    }
+
+    return LocalVoxelLocation;
 }

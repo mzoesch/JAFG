@@ -211,9 +211,10 @@ public:
      * Converts any unreal vector in world space to a Chunk Key.
      * See ACommonChunk#ChunkKey for more information about Chunk Keys.
      */
-    static FIntVector WorldToChunkPosition(const FVector& WorldPosition);
+    static FIntVector WorldToChunkKey(const FVector& WorldLocation);
+
     /**
-     * Converts any unreal vector in world space to a local voxel int location.
+     * Converts any unreal vector in world space to a local voxel integer location.
      * XYZ reaching from inclusively zero to exclusively AWorldGeneratorInfo::ChunkSize.
      */
     static FIntVector WorldToLocalVoxelLocation(const FVector& WorldLocation);

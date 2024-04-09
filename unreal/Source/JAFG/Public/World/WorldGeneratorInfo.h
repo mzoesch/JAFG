@@ -96,8 +96,12 @@ public:
      */
     inline static constexpr int ChunkSize { 16 };
 
-    inline static constexpr float JToUScale { 100.0f };
-    inline static constexpr float UToJScale { 1.0f / AWorldGeneratorInfo::JToUScale };
+    inline static constexpr float  JToUScale { 100.0f };
+    inline static constexpr float  UToJScale { 1.0f / AWorldGeneratorInfo::JToUScale };
+    inline static constexpr double JToUScaleDouble { 100.0 };
+    inline static constexpr double UToJScaleDouble { 1.0 / AWorldGeneratorInfo::JToUScaleDouble };
+    inline static constexpr int    JToUScaleInteger { 100 };
+    /* There is obviously no integer with a U To J Scale. */
 
 protected:
 
