@@ -100,6 +100,8 @@ void AWorldCharacter::OnMove(const FInputActionValue& Value)
 
 void AWorldCharacter::OnPrimary(const FInputActionValue& Value)
 {
+    LOG_VERBOSE(LogWorldChar, "tirggered.")
+
     const FTransform TraceStart = this->GetFirstPersonTraceStart();
     const FVector    TraceEnd   = TraceStart.GetLocation() + (TraceStart.GetRotation().Vector() * this->GetCharacterReach());
 
@@ -110,24 +112,27 @@ void AWorldCharacter::OnPrimary(const FInputActionValue& Value)
 
     if (HitResult.GetActor() == nullptr)
     {
+        LOG_VERBOSE(LogWorldChar, "No AActor Hit Result was found.")
         return;
     }
 
     if (HitResult.GetActor()->IsA(ACommonChunk::StaticClass()) == false)
     {
+        LOG_VERBOSE(LogWorldChar, "AActor Hit Result is not a Common Chunk.")
         return;
     }
 
     ACommonChunk* Chunk = Cast<ACommonChunk>(HitResult.GetActor());
     check( Chunk )
 
-    const FVector    WorldHitLocation         = HitResult.Location - HitResult.Normal;
+    const FVector    WorldHitLocation      = HitResult.Location - HitResult.Normal;
     const FIntVector LocalHitVoxelLocation = ACommonChunk::WorldToLocalVoxelLocation(WorldHitLocation);
 
+    // ReSharper disable once CppTooWideScopeInitStatement
     const int HitVoxel = Chunk->GetLocalVoxelOnly(LocalHitVoxelLocation);
     if (HitVoxel == ECommonVoxels::Null || HitVoxel == ECommonVoxels::Air)
     {
-        UE_LOG(LogTemp, Warning, TEXT("AWorldCharacter::OnPrimary: HitVoxel is not valid."))
+        LOG_WARNING(LogWorldChar, "Hit Voxel is not valid.")
         return;
     }
 
@@ -138,6 +143,8 @@ void AWorldCharacter::OnPrimary(const FInputActionValue& Value)
 
 void AWorldCharacter::OnPrimary_ServerRPC_Implementation(const FInputActionValue& Value)
 {
+    LOG_VERBOSE(LogWorldChar, "tirggered.")
+
     const FTransform TraceNoPitchStart = this->GetFirstPersonTraceStart();
     const FTransform TraceStart = FTransform(
         FQuat(FRotator(

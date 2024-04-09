@@ -22,7 +22,10 @@
     Common extern logging categories.
 ----------------------------------------------------------------------------*/
 
+DECLARE_LOG_CATEGORY_EXTERN(LogChunkManipulation, Log, All)
+DECLARE_LOG_CATEGORY_EXTERN(LogChunkValidation, Log, All)
 DECLARE_LOG_CATEGORY_EXTERN(LogHyperlane, Log, All)
+DECLARE_LOG_CATEGORY_EXTERN(LogWorldChar, Log, All)
 
 
 /*----------------------------------------------------------------------------
@@ -73,13 +76,22 @@ DECLARE_LOG_CATEGORY_EXTERN(LogHyperlane, Log, All)
 #if LOG_WITH_LINE_NUMBERS
 
 /**
+ * A macro that logs a formatted message if the log category is active at VERY VERBOSE verbosity level.
+ *
+ * @param CategoryName Name of the log category as provided to DEFINE_LOG_CATEGORY.
+ * @param Format       Format string literal in the style of printf.
+ */
+#define LOG_VERY_VERBOSE(CategoryName, Format, ...) \
+    UE_LOG(CategoryName, VeryVerbose, TEXT("%s: %s"), *LOG_PRIVATE_TRACE_STR_CUR_CLASS_FUNC_LINE, *FString::Printf(TEXT(Format), ##__VA_ARGS__ ) )
+
+/**
  * A macro that logs a formatted message if the log category is active at VERBOSE verbosity level.
  *
  * @param CategoryName Name of the log category as provided to DEFINE_LOG_CATEGORY.
  * @param Format       Format string literal in the style of printf.
  */
 #define LOG_VERBOSE(CategoryName, Format, ...) \
-    UE_LOG(CategoryName, Verbose, TEXT("%s: %s"), *LOG_PRIVATE_TRACE_STR_CLASS_FUNC_LINE, *FString::Printf(TEXT(Format), ##__VA_ARGS__ ) )
+    UE_LOG(CategoryName, Verbose, TEXT("%s: %s"), *LOG_PRIVATE_TRACE_STR_CUR_CLASS_FUNC_LINE, *FString::Printf(TEXT(Format), ##__VA_ARGS__ ) )
 
 /**
  * A macro that logs a formatted message if the log category is active at DISPLAY verbosity level.
@@ -88,7 +100,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogHyperlane, Log, All)
  * @param Format       Format string literal in the style of printf.
  */
 #define LOG_DISPLAY(CategoryName, Format, ...) \
-    UE_LOG(CategoryName, Display, TEXT("%s: %s"), *LOG_PRIVATE_TRACE_STR_CLASS_FUNC_LINE, *FString::Printf(TEXT(Format), ##__VA_ARGS__ ) )
+    UE_LOG(CategoryName, Display, TEXT("%s: %s"), *LOG_PRIVATE_TRACE_STR_CUR_CLASS_FUNC_LINE, *FString::Printf(TEXT(Format), ##__VA_ARGS__ ) )
 
 /**
  * A macro that logs a formatted message if the log category is active at WARNING verbosity level.
@@ -97,7 +109,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogHyperlane, Log, All)
  * @param Format       Format string literal in the style of printf.
  */
 #define LOG_WARNING(CategoryName, Format, ...) \
-    UE_LOG(CategoryName, Warning, TEXT("%s: %s"), *LOG_PRIVATE_TRACE_STR_CLASS_FUNC_LINE, *FString::Printf(TEXT(Format), ##__VA_ARGS__ ) )
+    UE_LOG(CategoryName, Warning, TEXT("%s: %s"), *LOG_PRIVATE_TRACE_STR_CUR_CLASS_FUNC_LINE, *FString::Printf(TEXT(Format), ##__VA_ARGS__ ) )
 
 /**
  * A macro that logs a formatted message if the log category is active at ERROR verbosity level.
@@ -106,7 +118,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogHyperlane, Log, All)
  * @param Format       Format string literal in the style of printf.
  */
 #define LOG_ERROR(CategoryName, Format, ...) \
-    UE_LOG(CategoryName, Error, TEXT("%s: %s"), *LOG_PRIVATE_TRACE_STR_CLASS_FUNC_LINE, *FString::Printf(TEXT(Format), ##__VA_ARGS__ ) )
+    UE_LOG(CategoryName, Error, TEXT("%s: %s"), *LOG_PRIVATE_TRACE_STR_CUR_CLASS_FUNC_LINE, *FString::Printf(TEXT(Format), ##__VA_ARGS__ ) )
 
 /**
  * A macro that logs a formatted message if the log category is active at FATAL verbosity level.
@@ -115,9 +127,18 @@ DECLARE_LOG_CATEGORY_EXTERN(LogHyperlane, Log, All)
  * @param Format       Format string literal in the style of printf.
  */
 #define LOG_FATAL(CategoryName, Format, ...) \
-    UE_LOG(CategoryName, Fatal, TEXT("%s: %s"), *LOG_PRIVATE_TRACE_STR_CLASS_FUNC_LINE, *FString::Printf(TEXT(Format), ##__VA_ARGS__ ) )
+    UE_LOG(CategoryName, Fatal, TEXT("%s: %s"), *LOG_PRIVATE_TRACE_STR_CUR_CLASS_FUNC_LINE, *FString::Printf(TEXT(Format), ##__VA_ARGS__ ) )
 
 #else /* LOG_WITH_LINE_NUMBERS */
+
+/**
+ * A macro that logs a formatted message if the log category is active at VERY VERBOSE verbosity level.
+ *
+ * @param CategoryName Name of the log category as provided to DEFINE_LOG_CATEGORY.
+ * @param Format       Format string literal in the style of printf.
+ */
+#define LOG_VERY_VERBOSE(CategoryName, Format, ...) \
+    UE_LOG(CategoryName, VeryVerbose, TEXT("%s: %s"), *LOG_PRIVATE_TRACE_STR_CUR_CLASS_FUNC, *FString::Printf(TEXT(Format), ##__VA_ARGS__ ) )
 
 /**
  * A macro that logs a formatted message if the log category is active at VERBOSE verbosity level.

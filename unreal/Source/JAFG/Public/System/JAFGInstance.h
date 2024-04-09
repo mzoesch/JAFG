@@ -7,6 +7,8 @@
 
 #include "JAFGInstance.generated.h"
 
+JAFG_VOID
+
 class ULocalSessionSupervisorSubsystem;
 
 UCLASS(Abstract, Blueprintable)

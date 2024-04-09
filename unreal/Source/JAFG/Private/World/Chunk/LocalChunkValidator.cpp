@@ -9,6 +9,10 @@
 #include "World/WorldPlayerController.h"
 #include "World/Chunk/GreedyChunk.h"
 
+#define OWNING_PAWN Cast<APawn>(this->GetOwner())
+#define CHECK_OWNING_PAWN check( this->GetOwner() ) check( Cast<APawn>(this->GetOwner()) )
+#define CHECKED_OWNING_PAWN CHECK_OWNING_PAWN OWNING_PAWN
+
 ULocalChunkValidator::ULocalChunkValidator(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
     this->PrimaryComponentTick.bCanEverTick = true;
@@ -19,41 +23,71 @@ void ULocalChunkValidator::BeginPlay(void)
 {
     Super::BeginPlay();
 
-    check( this->GetOwner() && Cast<APawn>(this->GetOwner()) && "ULocalChunkValidator::BeginPlay: Owner is not a pawn." )
+    CHECK_OWNING_PAWN
 
-    if (UNetworkStatics::IsSafeClient(this) && Cast<APawn>(this->GetOwner())->IsLocallyControlled())
+    if (UNetworkStatics::IsSafeClient(this) && OWNING_PAWN->IsLocallyControlled())
     {
+        LOG_VERBOSE(LogChunkValidation, "Spawned on a client. Activating.")
+
         this->SetComponentTickEnabled(true);
 
         check( GEngine )
         check( this->GetWorld() )
-        ULocalPlayer* LocalPlayer = GEngine->GetFirstGamePlayer(this->GetWorld());
+        const ULocalPlayer* LocalPlayer = GEngine->GetFirstGamePlayer(this->GetWorld());
         check( LocalPlayer )
-        ULocalPlayerChunkGeneratorSubsystem* ChunkGeneratorSubsystem = LocalPlayer->GetSubsystem<ULocalPlayerChunkGeneratorSubsystem>();
-        check( ChunkGeneratorSubsystem )
+        this->ChunkGeneratorSubsystem = LocalPlayer->GetSubsystem<ULocalPlayerChunkGeneratorSubsystem>();
+        check( this->ChunkGeneratorSubsystem )
+        this->ChunkGeneratorSubsystem->LoadedChunks.Empty();
 
-        ChunkGeneratorSubsystem->LoadedChunks.Empty();
+        this->WorldGeneratorInfo = nullptr;
 
         return;
     }
 
-    if (UNetworkStatics::IsSafeListenServer(this) && Cast<APawn>(this->GetOwner())->IsLocallyControlled())
+
+    if (UNetworkStatics::IsSafeListenServer(this) && OWNING_PAWN->IsLocallyControlled())
     {
+        LOG_VERBOSE(LogChunkValidation, "Spawned on a listen server. Activating.")
+
         this->SetComponentTickEnabled(true);
 
         check( GEngine )
         check( this->GetWorld() )
-        ULocalPlayer* LocalPlayer = GEngine->GetFirstGamePlayer(this->GetWorld());
+        const ULocalPlayer* LocalPlayer = GEngine->GetFirstGamePlayer(this->GetWorld());
         check( LocalPlayer )
-        ULocalPlayerChunkGeneratorSubsystem* ChunkGeneratorSubsystem = LocalPlayer->GetSubsystem<ULocalPlayerChunkGeneratorSubsystem>();
-        check( ChunkGeneratorSubsystem )
+        this->ChunkGeneratorSubsystem = LocalPlayer->GetSubsystem<ULocalPlayerChunkGeneratorSubsystem>();
+        check( this->ChunkGeneratorSubsystem )
+        this->ChunkGeneratorSubsystem->LoadedChunks.Empty();
 
-        ChunkGeneratorSubsystem->LoadedChunks.Empty();
+        AActor* _ = UGameplayStatics::GetActorOfClass(this, AWorldGeneratorInfo::StaticClass());
+        check( _ )
+        this->WorldGeneratorInfo = Cast<AWorldGeneratorInfo>(_);
+        check( this->WorldGeneratorInfo )
 
         return;
     }
+
+    if (UNetworkStatics::IsSafeServer(this))
+    {
+        LOG_VERBOSE(LogChunkValidation, "Spawned on a dedicated server or is not locally controlled. Initializing minimum variables. Deactivating.")
+
+        this->SetComponentTickEnabled(false);
+
+        this->ChunkGeneratorSubsystem = nullptr;
+
+        AActor* _ = UGameplayStatics::GetActorOfClass(this, AWorldGeneratorInfo::StaticClass());
+        check( _ )
+        this->WorldGeneratorInfo = Cast<AWorldGeneratorInfo>(_);
+        check( this->WorldGeneratorInfo )
+
+        return;
+    }
+
+    LOG_VERBOSE(LogChunkValidation, "Spawned on a non locally controlled client. Deactivating.")
 
     this->SetComponentTickEnabled(false);
+    this->ChunkGeneratorSubsystem = nullptr;
+    this->WorldGeneratorInfo = nullptr;
 
     return;
 }
@@ -62,7 +96,7 @@ void ULocalChunkValidator::TickComponent(const float DeltaTime, const ELevelTick
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-    UE_LOG(LogTemp, Verbose, TEXT("ULocalChunkValidator::TickComponent: Validating local chunks."))
+    LOG_VERY_VERBOSE(LogChunkValidation, "Validating local chunks.")
 
     this->GenerateMockChunks();
 
@@ -73,7 +107,8 @@ bool ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC_Validate(const FIntVe
 {
     if (this->ChunkHandles.Contains(ChunkKey))
     {
-        UE_LOG(LogTemp, Error, TEXT("ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC: Chunk already requested by this client."))
+        CHECK_OWNING_PAWN
+        LOG_ERROR(LogChunkValidation, "Chunk already requested by this (%s) client.", *OWNING_PAWN->GetName())
         return false;
     }
 
@@ -82,18 +117,15 @@ bool ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC_Validate(const FIntVe
 
 void ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC_Implementation(const FIntVector& ChunkKey)
 {
-    AActor* _ = UGameplayStatics::GetActorOfClass(this, AWorldGeneratorInfo::StaticClass());
-    check( _ )
-    AWorldGeneratorInfo* WorldGeneratorInfo = Cast<AWorldGeneratorInfo>(_);
-    check( WorldGeneratorInfo )
+    check( this->WorldGeneratorInfo )
 
-    if (WorldGeneratorInfo->HasFullyLoadedChunk(ChunkKey))
+    if (this->WorldGeneratorInfo->HasFullyLoadedChunk(ChunkKey))
     {
-        UE_LOG(LogTemp, Fatal, TEXT("ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC: Chunk already loaded. Not implemented yet."))
+        LOG_FATAL(LogChunkValidation, "Chunk already loaded. Not implemented yet.")
         return;
     }
 
-    const FDelegateHandle Handle = WorldGeneratorInfo->OnChunkFinishedGeneratingDelegate.AddLambda( [&, WorldGeneratorInfo, ChunkKey] (const ACommonChunk* Chunk)
+    const FDelegateHandle Handle = this->WorldGeneratorInfo->OnChunkFinishedGeneratingDelegate.AddLambda( [&, ChunkKey] (const ACommonChunk* Chunk)
     {
         check( Chunk )
 
@@ -106,21 +138,29 @@ void ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC_Implementation(const 
             return;
         }
 
-        UE_LOG(LogTemp, Verbose, TEXT("ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC: Chunk %s finished generating. Asking the Hyperlane Transmitter to give the authority data to the asking client."), *Chunk->GetChunkKey().ToString())
-
         if (this->ChunkHandles.Contains(ChunkKey) == false)
         {
-            UE_LOG(LogTemp, Fatal, TEXT("ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC: Chunk handle not found for %s."), *ChunkKey.ToString())
+            LOG_FATAL(LogChunkValidation, "Chunk handle not found for %s.", *ChunkKey.ToString())
             return;
         }
 
-        if (WorldGeneratorInfo->OnChunkFinishedGeneratingDelegate.Remove(this->ChunkHandles[ChunkKey]) == false)
+        if (this->WorldGeneratorInfo->OnChunkFinishedGeneratingDelegate.Remove(this->ChunkHandles[ChunkKey]) == false)
         {
-            UE_LOG(LogTemp, Fatal, TEXT("ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC: Error while removing delegate handle for %s."), *ChunkKey.ToString())
+            LOG_FATAL(LogChunkValidation, "Error while removing delegate handle for %s.", *ChunkKey.ToString())
             return;
         }
+
         this->ChunkHandles.Remove(ChunkKey);
 
+        CHECK_OWNING_PAWN
+
+        if (UNetworkStatics::IsSafeListenServer(this) && OWNING_PAWN->IsLocallyControlled())
+        {
+            LOG_VERBOSE(LogChunkValidation, "Delegate cleanup done for %s. Discarding authority data transmission as this chunk is already loaded (listen server).",*ChunkKey.ToString())
+            return;
+        }
+
+        LOG_VERBOSE(LogChunkValidation, "Chunk %s finished generating. Asking the Hyperlane Transmitter to give the authority data to the asking client.", *Chunk->GetChunkKey().ToString())
         check( this->GetOwner() )
         check( Cast<APawn>(this->GetOwner()) )
         check( Cast<APawn>(this->GetOwner())->Controller )
@@ -131,12 +171,50 @@ void ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC_Implementation(const 
 
     this->ChunkHandles.Add(ChunkKey, Handle);
 
-    if (WorldGeneratorInfo->AddChunkToGenerationQueue(ChunkKey) == false)
+    if (this->WorldGeneratorInfo->AddChunkToGenerationQueue(ChunkKey) == false)
     {
-        UE_LOG(LogTemp, Fatal, TEXT("ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC: Error while adding item [%s] to queue."), *ChunkKey.ToString())
+        LOG_FATAL(LogChunkValidation, "Unknown error while adding item [%s] to chunk generation queue.", *ChunkKey.ToString())
         return;
     }
 
+    LOG_VERBOSE(LogChunkValidation, "Chunk %s requested. Waiting for generation delegate to be called.", *ChunkKey.ToString())
+
+    return;
+}
+
+void ULocalChunkValidator::SafeSpawnChunk(const FIntVector& ChunkKey)
+{
+    LOG_VERBOSE(LogChunkValidation, "Asking to spawn chunk %s.", *ChunkKey.ToString())
+
+    CHECK_OWNING_PAWN
+
+    if (UNetworkStatics::IsSafeDedicatedServer(this) || OWNING_PAWN->IsLocallyControlled() == false)
+    {
+        LOG_FATAL(LogChunkValidation, "Disallowed call. SV: %s; LC: %s.",
+            UNetworkStatics::IsSafeServer(this) ? TEXT("true") : TEXT("false"),
+            OWNING_PAWN->IsLocallyControlled() ? TEXT("true") : TEXT("false"))
+        return;
+    }
+
+    if (UNetworkStatics::IsSafeListenServer(this))
+    {
+        /*
+         * This should be.
+         * We do not spawn here. But we directly ask the server RPC implementation for that.
+         */
+
+        if (this->AskServerToSpawnChunk_ServerRPC_Validate(ChunkKey) == false)
+        {
+            LOG_FATAL(LogChunkValidation, "Remote Procedure Call validation failed.")
+            return;
+        }
+
+        this->AskServerToSpawnChunk_ServerRPC_Implementation(ChunkKey);
+
+        return;
+    }
+
+    LOG_ERROR(LogChunkValidation, "Not implemented yet for a client.")
     return;
 }
 
@@ -148,17 +226,10 @@ void ULocalChunkValidator::GenerateMockChunks(void)
     }
 
     // ReSharper disable once CppTooWideScopeInitStatement
-    constexpr int MaxSpiralPoints = 200;
-    constexpr int ChunksAboveZero = 5;
+    constexpr int MaxSpiralPoints = 5;
+    constexpr int ChunksAboveZero = 2;
     constexpr int MaxPerTick = 20;
     int AddedThisTick = 0;
-
-    check( GEngine )
-    check( this->GetWorld() )
-    const ULocalPlayer* LocalPlayer = GEngine->GetFirstGamePlayer(this->GetWorld());
-    check( LocalPlayer )
-    ULocalPlayerChunkGeneratorSubsystem* ChunkGeneratorSubsystem = LocalPlayer->GetSubsystem<ULocalPlayerChunkGeneratorSubsystem>();
-    check( ChunkGeneratorSubsystem )
 
     auto MoveCursorRight = [] (const FIntVector2& CursorLocation)
     {
@@ -194,30 +265,14 @@ void ULocalChunkValidator::GenerateMockChunks(void)
     for (int Z = ChunksAboveZero; Z >= 0; --Z)
     {
         const FIntVector Key = FIntVector(0, 0, Z);
-        if (ChunkGeneratorSubsystem->LoadedChunks.Contains(Key) == false)
+
+        this->SafeSpawnChunk(Key);
+
+        AddedThisTick++;
+        this->MockChunksAdded++;
+        if (AddedThisTick >= MaxPerTick)
         {
-            const FTransform TargetedChunkTransform = FTransform(
-                FRotator::ZeroRotator,
-                FVector(
-                    Key.X * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale,
-                    Key.Y * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale,
-                    Key.Z * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale
-                ),
-                FVector::OneVector
-            );
-
-            ACommonChunk* Chunk = this->GetWorld()->SpawnActor<ACommonChunk>(AGreedyChunk::StaticClass(), TargetedChunkTransform);
-
-            ChunkGeneratorSubsystem->LoadedChunks.Add(Key, Chunk);
-            this->AskServerToSpawnChunk_ServerRPC(Key);
-
-            AddedThisTick++;
-            this->MockChunksAdded++;
-
-            if (AddedThisTick >= MaxPerTick)
-            {
-                return;
-            }
+            return;
         }
     }
 
@@ -240,30 +295,32 @@ void ULocalChunkValidator::GenerateMockChunks(void)
                 for (int Z = ChunksAboveZero; Z >= 0; --Z)
                 {
                     const FIntVector Key = FIntVector(TargetPoint.X, TargetPoint.Y, Z);
-                    if (ChunkGeneratorSubsystem->LoadedChunks.Contains(Key) == false)
+                    // if (ChunkGeneratorSubsystem->LoadedChunks.Contains(Key) == false)
+                    // {
+                    //     const FTransform TargetedChunkTransform = FTransform(
+                    //         FRotator::ZeroRotator,
+                    //         FVector(
+                    //             Key.X * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale,
+                    //             Key.Y * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale,
+                    //             Key.Z * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale
+                    //         ),
+                    //         FVector::OneVector
+                    //     );
+                    //
+                    //     ACommonChunk* Chunk = this->GetWorld()->SpawnActor<ACommonChunk>(AGreedyChunk::StaticClass(), TargetedChunkTransform);
+                    //
+                    //     ChunkGeneratorSubsystem->LoadedChunks.Add(Key, Chunk);
+                    //     this->AskServerToSpawnChunk_ServerRPC(Key);
+                    //
+
+                    this->SafeSpawnChunk(Key);
+
+                    AddedThisTick++;
+                    this->MockChunksAdded++;
+
+                    if (AddedThisTick >= MaxPerTick)
                     {
-                        const FTransform TargetedChunkTransform = FTransform(
-                            FRotator::ZeroRotator,
-                            FVector(
-                                Key.X * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale,
-                                Key.Y * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale,
-                                Key.Z * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale
-                            ),
-                            FVector::OneVector
-                        );
-
-                        ACommonChunk* Chunk = this->GetWorld()->SpawnActor<ACommonChunk>(AGreedyChunk::StaticClass(), TargetedChunkTransform);
-
-                        ChunkGeneratorSubsystem->LoadedChunks.Add(Key, Chunk);
-                        this->AskServerToSpawnChunk_ServerRPC(Key);
-
-                        AddedThisTick++;
-                        this->MockChunksAdded++;
-
-                        if (AddedThisTick >= MaxPerTick)
-                        {
-                            return;
-                        }
+                        return;
                     }
                 }
 
@@ -280,3 +337,7 @@ void ULocalChunkValidator::GenerateMockChunks(void)
 
     return;
 }
+
+#undef OWNING_PAWN
+#undef CHECK_OWNING_PAWN
+#undef CHECKED_OWNING_PAWN

@@ -2,10 +2,13 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "CommonCore.h"
 #include "UI/Common/CommonHUD.h"
 
 #include "WorldHUD.generated.h"
+
+class UCrosshair;
+JAFG_VOID
 
 class UChatMenu;
 class UEscapeMenu;
@@ -28,12 +31,16 @@ public:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widgets")
     TSubclassOf<UChatMenu> WChatMenuClass;
-    
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widgets")
+    TSubclassOf<UCrosshair> WCrosshairClass;
+
 private:
 
     TObjectPtr<UEscapeMenu> WEscapeMenu;
     TObjectPtr<UChatMenu> WChatMenu;
-    
+    TObjectPtr<UCrosshair> WCrosshair;
+
 public:
 
     void ToggleEscapeMenu(const bool bCollapsed) const;

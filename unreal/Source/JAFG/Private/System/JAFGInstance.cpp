@@ -20,13 +20,6 @@ void UJAFGInstance::Init(void)
 
     // ...
 
-    LOG_VERBOSE(LogHyperlane, "Initialized instance.")
-
-    LOG_DISPLAY(LogHyperlane, "Initialized instance.")
-    LOG_WARNING(LogHyperlane, "Initialized instance.")
-    LOG_ERROR(LogHyperlane, "Initialized instance.")
-
-
     return;
 }
 

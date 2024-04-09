@@ -4,20 +4,23 @@
 
 #include "World/WorldCharacter.h"
 #include "UI/Escape/EscapeMenu.h"
+#include "UI/HUD/Crosshair.h"
 #include "UI/MISC/ChatMenu.h"
 #include "World/WorldPlayerController.h"
 
 #define PLAYER_CONTROLLER Cast<AWorldPlayerController>(this->GetOwningPlayerController())
 
-AWorldHUD::AWorldHUD(const FObjectInitializer& ObjectInitializer)
+AWorldHUD::AWorldHUD(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
+    return;
 }
 
-void AWorldHUD::BeginPlay()
+void AWorldHUD::BeginPlay(void)
 {
     Super::BeginPlay();
 
 #if WITH_EDITOR
+    /* May often happen if we simulate the game in the editor. But should never happen in a packaged shipping game. */
     if (PLAYER_CONTROLLER == nullptr)
     {
         UE_LOG(LogTemp, Warning, TEXT("AWorldHUD::BeginPlay: Player controller is not valid. Discarding HUD setup."))
@@ -30,7 +33,7 @@ void AWorldHUD::BeginPlay()
         return;
     }
 #endif /* WITH_EDITOR */
-    
+
 #if WITH_EDITOR
     /* May often happen if we simulate the game in the editor. But should never happen in a packaged shipping game. */
     if (this->GetOwningPawn() == nullptr || this->GetOwningPawn()->GetClass()->IsChildOf(AWorldCharacter::StaticClass()) == false)
@@ -53,7 +56,11 @@ void AWorldHUD::BeginPlay()
     check( this->WChatMenuClass )
     this->WChatMenu = CreateWidget<UChatMenu>(this->GetWorld(), this->WChatMenuClass);
     this->WChatMenu->AddToViewport();
-    
+
+    check( this->WCrosshairClass )
+    this->WCrosshair = CreateWidget<UCrosshair>(this->GetWorld(), this->WCrosshairClass);
+    this->WCrosshair->AddToViewport();
+
     return;
 }
 

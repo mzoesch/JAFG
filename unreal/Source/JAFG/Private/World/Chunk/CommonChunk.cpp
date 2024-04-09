@@ -218,7 +218,7 @@ void ACommonChunk::SendInitializationDataToClient(AWorldPlayerController* Target
 {
     check ( Target )
 
-    UE_LOG(LogTemp, Verbose, TEXT("ACommonChunk::SendInitializationDataToClient: Sending packaged initialization data to client for chunk %s."), *this->ChunkKey.ToString())
+    LOG_VERBOSE(LogChunkValidation, "Sending packaged initialization data to client for chunk %s.", *this->ChunkKey.ToString())
 
     AHyperlaneTransmitterInfo* Transmitter = Cast<AHyperlaneTransmitterInfo>(UGameplayStatics::GetActorOfClass(this, AHyperlaneTransmitterInfo::StaticClass()));
     check( Transmitter )
@@ -233,7 +233,7 @@ void ACommonChunk::InitializeWithAuthorityData(const TArray<int32>& InRawVoxels)
 {
     this->RawVoxels = InRawVoxels;
 
-    UE_LOG(LogTemp, Verbose, TEXT("ACommonChunk::InitializeWithAuthorityData: Generating chunk %s with authority data."), *this->ChunkKey.ToString())
+    UE_LOG(LogTemp, Warning, TEXT("ACommonChunk::InitializeWithAuthorityData: Generating chunk %s with authority data."), *this->ChunkKey.ToString())
 
     this->ClearMesh();
     this->GenerateProceduralMesh();

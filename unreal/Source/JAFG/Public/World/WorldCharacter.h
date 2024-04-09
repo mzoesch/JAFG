@@ -2,12 +2,14 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "CommonCore.h"
 #include "WorldGeneratorInfo.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
 
 #include "WorldCharacter.generated.h"
+
+JAFG_VOID
 
 class ULocalChunkValidator;
 class UChatComponent;

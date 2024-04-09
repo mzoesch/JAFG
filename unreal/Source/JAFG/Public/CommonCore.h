@@ -2,6 +2,11 @@
 
 #pragma once
 
+/**
+ * Use this macro in a header file to make the IDEA shut up about false positive
+ * possibly unused #include directive warnings.
+ */
+#define JAFG_VOID
 
 /*----------------------------------------------------------------------------
     Engine includes.

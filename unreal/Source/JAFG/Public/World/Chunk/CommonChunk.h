@@ -2,13 +2,15 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "CommonCore.h"
 #include "GameFramework/Actor.h"
 #include "World/WorldGeneratorInfo.h"
 #include "World/Voxel/CommonVoxels.h"
 #include "World/Voxel/VoxelSubsystem.h"
 
 #include "CommonChunk.generated.h"
+
+JAFG_VOID
 
 class AWorldPlayerController;
 class UProceduralMeshComponent;

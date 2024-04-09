@@ -2,10 +2,14 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "CommonCore.h"
 #include "Components/ActorComponent.h"
 
 #include "LocalChunkValidator.generated.h"
+
+class AWorldGeneratorInfo;
+class ULocalPlayerChunkGeneratorSubsystem;
+JAFG_VOID
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class JAFG_API ULocalChunkValidator : public UActorComponent
@@ -27,6 +31,15 @@ public:
 private:
 
     /**
+     * Valid on client and listen server for the corresponding local player.
+     */
+    TObjectPtr<ULocalPlayerChunkGeneratorSubsystem> ChunkGeneratorSubsystem = nullptr;
+    /**
+     * Only valid on the server.
+     */
+    TObjectPtr<AWorldGeneratorInfo> WorldGeneratorInfo = nullptr;
+
+    /**
      * Server only.
      *
      * All chunk generation finished delegate callbacks for this client are stored here.
@@ -35,6 +48,12 @@ private:
 
     UFUNCTION(Server, Reliable, WithValidation)
     void AskServerToSpawnChunk_ServerRPC(const FIntVector& ChunkKey);
+
+    /**
+     * Only called on a instance of the game where a local player is present.
+     * Meaning clients or the host on a listen server.
+     */
+    void SafeSpawnChunk(const FIntVector& ChunkKey);
 
     /**
      * Development only.
