@@ -4,6 +4,7 @@
 
 #include "World/WorldCharacter.h"
 #include "World/Chunk/CommonChunk.h"
+#include "World/Chunk/ChunkWorldSubsystem.h"
 
 #define SANITIZED_FLT(Float, Precision)                                     \
     FString::SanitizeFloat(Float, Precision)                                ;
@@ -72,13 +73,13 @@ FString UDebugScreen::GetSectionClientCharacterLocation(void) const
     if (const AWorldCharacter* Character = OWNING_CHARACTER)
     {
         FString X =
-            SANITIZED_FLT(Character->GetActorLocation().X * AWorldGeneratorInfo::UToJScale, 3)
+            SANITIZED_FLT(Character->GetActorLocation().X * ChunkWorldSettings::UToJScale, 3)
             FORMAT_SANITIZED_FLT(X, 3)
         FString Y =
-            SANITIZED_FLT(Character->GetActorLocation().Y * AWorldGeneratorInfo::UToJScale, 3)
+            SANITIZED_FLT(Character->GetActorLocation().Y * ChunkWorldSettings::UToJScale, 3)
             FORMAT_SANITIZED_FLT(Y, 3)
         FString Z =
-            SANITIZED_FLT(Character->GetActorLocation().Z * AWorldGeneratorInfo::UToJScale, 3)
+            SANITIZED_FLT(Character->GetActorLocation().Z * ChunkWorldSettings::UToJScale, 3)
             FORMAT_SANITIZED_FLT(Z, 3)
 
         return FString::Printf(TEXT("XYZ: %s / %s / %s"), *X, *Y, *Z);

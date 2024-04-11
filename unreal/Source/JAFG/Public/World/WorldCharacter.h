@@ -5,6 +5,7 @@
 #include "CommonCore.h"
 #include "WorldGeneratorInfo.h"
 #include "Camera/CameraComponent.h"
+#include "Chunk/ChunkWorldSubsystem.h"
 #include "GameFramework/Character.h"
 
 #include "WorldCharacter.generated.h"
@@ -126,10 +127,10 @@ private:
      * The maximum distance where we trace for voxels and other hit objects.
      * Equivalent to 4 x Chunk => 4 x 16 Voxels => 64 Voxels.
      */
-    static constexpr float MaxPOVLineTraceLength { (AWorldGeneratorInfo::ChunkSize * 4.0f ) * AWorldGeneratorInfo::JToUScale };
+    static constexpr float MaxPOVLineTraceLength { (ChunkWorldSettings::ChunkSize * 4.0f ) * ChunkWorldSettings::JToUScale };
     // ReSharper disable once CppMemberFunctionMayBeStatic
     FORCEINLINE auto GetCharacterReachInVoxels(void) const -> float { return 4.5f; }
-    FORCEINLINE auto GetCharacterReach(void) const -> float { return this->GetCharacterReachInVoxels() * AWorldGeneratorInfo::JToUScale; }
+    FORCEINLINE auto GetCharacterReach(void) const -> float { return this->GetCharacterReachInVoxels() * ChunkWorldSettings::JToUScale; }
 
     FORCEINLINE auto GetFirstPersonTraceStart(void) const -> FTransform { return this->FirstPersonCameraComponent->GetComponentTransform(); }
     FORCEINLINE auto GetFirstPersonTraceStart_DedServer(void) const -> FTransform

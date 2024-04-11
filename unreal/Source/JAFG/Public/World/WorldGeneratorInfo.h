@@ -11,46 +11,6 @@ class ACommonChunk;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FChunkEventSignature, ACommonChunk* /* Chunk */);
 
-UENUM(BlueprintType)
-enum class EChunkType
-{
-    Naive,
-    Greedy,
-    Marching,
-};
-
-UENUM(BlueprintType)
-enum class EWorldGenerationType
-{
-    Default,
-    SuperFlat,
-};
-
-namespace WorldGeneratorInfo
-{
-
-FORCEINLINE FString LexToString(const EWorldGenerationType Type)
-{
-    switch (Type)
-    {
-    case EWorldGenerationType::Default:
-    {
-        return FString(TEXT("Default"));
-    }
-    case EWorldGenerationType::SuperFlat:
-    {
-        return FString(TEXT("SuperFlat"));
-    }
-    default:
-    {
-        return FString(TEXT("Unknown"));
-    }
-    }
-}
-
-}
-
-// TODO Make this a subsystem
 /**
  * Singleton information non-replicated boundless super AActor class sitting in the UWorld responsible for generating
  * the world. It handles the creation and destroying of AChunks depending on the Player States data. Not responsible
@@ -69,39 +29,6 @@ public:
 
     explicit AWorldGeneratorInfo(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
-private:
-
-    //////////////////////////////////////////////////////////////////////////
-    // Note that all these member variables are not replicated.
-    // And therefore only valid on a server.
-    //////////////////////////////////////////////////////////////////////////
-
-    UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Generation", meta = (AllowPrivateAccess = "true"))
-    EChunkType ChunkType = EChunkType::Greedy;
-
-    UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Generation", meta = (AllowPrivateAccess = "true"))
-    EWorldGenerationType WorldGenerationType = EWorldGenerationType::SuperFlat;
-
-    UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Generation", meta = (AllowPrivateAccess = "true"))
-    int ChunksAboveZero = 3;
-
-    UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Generation", meta = (AllowPrivateAccess = "true"))
-    int MaxSpiralPoints = 20;
-
-public:
-
-    /**
-     * Do not increase this value beyond 16 for now. As we would breach the Bunch size limit of 2^16 = 65.536 bytes.
-     * See CommonChunk.h for more information.
-     */
-    inline static constexpr int ChunkSize { 16 };
-
-    inline static constexpr float  JToUScale { 100.0f };
-    inline static constexpr float  UToJScale { 1.0f / AWorldGeneratorInfo::JToUScale };
-    inline static constexpr double JToUScaleDouble { 100.0 };
-    inline static constexpr double UToJScaleDouble { 1.0 / AWorldGeneratorInfo::JToUScaleDouble };
-    inline static constexpr int    JToUScaleInteger { 100 };
-    /* There is obviously no integer with a U To J Scale. */
 
 protected:
 

@@ -4,6 +4,7 @@
 
 #include "Network/NetworkStatics.h"
 #include "World/Chunk/GreedyChunk.h"
+#include "World/Chunk/ChunkWorldSubsystem.h"
 
 AWorldGeneratorInfo::AWorldGeneratorInfo(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -63,9 +64,9 @@ void AWorldGeneratorInfo::Tick(const float DeltaTime)
         const FTransform TargetedChunkTransform = FTransform(
             FRotator::ZeroRotator,
             FVector(
-                Key.X * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale,
-                Key.Y * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale,
-                Key.Z * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale
+                Key.X * ChunkWorldSettings::ChunkSize * ChunkWorldSettings::JToUScale,
+                Key.Y * ChunkWorldSettings::ChunkSize * ChunkWorldSettings::JToUScale,
+                Key.Z * ChunkWorldSettings::ChunkSize * ChunkWorldSettings::JToUScale
             ),
             FVector::OneVector
         );

@@ -75,9 +75,9 @@ void ACommonChunk::BeginPlay(void)
 
 void ACommonChunk::PreInitialize(void)
 {
-    this->RawVoxels.SetNum(AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::ChunkSize, false);
-    this->JChunkPosition = this->GetActorLocation() * AWorldGeneratorInfo::UToJScale;
-    this->ChunkKey = FIntVector(this->JChunkPosition / (AWorldGeneratorInfo::ChunkSize - 1));
+    this->RawVoxels.SetNum(ChunkWorldSettings::ChunkSize * ChunkWorldSettings::ChunkSize * ChunkWorldSettings::ChunkSize, false);
+    this->JChunkPosition = this->GetActorLocation() * ChunkWorldSettings::UToJScale;
+    this->ChunkKey = FIntVector(this->JChunkPosition / (ChunkWorldSettings::ChunkSize - 1));
 }
 
 void ACommonChunk::ApplyProceduralMesh(void) const
@@ -144,7 +144,11 @@ void ACommonChunk::ClearMesh()
 
 void ACommonChunk::GenerateVoxels(void)
 {
-    switch (this->WorldGeneratorInfo->WorldGenerationType)
+    check( this->GetWorld() )
+    check( this->GetWorld()->GetWorldSettings() )
+    check( Cast<AChunkWorldSettings>(this->GetWorld()->GetWorldSettings()) )
+
+    switch (Cast<AChunkWorldSettings>(this->GetWorld()->GetWorldSettings())->WorldGenerationType)
     {
     case EWorldGenerationType::Default:
     {
@@ -159,7 +163,7 @@ void ACommonChunk::GenerateVoxels(void)
     }
     }
 
-    UE_LOG(LogTemp, Error, TEXT("ACommonChunk::GenerateVoxels: World Generation of type %s not implemented."), *WorldGeneratorInfo::LexToString(this->WorldGeneratorInfo->WorldGenerationType));
+    UE_LOG(LogTemp, Error, TEXT("ACommonChunk::GenerateVoxels: World Generation of type %s not implemented."), *ChunkWorldSettings::LexToString(Cast<AChunkWorldSettings>(this->GetWorld()->GetWorldSettings())->WorldGenerationType));
 
     return;
 }
@@ -174,11 +178,11 @@ void ACommonChunk::GenerateSuperFlatWorld()
     constexpr int DirtVoxel{3};
     constexpr int GrassVoxel{4};
 
-    for (int X = 0; X < AWorldGeneratorInfo::ChunkSize; ++X)
+    for (int X = 0; X < ChunkWorldSettings::ChunkSize; ++X)
     {
-        for (int Y = 0; Y < AWorldGeneratorInfo::ChunkSize; ++Y)
+        for (int Y = 0; Y < ChunkWorldSettings::ChunkSize; ++Y)
         {
-            for (int Z = 0; Z < AWorldGeneratorInfo::ChunkSize; ++Z)
+            for (int Z = 0; Z < ChunkWorldSettings::ChunkSize; ++Z)
             {
                 const float WorldZ = this->JChunkPosition.Z + Z;
 
@@ -253,40 +257,40 @@ ACommonChunk* ACommonChunk::GetTargetChunk(const FIntVector& LocalVoxelPosition,
     FIntVector TransformedChunkKey   = this->ChunkKey;
     OutTransformedLocalVoxelPosition = LocalVoxelPosition;
 
-    if (LocalVoxelPosition.X >= AWorldGeneratorInfo::ChunkSize)
+    if (LocalVoxelPosition.X >= ChunkWorldSettings::ChunkSize)
     {
         TransformedChunkKey.X++;
-        OutTransformedLocalVoxelPosition.X -= AWorldGeneratorInfo::ChunkSize;
+        OutTransformedLocalVoxelPosition.X -= ChunkWorldSettings::ChunkSize;
     }
 
     else if (LocalVoxelPosition.X < 0)
     {
         TransformedChunkKey.X--;
-        OutTransformedLocalVoxelPosition.X += AWorldGeneratorInfo::ChunkSize;
+        OutTransformedLocalVoxelPosition.X += ChunkWorldSettings::ChunkSize;
     }
 
-    if (LocalVoxelPosition.Y >= AWorldGeneratorInfo::ChunkSize)
+    if (LocalVoxelPosition.Y >= ChunkWorldSettings::ChunkSize)
     {
         TransformedChunkKey.Y++;
-        OutTransformedLocalVoxelPosition.Y -= AWorldGeneratorInfo::ChunkSize;
+        OutTransformedLocalVoxelPosition.Y -= ChunkWorldSettings::ChunkSize;
     }
 
     else if (LocalVoxelPosition.Y < 0)
     {
         TransformedChunkKey.Y--;
-        OutTransformedLocalVoxelPosition.Y += AWorldGeneratorInfo::ChunkSize;
+        OutTransformedLocalVoxelPosition.Y += ChunkWorldSettings::ChunkSize;
     }
 
-    if (LocalVoxelPosition.Z >= AWorldGeneratorInfo::ChunkSize)
+    if (LocalVoxelPosition.Z >= ChunkWorldSettings::ChunkSize)
     {
         TransformedChunkKey.Z++;
-        OutTransformedLocalVoxelPosition.Z -= AWorldGeneratorInfo::ChunkSize;
+        OutTransformedLocalVoxelPosition.Z -= ChunkWorldSettings::ChunkSize;
     }
 
     else if (LocalVoxelPosition.Z < 0)
     {
         TransformedChunkKey.Z--;
-        OutTransformedLocalVoxelPosition.Z += AWorldGeneratorInfo::ChunkSize;
+        OutTransformedLocalVoxelPosition.Z += ChunkWorldSettings::ChunkSize;
     }
 
     if (OutTransformedLocalVoxelPosition == LocalVoxelPosition)
@@ -355,7 +359,7 @@ void ACommonChunk::ModifySingleVoxel(const FIntVector& LocalVoxelPosition, const
 
 FIntVector ACommonChunk::WorldToChunkKey(const FVector& WorldLocation)
 {
-    constexpr double Factor { AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScaleDouble };
+    constexpr double Factor { ChunkWorldSettings::ChunkSize * ChunkWorldSettings::JToUScaleDouble };
 
     FIntVector ChunkKey;
 
@@ -391,7 +395,7 @@ FIntVector ACommonChunk::WorldToChunkKey(const FVector& WorldLocation)
 
 FIntVector ACommonChunk::WorldToLocalVoxelLocation(const FVector& WorldLocation)
 {
-    constexpr double Factor { AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScaleDouble };
+    constexpr double Factor { ChunkWorldSettings::ChunkSize * ChunkWorldSettings::JToUScaleDouble };
 
     FIntVector ChunkLocation;
 
@@ -423,8 +427,8 @@ FIntVector ACommonChunk::WorldToLocalVoxelLocation(const FVector& WorldLocation)
     }
 
     FIntVector LocalVoxelLocation =
-          FIntVector(WorldLocation) / AWorldGeneratorInfo::JToUScaleInteger
-        - ChunkLocation * AWorldGeneratorInfo::ChunkSize;
+          FIntVector(WorldLocation) / ChunkWorldSettings::JToUScaleInteger
+        - ChunkLocation * ChunkWorldSettings::ChunkSize;
 
     /* Negative Normalization */
 

@@ -1,3 +1,6 @@
+// Copyright 2024 mzoesch. All rights reserved.
+// Slightly modified version of FastNoiseLite.h to fit the needs of the Unreal Engine 5 norms.
+
 // MIT License
 //
 // Copyright(c) 2023 Jordan Peck (jordan.me2@gmail.com)
@@ -47,24 +50,46 @@
 // VERSION: 1.1.1
 // https://github.com/Auburn/FastNoiseLite
 
-#ifndef FASTNOISELITE_H
-#define FASTNOISELITE_H
+// Pragma once must be used instead of #ifndef
+// 'UENUM' must not be inside preprocessor blocks, except for WITH_EDITORONLY_DATA
+
+#pragma once
+
+// #ifndef FASTNOISELITE_H
+// #define FASTNOISELITE_H
 
 #include <cmath>
 
-class FastNoiseLite
+UENUM()
+enum class EKismetNoiseType : uint8
+{
+    OpenSimplex2,
+    OpenSimplex2S,
+    Cellular,
+    Perlin,
+    ValueCubic,
+    Value
+};
+
+namespace ENoiseType
+{
+
+UENUM()
+enum Type
+{
+    NoiseType_OpenSimplex2,
+    NoiseType_OpenSimplex2S,
+    NoiseType_Cellular,
+    NoiseType_Perlin,
+    NoiseType_ValueCubic,
+    NoiseType_Value
+};
+
+}
+
+class FFastNoiseLite
 {
 public:
-    enum NoiseType
-    {
-        NoiseType_OpenSimplex2,
-        NoiseType_OpenSimplex2S,
-        NoiseType_Cellular,
-        NoiseType_Perlin,
-        NoiseType_ValueCubic,
-        NoiseType_Value
-    };
-
     enum RotationType3D
     {
         RotationType3D_None,
@@ -111,11 +136,11 @@ public:
     /// <summary>
     /// Create new FastNoise object with optional seed
     /// </summary>
-    FastNoiseLite(int seed = 1337)
+    FFastNoiseLite(int seed = 1337)
     {
         mSeed = seed;
         mFrequency = 0.01f;
-        mNoiseType = NoiseType_OpenSimplex2;
+        mNoiseType = ENoiseType::NoiseType_OpenSimplex2;
         mRotationType3D = RotationType3D_None;
         mTransformType3D = TransformType3D_DefaultOpenSimplex2;
 
@@ -159,7 +184,7 @@ public:
     /// <remarks>
     /// Default: OpenSimplex2
     /// </remarks>
-    void SetNoiseType(NoiseType noiseType)
+    void SetNoiseType(ENoiseType::Type noiseType)
     {
         mNoiseType = noiseType;
         UpdateTransformType3D();
@@ -407,7 +432,7 @@ private:
 
     int mSeed;
     float mFrequency;
-    NoiseType mNoiseType;
+    ENoiseType::Type mNoiseType;
     RotationType3D mRotationType3D;
     TransformType3D mTransformType3D;
 
@@ -618,17 +643,17 @@ private:
     {
         switch (mNoiseType)
         {
-        case NoiseType_OpenSimplex2:
+        case ENoiseType::NoiseType_OpenSimplex2:
             return SingleSimplex(seed, x, y);
-        case NoiseType_OpenSimplex2S:
+        case ENoiseType::NoiseType_OpenSimplex2S:
             return SingleOpenSimplex2S(seed, x, y);
-        case NoiseType_Cellular:
+        case ENoiseType::NoiseType_Cellular:
             return SingleCellular(seed, x, y);
-        case NoiseType_Perlin:
+        case ENoiseType::NoiseType_Perlin:
             return SinglePerlin(seed, x, y);
-        case NoiseType_ValueCubic:
+        case ENoiseType::NoiseType_ValueCubic:
             return SingleValueCubic(seed, x, y);
-        case NoiseType_Value:
+        case ENoiseType::NoiseType_Value:
             return SingleValue(seed, x, y);
         default:
             return 0;
@@ -640,17 +665,17 @@ private:
     {
         switch (mNoiseType)
         {
-        case NoiseType_OpenSimplex2:
+        case ENoiseType::NoiseType_OpenSimplex2:
             return SingleOpenSimplex2(seed, x, y, z);
-        case NoiseType_OpenSimplex2S:
+        case ENoiseType::NoiseType_OpenSimplex2S:
             return SingleOpenSimplex2S(seed, x, y, z);
-        case NoiseType_Cellular:
+        case ENoiseType::NoiseType_Cellular:
             return SingleCellular(seed, x, y, z);
-        case NoiseType_Perlin:
+        case ENoiseType::NoiseType_Perlin:
             return SinglePerlin(seed, x, y, z);
-        case NoiseType_ValueCubic:
+        case ENoiseType::NoiseType_ValueCubic:
             return SingleValueCubic(seed, x, y, z);
-        case NoiseType_Value:
+        case ENoiseType::NoiseType_Value:
             return SingleValue(seed, x, y, z);
         default:
             return 0;
@@ -668,8 +693,8 @@ private:
 
         switch (mNoiseType)
         {
-        case NoiseType_OpenSimplex2:
-        case NoiseType_OpenSimplex2S:
+        case ENoiseType::NoiseType_OpenSimplex2:
+        case ENoiseType::NoiseType_OpenSimplex2S:
             {
                 const FNfloat SQRT3 = (FNfloat)1.7320508075688772935274463415059;
                 const FNfloat F2 = 0.5f * (SQRT3 - 1);
@@ -739,8 +764,8 @@ private:
         default:
             switch (mNoiseType)
             {
-            case NoiseType_OpenSimplex2:
-            case NoiseType_OpenSimplex2S:
+            case ENoiseType::NoiseType_OpenSimplex2:
+            case ENoiseType::NoiseType_OpenSimplex2S:
                 mTransformType3D = TransformType3D_DefaultOpenSimplex2;
                 break;
             default:
@@ -2445,14 +2470,14 @@ private:
 };
 
 template <>
-struct FastNoiseLite::Arguments_must_be_floating_point_values<float> {};
+struct FFastNoiseLite::Arguments_must_be_floating_point_values<float> {};
 template <>
-struct FastNoiseLite::Arguments_must_be_floating_point_values<double> {};
+struct FFastNoiseLite::Arguments_must_be_floating_point_values<double> {};
 template <>
-struct FastNoiseLite::Arguments_must_be_floating_point_values<long double> {};
+struct FFastNoiseLite::Arguments_must_be_floating_point_values<long double> {};
 
 template <typename T>
-const T FastNoiseLite::Lookup<T>::Gradients2D[] =
+const T FFastNoiseLite::Lookup<T>::Gradients2D[] =
 {
     0.130526192220052f, 0.99144486137381f, 0.38268343236509f, 0.923879532511287f, 0.608761429008721f, 0.793353340291235f, 0.793353340291235f, 0.608761429008721f,
     0.923879532511287f, 0.38268343236509f, 0.99144486137381f, 0.130526192220051f, 0.99144486137381f, -0.130526192220051f, 0.923879532511287f, -0.38268343236509f,
@@ -2489,7 +2514,7 @@ const T FastNoiseLite::Lookup<T>::Gradients2D[] =
 };
 
 template <typename T>
-const T FastNoiseLite::Lookup<T>::RandVecs2D[] =
+const T FFastNoiseLite::Lookup<T>::RandVecs2D[] =
 {
     -0.2700222198f, -0.9628540911f, 0.3863092627f, -0.9223693152f, 0.04444859006f, -0.999011673f, -0.5992523158f, -0.8005602176f, -0.7819280288f, 0.6233687174f, 0.9464672271f, 0.3227999196f, -0.6514146797f, -0.7587218957f, 0.9378472289f, 0.347048376f,
     -0.8497875957f, -0.5271252623f, -0.879042592f, 0.4767432447f, -0.892300288f, -0.4514423508f, -0.379844434f, -0.9250503802f, -0.9951650832f, 0.0982163789f, 0.7724397808f, -0.6350880136f, 0.7573283322f, -0.6530343002f, -0.9928004525f, -0.119780055f,
@@ -2526,7 +2551,7 @@ const T FastNoiseLite::Lookup<T>::RandVecs2D[] =
 };
 
 template <typename T>
-const T FastNoiseLite::Lookup<T>::Gradients3D[] =
+const T FFastNoiseLite::Lookup<T>::Gradients3D[] =
 {
     0, 1, 1, 0,  0,-1, 1, 0,  0, 1,-1, 0,  0,-1,-1, 0,
     1, 0, 1, 0, -1, 0, 1, 0,  1, 0,-1, 0, -1, 0,-1, 0,
@@ -2547,7 +2572,7 @@ const T FastNoiseLite::Lookup<T>::Gradients3D[] =
 };
 
 template <typename T>
-const T FastNoiseLite::Lookup<T>::RandVecs3D[] =
+const T FFastNoiseLite::Lookup<T>::RandVecs3D[] =
 {
     -0.7292736885f, -0.6618439697f, 0.1735581948f, 0, 0.790292081f, -0.5480887466f, -0.2739291014f, 0, 0.7217578935f, 0.6226212466f, -0.3023380997f, 0, 0.565683137f, -0.8208298145f, -0.0790000257f, 0, 0.760049034f, -0.5555979497f, -0.3370999617f, 0, 0.3713945616f, 0.5011264475f, 0.7816254623f, 0, -0.1277062463f, -0.4254438999f, -0.8959289049f, 0, -0.2881560924f, -0.5815838982f, 0.7607405838f, 0,
     0.5849561111f, -0.662820239f, -0.4674352136f, 0, 0.3307171178f, 0.0391653737f, 0.94291689f, 0, 0.8712121778f, -0.4113374369f, -0.2679381538f, 0, 0.580981015f, 0.7021915846f, 0.4115677815f, 0, 0.503756873f, 0.6330056931f, -0.5878203852f, 0, 0.4493712205f, 0.601390195f, 0.6606022552f, 0, -0.6878403724f, 0.09018890807f, -0.7202371714f, 0, -0.5958956522f, -0.6469350577f, 0.475797649f, 0,
@@ -2583,4 +2608,7 @@ const T FastNoiseLite::Lookup<T>::RandVecs3D[] =
     -0.7870349638f, 0.03447489231f, 0.6159443543f, 0, -0.2015596421f, 0.6859872284f, 0.6991389226f, 0, -0.08581082512f, -0.10920836f, -0.9903080513f, 0, 0.5532693395f, 0.7325250401f, -0.396610771f, 0, -0.1842489331f, -0.9777375055f, -0.1004076743f, 0, 0.0775473789f, -0.9111505856f, 0.4047110257f, 0, 0.1399838409f, 0.7601631212f, -0.6344734459f, 0, 0.4484419361f, -0.845289248f, 0.2904925424f, 0
 };
 
-#endif
+// Pragma once must be used instead of #ifndef
+// 'UENUM' must not be inside preprocessor blocks, except for WITH_EDITORONLY_DATA
+
+// #endif

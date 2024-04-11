@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "ChunkWorldSubsystem.h"
 #include "CommonCore.h"
 #include "GameFramework/Actor.h"
 #include "World/WorldGeneratorInfo.h"
@@ -99,8 +100,8 @@ protected:
     FORCEINLINE static int GetVoxelIndex(const FIntVector& LocalVoxelPosition)
     {
         return
-            LocalVoxelPosition.Z * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::ChunkSize +
-            LocalVoxelPosition.Y * AWorldGeneratorInfo::ChunkSize +
+            LocalVoxelPosition.Z * ChunkWorldSettings::ChunkSize * ChunkWorldSettings::ChunkSize +
+            LocalVoxelPosition.Y * ChunkWorldSettings::ChunkSize +
             LocalVoxelPosition.X;
     }
 
@@ -193,9 +194,9 @@ public:
          * Do we need to have this if statement?
          */
         if (
-            LocalVoxelPosition.X >= AWorldGeneratorInfo::ChunkSize
-            || LocalVoxelPosition.Y >= AWorldGeneratorInfo::ChunkSize
-            || LocalVoxelPosition.Z >= AWorldGeneratorInfo::ChunkSize
+               LocalVoxelPosition.X >= ChunkWorldSettings::ChunkSize
+            || LocalVoxelPosition.Y >= ChunkWorldSettings::ChunkSize
+            || LocalVoxelPosition.Z >= ChunkWorldSettings::ChunkSize
             || LocalVoxelPosition.X < 0
             || LocalVoxelPosition.Y < 0
             || LocalVoxelPosition.Z < 0

@@ -20,9 +20,9 @@ void AGreedyChunk::GenerateProceduralMesh()
         const int Axis1 = (Axis + 1) % 3;
         const int Axis2 = (Axis + 2) % 3;
 
-        const int MainAxisLimit = AWorldGeneratorInfo::ChunkSize;
-        const int Axis1Limit = AWorldGeneratorInfo::ChunkSize;
-        const int Axis2Limit = AWorldGeneratorInfo::ChunkSize;
+        const int MainAxisLimit = ChunkWorldSettings::ChunkSize;
+        const int Axis1Limit = ChunkWorldSettings::ChunkSize;
+        const int Axis2Limit = ChunkWorldSettings::ChunkSize;
 
         auto DeltaAxis1 = FIntVector::ZeroValue;
         auto DeltaAxis2 = FIntVector::ZeroValue;
