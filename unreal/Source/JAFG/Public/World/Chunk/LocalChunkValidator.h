@@ -50,7 +50,7 @@ private:
     void AskServerToSpawnChunk_ServerRPC(const FIntVector& ChunkKey);
 
     /**
-     * Only called on a instance of the game where a local player is present.
+     * Only called on an instance of the game where a local player is present.
      * Meaning clients or the host on a listen server.
      */
     void SafeSpawnChunk(const FIntVector& ChunkKey);

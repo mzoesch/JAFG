@@ -25,6 +25,32 @@ void ULocalChunkValidator::BeginPlay(void)
 
     CHECK_OWNING_PAWN
 
+    if (UNetworkStatics::IsSafeStandalone(this) && OWNING_PAWN->IsLocallyControlled())
+    {
+        LOG_VERBOSE(LogChunkValidation, "Spawned on a standalone game. Deactivating.")
+
+#if !WITH_EDITOR
+        LOG_FATAL(LogChunkValidation, "Standalone game is not supported outside the editor.")
+#endif /* !WITH_EDITOR */
+
+        this->SetComponentTickEnabled(true);
+
+        check( GEngine )
+        check( this->GetWorld() )
+        const ULocalPlayer* LocalPlayer = GEngine->GetFirstGamePlayer(this->GetWorld());
+        check( LocalPlayer )
+        this->ChunkGeneratorSubsystem = LocalPlayer->GetSubsystem<ULocalPlayerChunkGeneratorSubsystem>();
+        check( this->ChunkGeneratorSubsystem )
+        this->ChunkGeneratorSubsystem->LoadedChunks.Empty();
+
+        AActor* _ = UGameplayStatics::GetActorOfClass(this, AWorldGeneratorInfo::StaticClass());
+        check( _ )
+        this->WorldGeneratorInfo = Cast<AWorldGeneratorInfo>(_);
+        check( this->WorldGeneratorInfo )
+
+        return;
+    }
+
     if (UNetworkStatics::IsSafeClient(this) && OWNING_PAWN->IsLocallyControlled())
     {
         LOG_VERBOSE(LogChunkValidation, "Spawned on a client. Activating.")
@@ -154,9 +180,10 @@ void ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC_Implementation(const 
 
         CHECK_OWNING_PAWN
 
-        if (UNetworkStatics::IsSafeListenServer(this) && OWNING_PAWN->IsLocallyControlled())
+        if ((UNetworkStatics::IsSafeListenServer(this) || UNetworkStatics::IsSafeStandalone(this)) && OWNING_PAWN->IsLocallyControlled())
         {
-            LOG_VERBOSE(LogChunkValidation, "Delegate cleanup done for %s. Discarding authority data transmission as this chunk is already loaded (listen server).",*ChunkKey.ToString())
+            LOG_VERBOSE(LogChunkValidation, "Delegate cleanup done for %s. Discarding authority data transmission as this chunk is already loaded. Reason: %s.",
+                *ChunkKey.ToString(), UNetworkStatics::IsSafeListenServer(this) ? TEXT("listen server") : TEXT("standalone"))
             return;
         }
 
@@ -164,6 +191,7 @@ void ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC_Implementation(const 
         check( this->GetOwner() )
         check( Cast<APawn>(this->GetOwner()) )
         check( Cast<APawn>(this->GetOwner())->Controller )
+        check( Cast<AWorldPlayerController>(Cast<APawn>(this->GetOwner())->Controller) )
         Chunk->SendInitializationDataToClient(Cast<AWorldPlayerController>(Cast<APawn>(this->GetOwner())->Controller));
 
         return;
@@ -196,7 +224,7 @@ void ULocalChunkValidator::SafeSpawnChunk(const FIntVector& ChunkKey)
         return;
     }
 
-    if (UNetworkStatics::IsSafeListenServer(this))
+    if (UNetworkStatics::IsSafeListenServer(this) || UNetworkStatics::IsSafeStandalone(this))
     {
         /*
          * This should be.
@@ -295,23 +323,6 @@ void ULocalChunkValidator::GenerateMockChunks(void)
                 for (int Z = ChunksAboveZero; Z >= 0; --Z)
                 {
                     const FIntVector Key = FIntVector(TargetPoint.X, TargetPoint.Y, Z);
-                    // if (ChunkGeneratorSubsystem->LoadedChunks.Contains(Key) == false)
-                    // {
-                    //     const FTransform TargetedChunkTransform = FTransform(
-                    //         FRotator::ZeroRotator,
-                    //         FVector(
-                    //             Key.X * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale,
-                    //             Key.Y * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale,
-                    //             Key.Z * AWorldGeneratorInfo::ChunkSize * AWorldGeneratorInfo::JToUScale
-                    //         ),
-                    //         FVector::OneVector
-                    //     );
-                    //
-                    //     ACommonChunk* Chunk = this->GetWorld()->SpawnActor<ACommonChunk>(AGreedyChunk::StaticClass(), TargetedChunkTransform);
-                    //
-                    //     ChunkGeneratorSubsystem->LoadedChunks.Add(Key, Chunk);
-                    //     this->AskServerToSpawnChunk_ServerRPC(Key);
-                    //
 
                     this->SafeSpawnChunk(Key);
 

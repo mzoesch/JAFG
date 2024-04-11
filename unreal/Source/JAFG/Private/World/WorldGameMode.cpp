@@ -2,6 +2,7 @@
 
 #include "World/WorldGameMode.h"
 
+#include "Misc/WorldSimulationSpectatorPawn.h"
 #include "UI/World/WorldHUD.h"
 #include "World/WorldGameState.h"
 #include "World/WorldPlayerController.h"
@@ -16,7 +17,7 @@ AWorldGameMode::AWorldGameMode(const FObjectInitializer& ObjectInitializer) : Su
     this->PlayerControllerClass = AWorldPlayerController::StaticClass();
     this->HUDClass              = AWorldHUD::StaticClass();
     this->DefaultPawnClass      = nullptr; /* Determined at runtime. */
-    /* SpectatorClass */
+    this->SpectatorClass        = AWorldSimulationSpectatorPawn::StaticClass();
     /* ReplaySpectatorClass */
     /* ServerStatReplicatorClass */
 
@@ -32,7 +33,11 @@ void AWorldGameMode::PostLogin(APlayerController* NewPlayer)
     AWorldPlayerController* WorldPlayerController = Cast<AWorldPlayerController>(NewPlayer);
     if (WorldPlayerController == nullptr)
     {
-        UE_LOG(LogTemp, Fatal, TEXT("Player %s is not a AWorldPlayerController."), *NewPlayer->GetName());
+#if WITH_EDITOR
+        LOG_ERROR(LogWorldGameMode, "Player %s is not of type AWorldPlayerController. Discarding post login event.", *NewPlayer->GetName());
+#else /* WITH_EDITOR */
+        LOG_FATAL(LogWorldGameMode, "Player %s is not of type AWorldPlayerController.", *NewPlayer->GetName());
+#endif /* !WITH_EDITOR */
         return;
     }
 

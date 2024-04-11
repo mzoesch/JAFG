@@ -2,10 +2,12 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "CommonCore.h"
 #include "GameFramework/GameMode.h"
 
 #include "WorldGameMode.generated.h"
+
+JAFG_VOID
 
 UCLASS(Abstract, Blueprintable)
 class JAFG_API AWorldGameMode : public AGameMode
