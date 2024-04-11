@@ -4,30 +4,49 @@
 
 bool UChunkWorldSubsystem::ShouldCreateSubsystem(UObject* Outer) const
 {
-    LOG_WARNING(LogTemp, "Called")
-    return Super::ShouldCreateSubsystem(Outer);
+    check( Outer )
+
+    const bool bSuperCreate = Super::ShouldCreateSubsystem(Outer);
+
+    LOG_VERBOSE(LogChunkMisc, "Called.")
+
+    if (bSuperCreate == false)
+    {
+        return false;
+    }
+
+    check( Outer->GetWorld() )
+
+    if (Outer->GetWorld()->GetName() == TEXT("L_World"))
+    {
+        return true;
+    }
+
+    LOG_WARNING(LogChunkMisc, "Subsystem will not be created for world %s.", *Outer->GetWorld()->GetName())
+
+    return false;
 }
 
 void UChunkWorldSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     Super::Initialize(Collection);
-    LOG_WARNING(LogTemp, "Called")
+    LOG_VERBOSE(LogChunkMisc, "Called.")
 }
 
-void UChunkWorldSubsystem::PostInitialize()
+void UChunkWorldSubsystem::PostInitialize(void)
 {
     Super::PostInitialize();
-    LOG_WARNING(LogTemp, "Called")
+    LOG_VERBOSE(LogChunkMisc, "Called.")
 }
 
 void UChunkWorldSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 {
     Super::OnWorldBeginPlay(InWorld);
-    LOG_WARNING(LogTemp, "Called")
+    LOG_VERBOSE(LogChunkMisc, "Called.")
 }
 
-void UChunkWorldSubsystem::Deinitialize()
+void UChunkWorldSubsystem::Deinitialize(void)
 {
     Super::Deinitialize();
-    LOG_WARNING(LogTemp, "Called")
+    LOG_VERBOSE(LogChunkMisc, "Called.")
 }

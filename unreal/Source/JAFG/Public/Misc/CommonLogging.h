@@ -23,6 +23,7 @@
 ----------------------------------------------------------------------------*/
 
 DECLARE_LOG_CATEGORY_EXTERN(LogChunkManipulation, Log, All)
+DECLARE_LOG_CATEGORY_EXTERN(LogChunkMisc, Log, All)
 DECLARE_LOG_CATEGORY_EXTERN(LogChunkValidation, Log, All)
 DECLARE_LOG_CATEGORY_EXTERN(LogCommonSlate, Log, All)
 DECLARE_LOG_CATEGORY_EXTERN(LogWorldGameMode, Log, All)
