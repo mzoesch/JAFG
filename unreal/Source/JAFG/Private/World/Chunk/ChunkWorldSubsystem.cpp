@@ -43,6 +43,30 @@ void UChunkWorldSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 {
     Super::OnWorldBeginPlay(InWorld);
     LOG_VERBOSE(LogChunkMisc, "Called.")
+
+    check( this->ChunkWorldSettings == nullptr )
+    check( this->GetWorld() )
+    check( this->GetWorld()->GetWorldSettings() )
+    this->ChunkWorldSettings = Cast<AChunkWorldSettings>(this->GetWorld()->GetWorldSettings());
+    check( this->ChunkWorldSettings )
+
+    /* Transform kismet types to c++. */
+    this->ChunkWorldSettings->WorldNoiseType   = ENoiseType::KismetToCPP(this->ChunkWorldSettings->WorldKismetNoiseType);
+    this->ChunkWorldSettings->WorldFractalType = EFractalType::KismetToCPP(this->ChunkWorldSettings->WorldKismetFractalType);
+    this->ChunkWorldSettings->ContinentalnessNoiseType   = ENoiseType::KismetToCPP(this->ChunkWorldSettings->ContinentalnessKismetNoiseType);
+    this->ChunkWorldSettings->ContinentalnessFractalType = EFractalType::KismetToCPP(this->ChunkWorldSettings->ContinentalnessKismetFractalType);
+
+    this->ChunkWorldSettings->NoiseWorld = new FFastNoiseLite();
+    this->ChunkWorldSettings->NoiseWorld->SetSeed(this->ChunkWorldSettings->Seed);
+    this->ChunkWorldSettings->NoiseWorld->SetFrequency(this->ChunkWorldSettings->WorldFrequency);
+    this->ChunkWorldSettings->NoiseWorld->SetFractalType(this->ChunkWorldSettings->WorldFractalType);
+
+    this->ChunkWorldSettings->NoiseContinentalness = new FFastNoiseLite();
+    this->ChunkWorldSettings->NoiseContinentalness->SetSeed(this->ChunkWorldSettings->Seed);
+    this->ChunkWorldSettings->NoiseContinentalness->SetFrequency(this->ChunkWorldSettings->ContinentalnessFrequency);
+    this->ChunkWorldSettings->NoiseContinentalness->SetFractalType(this->ChunkWorldSettings->ContinentalnessFractalType);
+
+    return;
 }
 
 void UChunkWorldSubsystem::Deinitialize(void)

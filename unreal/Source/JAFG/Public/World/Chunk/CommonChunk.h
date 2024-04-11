@@ -67,10 +67,31 @@ protected:
      */
     TArray<int32> RawVoxels;
 
+    /**
+     * Never actually use in production code. This is just a helper method for developing and testing. Often things
+     * may go wrong while developing the generation system and this method help to not crash the game completely
+     * if something goes wrong. Will show a recognizable pattern in the wrong chunk to immediately see that something
+     * went wrong with the voxel generation due to a Hyperlane error or the generation algorithm itself.
+     */
+    FORCEINLINE void HoldAutoShrinking(void)
+    {
+#if !WITH_EDITOR /* && !UE_BUILD_SHIPPING */
+        LOG_FATAL(LogChunkMisc, "Disallowed.")
+#endif /* !WITH_EDITOR */
+
+        for (int i = 0; i < FMath::Pow(ChunkWorldSettings::ChunkSize, 3.0f); i++)
+        {
+            this->RawVoxels[i] = i % 2 == 0 ? ECommonVoxels::GetBaseVoxel() : ECommonVoxels::Air;
+        }
+
+        return;
+    }
+
     FORCEINLINE int GetRawVoxelData(const FIntVector& LocalVoxelPosition) const
     {
         return this->RawVoxels[ACommonChunk::GetVoxelIndex(LocalVoxelPosition)];
     }
+
     FORCEINLINE void ModifyRawVoxelData(const FIntVector& LocalVoxelPosition, const int NewVoxel)
     {
         this->RawVoxels[ACommonChunk::GetVoxelIndex(LocalVoxelPosition)] = NewVoxel;
@@ -84,6 +105,8 @@ protected:
     // MISC
     //////////////////////////////////////////////////////////////////////////
 
+    UPROPERTY()
+    TObjectPtr<AChunkWorldSettings> ChunkWorldSettings;
     UPROPERTY()
     TObjectPtr<AWorldGeneratorInfo> WorldGeneratorInfo;
     UPROPERTY()
@@ -114,6 +137,18 @@ private:
     void GenerateVoxels(void);
 
     void GenerateSuperFlatWorld(void);
+
+    void GenerateDefaultWorld(void);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Default World Generation
+    // In chronological order of execution.
+
+    void ShapeTerrain(void);
+    /* MISSING -> Water Filling */
+    void ReplaceSurface(void);
+    /* MISSING -> Caves */
+    /* MISSING -> Features and structures */
 
 public:
 

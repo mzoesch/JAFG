@@ -39,6 +39,14 @@ void AWorldGeneratorInfo::BeginPlay(void)
      * The server will generate the chunks based on the needs of a client.
      */
 
+    check( this->GetWorldSettings() )
+    check( Cast<AChunkWorldSettings>(this->GetWorldSettings()) )
+
+    if (Cast<AChunkWorldSettings>(this->GetWorldSettings())->bOverrideServerChunkGenerationTickRate)
+    {
+        this->PrimaryActorTick.TickInterval = Cast<AChunkWorldSettings>(this->GetWorldSettings())->ServerChunkGenerationTickRate;
+    }
+
     return;
 }
 
@@ -51,8 +59,10 @@ void AWorldGeneratorInfo::Tick(const float DeltaTime)
         return;
     }
 
-    constexpr int MaxNewChunksPerTick = 100;
-    for (int i = 0; i < MaxNewChunksPerTick; ++i)
+    check( this->GetWorldSettings() )
+    check( Cast<AChunkWorldSettings>(this->GetWorldSettings()) )
+
+    for (int i = 0; i < Cast<AChunkWorldSettings>(this->GetWorldSettings())->MaxServerChunksPerTick; ++i)
     {
         FIntVector Key;
         if (this->ChunkGenerationQueue.Dequeue(Key) == false)

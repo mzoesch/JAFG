@@ -2,6 +2,7 @@
 
 #include "Misc/CommonLogging.h"
 
+DEFINE_LOG_CATEGORY(LogChunkGeneration)
 DEFINE_LOG_CATEGORY(LogChunkManipulation)
 DEFINE_LOG_CATEGORY(LogChunkMisc)
 DEFINE_LOG_CATEGORY(LogChunkValidation)

@@ -4,6 +4,7 @@
 
 #include "Kismet/GameplayStatics.h"
 #include "Network/NetworkStatics.h"
+#include "World/Chunk/ChunkWorldSubsystem.h"
 #include "World/Chunk/LocalPlayerChunkGeneratorSubsystem.h"
 #include "World/WorldGeneratorInfo.h"
 #include "World/WorldPlayerController.h"
@@ -48,6 +49,10 @@ void ULocalChunkValidator::BeginPlay(void)
         this->WorldGeneratorInfo = Cast<AWorldGeneratorInfo>(_);
         check( this->WorldGeneratorInfo )
 
+        check( this->GetWorld()->GetWorldSettings() )
+        this->ChunkWorldSettings = Cast<AChunkWorldSettings>(this->GetWorld()->GetWorldSettings());
+        check( this->ChunkWorldSettings )
+
         return;
     }
 
@@ -66,6 +71,7 @@ void ULocalChunkValidator::BeginPlay(void)
         this->ChunkGeneratorSubsystem->LoadedChunks.Empty();
 
         this->WorldGeneratorInfo = nullptr;
+        this->ChunkWorldSettings = nullptr;
 
         return;
     }
@@ -90,6 +96,10 @@ void ULocalChunkValidator::BeginPlay(void)
         this->WorldGeneratorInfo = Cast<AWorldGeneratorInfo>(_);
         check( this->WorldGeneratorInfo )
 
+        check( this->GetWorld()->GetWorldSettings() )
+        this->ChunkWorldSettings = Cast<AChunkWorldSettings>(this->GetWorld()->GetWorldSettings());
+        check( this->ChunkWorldSettings )
+
         return;
     }
 
@@ -106,6 +116,10 @@ void ULocalChunkValidator::BeginPlay(void)
         this->WorldGeneratorInfo = Cast<AWorldGeneratorInfo>(_);
         check( this->WorldGeneratorInfo )
 
+        check( this->GetWorld()->GetWorldSettings() )
+        this->ChunkWorldSettings = Cast<AChunkWorldSettings>(this->GetWorld()->GetWorldSettings());
+        check( this->ChunkWorldSettings )
+
         return;
     }
 
@@ -114,6 +128,7 @@ void ULocalChunkValidator::BeginPlay(void)
     this->SetComponentTickEnabled(false);
     this->ChunkGeneratorSubsystem = nullptr;
     this->WorldGeneratorInfo = nullptr;
+    this->ChunkWorldSettings = nullptr;
 
     return;
 }
@@ -147,7 +162,7 @@ void ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC_Implementation(const 
 
     if (this->WorldGeneratorInfo->HasFullyLoadedChunk(ChunkKey))
     {
-        LOG_FATAL(LogChunkValidation, "Chunk already loaded. Not implemented yet.")
+        LOG_ERROR(LogChunkValidation, "Chunk already loaded. Not implemented yet.")
         return;
     }
 
@@ -248,16 +263,12 @@ void ULocalChunkValidator::SafeSpawnChunk(const FIntVector& ChunkKey)
 
 void ULocalChunkValidator::GenerateMockChunks(void)
 {
+    check( this->ChunkWorldSettings )
+
     if (this->bFinishedMockingChunkGeneration)
     {
         return;
     }
-
-    // ReSharper disable once CppTooWideScopeInitStatement
-    constexpr int MaxSpiralPoints = 5;
-    constexpr int ChunksAboveZero = 2;
-    constexpr int MaxPerTick = 20;
-    int AddedThisTick = 0;
 
     auto MoveCursorRight = [] (const FIntVector2& CursorLocation)
     {
@@ -284,23 +295,17 @@ void ULocalChunkValidator::GenerateMockChunks(void)
         MoveCursorRight, MoveCursorDown, MoveCursorLeft, MoveCursorUp
     });
 
-    int CurrentMoveIndex = 0;
+    int SpiralsAddedThisTick = 0;
 
-    int n = 1;
-    FIntVector2 TargetPoint = FIntVector2(0, 0);
-    int TimesToMove = 1;
-
-    for (int Z = ChunksAboveZero; Z >= 0; --Z)
+    /* first iteration */
+    if (this->MockCursor == 1)
     {
-        const FIntVector Key = FIntVector(0, 0, Z);
+        SpiralsAddedThisTick++;
 
-        this->SafeSpawnChunk(Key);
-
-        AddedThisTick++;
-        this->MockChunksAdded++;
-        if (AddedThisTick >= MaxPerTick)
+        for (int Z = this->ChunkWorldSettings->ChunksAboveZero; Z >= 0; --Z)
         {
-            return;
+            const FIntVector Key = FIntVector(0, 0, Z);
+            this->SafeSpawnChunk(Key);
         }
     }
 
@@ -311,29 +316,17 @@ void ULocalChunkValidator::GenerateMockChunks(void)
             CurrentMoveIndex = (CurrentMoveIndex + 1) % Moves.Num();
             for (int __ = 0; __ < TimesToMove; ++__)
             {
-                if (n >= MaxSpiralPoints)
-                {
-                    this->bFinishedMockingChunkGeneration = true;
-                    return;
-                }
-
                 TargetPoint = Moves[CurrentMoveIndex](TargetPoint);
 
-                ++n;
-                for (int Z = ChunksAboveZero; Z >= 0; --Z)
+                ++MockCursor;
+                ++SpiralsAddedThisTick;
+                for (int Z = this->ChunkWorldSettings->ChunksAboveZero; Z >= 0; --Z)
                 {
                     const FIntVector Key = FIntVector(TargetPoint.X, TargetPoint.Y, Z);
 
                     this->SafeSpawnChunk(Key);
-
-                    AddedThisTick++;
-                    this->MockChunksAdded++;
-
-                    if (AddedThisTick >= MaxPerTick)
-                    {
-                        return;
-                    }
                 }
+
 
                 continue;
             }
@@ -342,6 +335,12 @@ void ULocalChunkValidator::GenerateMockChunks(void)
         }
 
         ++TimesToMove;
+
+        if (MockCursor >= ChunkWorldSettings->MaxSpiralPoints)
+        {
+            this->bFinishedMockingChunkGeneration = true;
+            return;
+        }
 
         continue;
     }

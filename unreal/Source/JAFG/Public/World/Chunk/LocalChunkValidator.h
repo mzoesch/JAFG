@@ -7,6 +7,7 @@
 
 #include "LocalChunkValidator.generated.h"
 
+class AChunkWorldSettings;
 class AWorldGeneratorInfo;
 class ULocalPlayerChunkGeneratorSubsystem;
 JAFG_VOID
@@ -29,6 +30,11 @@ public:
     virtual void TickComponent(const float DeltaTime, const ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 private:
+
+    /**
+     * Only valid on server.
+     */
+    TObjectPtr<AChunkWorldSettings> ChunkWorldSettings = nullptr;
 
     /**
      * Valid on client and listen server for the corresponding local player.
@@ -59,6 +65,9 @@ private:
      * Development only.
      */
     void GenerateMockChunks(void);
-    int MockChunksAdded = 0;
+    int MockCursor = 1;
+    int CurrentMoveIndex = 0;
+    FIntVector2 TargetPoint = FIntVector2(0, 0);
+    int TimesToMove = 1;
     bool bFinishedMockingChunkGeneration = false;
 };

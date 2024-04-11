@@ -32,6 +32,10 @@ void ACommonChunk::BeginPlay(void)
 
     if (UNetworkStatics::IsSafeServer(this))
     {
+        check( this->GetWorld() )
+        check( this->GetWorld()->GetWorldSettings() )
+        this->ChunkWorldSettings = Cast<AChunkWorldSettings>(this->GetWorld()->GetWorldSettings());
+        check( this->ChunkWorldSettings )
         this->WorldGeneratorInfo = Cast<AWorldGeneratorInfo>(UGameplayStatics::GetActorOfClass(this, AWorldGeneratorInfo::StaticClass()));
         check (this->WorldGeneratorInfo )
     }
@@ -42,6 +46,9 @@ void ACommonChunk::BeginPlay(void)
             UE_LOG(LogTemp, Fatal, TEXT("ACommonChunk::BeginPlay: Found World Generator Info on a client. This is disallowed."))
             return;
         }
+
+        this->ChunkWorldSettings = nullptr;
+        this->WorldGeneratorInfo = nullptr;
     }
 
     this->VoxelSubsystem = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>();
@@ -152,6 +159,8 @@ void ACommonChunk::GenerateVoxels(void)
     {
     case EWorldGenerationType::Default:
     {
+        this->GenerateDefaultWorld();
+        return;
     }
     case EWorldGenerationType::SuperFlat:
     {
@@ -160,10 +169,13 @@ void ACommonChunk::GenerateVoxels(void)
     }
     default:
     {
+        break;
     }
     }
 
-    UE_LOG(LogTemp, Error, TEXT("ACommonChunk::GenerateVoxels: World Generation of type %s not implemented."), *ChunkWorldSettings::LexToString(Cast<AChunkWorldSettings>(this->GetWorld()->GetWorldSettings())->WorldGenerationType));
+    LOG_ERROR(LogChunkGeneration, "World Generation of type %s not implemented.",
+        *ChunkWorldSettings::LexToString(Cast<AChunkWorldSettings>(this->GetWorld()->GetWorldSettings())->WorldGenerationType))
+    this->HoldAutoShrinking();
 
     return;
 }
@@ -216,6 +228,49 @@ void ACommonChunk::GenerateSuperFlatWorld()
     }
 
     return;
+}
+
+void ACommonChunk::GenerateDefaultWorld(void)
+{
+    this->ShapeTerrain();
+    this->ReplaceSurface();
+}
+
+void ACommonChunk::ShapeTerrain(void)
+{
+    check( ChunkWorldSettings )
+
+    for (int X = 0; X < ChunkWorldSettings::ChunkSize; ++X)
+    {
+        const float WorldX = this->JChunkPosition.X + X;
+
+        for (int Y = 0; Y < ChunkWorldSettings::ChunkSize; ++Y)
+        {
+            const float WorldY = this->JChunkPosition.Y + Y;
+
+            const float ContinentalnessNoiseValue = this->ChunkWorldSettings->NoiseContinentalness->GetNoise(WorldX, WorldY);
+
+            for (int Z = 0; Z < ChunkWorldSettings::ChunkSize; ++Z)
+            {
+                const float WorldZ = this->JChunkPosition.Z + Z;
+
+
+                this->RawVoxels[ACommonChunk::GetVoxelIndex(FIntVector(X, Y, Z))]
+                    = this->ChunkWorldSettings->NoiseWorld->GetNoise(WorldX, WorldY, WorldZ)
+                        < 0.0f ? ECommonVoxels::Air : ECommonVoxels::GetBaseVoxel();
+            }
+
+            continue;
+        }
+
+        continue;
+    }
+
+    return;
+}
+
+void ACommonChunk::ReplaceSurface(void)
+{
 }
 
 void ACommonChunk::SendInitializationDataToClient(AWorldPlayerController* Target) const

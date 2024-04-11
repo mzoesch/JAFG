@@ -80,26 +80,70 @@ public:
     // See UChunkWorldSubsystem::Initialize for more information.
     //////////////////////////////////////////////////////////////////////////
 
-    UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Generation")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Generation")
     EChunkType ChunkType = EChunkType::Greedy;
 
-    UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Generation")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Generation")
     EWorldGenerationType WorldGenerationType = EWorldGenerationType::SuperFlat;
 
-    UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Generation")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Generation")
     int ChunksAboveZero = 3;
 
-    UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Generation")
+    UPROPERTY(EditAnywhere, /* BlueprintReadOnly, */ Category = "Generation")
+    uint64 Seed = 0;
+
+    /**
+     * How many chunks the server may generate at one tick. Clients will have to wait for the server to generate
+     * chunks if the waiting queue is bigger than this value.
+     */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Generation|Runtime")
+    int MaxServerChunksPerTick = 100;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Generation|Runtime")
+    bool bOverrideServerChunkGenerationTickRate = false;
+
+    /**
+     * If less than or equal to 0.0f the server will generate chunks as fast as possible. Every tick will be maxed out
+     * based on the AChunkWorldSettings#MaxServerChunksPerTick value.
+     */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Generation|Runtime")
+    float ServerChunkGenerationTickRate = 0.0f;
+
+    /**
+     * May be more. As we only check at the end of one round around the circle in the middle
+     * of the spiral.
+     */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Generation|Mocking")
     int MaxSpiralPoints = 20;
 
-    UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Generation|Noise")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Generation|Noise|World")
     double WorldFrequency = 0.006;
 
-    UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Generation|Noise")
-    EKismetNoiseType NoiseType = EKismetNoiseType::Perlin;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Generation|Noise|World")
+    EKismetNoiseType WorldKismetNoiseType = EKismetNoiseType::Perlin;
+    ENoiseType::Type WorldNoiseType       = ENoiseType::Perlin;
 
-    UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Generation|Noise|Continentalness")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Generation|Noise|World")
+    EKismetFractalType WorldKismetFractalType = EKismetFractalType::FBm;
+    EFractalType::Type WorldFractalType       = EFractalType::FBm;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Generation|Noise|Continentalness")
     double ContinentalnessFrequency = 0.001;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Generation|Noise|Continentalness")
+    EKismetNoiseType ContinentalnessKismetNoiseType = EKismetNoiseType::Perlin;
+    ENoiseType::Type ContinentalnessNoiseType       = ENoiseType::Perlin;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Generation|Noise|Continentalness")
+    EKismetFractalType ContinentalnessKismetFractalType = EKismetFractalType::FBm;
+    EFractalType::Type ContinentalnessFractalType       = EFractalType::FBm;
+
+    //////////////////////////////////////////////////////////////////////////
+    // Auto generated
+    //////////////////////////////////////////////////////////////////////////
+
+    FFastNoiseLite* NoiseWorld = nullptr;
+    FFastNoiseLite* NoiseContinentalness = nullptr;
 };
 
 UCLASS(NotBlueprintable)
@@ -116,4 +160,9 @@ public:
     virtual void OnWorldBeginPlay(UWorld& InWorld) override;
     virtual void Deinitialize(void) override;
     // ~Word Subsystem implementation
+
+private:
+
+    UPROPERTY()
+    TObjectPtr<AChunkWorldSettings> ChunkWorldSettings = nullptr;
 };

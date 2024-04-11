@@ -68,7 +68,7 @@ enum class EKismetNoiseType : uint8
     Cellular,
     Perlin,
     ValueCubic,
-    Value
+    Value,
 };
 
 namespace ENoiseType
@@ -77,13 +77,116 @@ namespace ENoiseType
 UENUM()
 enum Type
 {
-    NoiseType_OpenSimplex2,
-    NoiseType_OpenSimplex2S,
-    NoiseType_Cellular,
-    NoiseType_Perlin,
-    NoiseType_ValueCubic,
-    NoiseType_Value
+    OpenSimplex2,
+    OpenSimplex2S,
+    Cellular,
+    Perlin,
+    ValueCubic,
+    Value
 };
+
+FORCEINLINE ENoiseType::Type KismetToCPP(const EKismetNoiseType KismetNoiseType)
+{
+    switch (KismetNoiseType)
+    {
+    case EKismetNoiseType::OpenSimplex2:
+    {
+        return ENoiseType::OpenSimplex2;
+    }
+    case EKismetNoiseType::OpenSimplex2S:
+    {
+        return ENoiseType::OpenSimplex2S;
+    }
+    case EKismetNoiseType::Cellular:
+    {
+        return ENoiseType::Cellular;
+    }
+    case EKismetNoiseType::Perlin:
+    {
+        return ENoiseType::Perlin;
+    }
+    case EKismetNoiseType::ValueCubic:
+    {
+        return ENoiseType::ValueCubic;
+    }
+    case EKismetNoiseType::Value:
+    {
+        return ENoiseType::Value;
+    }
+    default:
+    {
+    }
+    }
+
+    LOG_ERROR(LogChunkMisc, "Unknown noise type %d.", KismetNoiseType);
+
+    return ENoiseType::Perlin;
+}
+
+}
+
+UENUM()
+enum class EKismetFractalType : uint8
+{
+    None,
+    FBm,
+    Ridged,
+    PingPong,
+    DomainWarpProgressive,
+    DomainWarpIndependent,
+};
+
+namespace EFractalType
+{
+
+UENUM()
+enum Type
+{
+    None,
+    FBm,
+    Ridged,
+    PingPong,
+    DomainWarpProgressive,
+    DomainWarpIndependent
+};
+
+FORCEINLINE EFractalType::Type KismetToCPP(const EKismetFractalType KismetFractalType)
+{
+    switch (KismetFractalType)
+    {
+    case EKismetFractalType::None:
+    {
+        return EFractalType::None;
+    }
+    case EKismetFractalType::FBm:
+    {
+        return EFractalType::FBm;
+    }
+    case EKismetFractalType::Ridged:
+    {
+        return EFractalType::Ridged;
+    }
+    case EKismetFractalType::PingPong:
+    {
+        return EFractalType::PingPong;
+    }
+    case EKismetFractalType::DomainWarpProgressive:
+    {
+        return EFractalType::DomainWarpProgressive;
+    }
+    case EKismetFractalType::DomainWarpIndependent:
+    {
+        return EFractalType::DomainWarpIndependent;
+    }
+    default:
+    {
+    }
+    }
+
+    LOG_ERROR(LogChunkMisc, "Unknown fractal type %d.", KismetFractalType);
+
+    return EFractalType::None;
+}
 
 }
 
@@ -95,16 +198,6 @@ public:
         RotationType3D_None,
         RotationType3D_ImproveXYPlanes,
         RotationType3D_ImproveXZPlanes
-    };
-
-    enum FractalType
-    {
-        FractalType_None,
-        FractalType_FBm,
-        FractalType_Ridged,
-        FractalType_PingPong,
-        FractalType_DomainWarpProgressive,
-        FractalType_DomainWarpIndependent
     };
 
     enum CellularDistanceFunction
@@ -140,11 +233,11 @@ public:
     {
         mSeed = seed;
         mFrequency = 0.01f;
-        mNoiseType = ENoiseType::NoiseType_OpenSimplex2;
+        mNoiseType = ENoiseType::OpenSimplex2;
         mRotationType3D = RotationType3D_None;
         mTransformType3D = TransformType3D_DefaultOpenSimplex2;
 
-        mFractalType = FractalType_None;
+        mFractalType = EFractalType::None;
         mOctaves = 3;
         mLacunarity = 2.0f;
         mGain = 0.5f;
@@ -211,7 +304,7 @@ public:
     /// Default: None
     /// Note: FractalType_DomainWarp... only affects DomainWarp(...)
     /// </remarks>
-    void SetFractalType(FractalType fractalType) { mFractalType = fractalType; }
+    void SetFractalType(EFractalType::Type fractalType) { mFractalType = fractalType; }
 
     /// <summary>
     /// Sets octave count for all fractal noise types
@@ -328,11 +421,11 @@ public:
         {
         default:
             return GenNoiseSingle(mSeed, x, y);
-        case FractalType_FBm:
+        case EFractalType::FBm:
             return GenFractalFBm(x, y);
-        case FractalType_Ridged:
+        case EFractalType::Ridged:
             return GenFractalRidged(x, y);
-        case FractalType_PingPong:
+        case EFractalType::PingPong:
             return GenFractalPingPong(x, y);
         }
     }
@@ -354,11 +447,11 @@ public:
         {
         default:
             return GenNoiseSingle(mSeed, x, y, z);
-        case FractalType_FBm:
+        case EFractalType::FBm:
             return GenFractalFBm(x, y, z);
-        case FractalType_Ridged:
+        case EFractalType::Ridged:
             return GenFractalRidged(x, y, z);
-        case FractalType_PingPong:
+        case EFractalType::PingPong:
             return GenFractalPingPong(x, y, z);
         }
     }
@@ -382,10 +475,10 @@ public:
         default:
             DomainWarpSingle(x, y);
             break;
-        case FractalType_DomainWarpProgressive:
+        case EFractalType::DomainWarpProgressive:
             DomainWarpFractalProgressive(x, y);
             break;
-        case FractalType_DomainWarpIndependent:
+        case EFractalType::DomainWarpIndependent:
             DomainWarpFractalIndependent(x, y);
             break;
         }
@@ -409,10 +502,10 @@ public:
         default:
             DomainWarpSingle(x, y, z);
             break;
-        case FractalType_DomainWarpProgressive:
+        case EFractalType::DomainWarpProgressive:
             DomainWarpFractalProgressive(x, y, z);
             break;
-        case FractalType_DomainWarpIndependent:
+        case EFractalType::DomainWarpIndependent:
             DomainWarpFractalIndependent(x, y, z);
             break;
         }
@@ -436,7 +529,7 @@ private:
     RotationType3D mRotationType3D;
     TransformType3D mTransformType3D;
 
-    FractalType mFractalType;
+    EFractalType::Type mFractalType;
     int mOctaves;
     float mLacunarity;
     float mGain;
@@ -643,17 +736,17 @@ private:
     {
         switch (mNoiseType)
         {
-        case ENoiseType::NoiseType_OpenSimplex2:
+        case ENoiseType::OpenSimplex2:
             return SingleSimplex(seed, x, y);
-        case ENoiseType::NoiseType_OpenSimplex2S:
+        case ENoiseType::OpenSimplex2S:
             return SingleOpenSimplex2S(seed, x, y);
-        case ENoiseType::NoiseType_Cellular:
+        case ENoiseType::Cellular:
             return SingleCellular(seed, x, y);
-        case ENoiseType::NoiseType_Perlin:
+        case ENoiseType::Perlin:
             return SinglePerlin(seed, x, y);
-        case ENoiseType::NoiseType_ValueCubic:
+        case ENoiseType::ValueCubic:
             return SingleValueCubic(seed, x, y);
-        case ENoiseType::NoiseType_Value:
+        case ENoiseType::Value:
             return SingleValue(seed, x, y);
         default:
             return 0;
@@ -665,17 +758,17 @@ private:
     {
         switch (mNoiseType)
         {
-        case ENoiseType::NoiseType_OpenSimplex2:
+        case ENoiseType::OpenSimplex2:
             return SingleOpenSimplex2(seed, x, y, z);
-        case ENoiseType::NoiseType_OpenSimplex2S:
+        case ENoiseType::OpenSimplex2S:
             return SingleOpenSimplex2S(seed, x, y, z);
-        case ENoiseType::NoiseType_Cellular:
+        case ENoiseType::Cellular:
             return SingleCellular(seed, x, y, z);
-        case ENoiseType::NoiseType_Perlin:
+        case ENoiseType::Perlin:
             return SinglePerlin(seed, x, y, z);
-        case ENoiseType::NoiseType_ValueCubic:
+        case ENoiseType::ValueCubic:
             return SingleValueCubic(seed, x, y, z);
-        case ENoiseType::NoiseType_Value:
+        case ENoiseType::Value:
             return SingleValue(seed, x, y, z);
         default:
             return 0;
@@ -693,8 +786,8 @@ private:
 
         switch (mNoiseType)
         {
-        case ENoiseType::NoiseType_OpenSimplex2:
-        case ENoiseType::NoiseType_OpenSimplex2S:
+        case ENoiseType::OpenSimplex2:
+        case ENoiseType::OpenSimplex2S:
             {
                 const FNfloat SQRT3 = (FNfloat)1.7320508075688772935274463415059;
                 const FNfloat F2 = 0.5f * (SQRT3 - 1);
@@ -764,8 +857,8 @@ private:
         default:
             switch (mNoiseType)
             {
-            case ENoiseType::NoiseType_OpenSimplex2:
-            case ENoiseType::NoiseType_OpenSimplex2S:
+            case ENoiseType::OpenSimplex2:
+            case ENoiseType::OpenSimplex2S:
                 mTransformType3D = TransformType3D_DefaultOpenSimplex2;
                 break;
             default:

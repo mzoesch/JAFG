@@ -22,6 +22,7 @@
     Common extern logging categories.
 ----------------------------------------------------------------------------*/
 
+DECLARE_LOG_CATEGORY_EXTERN(LogChunkGeneration, Log, All)
 DECLARE_LOG_CATEGORY_EXTERN(LogChunkManipulation, Log, All)
 DECLARE_LOG_CATEGORY_EXTERN(LogChunkMisc, Log, All)
 DECLARE_LOG_CATEGORY_EXTERN(LogChunkValidation, Log, All)
@@ -45,7 +46,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogWorldChar, Log, All)
  * Current function name.
  */
 #define LOG_PRIVATE_TRACE_STR_CUR_FUNC \
-    (FString(__FUNCTION__).Right(FString(__FUNCTION__).Len() - FString(__FUNCTION__).Find(TEXT("::")) - 2 ))
+    (FString(__FUNCTION__).Right(FString(__FUNCTION__).Len() - FString(__FUNCTION__).Find(TEXT("::")) - 2))
 
 /**
  * Current function signature.
