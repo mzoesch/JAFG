@@ -55,6 +55,7 @@ struct JAFG_API FNoiseSplinePoint
 
 namespace NoiseSpline
 {
+
 /**
  * @return The target height that this spline aims for at the given noise value ranging from 0.0 to 1.0.
  *         0.0 for the lowest point and 1.0 for the highest point.

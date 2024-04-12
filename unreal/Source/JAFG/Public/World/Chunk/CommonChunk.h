@@ -79,7 +79,7 @@ protected:
         LOG_FATAL(LogChunkMisc, "Disallowed.")
 #endif /* !WITH_EDITOR */
 
-        for (int i = 0; i < FMath::Pow(ChunkWorldSettings::ChunkSize, 3.0f); i++)
+        for (int i = 0; i < FMath::Pow(ChunkWorldSettings::ChunkSize, 3.0f); ++i)
         {
             this->RawVoxels[i] = i % 2 == 0 ? ECommonVoxels::GetBaseVoxel() : ECommonVoxels::Air;
         }
@@ -244,6 +244,12 @@ public:
     }
 
     /**
+     * Server only.
+     * The called chunk acts as the pivot of the FIntVector and is the origin of the Cartesian coordinate system.
+     */
+    int32 GetVoxelInNeighbourChunk(const FIntVector& LocalVoxelPosition) const;
+
+    /**
      * Converts any unreal vector in world space to a Chunk Key.
      * See ACommonChunk#ChunkKey for more information about Chunk Keys.
      */
@@ -251,7 +257,7 @@ public:
 
     /**
      * Converts any unreal vector in world space to a local voxel integer location.
-     * XYZ reaching from inclusively zero to exclusively AWorldGeneratorInfo::ChunkSize.
+     * XYZ reaching from inclusively zero to exclusively ChunkWorldSettings::ChunkSize.
      */
     static FIntVector WorldToLocalVoxelLocation(const FVector& WorldLocation);
 };

@@ -259,11 +259,6 @@ void ACommonChunk::ShapeTerrain(void)
 
                 const float Density = CurrentPercentageWorldZ < ContinentalnessTargetHeight ? 1.0f : -1.0f;
 
-                if (WorldX == 0 && WorldY == 0)
-                {
-                    LOG_WARNING(LogTemp, "WZ:%f, CNV: %f, CTH: %f, CPWZ:%f, D:%f", WorldZ, ContinentalnessNoiseValue, ContinentalnessTargetHeight, CurrentPercentageWorldZ, Density)
-                }
-
                 this->RawVoxels[ACommonChunk::GetVoxelIndex(FIntVector(X, Y, Z))]
                     = this->ChunkWorldSettings->NoiseWorld->GetNoise(WorldX, WorldY, WorldZ)
                         > Density ? ECommonVoxels::Air : ECommonVoxels::GetBaseVoxel();
@@ -280,6 +275,60 @@ void ACommonChunk::ShapeTerrain(void)
 
 void ACommonChunk::ReplaceSurface(void)
 {
+    constexpr int MaxModified     { 3 };
+    constexpr int SurfaceVoxel    { 4 };
+    constexpr int SubSurfaceVoxel { 3 };
+
+    for (int X = 0; X < ChunkWorldSettings::ChunkSize; ++X)
+    {
+        for (int Y = 0; Y < ChunkWorldSettings::ChunkSize; ++Y)
+        {
+            int Modified = 0;
+
+            /* The voxel on the bottom side of the above chunk. */
+            const int TopVoxel = this->GetVoxelInNeighbourChunk(FIntVector(X, Y, ChunkWorldSettings::ChunkSize));
+
+            if (TopVoxel == ECommonVoxels::GetBaseVoxel())
+            {
+                Modified = MaxModified;
+            }
+
+            else if (TopVoxel == SurfaceVoxel)
+            {
+                Modified = 1;
+            }
+
+            /* This is kinda sketchy because now there may be parts with more subsurface blocks. */
+            else if (TopVoxel == SubSurfaceVoxel)
+            {
+                Modified = 2;
+            }
+
+            for (int Z = ChunkWorldSettings::ChunkSize -1 ; Z >= 0; --Z)
+            {
+                if (this->GetRawVoxelData(FIntVector(X, Y, Z)) == ECommonVoxels::Air)
+                {
+                    Modified = 0;
+                    continue;
+                }
+
+                if (Modified >= MaxModified)
+                {
+                    continue;
+                }
+
+                this->ModifyRawVoxelData(FIntVector(X, Y, Z), Modified++ == 0 ? SurfaceVoxel : SubSurfaceVoxel);
+
+                continue;
+            }
+
+            continue;
+        }
+
+        continue;
+    }
+
+    return;
 }
 
 void ACommonChunk::SendInitializationDataToClient(AWorldPlayerController* Target) const
@@ -366,7 +415,7 @@ ACommonChunk* ACommonChunk::GetTargetChunk(const FIntVector& LocalVoxelPosition,
         *LocalVoxelPosition.ToString(), *OutTransformedLocalVoxelPosition.ToString(), *this->ChunkKey.ToString(), *TransformedChunkKey.ToString())
 
     check( this->WorldGeneratorInfo )
-    ACommonChunk* TargetChunk = this->WorldGeneratorInfo->GetChunkBy(TransformedChunkKey);
+    ACommonChunk* TargetChunk = this->WorldGeneratorInfo->GetChunkByKey(TransformedChunkKey);
 
     if (TargetChunk == nullptr)
     {
@@ -419,6 +468,33 @@ void ACommonChunk::ModifySingleVoxel(const FIntVector& LocalVoxelPosition, const
     TargetChunk->ApplyProceduralMesh();
 
     return;
+}
+
+int32 ACommonChunk::GetVoxelInNeighbourChunk(const FIntVector& LocalVoxelPosition) const
+{
+    if (UNetworkStatics::IsServer(this) == false)
+    {
+        LOG_FATAL(LogChunkMisc, "Only the server can get voxels in neighbour chunks.")
+        return ECommonVoxels::Null;
+    }
+
+    check( this->WorldGeneratorInfo )
+
+    /*
+     * We might want to cache the neighbour chunks.
+     */
+    if (LocalVoxelPosition.Z >= ChunkWorldSettings::ChunkSize)
+    {
+        if (ACommonChunk* Neighbour = this->WorldGeneratorInfo->GetChunkByKey(this->ChunkKey + FIntVector(0, 0, 1)))
+        {
+            return Neighbour->GetLocalVoxelOnly(FIntVector(LocalVoxelPosition.X, LocalVoxelPosition.Y, LocalVoxelPosition.Z - ChunkWorldSettings::ChunkSize));
+        }
+
+        return ECommonVoxels::Null;
+    }
+
+    LOG_FATAL(LogChunkMisc, "Not implemented.")
+    return ECommonVoxels::Null;
 }
 
 FIntVector ACommonChunk::WorldToChunkKey(const FVector& WorldLocation)

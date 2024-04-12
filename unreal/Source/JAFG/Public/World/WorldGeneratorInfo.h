@@ -60,7 +60,7 @@ public:
         return this->ChunkGenerationQueue.Enqueue(ChunkKey);
     }
 
-    FORCEINLINE ACommonChunk* GetChunkBy(const FIntVector& ChunkKey) const
+    FORCEINLINE ACommonChunk* GetChunkByKey(const FIntVector& ChunkKey) const
     {
         return this->FullyLoadedChunks.Contains(ChunkKey) ? this->FullyLoadedChunks[ChunkKey] : nullptr;
     }
