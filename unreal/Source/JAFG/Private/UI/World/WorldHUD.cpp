@@ -2,6 +2,7 @@
 
 #include "UI/World/WorldHUD.h"
 
+#include "Misc/WorldSimulationSpectatorPawn.h"
 #include "UI/Debug/DebugScreen.h"
 #include "World/WorldCharacter.h"
 #include "UI/Escape/EscapeMenu.h"
@@ -9,7 +10,10 @@
 #include "UI/MISC/ChatMenu.h"
 #include "World/WorldPlayerController.h"
 
-#define PLAYER_CONTROLLER Cast<AWorldPlayerController>(this->GetOwningPlayerController())
+#define PLAYER_CONTROLLER \
+    Cast<AWorldPlayerController>(this->GetOwningPlayerController())
+#define SIMULATION_PLAYER_CONTROLLER \
+    Cast<APlayerController>(this->GetOwningPlayerController())
 
 AWorldHUD::AWorldHUD(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -21,34 +25,60 @@ void AWorldHUD::BeginPlay(void)
     Super::BeginPlay();
 
 #if WITH_EDITOR
-    /* May often happen if we simulate the game in the editor. But should never happen in a packaged shipping game. */
-    if (PLAYER_CONTROLLER == nullptr)
+    /*
+     * May often happen if we simulate the game in the editor using PIE.
+     * But should never happen in a packaged shipping game.
+     */
+    if (this->GetOwningPlayerController() == nullptr || (PLAYER_CONTROLLER == nullptr && SIMULATION_PLAYER_CONTROLLER == nullptr))
     {
-        UE_LOG(LogTemp, Warning, TEXT("AWorldHUD::BeginPlay: Player controller is not valid. Discarding HUD setup."))
+        LOG_FATAL(LogCommonSlate, "Player controller is not valid. Discarding HUD setup.")
         return;
     }
-#else
-    if (PLAYER_CONTROLLER == nullptr)
+#else /* WITH_EDITOR */
+    /*
+     * Simulation is not allowed in a packaged game. Therefore, we can directly discard the HUD setup
+     * and log a fatal error.
+     */
+    if (this->GetOwningPlayerController() == nullptr || PLAYER_CONTROLLER == nullptr)
     {
-        UE_LOG(LogTemp, Fatal, TEXT("AWorldHUD::BeginPlay: Player controller is not valid."))
+        LOG_FATAL(LogCommonSlate, "Player controller is not valid.")
         return;
     }
-#endif /* WITH_EDITOR */
+#endif /* !WITH_EDITOR */
 
 #if WITH_EDITOR
-    /* May often happen if we simulate the game in the editor. But should never happen in a packaged shipping game. */
+    /*
+     * May often happen if we simulate the game in the editor using PIE.
+     * But should never happen in a packaged shipping game.
+     */
     if (this->GetOwningPawn() == nullptr || this->GetOwningPawn()->GetClass()->IsChildOf(AWorldCharacter::StaticClass()) == false)
     {
-        UE_LOG(LogTemp, Warning, TEXT("AWorldHUD::BeginPlay: Owning pawn is not a valid type for this HUD. Discarding HUD setup."))
+        if (this->GetOwningPlayerController() != nullptr && this->GetOwningPlayerController()->GetSpectatorPawn()->GetClass()->IsChildOf(AWorldSimulationSpectatorPawn::StaticClass()))
+        {
+            LOG_DISPLAY(LogCommonSlate, "Discarding HUD setup except for the debug screen because the owning pawn is a simulation spectator pawn.")
+
+            check( this->WDebugScreenClass )
+            this->WDebugScreen = CreateWidget<UDebugScreen>(this->GetWorld(), this->WDebugScreenClass);
+            check( this->WDebugScreen )
+            this->WDebugScreen->AddToViewport();
+            this->WDebugScreen->SetVisibility(ESlateVisibility::Collapsed);
+
+            return;
+        }
+
+        LOG_FATAL(LogCommonSlate, "Owning pawn is not a valid type for this HUD. Discarding HUD setup.")
+
         return;
     }
-#else
+#else /* WITH_EDITOR */
     if (this->GetOwningPawn() == nullptr || this->GetOwningPawn()->GetClass()->IsChildOf(AWorldCharacter::StaticClass()) == false)
     {
-        UE_LOG(LogTemp, Fatal, TEXT("AWorldHUD::BeginPlay: Owning pawn is not a valid type for this HUD."))
+        LOG_FATAL(LogCommonSlate, "Owning pawn is not a valid type for this HUD.")
         return;
     }
-#endif /* WITH_EDITOR */
+#endif /* !WITH_EDITOR */
+
+    LOG_DISPLAY(LogCommonSlate, "Setting up World HUD in default configuration.")
 
     check( this->WDebugScreenClass)
     this->WDebugScreen = CreateWidget<UDebugScreen>(this->GetWorld(), this->WDebugScreenClass);
@@ -89,8 +119,8 @@ void AWorldHUD::ToggleEscapeMenu(const bool bCollapsed) const
         this->WCrosshair->SetVisibility(ESlateVisibility::Collapsed);
     }
 
-    this->WEscapeMenu->ToggleEscapeMenu(bCollapsed);
     check( this->WEscapeMenu )
+    this->WEscapeMenu->ToggleEscapeMenu(bCollapsed);
 
     return;
 }
@@ -119,3 +149,4 @@ void AWorldHUD::ToggleDebugScreen(void) const
 }
 
 #undef PLAYER_CONTROLLER
+#undef SIMULATION_PLAYER_CONTROLLER

@@ -2,15 +2,17 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "CommonCore.h"
 #include "GameFramework/SpectatorPawn.h"
 
 #include "WorldSimulationSpectatorPawn.generated.h"
 
-class UInputComponent;
-class ULocalChunkValidator;
+JAFG_VOID
 
-UCLASS()
+class ULocalChunkValidator;
+struct FInputActionValue;
+
+UCLASS(NotBlueprintable)
 class JAFG_API AWorldSimulationSpectatorPawn : public ASpectatorPawn
 {
     GENERATED_BODY()
@@ -22,12 +24,12 @@ public:
 protected:
 
     virtual void BeginPlay(void) override;
-
-public:
-
-    virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 private:
+
+    IConsoleCommand* CommandToggleDebugScreen = nullptr;
+    void OnToggleDebugScreen(const FInputActionValue& Value);
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<ULocalChunkValidator> LocalChunkValidator;

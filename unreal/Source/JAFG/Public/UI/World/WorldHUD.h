@@ -7,10 +7,10 @@
 
 #include "WorldHUD.generated.h"
 
-class UDebugScreen;
-class UCrosshair;
 JAFG_VOID
 
+class UDebugScreen;
+class UCrosshair;
 class UChatMenu;
 class UEscapeMenu;
 

@@ -10,6 +10,14 @@
 
 JAFG_VOID
 
+/*
+ * General information:
+ *
+ *  Density:
+ *      - Value between -1 and 1.
+ *      - Air is -1 and base voxel is 1.
+ */
+
 UENUM(BlueprintType)
 enum class EChunkType
 {
@@ -24,6 +32,54 @@ enum class EWorldGenerationType
     Default,
     SuperFlat,
 };
+
+USTRUCT()
+struct JAFG_API FNoiseSplinePoint
+{
+    GENERATED_BODY()
+
+    FNoiseSplinePoint(void) = default;
+    explicit FNoiseSplinePoint(const float NoiseValue, const float TargetPercentageTerrainHeight)
+    : NoiseValue(NoiseValue), TargetPercentageTerrainHeight(TargetPercentageTerrainHeight)
+    {
+        return;
+    }
+
+    UPROPERTY(EditInstanceOnly, meta = (ClampMin = "-1.0", ClampMax = "1.0"))
+    float NoiseValue = 0.0f;
+
+    /** The percentage of the current world height. */
+    UPROPERTY(EditInstanceOnly, meta = (ClampMin = "0.0", ClampMax = "100.0"))
+    float TargetPercentageTerrainHeight = 0.0f;
+};
+
+namespace NoiseSpline
+{
+/**
+ * @return The target height that this spline aims for at the given noise value ranging from 0.0 to 1.0.
+ *         0.0 for the lowest point and 1.0 for the highest point.
+ */
+FORCEINLINE static float GetTargetHeight(const TArray<FNoiseSplinePoint>& Spline, const float Noise)
+{
+    const FNoiseSplinePoint* Lower = nullptr;
+    const FNoiseSplinePoint* Upper = nullptr;
+
+    for (int i = 1; i < Spline.Num(); ++i)
+    {
+        if (Spline[i].NoiseValue >= Noise)
+        {
+            Lower = &Spline[i - 1];
+            Upper = &Spline[i];
+            break;
+        }
+    }
+
+    const float Distance = (Noise - Lower->NoiseValue) / (Upper->NoiseValue - Lower->NoiseValue);
+
+    return /*1 - */(((1 - Distance) * Lower->TargetPercentageTerrainHeight) + (Distance * Upper->TargetPercentageTerrainHeight)) / 100.0f;
+}
+
+}
 
 namespace ChunkWorldSettings
 {
@@ -89,6 +145,9 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Generation")
     int ChunksAboveZero = 3;
 
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Generation")
+    float FakeHeightMultiplier = 0.6f;
+
     UPROPERTY(EditAnywhere, /* BlueprintReadOnly, */ Category = "Generation")
     uint64 Seed = 0;
 
@@ -138,12 +197,26 @@ public:
     EKismetFractalType ContinentalnessKismetFractalType = EKismetFractalType::FBm;
     EFractalType::Type ContinentalnessFractalType       = EFractalType::FBm;
 
+    UPROPERTY(EditAnywhere, /* BlueprintReadOnly, */ Category = "Generation|Noise|Continentalness")
+    TArray<FNoiseSplinePoint> ContinentalnessSpline = {};
+
     //////////////////////////////////////////////////////////////////////////
     // Auto generated
     //////////////////////////////////////////////////////////////////////////
 
     FFastNoiseLite* NoiseWorld = nullptr;
     FFastNoiseLite* NoiseContinentalness = nullptr;
+
+
+    FORCEINLINE int32 GetHighestPoint(void) const
+    {
+        return ChunksAboveZero * ChunkWorldSettings::ChunkSize;
+    }
+
+    FORCEINLINE int32 GetFakeHighestPoint(void) const
+    {
+        return this->GetHighestPoint() * FakeHeightMultiplier;
+    }
 };
 
 UCLASS(NotBlueprintable)

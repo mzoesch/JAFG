@@ -50,7 +50,13 @@ void UChunkWorldSubsystem::OnWorldBeginPlay(UWorld& InWorld)
     this->ChunkWorldSettings = Cast<AChunkWorldSettings>(this->GetWorld()->GetWorldSettings());
     check( this->ChunkWorldSettings )
 
-    /* Transform kismet types to c++. */
+    if (this->ChunkWorldSettings->ContinentalnessSpline.Num() < 2)
+    {
+        LOG_FATAL(LogChunkMisc, "Continentalness spline must have at least 2 points.")
+        return;
+    }
+
+    /* Transform Kismet types to C++. */
     this->ChunkWorldSettings->WorldNoiseType   = ENoiseType::KismetToCPP(this->ChunkWorldSettings->WorldKismetNoiseType);
     this->ChunkWorldSettings->WorldFractalType = EFractalType::KismetToCPP(this->ChunkWorldSettings->WorldKismetFractalType);
     this->ChunkWorldSettings->ContinentalnessNoiseType   = ENoiseType::KismetToCPP(this->ChunkWorldSettings->ContinentalnessKismetNoiseType);

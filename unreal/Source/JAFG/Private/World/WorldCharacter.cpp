@@ -381,7 +381,9 @@ void AWorldCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
         Subsystem->ClearAllMappings();
         Subsystem->AddMappingContext(this->IMCFoot, 0);
-        UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
+
+        UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent);
+        check( EnhancedInputComponent )
 
         EnhancedInputComponent->BindAction(this->IAJump, ETriggerEvent::Triggered, this, &AWorldCharacter::OnTriggerJump);
         EnhancedInputComponent->BindAction(this->IAJump, ETriggerEvent::Completed, this, &AWorldCharacter::OnCompleteJump);

@@ -250,14 +250,23 @@ void ACommonChunk::ShapeTerrain(void)
 
             const float ContinentalnessNoiseValue = this->ChunkWorldSettings->NoiseContinentalness->GetNoise(WorldX, WorldY);
 
+            const float ContinentalnessTargetHeight = NoiseSpline::GetTargetHeight(this->ChunkWorldSettings->ContinentalnessSpline, ContinentalnessNoiseValue);
+
             for (int Z = 0; Z < ChunkWorldSettings::ChunkSize; ++Z)
             {
                 const float WorldZ = this->JChunkPosition.Z + Z;
+                const float CurrentPercentageWorldZ = WorldZ / this->ChunkWorldSettings->GetFakeHighestPoint();
 
+                const float Density = CurrentPercentageWorldZ < ContinentalnessTargetHeight ? 1.0f : -1.0f;
+
+                if (WorldX == 0 && WorldY == 0)
+                {
+                    LOG_WARNING(LogTemp, "WZ:%f, CNV: %f, CTH: %f, CPWZ:%f, D:%f", WorldZ, ContinentalnessNoiseValue, ContinentalnessTargetHeight, CurrentPercentageWorldZ, Density)
+                }
 
                 this->RawVoxels[ACommonChunk::GetVoxelIndex(FIntVector(X, Y, Z))]
                     = this->ChunkWorldSettings->NoiseWorld->GetNoise(WorldX, WorldY, WorldZ)
-                        < 0.0f ? ECommonVoxels::Air : ECommonVoxels::GetBaseVoxel();
+                        > Density ? ECommonVoxels::Air : ECommonVoxels::GetBaseVoxel();
             }
 
             continue;
