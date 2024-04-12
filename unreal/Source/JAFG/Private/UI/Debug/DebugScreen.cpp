@@ -2,24 +2,29 @@
 
 #include "UI/Debug/DebugScreen.h"
 
+#include "Misc/WorldSimulationSpectatorPawn.h"
 #include "World/WorldCharacter.h"
 #include "World/Chunk/CommonChunk.h"
 #include "World/Chunk/ChunkWorldSubsystem.h"
 
-#define SANITIZED_FLT(Float, Precision)                                     \
-    FString::SanitizeFloat(Float, Precision)                                ;
-#define FORMAT_SANITIZED_FLT(InString, Precision)                           \
-    InString.RemoveAt(                                                      \
-        InString.Find(TEXT(".")) + Precision + 1,                           \
-        InString.Len() - InString.Find(TEXT(".")) + Precision + 1           \
-    )                                                                       ;
-#define OWNING_CHARACTER                                                    \
+#define SANITIZED_FLT(Float, Precision)                                                     \
+    FString::SanitizeFloat(Float, Precision)                                                ;
+#define FORMAT_SANITIZED_FLT(InString, Precision)                                           \
+    InString.RemoveAt(                                                                      \
+        InString.Find(TEXT(".")) + Precision + 1,                                           \
+        InString.Len() - InString.Find(TEXT(".")) + Precision + 1                           \
+    )                                                                                       ;
+#define OWNING_CHARACTER                                                                    \
     Cast<AWorldCharacter>(this->GetOwningPlayer()->GetCharacter())
-#define CHECK_OWNING_CHARACTER                                              \
-    check( this->GetOwningPlayer() )                                        \
-    check( this->GetOwningPlayer()->GetCharacter() )                        \
+#if WITH_EDITOR
+    #define OWNING_SIMULATION_PAWN                                                          \
+        Cast<AWorldSimulationSpectatorPawn>(this->GetOwningPlayer()->GetSpectatorPawn())
+#endif /* WITH_EDITOR */
+#define CHECK_OWNING_CHARACTER                                                              \
+    check( this->GetOwningPlayer() )                                                        \
+    check( this->GetOwningPlayer()->GetCharacter() )                                        \
     check( Cast<AWorldCharacter>(this->GetOwningPlayer()->GetCharacter()) )
-#define CHECKED_OWNING_CHARACTER                                            \
+#define CHECKED_OWNING_CHARACTER                                                            \
     CHECK_OWNING_CHARACTER OWNING_CHARACTER
 
 void UDebugScreen::Toggle(void)
@@ -85,6 +90,13 @@ FString UDebugScreen::GetSectionClientCharacterLocation(void) const
         return FString::Printf(TEXT("XYZ: %s / %s / %s"), *X, *Y, *Z);
     }
 
+#if WITH_EDITOR
+    if (OWNING_SIMULATION_PAWN)
+    {
+        return FString::Printf(TEXT("XYZ: NA / NA / NA [REASON: Simulation Pawn]"));
+    }
+#endif /* WITH_EDITOR */
+
     return FString::Printf(TEXT("XYZ: N/A"));
 }
 
@@ -95,6 +107,13 @@ FString UDebugScreen::GetSectionClientCharacterChunkLocation(void) const
         const FIntVector ChunkPosition = ACommonChunk::WorldToChunkKey(Character->GetActorLocation());
         return FString::Printf(TEXT("Chunk: %d %d %d"), ChunkPosition.X, ChunkPosition.Y, ChunkPosition.Z);
     }
+
+#if WITH_EDITOR
+    if (OWNING_SIMULATION_PAWN)
+    {
+        return FString::Printf(TEXT("Chunk: NA NA NA [REASON: Simulation Pawn]"));
+    }
+#endif /* WITH_EDITOR */
 
     return FString::Printf(TEXT("Chunk: N/A"));
 }
@@ -136,7 +155,14 @@ FString UDebugScreen::GetSectionClientCharacterFacing(void) const
         return FString::Printf(TEXT("Facing: %s (%s / %s)"), *YawAsText, *YawFloat, *PitchFloat);
     }
 
-    return FString::Printf(TEXT("Facing: N/A"));
+#if WITH_EDITOR
+    if (OWNING_SIMULATION_PAWN)
+    {
+        return FString::Printf(TEXT("Facing: NA (NA / NA) [REASON: Simulation Pawn]"));
+    }
+#endif /* WITH_EDITOR */
+
+    return FString::Printf(TEXT("Facing: NA (NA / NA)"));
 }
 
 FString UDebugScreen::GetSectionTargetVoxelData(void) const
@@ -171,11 +197,21 @@ FString UDebugScreen::GetSectionTargetVoxelData(void) const
         );
     }
 
+#if WITH_EDITOR
+    if (OWNING_SIMULATION_PAWN)
+    {
+        return FString::Printf(TEXT("Targeted Voxel: N/A [REASON: Simulation Pawn]"));
+    }
+#endif /* WITH_EDITOR */
+
     return FString::Printf(TEXT("Targeted Voxel: N/A\n"));
 }
 
 #undef SANITIZED_FLT
 #undef FORMAT_SANITIZED_FLT
 #undef OWNING_CHARACTER
+#if WITH_EDITOR
+    #undef OWNING_SIMULATION_PAWN
+#endif /* WITH_EDITOR */
 #undef CHECK_OWNING_CHARACTER
 #undef CHECKED_OWNING_CHARACTER

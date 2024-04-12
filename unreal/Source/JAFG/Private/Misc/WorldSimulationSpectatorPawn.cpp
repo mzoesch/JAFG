@@ -65,7 +65,6 @@ void AWorldSimulationSpectatorPawn::EndPlay(const EEndPlayReason::Type EndPlayRe
 // ReSharper disable once CppMemberFunctionMayBeConst
 void AWorldSimulationSpectatorPawn::OnToggleDebugScreen(const FInputActionValue& Value)
 {
-    LOG_WARNING(LogWorldChar, "Called.")
     CHECKED_HEAD_UP_DISPLAY->ToggleDebugScreen();
 }
 
