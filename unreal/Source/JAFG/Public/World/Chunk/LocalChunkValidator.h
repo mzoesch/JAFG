@@ -52,6 +52,13 @@ private:
      */
     TMap<FIntVector, FDelegateHandle> ChunkHandles;
 
+    /**
+     * Client only.
+     */
+    TQueue<FIntVector> PreValidationChunkQueue;
+
+    bool bExecuteChunkValidationFuture = false;
+    TFuture<void> ChunkValidationFuture;
     UFUNCTION(Server, Reliable, WithValidation)
     void AskServerToSpawnChunk_ServerRPC(const FIntVector& ChunkKey);
 
@@ -65,6 +72,7 @@ private:
      * Development only.
      */
     void GenerateMockChunks(void);
+    void GenerateMockChunksOnClient(void);
     int MockCursor = 1;
     int CurrentMoveIndex = 0;
     FIntVector2 TargetPoint = FIntVector2(0, 0);

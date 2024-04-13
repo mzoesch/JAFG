@@ -2,11 +2,13 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "CommonCore.h"
 #include "Network/NetworkStatics.h"
 #include "Player/JAFGPlayerController.h"
 
 #include "WorldPlayerController.generated.h"
+
+JAFG_VOID
 
 UCLASS(NotBlueprintable)
 class JAFG_API AWorldPlayerController : public AJAFGPlayerController
@@ -16,6 +18,8 @@ class JAFG_API AWorldPlayerController : public AJAFGPlayerController
 public:
 
     explicit AWorldPlayerController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
     virtual void BeginPlay(void) override;
     /** Must be called by the Game Mode in the server when this clients Post Login event has been fired. */
@@ -32,6 +36,10 @@ private:
     /** Generated on server and replicated to the client on Post Login.  */
     FString HyperlaneIdentifier = L"";
     bool bListenServerController = false;
+    UFUNCTION()
+    void OnRep_IsConnectionEstablishedAndValidated() const;
+    UPROPERTY(ReplicatedUsing=OnRep_IsConnectionEstablishedAndValidated)
+    bool bIsConnectionEstablishedAndValidated = false;
 
     UFUNCTION(Client, Reliable)
     void SetHyperlaneIdentifier_ClientRPC(const FString& InHyperlaneIdentifier);
@@ -86,5 +94,31 @@ public:
         }
 
         return this->HyperlaneIdentifier;
+    }
+
+    FORCEINLINE void SetConnectionValidAndEstablished(void)
+    {
+        if (UNetworkStatics::IsServer(this) == false)
+        {
+            UE_LOG(LogTemp, Fatal, TEXT("AWorldPlayerController::SetConnectionValidAndEstablished: Called on a client. This is disallowed."))
+            return;
+        }
+
+        LOG_WARNING(LogTemp, "Connection established and validated. Setting replciated prop")
+
+        this->bIsConnectionEstablishedAndValidated = true;
+
+        return;
+    }
+
+    FORCEINLINE bool IsConnectionValidAndEstablished(void) const
+    {
+        if (UNetworkStatics::IsServer(this))
+        {
+            LOG_FATAL(LogTemp, "Called on server. This is disallowed.")
+            return false;
+        }
+        return false;
+        return this->bIsConnectionEstablishedAndValidated;
     }
 };

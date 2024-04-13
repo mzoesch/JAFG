@@ -31,8 +31,8 @@ public:
      */
     void InitializeChunkWithAuthorityData(const FIntVector& InChunkKey, const TArray<int32>& InRawVoxels);
 
-    TQueue<FIntVector> WaitForAuthorityQueue;
     /*
+     * Only valid on clients not on the server or listen server.
      * The AActors are loaded, not necessarily generated.
      */
     TMap<FIntVector, ACommonChunk*> LoadedChunks;

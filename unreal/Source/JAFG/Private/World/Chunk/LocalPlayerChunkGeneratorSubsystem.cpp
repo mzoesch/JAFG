@@ -61,6 +61,12 @@ void ULocalPlayerChunkGeneratorSubsystem::DisconnectFromHyperlane(void)
 
 void ULocalPlayerChunkGeneratorSubsystem::InitializeChunkWithAuthorityData(const FIntVector& InChunkKey, const TArray<int32>& InRawVoxels)
 {
+    if (this->LoadedChunks.Contains(InChunkKey) == false)
+    {
+        LOG_FATAL(LogChunkValidation, "Server send chunk data for an unknown chunk: %s.", *InChunkKey.ToString())
+        return;
+    }
+
     ACommonChunk* Chunk = this->LoadedChunks[InChunkKey];
     if (Chunk == nullptr)
     {

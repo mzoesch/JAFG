@@ -2,11 +2,13 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "CommonCore.h"
 #include "GameFramework/Info.h"
 #include "World/WorldPlayerController.h"
 
 #include "HyperlaneTransmitterInfo.generated.h"
+
+JAFG_VOID
 
 class FHyperlaneWorker;
 
@@ -96,7 +98,7 @@ private:
     void OnListenBeginDelegateHandler(const FString& InAddress, const uint16& InPort);
     void OnListenBeginFailureDelegateHandler(const FString& InAddress, const uint16& InPort);
     void OnListenEndDelegateHandler(void);
-    void OnClientConnectedDelegateHandler(const FString& Address);
+    void OnClientConnectedDelegateHandler(const FString& InAddress);
     void OnClientDisconnectedDelegateHandler(const FString& Address);
 
     FThreadSafeBool bShouldPingCheck = false;

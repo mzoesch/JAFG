@@ -28,7 +28,7 @@ void ULocalChunkValidator::BeginPlay(void)
 
     if (UNetworkStatics::IsSafeStandalone(this) && OWNING_PAWN->IsLocallyControlled())
     {
-        LOG_VERBOSE(LogChunkValidation, "Spawned on a standalone game. Deactivating.")
+        LOG_VERBOSE(LogChunkValidation, "Spawned on a standalone game (Pawn: %s). Activating.", *OWNING_PAWN->GetName())
 
 #if !WITH_EDITOR
         LOG_FATAL(LogChunkValidation, "Standalone game is not supported outside the editor.")
@@ -58,7 +58,20 @@ void ULocalChunkValidator::BeginPlay(void)
 
     if (UNetworkStatics::IsSafeClient(this) && OWNING_PAWN->IsLocallyControlled())
     {
-        LOG_VERBOSE(LogChunkValidation, "Spawned on a client. Activating.")
+        LOG_VERBOSE(LogChunkValidation, "Spawned on a client (Pawn %s). Activating.", *OWNING_PAWN->GetName())
+
+        if (OWNING_PAWN->GetName().Contains(TEXT("WorldSimulationSpectatorPawn")))
+        {
+            LOG_VERBOSE(LogChunkValidation, "Is PIE spectator. Ignoring implementation. Deactivating", *OWNING_PAWN->GetName())
+            this->SetComponentTickEnabled(false);
+            check( ChunkGeneratorSubsystem == nullptr )
+            this->ChunkGeneratorSubsystem = nullptr;
+            check( WorldGeneratorInfo == nullptr )
+            this->WorldGeneratorInfo = nullptr;
+            check( ChunkWorldSettings == nullptr )
+            this->ChunkWorldSettings = nullptr;
+            return;
+        }
 
         this->SetComponentTickEnabled(true);
 
@@ -76,10 +89,9 @@ void ULocalChunkValidator::BeginPlay(void)
         return;
     }
 
-
     if (UNetworkStatics::IsSafeListenServer(this) && OWNING_PAWN->IsLocallyControlled())
     {
-        LOG_VERBOSE(LogChunkValidation, "Spawned on a listen server. Activating.")
+        LOG_VERBOSE(LogChunkValidation, "Spawned on a listen server (Pawn: %s). Activating.", *OWNING_PAWN->GetName())
 
         this->SetComponentTickEnabled(true);
 
@@ -105,7 +117,7 @@ void ULocalChunkValidator::BeginPlay(void)
 
     if (UNetworkStatics::IsSafeServer(this))
     {
-        LOG_VERBOSE(LogChunkValidation, "Spawned on a dedicated server or is not locally controlled. Initializing minimum variables. Deactivating.")
+        LOG_VERBOSE(LogChunkValidation, "Spawned on a dedicated server or is not locally controlled (Pawn: %s). Initializing minimum variables. Deactivating.", *OWNING_PAWN->GetName())
 
         this->SetComponentTickEnabled(false);
 
@@ -123,7 +135,7 @@ void ULocalChunkValidator::BeginPlay(void)
         return;
     }
 
-    LOG_VERBOSE(LogChunkValidation, "Spawned on a non locally controlled client. Deactivating.")
+    LOG_VERBOSE(LogChunkValidation, "Spawned on a non locally controlled client (Pawn: %s). Deactivating.", *OWNING_PAWN->GetName())
 
     this->SetComponentTickEnabled(false);
     this->ChunkGeneratorSubsystem = nullptr;
@@ -139,13 +151,22 @@ void ULocalChunkValidator::TickComponent(const float DeltaTime, const ELevelTick
 
     LOG_VERY_VERBOSE(LogChunkValidation, "Validating local chunks.")
 
-    this->GenerateMockChunks();
+    if (UNetworkStatics::IsSafeClient(this))
+    {
+        this->GenerateMockChunksOnClient();
+    }
+    else
+    {
+        this->GenerateMockChunks();
+    }
 
     return;
 }
 
 bool ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC_Validate(const FIntVector& ChunkKey)
 {
+    // Do we want to check here if the hyperlane is already validated?
+
     if (this->ChunkHandles.Contains(ChunkKey))
     {
         CHECK_OWNING_PAWN
@@ -235,7 +256,7 @@ void ULocalChunkValidator::SafeSpawnChunk(const FIntVector& ChunkKey)
     {
         LOG_FATAL(LogChunkValidation, "Disallowed call. SV: %s; LC: %s.",
             UNetworkStatics::IsSafeServer(this) ? TEXT("true") : TEXT("false"),
-            OWNING_PAWN->IsLocallyControlled() ? TEXT("true") : TEXT("false"))
+            OWNING_PAWN->IsLocallyControlled()  ? TEXT("true") : TEXT("false"))
         return;
     }
 
@@ -257,7 +278,105 @@ void ULocalChunkValidator::SafeSpawnChunk(const FIntVector& ChunkKey)
         return;
     }
 
-    LOG_ERROR(LogChunkValidation, "Not implemented yet for a client.")
+    if (UNetworkStatics::IsSafeDedicatedServer(this))
+    {
+        LOG_FATAL(LogChunkValidation, "Disallowed call on dedicated server.")
+        return;
+    }
+
+    check( GEngine )
+    check( this->GetWorld() )
+    check( GEngine->GetFirstGamePlayer(this->GetWorld()) )
+    ULocalPlayerChunkGeneratorSubsystem* Subsystem = GEngine->GetFirstGamePlayer(this->GetWorld())->GetSubsystem<ULocalPlayerChunkGeneratorSubsystem>();
+    check( Subsystem )
+    if (Subsystem->LoadedChunks.Contains(ChunkKey))
+    {
+        LOG_FATAL(LogChunkValidation, "Chunk already loaded.")
+        return;
+    }
+
+    const FTransform TargetedChunkTransform = FTransform(
+            FRotator::ZeroRotator,
+            FVector(
+                ChunkKey.X * ChunkWorldSettings::ChunkSize * ChunkWorldSettings::JToUScale,
+                ChunkKey.Y * ChunkWorldSettings::ChunkSize * ChunkWorldSettings::JToUScale,
+                ChunkKey.Z * ChunkWorldSettings::ChunkSize * ChunkWorldSettings::JToUScale
+            ),
+            FVector::OneVector
+        );
+    ACommonChunk* Chunk = this->GetWorld()->SpawnActor<ACommonChunk>(AGreedyChunk::StaticClass(), TargetedChunkTransform);
+    check( Chunk )
+    Subsystem->LoadedChunks.Add(ChunkKey, Chunk);
+
+    check(this->GetOwner())
+    check( Cast<APawn>(this->GetOwner()) )
+    check( Cast<APawn>(this->GetOwner())->GetController() )
+    check( Cast<AWorldPlayerController>(Cast<APawn>(this->GetOwner())->GetController()) )
+    if (Cast<AWorldPlayerController>(Cast<APawn>(this->GetOwner())->GetController())->IsConnectionValidAndEstablished() == false)
+    {
+        this->PreValidationChunkQueue.Enqueue(ChunkKey);
+
+        if (this->ChunkValidationFuture.IsValid() == false)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Creating chunk validation future."))
+
+            this->bExecuteChunkValidationFuture = true;
+            this->ChunkValidationFuture = Async(EAsyncExecution::Thread, [this] ()
+            {
+                FPlatformProcess::Sleep(5.0f);
+
+                if (this->bExecuteChunkValidationFuture)
+                {
+                    UE_LOG(LogTemp, Warning, TEXT("Chunk validation future will be exectued next tick."))
+                    AsyncTask(ENamedThreads::GameThread, [this] ()
+                    {
+                        if (this->bExecuteChunkValidationFuture == false)
+                        {
+                            return;
+                        }
+                        this->bExecuteChunkValidationFuture = false;
+                        while (this->PreValidationChunkQueue.IsEmpty() == false)
+                        {
+                            FIntVector Key;
+                            this->PreValidationChunkQueue.Dequeue(Key);
+                            this->AskServerToSpawnChunk_ServerRPC(Key);
+                        }
+
+                        UE_LOG(LogTemp, Warning, TEXT("Chunk validation future was executed."))
+
+                        return;
+                    });
+
+                    return;
+                }
+
+                UE_LOG(LogTemp, Warning, TEXT("Chunk validation future was not executed."))
+
+                return;
+            });
+        }
+
+        UE_LOG(LogTemp, Warning, TEXT("Waiting"))
+
+        return;
+    }
+
+    this->bExecuteChunkValidationFuture = false;
+
+    if (this->PreValidationChunkQueue.IsEmpty())
+    {
+        this->AskServerToSpawnChunk_ServerRPC(ChunkKey);
+    }
+
+    while (this->PreValidationChunkQueue.IsEmpty() == false)
+    {
+        FIntVector Key;
+        this->PreValidationChunkQueue.Dequeue(Key);
+        this->AskServerToSpawnChunk_ServerRPC(Key);
+    }
+
+    this->AskServerToSpawnChunk_ServerRPC(ChunkKey);
+
     return;
 }
 
@@ -267,6 +386,12 @@ void ULocalChunkValidator::GenerateMockChunks(void)
 
     if (this->bFinishedMockingChunkGeneration)
     {
+        return;
+    }
+
+    if (UNetworkStatics::IsSafeDedicatedServer(this))
+    {
+        LOG_FATAL(LogChunkValidation, "Disallowed call on dedicated server.")
         return;
     }
 
@@ -337,6 +462,103 @@ void ULocalChunkValidator::GenerateMockChunks(void)
         ++TimesToMove;
 
         if (MockCursor >= ChunkWorldSettings->MaxSpiralPoints)
+        {
+            this->bFinishedMockingChunkGeneration = true;
+            return;
+        }
+
+        continue;
+    }
+
+    return;
+}
+
+void ULocalChunkValidator::GenerateMockChunksOnClient(void)
+{
+    if (UNetworkStatics::IsSafeServer(this))
+    {
+        LOG_FATAL(LogChunkValidation, "Disallowed call on server.")
+        return;
+    }
+
+    check( this->ChunkWorldSettings == nullptr )
+
+    if (this->bFinishedMockingChunkGeneration)
+    {
+        return;
+    }
+
+    // ReSharper disable once CppTooWideScopeInitStatement
+    constexpr int ChunksAboveZeroClient {  4 };
+    // ReSharper disable once CppTooWideScopeInitStatement
+    constexpr int MaxSpiralPointsClient { 40 };
+
+    auto MoveCursorRight = [] (const FIntVector2& CursorLocation)
+    {
+        return FIntVector2(CursorLocation.X + 1, CursorLocation.Y);
+    };
+
+    auto MoveCursorDown = [] (const FIntVector2& CursorLocation)
+    {
+        return FIntVector2(CursorLocation.X, CursorLocation.Y - 1);
+    };
+
+    auto MoveCursorLeft = [] (const FIntVector2& CursorLocation)
+    {
+        return FIntVector2(CursorLocation.X - 1, CursorLocation.Y);
+    };
+
+    auto MoveCursorUp = [] (const FIntVector2& CursorLocation)
+    {
+        return FIntVector2(CursorLocation.X, CursorLocation.Y + 1);
+    };
+
+    const auto Moves = TArray<FIntVector2(*)(const FIntVector2&)>(
+    {
+        MoveCursorRight, MoveCursorDown, MoveCursorLeft, MoveCursorUp
+    });
+
+    int SpiralsAddedThisTick = 0;
+
+    /* first iteration */
+    if (this->MockCursor == 1)
+    {
+        SpiralsAddedThisTick++;
+
+        for (int Z = ChunksAboveZeroClient; Z >= 0; --Z)
+        {
+            const FIntVector Key = FIntVector(0, 0, Z);
+            this->SafeSpawnChunk(Key);
+        }
+    }
+
+    while (true)
+    {
+        for (int _ = 0; _ < 2; ++_)
+        {
+            CurrentMoveIndex = (CurrentMoveIndex + 1) % Moves.Num();
+            for (int __ = 0; __ < TimesToMove; ++__)
+            {
+                TargetPoint = Moves[CurrentMoveIndex](TargetPoint);
+
+                ++MockCursor;
+                ++SpiralsAddedThisTick;
+                for (int Z = ChunksAboveZeroClient; Z >= 0; --Z)
+                {
+                    const FIntVector Key = FIntVector(TargetPoint.X, TargetPoint.Y, Z);
+
+                    this->SafeSpawnChunk(Key);
+                }
+
+                continue;
+            }
+
+            continue;
+        }
+
+        ++TimesToMove;
+
+        if (MockCursor >= MaxSpiralPointsClient)
         {
             this->bFinishedMockingChunkGeneration = true;
             return;

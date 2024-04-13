@@ -275,9 +275,39 @@ void AHyperlaneTransmitterInfo::OnListenEndDelegateHandler(void)
     UE_LOG(LogTemp, Warning, TEXT("AHyperlaneTransmitterInfo::OnListenEndDelegateHandler: Fired."))
 }
 
-void AHyperlaneTransmitterInfo::OnClientConnectedDelegateHandler(const FString& Address)
+void AHyperlaneTransmitterInfo::OnClientConnectedDelegateHandler(const FString& InAddress)
 {
-    UE_LOG(LogTemp, Warning, TEXT("AHyperlaneTransmitterInfo::OnClientConnectedDelegateHandler: Fired with %s."), *Address)
+    UE_LOG(LogTemp, Warning, TEXT("AHyperlaneTransmitterInfo::OnClientConnectedDelegateHandler: Fired with %s."), *InAddress)
+    const TSharedPtr<FTCPTransmitterClient> Client = this->Clients.Contains(InAddress) ? this->Clients[InAddress] : nullptr;
+
+    if (Client == nullptr || Client.IsValid() == false)
+    {
+        LOG_FATAL(LogTemp, "Client %s is invalid but should be connected and validated.", *InAddress)
+        return;
+    }
+
+    for (FConstPlayerControllerIterator It = this->GetWorld()->GetPlayerControllerIterator(); It; ++It)
+    {
+        APlayerController* PlayerController = It->Get();
+
+        check( PlayerController )
+
+        if (AWorldPlayerController* WorldPlayerController = Cast<AWorldPlayerController>(PlayerController); WorldPlayerController != nullptr)
+        {
+            if (WorldPlayerController->GetHyperlaneWorkerAddress() == InAddress)
+            {
+                WorldPlayerController->SetConnectionValidAndEstablished();
+                return;
+            }
+
+            continue;
+        }
+
+        LOG_ERROR(LogTemp, "PlayerController is not a WorldPlayerController: %s.", *PlayerController->GetName())
+
+        continue;
+    }
+
 }
 
 void AHyperlaneTransmitterInfo::OnClientDisconnectedDelegateHandler(const FString& Address)

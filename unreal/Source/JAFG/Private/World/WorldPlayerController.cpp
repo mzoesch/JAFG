@@ -2,10 +2,24 @@
 
 #include "World/WorldPlayerController.h"
 
+#include "Misc/CommonLogging.h"
+#include "Net/UnrealNetwork.h"
 #include "Network/NetworkStatics.h"
 
 AWorldPlayerController::AWorldPlayerController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
+    this->PrimaryActorTick.bCanEverTick = false;
+    this->bReplicates = true;
+
+    return;
+}
+
+void AWorldPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(AWorldPlayerController, bIsConnectionEstablishedAndValidated);
+
     return;
 }
 
@@ -38,7 +52,7 @@ void AWorldPlayerController::BeginPlay(void)
          * This should be and is not wrong.
          * The host of this listen server will not send a worker to the Hyperlane. We always mock the worker for
          * the host of a listen server.
-         * Remote Procedure Calls will also not work from the host to the host. Therefore we call the implementation
+         * Remote Procedure Calls will also not work from the host to the host. Therefore, we call the implementation
          * directly and not through unreals RPC system.
          */
         this->SetHyperlaneIdentifier_ClientRPC_Implementation(this->HyperlaneIdentifier);
@@ -78,6 +92,19 @@ void AWorldPlayerController::OnPostLogin(void)
     }
 
     this->SetHyperlaneIdentifier_ClientRPC(this->HyperlaneIdentifier);
+
+    return;
+}
+
+void AWorldPlayerController::OnRep_IsConnectionEstablishedAndValidated(void) const
+{
+    if (UNetworkStatics::IsSafeServer(this))
+    {
+        LOG_FATAL(LogTemp, "Called on server. This is disallowed.")
+        return;
+    }
+
+    LOG_WARNING(LogTemp, "Connection established and validated. %hhd", this->bIsConnectionEstablishedAndValidated)
 
     return;
 }
