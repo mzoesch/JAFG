@@ -362,8 +362,6 @@ void AWorldCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
     if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ENHANCED_INPUT_SUBSYSTEM)
     {
-        UE_LOG(LogTemp, Error, TEXT("AWorldCharacter::SetupPlayerInputComponent: Enhanced Input subsystem is available."))
-
         check( Subsystem )
 
         check( this->IMCFoot )
