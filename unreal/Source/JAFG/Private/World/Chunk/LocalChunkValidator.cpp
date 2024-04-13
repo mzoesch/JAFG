@@ -324,8 +324,11 @@ void ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC_Implementation(const 
 
         if ((UNetworkStatics::IsSafeListenServer(this) || UNetworkStatics::IsSafeStandalone(this)) && OWNING_PAWN->IsLocallyControlled())
         {
-            LOG_VERBOSE(LogChunkValidation, "Delegate cleanup done for %s. Discarding authority data transmission as this chunk is already loaded. Reason: %s.",
-                *ChunkKey.ToString(), UNetworkStatics::IsSafeListenServer(this) ? TEXT("listen server") : TEXT("standalone"))
+            LOG_VERY_VERBOSE(
+                LogChunkValidation,
+                "Delegate cleanup done for %s. Discarding authority data transmission as this chunk is already loaded. Reason: %s.",
+                *ChunkKey.ToString(), UNetworkStatics::IsSafeListenServer(this) ? TEXT("Listen server") : TEXT("Standalone")
+            )
             return;
         }
 

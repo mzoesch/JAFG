@@ -35,6 +35,7 @@ private:
     FString HyperlaneWorkerAddress = L"";
     /** Generated on server and replicated to the client on Post Login.  */
     FString HyperlaneIdentifier = L"";
+    /** Also true on standalone games. */
     bool bListenServerController = false;
     UFUNCTION()
     void OnRep_IsConnectionEstablishedAndValidated() const;

@@ -70,7 +70,7 @@ void AWorldPlayerController::OnPostLogin(void)
         return;
     }
 
-    if (UNetworkStatics::IsSafeListenServer(this) && this->IsLocalController())
+    if (UNetworkStatics::IsSafeListenServer(this) && this->IsLocalController() || UNetworkStatics::IsSafeStandalone(this))
     {
         /*
          * Because the post login will be called before the Begin Play if this player controller is the host of any
