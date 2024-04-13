@@ -56,6 +56,9 @@ void UChunkWorldSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 
     LOG_DISPLAY(LogChunkMisc, "Initializing Chunk World Settings based on current server settings.")
 
+    this->ChunkMulticasterInfo = Cast<AChunkMulticasterInfo>(UGameplayStatics::GetActorOfClass(this, AChunkMulticasterInfo::StaticClass()));
+    check( this->ChunkMulticasterInfo )
+
     check( this->ChunkWorldSettings == nullptr )
     check( this->GetWorld() )
     check( this->GetWorld()->GetWorldSettings() )
@@ -109,21 +112,21 @@ void UChunkWorldSubsystem::Deinitialize(void)
     return;
 }
 
-void UChunkWorldSubsystem::BroadcastChunkModification(const FIntVector& ChunkKey, const FIntVector& LocalVoxel, const int32 VoxelValue)
+void UChunkWorldSubsystem::BroadcastChunkModification(const FIntVector& ChunkKey, const FIntVector& LocalVoxelLocation, const int32 Voxel) const
 {
     if (UNetworkStatics::IsSafeClient(this) || UNetworkStatics::IsSafeStandalone(this))
     {
-        LOG_FATAL(LogChunkMisc, "Disallowed. Reason: %s", UNetworkStatics::IsSafeClient(this) ? *"Client" : *"Standalone")
+        LOG_FATAL(LogChunkMisc, "Disallowed. Reason: %s", UNetworkStatics::IsSafeClient(this) ? *FString("Client") : *FString("Standalone"))
         return;
     }
 
-    LOG_WARNING(LogChunkMisc, "Broadcasting chunk modification to all clients: ChunkKey: %s, LocalVoxel: %s, VoxelValue: %d",
-        *ChunkKey.ToString(), *LocalVoxel.ToString(), VoxelValue)
+    LOG_VERY_VERBOSE(
+        LogChunkMisc,
+        "Broadcasting chunk modification to all clients: CK: %s, LV: %s, V: %d",
+        *ChunkKey.ToString(), *LocalVoxelLocation.ToString(), Voxel
+    )
 
-
-    AChunkMulticasterInfo* Multicaster = Cast<AChunkMulticasterInfo>(UGameplayStatics::GetActorOfClass(this, AChunkMulticasterInfo::StaticClass()));
-    check( Multicaster )
-    Multicaster->MulticastChunkModification(ChunkKey, LocalVoxel, VoxelValue);
+    this->ChunkMulticasterInfo->MulticastChunkModification(ChunkKey, LocalVoxelLocation, Voxel);
 
     return;
 }

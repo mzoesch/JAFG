@@ -8,6 +8,7 @@
 
 #include "ChunkWorldSubsystem.generated.h"
 
+class AChunkMulticasterInfo;
 JAFG_VOID
 
 /*
@@ -235,10 +236,12 @@ public:
     virtual void Deinitialize(void) override;
     // ~World Subsystem implementation
 
-    void BroadcastChunkModification(const FIntVector& ChunkKey, const FIntVector& LocalVoxel, const int32 VoxelValue);
+    void BroadcastChunkModification(const FIntVector& ChunkKey, const FIntVector& LocalVoxelLocation, const int32 Voxel) const;
 
 private:
 
+    UPROPERTY()
+    TObjectPtr<AChunkMulticasterInfo> ChunkMulticasterInfo = nullptr;
     UPROPERTY()
     TObjectPtr<AChunkWorldSettings> ChunkWorldSettings = nullptr;
 };

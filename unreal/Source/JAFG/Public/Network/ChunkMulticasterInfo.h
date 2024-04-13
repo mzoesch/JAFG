@@ -30,5 +30,5 @@ private:
 public:
 
     UFUNCTION(NetMulticast, Reliable)
-    void MulticastChunkModification(const FIntVector& ChunkKey, const FIntVector& LocalVoxel, const int32 VoxelValue);
+    void MulticastChunkModification(const FIntVector& ChunkKey, const FIntVector& LocalVoxelLocation, const int32 Voxel);
 };

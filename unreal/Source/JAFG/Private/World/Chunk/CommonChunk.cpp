@@ -429,10 +429,10 @@ ACommonChunk* ACommonChunk::GetTargetChunk(const FIntVector& LocalVoxelPosition,
     return TargetChunk->GetTargetChunk(Temp, OutTransformedLocalVoxelPosition);
 }
 
-void ACommonChunk::ModifySingleVoxel(const FIntVector& LocalVoxelPosition, const int NewVoxel)
+void ACommonChunk::ModifySingleVoxel(const FIntVector& LocalVoxelLocation, const int Voxel)
 {
     LOG_VERY_VERBOSE(LogChunkManipulation, "Requested to modify single voxel at %s to %d in %s.",
-        *LocalVoxelPosition.ToString(), NewVoxel, *this->ChunkKey.ToString())
+        *LocalVoxelLocation.ToString(), Voxel, *this->ChunkKey.ToString())
 
     if (UNetworkStatics::IsSafeServer(this) == false)
     {
@@ -440,24 +440,24 @@ void ACommonChunk::ModifySingleVoxel(const FIntVector& LocalVoxelPosition, const
         return;
     }
 
-    FIntVector TransformedLocalVoxelPosition = LocalVoxelPosition;
-    ACommonChunk* TargetChunk = this->GetTargetChunk(LocalVoxelPosition, TransformedLocalVoxelPosition);
+    FIntVector TransformedLocalLocation = LocalVoxelLocation;
+    ACommonChunk* TargetChunk = this->GetTargetChunk(LocalVoxelLocation, TransformedLocalLocation);
 
     if (TargetChunk == nullptr)
     {
         LOG_ERROR(LogChunkManipulation, "Could not get target chunk for local voxel position %s (pivot: %s). Modfied to %s.",
-            *LocalVoxelPosition.ToString(), *this->GetName(), *TransformedLocalVoxelPosition.ToString())
+            *LocalVoxelLocation.ToString(), *this->GetName(), *TransformedLocalLocation.ToString())
         return;
     }
 
-    if (TargetChunk->GetRawVoxelData(TransformedLocalVoxelPosition) == NewVoxel)
+    if (TargetChunk->GetRawVoxelData(TransformedLocalLocation) == Voxel)
     {
         LOG_WARNING(LogChunkManipulation, "Voxel at %s already has the value %d. No need to modify.",
-            *TransformedLocalVoxelPosition.ToString(), NewVoxel)
+            *TransformedLocalLocation.ToString(), Voxel)
         return;
     }
 
-    TargetChunk->ModifyRawVoxelData(TransformedLocalVoxelPosition, NewVoxel);
+    TargetChunk->ModifyRawVoxelData(TransformedLocalLocation, Voxel);
 
     if (UNetworkStatics::IsSafeStandalone(this))
     {
@@ -465,7 +465,7 @@ void ACommonChunk::ModifySingleVoxel(const FIntVector& LocalVoxelPosition, const
         return;
     }
 
-    this->ChunkWorldSubsystem->BroadcastChunkModification(TargetChunk->ChunkKey, TransformedLocalVoxelPosition, NewVoxel);
+    this->ChunkWorldSubsystem->BroadcastChunkModification(TargetChunk->ChunkKey, TransformedLocalLocation, Voxel);
 
     /*
      * In the future we might want to look at this one more time
@@ -479,25 +479,22 @@ void ACommonChunk::ModifySingleVoxel(const FIntVector& LocalVoxelPosition, const
     return;
 }
 
-void ACommonChunk::ModifySingleVoxelOnClient(const FIntVector& LocalVoxelPosition, const int NewVoxel)
+void ACommonChunk::ModifySingleVoxelOnClient(const FIntVector& LocalVoxelLocation, const int Voxel)
 {
-    LOG_VERY_VERBOSE(LogChunkManipulation, "Requested to modify single voxel at %s to %d in %s.",
-        *LocalVoxelPosition.ToString(), NewVoxel, *this->ChunkKey.ToString())
-
     if (UNetworkStatics::IsSafeClient(this) == false)
     {
         LOG_FATAL(LogChunkManipulation, "Not a client. Disallowed.")
         return;
     }
 
-    if (this->GetRawVoxelData(LocalVoxelPosition) == NewVoxel)
+    if (this->GetRawVoxelData(LocalVoxelLocation) == Voxel)
     {
         LOG_WARNING(LogChunkManipulation, "Voxel at %s already has the value %d. No need to modify.",
-            *LocalVoxelPosition.ToString(), NewVoxel)
+            *LocalVoxelLocation.ToString(), Voxel)
         return;
     }
 
-    this->ModifyRawVoxelData(LocalVoxelPosition, NewVoxel);
+    this->ModifyRawVoxelData(LocalVoxelLocation, Voxel);
 
     this->RegenerateProceduralMesh();
 

@@ -35,14 +35,12 @@ void AChunkMulticasterInfo::BeginPlay(void)
     return;
 }
 
-void AChunkMulticasterInfo::MulticastChunkModification_Implementation(const FIntVector& ChunkKey, const FIntVector& LocalVoxel, const int32 VoxelValue)
+void AChunkMulticasterInfo::MulticastChunkModification_Implementation(const FIntVector& ChunkKey, const FIntVector& LocalVoxelLocation, const int32 Voxel)
 {
     if (UNetworkStatics::IsSafeClient(this) == false)
     {
         return;
     }
-
-    LOG_WARNING(LogChunkMisc, "Updating %s at %s with %d.", *ChunkKey.ToString(), *LocalVoxel.ToString(), VoxelValue)
 
     check( this->LocalPlayerChunkGeneratorSubsystem )
 
@@ -55,7 +53,10 @@ void AChunkMulticasterInfo::MulticastChunkModification_Implementation(const FInt
         return;
     }
 
-    Chunk->ModifySingleVoxelOnClient(LocalVoxel, VoxelValue);
+    LOG_VERY_VERBOSE(LogChunkManipulation, "Requested to modify single voxel at %s to %d in %s.",
+        *LocalVoxelLocation.ToString(), Voxel, *ChunkKey.ToString())
+
+    Chunk->ModifySingleVoxelOnClient(LocalVoxelLocation, Voxel);
 
     return;
 }

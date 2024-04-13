@@ -211,16 +211,16 @@ public:
      * This method is extremely slow.
      * Large amounts of calls in one frame will cause a significant performance hit.
      *
-     * @param LocalVoxelPosition The local voxel position within the chunk. Can be out of bounds of the chunk but
+     * @param LocalVoxelLocation The local voxel position within the chunk. Can be out of bounds of the chunk but
      *                           the method will assume that the initial called chunk object acts as the pivot of the
      *                           FIntVector.
      */
-    void ModifySingleVoxel(const FIntVector& LocalVoxelPosition, const int NewVoxel);
+    void ModifySingleVoxel(const FIntVector& LocalVoxelLocation, const int Voxel);
     /**
      * Client only.
      * Pos can not be out of bounds!!!
      */
-    void ModifySingleVoxelOnClient(const FIntVector& LocalVoxelPosition, const int NewVoxel);
+    void ModifySingleVoxelOnClient(const FIntVector& LocalVoxelLocation, const int Voxel);
 
     //////////////////////////////////////////////////////////////////////////
     // Getters
