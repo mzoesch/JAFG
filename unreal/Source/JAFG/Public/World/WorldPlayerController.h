@@ -118,7 +118,7 @@ public:
             LOG_FATAL(LogTemp, "Called on server. This is disallowed.")
             return false;
         }
-        return false;
+
         return this->bIsConnectionEstablishedAndValidated;
     }
 };

@@ -24,6 +24,7 @@ public:
 protected:
 
     virtual void BeginPlay(void) override;
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 public:
 

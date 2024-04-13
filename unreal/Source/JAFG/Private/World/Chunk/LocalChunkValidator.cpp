@@ -145,6 +145,15 @@ void ULocalChunkValidator::BeginPlay(void)
     return;
 }
 
+void ULocalChunkValidator::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    Super::EndPlay(EndPlayReason);
+
+    this->bExecuteChunkValidationFuture = false;
+
+    return;
+}
+
 void ULocalChunkValidator::TickComponent(const float DeltaTime, const ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -312,7 +321,7 @@ void ULocalChunkValidator::SafeSpawnChunk(const FIntVector& ChunkKey)
     check( Cast<APawn>(this->GetOwner()) )
     check( Cast<APawn>(this->GetOwner())->GetController() )
     check( Cast<AWorldPlayerController>(Cast<APawn>(this->GetOwner())->GetController()) )
-    if (Cast<AWorldPlayerController>(Cast<APawn>(this->GetOwner())->GetController())->IsConnectionValidAndEstablished() == false)
+    if (AWorldPlayerController* OwningController = Cast<AWorldPlayerController>(Cast<APawn>(this->GetOwner())->GetController()); OwningController->IsConnectionValidAndEstablished() == false)
     {
         this->PreValidationChunkQueue.Enqueue(ChunkKey);
 
@@ -321,20 +330,42 @@ void ULocalChunkValidator::SafeSpawnChunk(const FIntVector& ChunkKey)
             UE_LOG(LogTemp, Warning, TEXT("Creating chunk validation future."))
 
             this->bExecuteChunkValidationFuture = true;
-            this->ChunkValidationFuture = Async(EAsyncExecution::Thread, [this] ()
+            this->ChunkValidationFuture = Async(EAsyncExecution::Thread, [this, OwningController] ()
             {
-                FPlatformProcess::Sleep(5.0f);
+                check( OwningController )
+
+                const double StartTime = FPlatformTime::Seconds();
+                while (this->bExecuteChunkValidationFuture && OwningController->IsConnectionValidAndEstablished() == false)
+                {
+                    if (FPlatformTime::Seconds() - StartTime > 5.0)
+                    {
+                        break;
+                    }
+
+                    FPlatformProcess::Sleep(0.1f);
+
+                    continue;
+                }
 
                 if (this->bExecuteChunkValidationFuture)
                 {
-                    UE_LOG(LogTemp, Warning, TEXT("Chunk validation future will be exectued next tick."))
-                    AsyncTask(ENamedThreads::GameThread, [this] ()
+                    UE_LOG(LogTemp, Warning, TEXT("Chunk validation future will be exectued next tick if still valid."))
+                    AsyncTask(ENamedThreads::GameThread, [this, OwningController] ()
                     {
                         if (this->bExecuteChunkValidationFuture == false)
                         {
                             return;
                         }
                         this->bExecuteChunkValidationFuture = false;
+
+                        check( OwningController )
+
+                        if (OwningController->IsConnectionValidAndEstablished() == false)
+                        {
+                            LOG_FATAL(LogChunkValidation, "Connection is not valid and established.")
+                            return;
+                        }
+
                         while (this->PreValidationChunkQueue.IsEmpty() == false)
                         {
                             FIntVector Key;
