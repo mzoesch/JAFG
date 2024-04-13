@@ -2,6 +2,10 @@
 
 #include "World/Chunk/ChunkWorldSubsystem.h"
 
+#include "Kismet/GameplayStatics.h"
+#include "Network/ChunkMulticasterInfo.h"
+#include "Network/NetworkStatics.h"
+
 bool UChunkWorldSubsystem::ShouldCreateSubsystem(UObject* Outer) const
 {
     check( Outer )
@@ -44,6 +48,14 @@ void UChunkWorldSubsystem::OnWorldBeginPlay(UWorld& InWorld)
     Super::OnWorldBeginPlay(InWorld);
     LOG_VERBOSE(LogChunkMisc, "Called.")
 
+    if (UNetworkStatics::IsSafeClient(this))
+    {
+        LOG_DISPLAY(LogChunkMisc, "Not initializing Chunk World Settings on client.")
+        return;
+    }
+
+    LOG_DISPLAY(LogChunkMisc, "Initializing Chunk World Settings based on current server settings.")
+
     check( this->ChunkWorldSettings == nullptr )
     check( this->GetWorld() )
     check( this->GetWorld()->GetWorldSettings() )
@@ -79,4 +91,39 @@ void UChunkWorldSubsystem::Deinitialize(void)
 {
     Super::Deinitialize();
     LOG_VERBOSE(LogChunkMisc, "Called.")
+
+    if (UNetworkStatics::IsSafeClient(this))
+    {
+        /*
+         * Settings are only valid on the server.
+         */
+        return;
+    }
+
+    if (this->ChunkWorldSettings)
+    {
+        delete this->ChunkWorldSettings->NoiseWorld;
+        delete this->ChunkWorldSettings->NoiseContinentalness;
+    }
+
+    return;
+}
+
+void UChunkWorldSubsystem::BroadcastChunkModification(const FIntVector& ChunkKey, const FIntVector& LocalVoxel, const int32 VoxelValue)
+{
+    if (UNetworkStatics::IsSafeClient(this) || UNetworkStatics::IsSafeStandalone(this))
+    {
+        LOG_FATAL(LogChunkMisc, "Disallowed. Reason: %s", UNetworkStatics::IsSafeClient(this) ? *"Client" : *"Standalone")
+        return;
+    }
+
+    LOG_WARNING(LogChunkMisc, "Broadcasting chunk modification to all clients: ChunkKey: %s, LocalVoxel: %s, VoxelValue: %d",
+        *ChunkKey.ToString(), *LocalVoxel.ToString(), VoxelValue)
+
+
+    AChunkMulticasterInfo* Multicaster = Cast<AChunkMulticasterInfo>(UGameplayStatics::GetActorOfClass(this, AChunkMulticasterInfo::StaticClass()));
+    check( Multicaster )
+    Multicaster->MulticastChunkModification(ChunkKey, LocalVoxel, VoxelValue);
+
+    return;
 }

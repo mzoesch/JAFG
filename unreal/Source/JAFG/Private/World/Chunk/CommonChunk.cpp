@@ -36,6 +36,8 @@ void ACommonChunk::BeginPlay(void)
         check( this->GetWorld()->GetWorldSettings() )
         this->ChunkWorldSettings = Cast<AChunkWorldSettings>(this->GetWorld()->GetWorldSettings());
         check( this->ChunkWorldSettings )
+        this->ChunkWorldSubsystem = this->GetWorld()->GetSubsystem<UChunkWorldSubsystem>();
+        check( this->ChunkWorldSubsystem )
         this->WorldGeneratorInfo = Cast<AWorldGeneratorInfo>(UGameplayStatics::GetActorOfClass(this, AWorldGeneratorInfo::StaticClass()));
         check (this->WorldGeneratorInfo )
     }
@@ -48,6 +50,7 @@ void ACommonChunk::BeginPlay(void)
         }
 
         this->ChunkWorldSettings = nullptr;
+        this->ChunkWorldSubsystem = nullptr;
         this->WorldGeneratorInfo = nullptr;
     }
 
@@ -428,7 +431,7 @@ ACommonChunk* ACommonChunk::GetTargetChunk(const FIntVector& LocalVoxelPosition,
 
 void ACommonChunk::ModifySingleVoxel(const FIntVector& LocalVoxelPosition, const int NewVoxel)
 {
-    LOG_VERY_VERBOSE(LogChunkManipulation, "Requested to modify single voxel at %s to %d int %s.",
+    LOG_VERY_VERBOSE(LogChunkManipulation, "Requested to modify single voxel at %s to %d in %s.",
         *LocalVoxelPosition.ToString(), NewVoxel, *this->ChunkKey.ToString())
 
     if (UNetworkStatics::IsSafeServer(this) == false)
@@ -456,6 +459,14 @@ void ACommonChunk::ModifySingleVoxel(const FIntVector& LocalVoxelPosition, const
 
     TargetChunk->ModifyRawVoxelData(TransformedLocalVoxelPosition, NewVoxel);
 
+    if (UNetworkStatics::IsSafeStandalone(this))
+    {
+        TargetChunk->RegenerateProceduralMesh();
+        return;
+    }
+
+    this->ChunkWorldSubsystem->BroadcastChunkModification(TargetChunk->ChunkKey, TransformedLocalVoxelPosition, NewVoxel);
+
     /*
      * In the future we might want to look at this one more time
      * and try to only update a small percentage of the mesh.
@@ -463,9 +474,32 @@ void ACommonChunk::ModifySingleVoxel(const FIntVector& LocalVoxelPosition, const
     /*
      * Here we of course should only do convex meshing.
      */
-    TargetChunk->ClearMesh();
-    TargetChunk->GenerateProceduralMesh();
-    TargetChunk->ApplyProceduralMesh();
+    TargetChunk->RegenerateProceduralMesh();
+
+    return;
+}
+
+void ACommonChunk::ModifySingleVoxelOnClient(const FIntVector& LocalVoxelPosition, const int NewVoxel)
+{
+    LOG_VERY_VERBOSE(LogChunkManipulation, "Requested to modify single voxel at %s to %d in %s.",
+        *LocalVoxelPosition.ToString(), NewVoxel, *this->ChunkKey.ToString())
+
+    if (UNetworkStatics::IsSafeClient(this) == false)
+    {
+        LOG_FATAL(LogChunkManipulation, "Not a client. Disallowed.")
+        return;
+    }
+
+    if (this->GetRawVoxelData(LocalVoxelPosition) == NewVoxel)
+    {
+        LOG_WARNING(LogChunkManipulation, "Voxel at %s already has the value %d. No need to modify.",
+            *LocalVoxelPosition.ToString(), NewVoxel)
+        return;
+    }
+
+    this->ModifyRawVoxelData(LocalVoxelPosition, NewVoxel);
+
+    this->RegenerateProceduralMesh();
 
     return;
 }

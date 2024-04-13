@@ -227,13 +227,15 @@ class JAFG_API UChunkWorldSubsystem : public UWorldSubsystem
 
 public:
 
-    // Word Subsystem implementation
+    // World Subsystem implementation
     virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
     virtual void PostInitialize(void) override;
     virtual void OnWorldBeginPlay(UWorld& InWorld) override;
     virtual void Deinitialize(void) override;
-    // ~Word Subsystem implementation
+    // ~World Subsystem implementation
+
+    void BroadcastChunkModification(const FIntVector& ChunkKey, const FIntVector& LocalVoxel, const int32 VoxelValue);
 
 private:
 

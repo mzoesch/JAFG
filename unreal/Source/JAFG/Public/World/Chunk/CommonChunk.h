@@ -57,6 +57,12 @@ protected:
     void ApplyProceduralMesh(void) const;
     /* make inline? */
     void ClearMesh(void);
+    FORCEINLINE void RegenerateProceduralMesh(void)
+    {
+        this->ClearMesh();
+        this->GenerateProceduralMesh();
+        this->ApplyProceduralMesh();
+    }
 
     //////////////////////////////////////////////////////////////////////////
     // Raw Data
@@ -107,6 +113,8 @@ protected:
 
     UPROPERTY()
     TObjectPtr<AChunkWorldSettings> ChunkWorldSettings;
+    UPROPERTY()
+    TObjectPtr<UChunkWorldSubsystem> ChunkWorldSubsystem;
     UPROPERTY()
     TObjectPtr<AWorldGeneratorInfo> WorldGeneratorInfo;
     UPROPERTY()
@@ -193,7 +201,7 @@ public:
      */
     ACommonChunk* GetTargetChunk(const FIntVector& LocalVoxelPosition, FIntVector& OutTransformedLocalVoxelPosition);
 
-    /*
+    /**
      * Server only.
      *
      * Safely changes a single voxel at the given local voxel position and causes a complete mesh rerender on all
@@ -208,6 +216,11 @@ public:
      *                           FIntVector.
      */
     void ModifySingleVoxel(const FIntVector& LocalVoxelPosition, const int NewVoxel);
+    /**
+     * Client only.
+     * Pos can not be out of bounds!!!
+     */
+    void ModifySingleVoxelOnClient(const FIntVector& LocalVoxelPosition, const int NewVoxel);
 
     //////////////////////////////////////////////////////////////////////////
     // Getters
