@@ -11,13 +11,20 @@
 #include "World/WorldPlayerController.h"
 #include "World/Chunk/GreedyChunk.h"
 
-#define OWNING_PAWN                        \
+#define OWNING_PAWN                                                                  \
     Cast<APawn>(this->GetOwner())
-#define CHECK_OWNING_PAWN                  \
-    check( this->GetOwner() )              \
+#define CHECK_OWNING_PAWN                                                            \
+    check( this->GetOwner() )                                                        \
     check( Cast<APawn>(this->GetOwner()) )
-#define CHECKED_OWNING_PAWN                \
+#define CHECKED_OWNING_PAWN                                                          \
     CHECK_OWNING_PAWN OWNING_PAWN
+#define OWNING_CONTROLLER                                                            \
+    Cast<AWorldPlayerController>(Cast<APawn>(this->GetOwner())->Controller)
+#define CHECK_OWNING_CONTROLLER                                                      \
+    check( this->GetOwner() )                                                        \
+    check( Cast<APawn>(this->GetOwner()) )                                           \
+    check( Cast<APawn>(this->GetOwner())->Controller )                               \
+    check( Cast<AWorldPlayerController>(Cast<APawn>(this->GetOwner())->Controller) )
 
 ULocalChunkValidator::ULocalChunkValidator(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -287,9 +294,19 @@ void ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC_Implementation(const 
 {
     check( this->WorldGeneratorInfo )
 
-    if (this->WorldGeneratorInfo->HasFullyLoadedChunk(ChunkKey))
+    if (ACommonChunk* Chunk = nullptr; this->WorldGeneratorInfo->HasFullyLoadedChunk(ChunkKey, Chunk))
     {
-        LOG_ERROR(LogChunkValidation, "Chunk already loaded. Not implemented yet.")
+        LOG_VERY_VERBOSE(
+            LogChunkValidation,
+            "Chunk %s already loaded. Directly sending authority data to asking client.",
+            *ChunkKey.ToString()
+        )
+
+        check( Chunk )
+
+        CHECK_OWNING_CONTROLLER
+        Chunk->SendInitializationDataToClient(OWNING_CONTROLLER);
+
         return;
     }
 
@@ -332,12 +349,14 @@ void ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC_Implementation(const 
             return;
         }
 
-        LOG_VERY_VERBOSE(LogChunkValidation, "Chunk %s finished generating. Asking the Hyperlane Transmitter to give the authority data to the asking client.", *Chunk->GetChunkKey().ToString())
-        check( this->GetOwner() )
-        check( Cast<APawn>(this->GetOwner()) )
-        check( Cast<APawn>(this->GetOwner())->Controller )
-        check( Cast<AWorldPlayerController>(Cast<APawn>(this->GetOwner())->Controller) )
-        Chunk->SendInitializationDataToClient(Cast<AWorldPlayerController>(Cast<APawn>(this->GetOwner())->Controller));
+        LOG_VERY_VERBOSE(
+            LogChunkValidation,
+            "Chunk %s finished generating. Asking the Hyperlane Transmitter to give the authority data to the asking client.",
+            *Chunk->GetChunkKey().ToString()
+        )
+
+        CHECK_OWNING_CONTROLLER
+        Chunk->SendInitializationDataToClient(OWNING_CONTROLLER);
 
         return;
     });
@@ -651,3 +670,4 @@ void ULocalChunkValidator::GenerateMockChunksOnClient(void)
 #undef OWNING_PAWN
 #undef CHECK_OWNING_PAWN
 #undef CHECKED_OWNING_PAWN
+#undef OWNING_CONTROLLER

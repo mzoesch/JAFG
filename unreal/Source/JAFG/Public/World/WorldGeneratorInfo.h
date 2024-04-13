@@ -55,6 +55,12 @@ public:
     {
         return this->FullyLoadedChunks.Contains(ChunkKey);
     }
+
+    FORCEINLINE bool HasFullyLoadedChunk(const FIntVector& ChunkKey, ACommonChunk*& OutChunk) const
+    {
+        return this->FullyLoadedChunks.Contains(ChunkKey) ? (OutChunk = this->FullyLoadedChunks[ChunkKey], true) : false;
+    }
+
     FORCEINLINE bool AddChunkToGenerationQueue(const FIntVector& ChunkKey)
     {
         return this->ChunkGenerationQueue.Enqueue(ChunkKey);

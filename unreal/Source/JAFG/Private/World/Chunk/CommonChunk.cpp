@@ -610,10 +610,12 @@ FIntVector ACommonChunk::WorldToLocalVoxelLocation(const FVector& WorldLocation)
     {
         --LocalVoxelLocation.X;
     }
+
     if (ChunkLocation.Y < 0)
     {
         --LocalVoxelLocation.Y;
     }
+
     if (ChunkLocation.Z < 0)
     {
         --LocalVoxelLocation.Z;
