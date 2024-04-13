@@ -56,10 +56,11 @@ private:
     /**
      * Client only.
      */
-    TQueue<FIntVector> PreValidationChunkQueue;
+    TQueue<FIntVector> PreHyperlaneValidationChunkKey;
+    bool bExecutePreHyperlaneValidationFuture = false;
+    TFuture<void> PreHyperlaneValidationFuture;
+    void CreatePreHyperlaneValidationFuture(void);
 
-    bool bExecuteChunkValidationFuture = false;
-    TFuture<void> ChunkValidationFuture;
     UFUNCTION(Server, Reliable, WithValidation)
     void AskServerToSpawnChunk_ServerRPC(const FIntVector& ChunkKey);
 

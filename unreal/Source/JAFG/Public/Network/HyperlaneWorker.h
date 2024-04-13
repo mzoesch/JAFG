@@ -2,12 +2,21 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "CommonCore.h"
+
+JAFG_VOID
 
 class ULocalPlayerChunkGeneratorSubsystem;
 
 DECLARE_DELEGATE(FTCPHyperlaneWorkerEventSignature)
 DECLARE_DELEGATE_OneParam(FTCPHyperlaneWorkerMessageSignature, const TArray<uint8>& /* Bytes */)
+
+namespace Hyperlane
+{
+
+inline static constexpr double UnverifiedHyperlaneConnectionExhaustionTimeInSeconds { 5.0 };
+
+}
 
 class JAFG_API FHyperlaneWorker final : public FRunnable
 {

@@ -3,6 +3,7 @@
 #include "World/Chunk/LocalChunkValidator.h"
 
 #include "Kismet/GameplayStatics.h"
+#include "Network/HyperlaneWorker.h"
 #include "Network/NetworkStatics.h"
 #include "World/Chunk/ChunkWorldSubsystem.h"
 #include "World/Chunk/LocalPlayerChunkGeneratorSubsystem.h"
@@ -10,14 +11,20 @@
 #include "World/WorldPlayerController.h"
 #include "World/Chunk/GreedyChunk.h"
 
-#define OWNING_PAWN Cast<APawn>(this->GetOwner())
-#define CHECK_OWNING_PAWN check( this->GetOwner() ) check( Cast<APawn>(this->GetOwner()) )
-#define CHECKED_OWNING_PAWN CHECK_OWNING_PAWN OWNING_PAWN
+#define OWNING_PAWN                        \
+    Cast<APawn>(this->GetOwner())
+#define CHECK_OWNING_PAWN                  \
+    check( this->GetOwner() )              \
+    check( Cast<APawn>(this->GetOwner()) )
+#define CHECKED_OWNING_PAWN                \
+    CHECK_OWNING_PAWN OWNING_PAWN
 
 ULocalChunkValidator::ULocalChunkValidator(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
     this->PrimaryComponentTick.bCanEverTick = true;
     this->PrimaryComponentTick.TickInterval = 1.0f;
+
+    return;
 }
 
 void ULocalChunkValidator::BeginPlay(void)
@@ -149,7 +156,19 @@ void ULocalChunkValidator::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
     Super::EndPlay(EndPlayReason);
 
-    this->bExecuteChunkValidationFuture = false;
+    this->bExecutePreHyperlaneValidationFuture = false;
+
+    if (this->PreHyperlaneValidationFuture.IsValid())
+    {
+        if (UNetworkStatics::IsSafeServer(this))
+        {
+            LOG_ERROR(LogChunkValidation, "Found pre hyperlane validation future on server. Something fishy is going on.")
+        }
+
+        LOG_VERBOSE(LogChunkValidation, "Waiting for Pre Hyperlane Validation future to finish.")
+        this->PreHyperlaneValidationFuture.Wait();
+        LOG_VERBOSE(LogChunkValidation, "Pre Hyperlane Validation future finished.")
+    }
 
     return;
 }
@@ -168,6 +187,84 @@ void ULocalChunkValidator::TickComponent(const float DeltaTime, const ELevelTick
     {
         this->GenerateMockChunks();
     }
+
+    return;
+}
+
+void ULocalChunkValidator::CreatePreHyperlaneValidationFuture(void)
+{
+    if (this->PreHyperlaneValidationFuture.IsValid())
+    {
+        LOG_FATAL(LogChunkValidation, "Future already exists.")
+        return;
+    }
+
+    check(this->GetOwner())
+    check( Cast<APawn>(this->GetOwner()) )
+    check( Cast<APawn>(this->GetOwner())->GetController() )
+    AWorldPlayerController* OwningController = Cast<AWorldPlayerController>(Cast<APawn>(this->GetOwner())->GetController());
+    check( OwningController )
+
+    this->PreHyperlaneValidationFuture = Async(EAsyncExecution::Thread, [this, OwningController] ()
+    {
+        check( OwningController )
+
+        const double StartTime = FPlatformTime::Seconds();
+        while (this->bExecutePreHyperlaneValidationFuture && OwningController->IsConnectionValidAndEstablished() == false)
+        {
+            if (FPlatformTime::Seconds() - StartTime > Hyperlane::UnverifiedHyperlaneConnectionExhaustionTimeInSeconds)
+            {
+                break;
+            }
+
+            FPlatformProcess::Sleep(0.1f);
+
+            continue;
+        }
+
+        if (this->bExecutePreHyperlaneValidationFuture == false)
+        {
+            LOG_DISPLAY(LogChunkValidation, "Chunk validation future was cancelled.")
+            return;
+        }
+
+        LOG_DISPLAY(LogChunkValidation, "Chunk validation future will be exectued next tick if still valid.")
+
+        AsyncTask(ENamedThreads::GameThread, [this, OwningController] ()
+        {
+            if (this->bExecutePreHyperlaneValidationFuture == false)
+            {
+                LOG_DISPLAY(LogChunkValidation, "Chunk validation future was cancelled in the end of the last tick.")
+                return;
+            }
+
+            this->bExecutePreHyperlaneValidationFuture = false;
+
+            check( OwningController )
+
+            if (OwningController->IsConnectionValidAndEstablished() == false)
+            {
+                LOG_FATAL(
+                    LogChunkValidation,
+                    "Hyperlane connection is still not established or validated after the future exhaustion time has been reached."
+                )
+                return;
+            }
+
+            while (this->PreHyperlaneValidationChunkKey.IsEmpty() == false)
+            {
+                FIntVector Key;
+                this->PreHyperlaneValidationChunkKey.Dequeue(Key);
+                this->AskServerToSpawnChunk_ServerRPC(Key);
+            }
+
+            LOG_DISPLAY(LogChunkValidation, "Future pushed successfully all pending chunk requests.")
+
+            return;
+        });
+
+        return;
+    });
 
     return;
 }
@@ -232,7 +329,7 @@ void ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC_Implementation(const 
             return;
         }
 
-        LOG_VERBOSE(LogChunkValidation, "Chunk %s finished generating. Asking the Hyperlane Transmitter to give the authority data to the asking client.", *Chunk->GetChunkKey().ToString())
+        LOG_VERY_VERBOSE(LogChunkValidation, "Chunk %s finished generating. Asking the Hyperlane Transmitter to give the authority data to the asking client.", *Chunk->GetChunkKey().ToString())
         check( this->GetOwner() )
         check( Cast<APawn>(this->GetOwner()) )
         check( Cast<APawn>(this->GetOwner())->Controller )
@@ -250,14 +347,14 @@ void ULocalChunkValidator::AskServerToSpawnChunk_ServerRPC_Implementation(const 
         return;
     }
 
-    LOG_VERBOSE(LogChunkValidation, "Chunk %s requested. Waiting for generation delegate to be called.", *ChunkKey.ToString())
+    LOG_VERY_VERBOSE(LogChunkValidation, "Chunk %s requested. Waiting for generation delegate to be called.", *ChunkKey.ToString())
 
     return;
 }
 
 void ULocalChunkValidator::SafeSpawnChunk(const FIntVector& ChunkKey)
 {
-    LOG_VERBOSE(LogChunkValidation, "Asking to spawn chunk %s.", *ChunkKey.ToString())
+    LOG_VERBOSE(LogChunkValidation, "Validator is asking for spawn chunk approval. Key: %s.", *ChunkKey.ToString())
 
     CHECK_OWNING_PAWN
 
@@ -316,93 +413,44 @@ void ULocalChunkValidator::SafeSpawnChunk(const FIntVector& ChunkKey)
     ACommonChunk* Chunk = this->GetWorld()->SpawnActor<ACommonChunk>(AGreedyChunk::StaticClass(), TargetedChunkTransform);
     check( Chunk )
     Subsystem->LoadedChunks.Add(ChunkKey, Chunk);
+    LOG_VERY_VERBOSE(LogChunkValidation, "Loaded empty chunk %s into UWorld.", *ChunkKey.ToString())
 
     check(this->GetOwner())
     check( Cast<APawn>(this->GetOwner()) )
     check( Cast<APawn>(this->GetOwner())->GetController() )
     check( Cast<AWorldPlayerController>(Cast<APawn>(this->GetOwner())->GetController()) )
-    if (AWorldPlayerController* OwningController = Cast<AWorldPlayerController>(Cast<APawn>(this->GetOwner())->GetController()); OwningController->IsConnectionValidAndEstablished() == false)
+    if (Cast<AWorldPlayerController>(Cast<APawn>(this->GetOwner())->GetController())->IsConnectionValidAndEstablished() == false)
     {
-        this->PreValidationChunkQueue.Enqueue(ChunkKey);
+        this->PreHyperlaneValidationChunkKey.Enqueue(ChunkKey);
 
-        if (this->ChunkValidationFuture.IsValid() == false)
+        if (this->PreHyperlaneValidationFuture.IsValid())
         {
-            UE_LOG(LogTemp, Warning, TEXT("Creating chunk validation future."))
-
-            this->bExecuteChunkValidationFuture = true;
-            this->ChunkValidationFuture = Async(EAsyncExecution::Thread, [this, OwningController] ()
-            {
-                check( OwningController )
-
-                const double StartTime = FPlatformTime::Seconds();
-                while (this->bExecuteChunkValidationFuture && OwningController->IsConnectionValidAndEstablished() == false)
-                {
-                    if (FPlatformTime::Seconds() - StartTime > 5.0)
-                    {
-                        break;
-                    }
-
-                    FPlatformProcess::Sleep(0.1f);
-
-                    continue;
-                }
-
-                if (this->bExecuteChunkValidationFuture)
-                {
-                    UE_LOG(LogTemp, Warning, TEXT("Chunk validation future will be exectued next tick if still valid."))
-                    AsyncTask(ENamedThreads::GameThread, [this, OwningController] ()
-                    {
-                        if (this->bExecuteChunkValidationFuture == false)
-                        {
-                            return;
-                        }
-                        this->bExecuteChunkValidationFuture = false;
-
-                        check( OwningController )
-
-                        if (OwningController->IsConnectionValidAndEstablished() == false)
-                        {
-                            LOG_FATAL(LogChunkValidation, "Connection is not valid and established.")
-                            return;
-                        }
-
-                        while (this->PreValidationChunkQueue.IsEmpty() == false)
-                        {
-                            FIntVector Key;
-                            this->PreValidationChunkQueue.Dequeue(Key);
-                            this->AskServerToSpawnChunk_ServerRPC(Key);
-                        }
-
-                        UE_LOG(LogTemp, Warning, TEXT("Chunk validation future was executed."))
-
-                        return;
-                    });
-
-                    return;
-                }
-
-                UE_LOG(LogTemp, Warning, TEXT("Chunk validation future was not executed."))
-
-                return;
-            });
+            return;
         }
 
-        UE_LOG(LogTemp, Warning, TEXT("Waiting"))
+        LOG_DISPLAY(
+            LogChunkValidation,
+            "Hyperlane is yet waiting to be approved. Creating future and enqueuing chunk %s and all future chunk reqeusts until validated.",
+            *ChunkKey.ToString()
+        )
+
+        this->bExecutePreHyperlaneValidationFuture = true;
+        this->CreatePreHyperlaneValidationFuture();
 
         return;
     }
 
-    this->bExecuteChunkValidationFuture = false;
+    this->bExecutePreHyperlaneValidationFuture = false;
 
-    if (this->PreValidationChunkQueue.IsEmpty())
+    if (this->PreHyperlaneValidationChunkKey.IsEmpty())
     {
         this->AskServerToSpawnChunk_ServerRPC(ChunkKey);
     }
 
-    while (this->PreValidationChunkQueue.IsEmpty() == false)
+    while (this->PreHyperlaneValidationChunkKey.IsEmpty() == false)
     {
         FIntVector Key;
-        this->PreValidationChunkQueue.Dequeue(Key);
+        this->PreHyperlaneValidationChunkKey.Dequeue(Key);
         this->AskServerToSpawnChunk_ServerRPC(Key);
     }
 
@@ -500,8 +548,6 @@ void ULocalChunkValidator::GenerateMockChunks(void)
 
         continue;
     }
-
-    return;
 }
 
 void ULocalChunkValidator::GenerateMockChunksOnClient(void)
@@ -597,8 +643,6 @@ void ULocalChunkValidator::GenerateMockChunksOnClient(void)
 
         continue;
     }
-
-    return;
 }
 
 #undef OWNING_PAWN

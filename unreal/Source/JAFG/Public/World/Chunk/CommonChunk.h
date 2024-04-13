@@ -162,7 +162,7 @@ public:
      * Called to package the initial chunk data that is needed to initialize the chunk on the client and send it to the
      * targeted client via the Hyperlane.
      */
-    void SendInitializationDataToClient(AWorldPlayerController* Target) const;
+    void SendInitializationDataToClient(const AWorldPlayerController* Target) const;
 
     /**
      * Client only.
