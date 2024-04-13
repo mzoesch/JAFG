@@ -8,7 +8,6 @@
 
 AWorldPlayerController::AWorldPlayerController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-    this->PrimaryActorTick.bCanEverTick = false;
     this->bReplicates = true;
 
     return;
