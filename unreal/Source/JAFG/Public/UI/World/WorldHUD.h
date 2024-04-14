@@ -7,8 +7,11 @@
 
 #include "WorldHUD.generated.h"
 
+class UHotbarSelector;
+class UHotbarSlot;
 JAFG_VOID
 
+class UHotbar;
 class UDebugScreen;
 class UCrosshair;
 class UChatMenu;
@@ -28,23 +31,33 @@ public:
 public:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widgets")
-    TSubclassOf<UEscapeMenu> WEscapeMenuClass;
+    TSubclassOf<UDebugScreen> WDebugScreenClass;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widgets")
+    TSubclassOf<UHotbar> WHotbarClass;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widgets")
+    TSubclassOf<UHotbarSlot> WHotbarSlotClass;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widgets")
+    TSubclassOf<UHotbarSelector> WHotbarSelectorClass;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widgets")
     TSubclassOf<UChatMenu> WChatMenuClass;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widgets")
-    TSubclassOf<UCrosshair> WCrosshairClass;
+    TSubclassOf<UEscapeMenu> WEscapeMenuClass;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widgets")
-    TSubclassOf<UDebugScreen> WDebugScreenClass;
+    TSubclassOf<UCrosshair> WCrosshairClass;
 
 private:
 
-    TObjectPtr<UEscapeMenu>  WEscapeMenu;
-    TObjectPtr<UChatMenu>    WChatMenu;
-    TObjectPtr<UCrosshair>   WCrosshair;
     TObjectPtr<UDebugScreen> WDebugScreen;
+    TObjectPtr<UHotbar>      WHotbar;
+    TObjectPtr<UChatMenu>    WChatMenu;
+    TObjectPtr<UEscapeMenu>  WEscapeMenu;
+    TObjectPtr<UCrosshair>   WCrosshair;
 
 public:
 

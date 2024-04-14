@@ -9,22 +9,22 @@
 
 /**
  * Empty declaration of a data class that can be used to pass data to a specific widget without knowing both the
- * widget class or / and the passed data class. Highly sketchy solution but helps to avoid some boiler plate code
+ * widget class or / and the passed data class. Highly sketchy solution but helps to avoid some boilerplate code
  * and unnecessary class declarations. Derived classes may implement some basic data references.
  */
 struct JAFG_API FMyPassData
 {
 protected:
-    
+
     ~FMyPassData() = default;
 
 public:
-    
+
     virtual FString ToString() const
     {
         /* Substituted all nested pure virtual macro calls as it does not define a non-void declared method. */
         static_assert(TIsArrayOrRefOfTypeByPredicate<decltype(L"Pure virtual not implemented (%s)"), TIsCharEncodingCompatibleWithTCHAR>::Value, "Formatting string must be a TCHAR array.");
-        LowLevelFatalErrorHandler("JAFGCommonWidget.h", /* Value should be manually updated. */ 27, _ReturnAddress(), (const TCHAR*)L"Pure virtual not implemented (%s)", L"FMyPassData::ToString");
+        LowLevelFatalErrorHandler("JAFGCommonWidget.h", /* The value should be manually updated. */ 27, _ReturnAddress(), (const TCHAR*)L"Pure virtual not implemented (%s)", L"FMyPassData::ToString");
         return FString(L"FATAL-ERROR");
     }
 };
@@ -43,7 +43,7 @@ public:
     static inline constexpr FLinearColor CommonWidgetForegroundColorReducedAlpha = FLinearColor(UJAFGCommonWidget::CommonWidgetForegroundColor.R, UJAFGCommonWidget::CommonWidgetForegroundColor.G, UJAFGCommonWidget::CommonWidgetForegroundColor.B, 0.5f);
     UPROPERTY(BlueprintReadOnly, Category = "Common")
     FLinearColor MyCommonWidgetForegroundColorReducedAlpha;
-    
+
     static inline constexpr FLinearColor CommonWidgetBackgroundColor = FLinearColor(0.2f, 0.2f, 0.2f, 1.0f);
     UPROPERTY(BlueprintReadOnly, Category = "Common")
     FLinearColor MyCommonWidgetBackgroundColor;
@@ -62,7 +62,7 @@ private:
     static void LogFatal(const FString& Message) { UE_LOG(LogTemp, Fatal, TEXT("UJAFGCommonWidget::LogFatal: [%s]."), *Message); }
 
 protected:
-    
+
     /**
      * A deferred constructor call to a widget. This virtual method may be called multiple times and is not a
      * replacement for the native construct method. Derived classes may implement this method to reset all data to
@@ -72,7 +72,7 @@ protected:
      */
     UFUNCTION(BlueprintImplementableEvent, Category = "Common", meta = (AllowPrivateAccess = "true"))
     void OnDeferredConstruct();
-    
+
 public:
 
     /**

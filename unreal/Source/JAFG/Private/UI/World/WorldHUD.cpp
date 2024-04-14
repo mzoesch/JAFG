@@ -7,6 +7,9 @@
 #include "World/WorldCharacter.h"
 #include "UI/Escape/EscapeMenu.h"
 #include "UI/HUD/Crosshair.h"
+#include "UI/HUD/Container/Hotbar.h"
+#include "UI/HUD/Container/HotbarSelector.h"
+#include "UI/HUD/Container/Slots/HotbarSlot.h"
 #include "UI/MISC/ChatMenu.h"
 #include "World/WorldPlayerController.h"
 
@@ -85,6 +88,14 @@ void AWorldHUD::BeginPlay(void)
     check( this->WDebugScreen )
     this->WDebugScreen->AddToViewport();
     this->WDebugScreen->SetVisibility(ESlateVisibility::Collapsed);
+
+    check( this->WHotbarClass )
+    this->WHotbar = CreateWidget<UHotbar>(this->GetWorld(), this->WHotbarClass);
+    check( this->WHotbar )
+    this->WHotbar->AddToViewport();
+    check( this->WHotbarSlotClass )
+    check( this->WHotbarSelectorClass )
+    this->WHotbar->InitializeHotbar(this->WHotbarSlotClass, this->WHotbarSelectorClass);
 
     check( this->WChatMenuClass )
     this->WChatMenu = CreateWidget<UChatMenu>(this->GetWorld(), this->WChatMenuClass);
