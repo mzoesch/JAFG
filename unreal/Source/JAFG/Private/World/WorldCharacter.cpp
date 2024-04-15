@@ -281,6 +281,118 @@ void AWorldCharacter::OnSecondary_ServerRPC_Implementation(const FInputActionVal
     return;
 }
 
+void AWorldCharacter::OnToggleInventory(const FInputActionValue& Value)
+{
+}
+
+#define QUICK_SLOT_0    0
+#define QUICK_SLOT_1    1
+#define QUICK_SLOT_2    2
+#define QUICK_SLOT_3    3
+#define QUICK_SLOT_4    4
+#define QUICK_SLOT_5    5
+#define QUICK_SLOT_6    6
+#define QUICK_SLOT_7    7
+#define QUICK_SLOT_8    8
+#define QUICK_SLOT_9    9
+#define QUICK_SLOT_MIN  0
+#define QUICK_SLOT_MAX  9
+
+void AWorldCharacter::OnQuickSlot0(const FInputActionValue& Value)
+{
+    this->OnQuickSlot(QUICK_SLOT_0);
+}
+
+void AWorldCharacter::OnQuickSlot1(const FInputActionValue& Value)
+{
+    this->OnQuickSlot(QUICK_SLOT_1);
+}
+
+void AWorldCharacter::OnQuickSlot2(const FInputActionValue& Value)
+{
+    this->OnQuickSlot(QUICK_SLOT_2);
+}
+
+void AWorldCharacter::OnQuickSlot3(const FInputActionValue& Value)
+{
+    this->OnQuickSlot(QUICK_SLOT_3);
+}
+
+void AWorldCharacter::OnQuickSlot4(const FInputActionValue& Value)
+{
+    this->OnQuickSlot(QUICK_SLOT_4);
+}
+
+void AWorldCharacter::OnQuickSlot5(const FInputActionValue& Value)
+{
+    this->OnQuickSlot(QUICK_SLOT_5);
+}
+
+void AWorldCharacter::OnQuickSlot6(const FInputActionValue& Value)
+{
+    this->OnQuickSlot(QUICK_SLOT_6);
+}
+
+void AWorldCharacter::OnQuickSlot7(const FInputActionValue& Value)
+{
+    this->OnQuickSlot(QUICK_SLOT_7);
+}
+
+void AWorldCharacter::OnQuickSlot8(const FInputActionValue& Value)
+{
+    this->OnQuickSlot(QUICK_SLOT_8);
+}
+
+void AWorldCharacter::OnQuickSlot9(const FInputActionValue& Value)
+{
+    this->OnQuickSlot(QUICK_SLOT_9);
+}
+
+void AWorldCharacter::OnQuickSlotBitwise(const FInputActionValue& Value)
+{
+    if (FMath::IsNearlyZero(Value.Get<FVector2D>().X))
+    {
+        return;
+    }
+
+    if (Value.Get<FVector>().X < 0.0)
+    {
+        this->OnQuickSlot((this->SelectedQuickSlotIndex + 1) % (QUICK_SLOT_MAX + 1));
+        return;
+    }
+
+    this->OnQuickSlot(this->SelectedQuickSlotIndex - 1 < QUICK_SLOT_MIN ? QUICK_SLOT_MAX : this->SelectedQuickSlotIndex - 1);
+
+    return;
+}
+
+void AWorldCharacter::OnQuickSlot(const int Slot)
+{
+    if (this->SelectedQuickSlotIndex == Slot)
+    {
+        return;
+    }
+
+    this->SelectedQuickSlotIndex = Slot;
+
+    CHECKED_HEAD_UP_DISPLAY->RefreshHotbarSelectorLocation();
+
+    return;
+}
+
+#undef QUICK_SLOT_0
+#undef QUICK_SLOT_1
+#undef QUICK_SLOT_2
+#undef QUICK_SLOT_3
+#undef QUICK_SLOT_4
+#undef QUICK_SLOT_5
+#undef QUICK_SLOT_6
+#undef QUICK_SLOT_7
+#undef QUICK_SLOT_8
+#undef QUICK_SLOT_9
+#undef QUICK_SLOT_MIN
+#undef QUICK_SLOT_MAX
+
 /** Do NOT convert to const method, as this is a Rider IDEA false positive error. */
 // ReSharper disable once CppMemberFunctionMayBeConst
 void AWorldCharacter::OnToggleEscapeMenu(const FInputActionValue& Value)
@@ -375,6 +487,19 @@ void AWorldCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
         check( this->IAPrimary )
         check( this->IASecondary )
 
+        check( this->IAToggleInventory )
+        check( this->IAQuickSlot0 )
+        check( this->IAQuickSlot1 )
+        check( this->IAQuickSlot2 )
+        check( this->IAQuickSlot3 )
+        check( this->IAQuickSlot4 )
+        check( this->IAQuickSlot5 )
+        check( this->IAQuickSlot6 )
+        check( this->IAQuickSlot7 )
+        check( this->IAQuickSlot8 )
+        check( this->IAQuickSlot9 )
+        check( this->IAQuickSlotBitwise )
+
         check( this->IAToggleEscapeMenu )
         check( this->IAToggleChatMenu )
         check( this->IAToggleDebugScreen )
@@ -392,6 +517,19 @@ void AWorldCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
         EnhancedInputComponent->BindAction(this->IAPrimary, ETriggerEvent::Started, this, &AWorldCharacter::OnPrimary);
         EnhancedInputComponent->BindAction(this->IASecondary, ETriggerEvent::Started, this, &AWorldCharacter::OnSecondary);
+
+        EnhancedInputComponent->BindAction(this->IAToggleInventory, ETriggerEvent::Started, this, &AWorldCharacter::OnToggleInventory);
+        EnhancedInputComponent->BindAction(this->IAQuickSlot0, ETriggerEvent::Started, this, &AWorldCharacter::OnQuickSlot0);
+        EnhancedInputComponent->BindAction(this->IAQuickSlot1, ETriggerEvent::Started, this, &AWorldCharacter::OnQuickSlot1);
+        EnhancedInputComponent->BindAction(this->IAQuickSlot2, ETriggerEvent::Started, this, &AWorldCharacter::OnQuickSlot2);
+        EnhancedInputComponent->BindAction(this->IAQuickSlot3, ETriggerEvent::Started, this, &AWorldCharacter::OnQuickSlot3);
+        EnhancedInputComponent->BindAction(this->IAQuickSlot4, ETriggerEvent::Started, this, &AWorldCharacter::OnQuickSlot4);
+        EnhancedInputComponent->BindAction(this->IAQuickSlot5, ETriggerEvent::Started, this, &AWorldCharacter::OnQuickSlot5);
+        EnhancedInputComponent->BindAction(this->IAQuickSlot6, ETriggerEvent::Started, this, &AWorldCharacter::OnQuickSlot6);
+        EnhancedInputComponent->BindAction(this->IAQuickSlot7, ETriggerEvent::Started, this, &AWorldCharacter::OnQuickSlot7);
+        EnhancedInputComponent->BindAction(this->IAQuickSlot8, ETriggerEvent::Started, this, &AWorldCharacter::OnQuickSlot8);
+        EnhancedInputComponent->BindAction(this->IAQuickSlot9, ETriggerEvent::Started, this, &AWorldCharacter::OnQuickSlot9);
+        EnhancedInputComponent->BindAction(this->IAQuickSlotBitwise, ETriggerEvent::Triggered, this, &AWorldCharacter::OnQuickSlotBitwise);
 
         EnhancedInputComponent->BindAction(this->IAToggleEscapeMenu, ETriggerEvent::Started, this, &AWorldCharacter::OnToggleEscapeMenu);
         EnhancedInputComponent->BindAction(this->IAToggleChatMenu, ETriggerEvent::Started, this, &AWorldCharacter::OnToggleChatMenu);

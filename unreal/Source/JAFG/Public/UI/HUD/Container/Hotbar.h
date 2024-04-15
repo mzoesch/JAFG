@@ -28,29 +28,34 @@ public:
 
 private:
 
+    /** To work properly, this must be the direct parent of UHotbar#CP_Slots. */
+    UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
+    UCanvasPanel* CP_SlotContainerWrapper;
+
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
     UBorder* B_SlotContainer;
 
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
     UCanvasPanel* CP_Slots;
 
-    UPROPERTY()
+    /** Automatically generated. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
     UCanvasPanelSlot* CPS_Selector;
 
     /**
      * To also look not stretched on smaller resolutions, this should always be true:
      * UHotbar#HotbarSelectorOverlap % 2 == 0.
      */
-    UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
     int HotbarSelectorOverlap = 16;
 
-    UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
     int BottomMargin = 0;
 
-    UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
     int SlotSizeX = 64;
 
-    UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
     int SlotSizeY = 64;
 
 protected:

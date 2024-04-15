@@ -7,6 +7,7 @@
 #include "Camera/CameraComponent.h"
 #include "Chunk/ChunkWorldSubsystem.h"
 #include "GameFramework/Character.h"
+#include "Jar/Slot.h"
 
 #include "WorldCharacter.generated.h"
 
@@ -51,6 +52,10 @@ private:
 
 public:
 
+    //////////////////////////////////////////////////////////////////////////
+    // Enhanced Input
+    //////////////////////////////////////////////////////////////////////////
+
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IMC")
     UInputMappingContext* IMCFoot;
 
@@ -75,6 +80,42 @@ public:
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Interraction")
     UInputAction* IASecondary;
 
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+    UInputAction* IAToggleInventory;
+
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+    UInputAction* IAQuickSlot0;
+
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+    UInputAction* IAQuickSlot1;
+
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+    UInputAction* IAQuickSlot2;
+
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+    UInputAction* IAQuickSlot3;
+
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+    UInputAction* IAQuickSlot4;
+
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+    UInputAction* IAQuickSlot5;
+
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+    UInputAction* IAQuickSlot6;
+
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+    UInputAction* IAQuickSlot7;
+
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+    UInputAction* IAQuickSlot8;
+
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+    UInputAction* IAQuickSlot9;
+
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+    UInputAction* IAQuickSlotBitwise;
+
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|MISC")
     UInputAction* IAToggleEscapeMenu;
 
@@ -98,6 +139,20 @@ private:
     UFUNCTION(Server, Reliable)
     void OnSecondary_ServerRPC(const FInputActionValue& Value);
 
+    void OnToggleInventory(const FInputActionValue& Value);
+    void OnQuickSlot0(const FInputActionValue& Value);
+    void OnQuickSlot1(const FInputActionValue& Value);
+    void OnQuickSlot2(const FInputActionValue& Value);
+    void OnQuickSlot3(const FInputActionValue& Value);
+    void OnQuickSlot4(const FInputActionValue& Value);
+    void OnQuickSlot5(const FInputActionValue& Value);
+    void OnQuickSlot6(const FInputActionValue& Value);
+    void OnQuickSlot7(const FInputActionValue& Value);
+    void OnQuickSlot8(const FInputActionValue& Value);
+    void OnQuickSlot9(const FInputActionValue& Value);
+    void OnQuickSlotBitwise(const FInputActionValue& Value);
+    void OnQuickSlot(const int Slot);
+
     void OnToggleEscapeMenu(const FInputActionValue& Value);
     friend UEscapeMenu;
     void OnToggleChatMenu(const FInputActionValue& Value);
@@ -109,6 +164,27 @@ public:
     virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
 private:
+
+    //////////////////////////////////////////////////////////////////////////
+    // Inventory
+    //////////////////////////////////////////////////////////////////////////
+
+    inline static constexpr int InventoryStartSize    { 78 };
+    inline static constexpr int InventoryCrafterWidth {  2 };
+    inline static constexpr int InventoryCrafterSize  {  4 };
+
+    TArray<FSlot> Inventory;
+    int SelectedQuickSlotIndex;
+
+public:
+
+    FORCEINLINE auto GetSelectedQuickSlotIndex(void) const -> int { return this->SelectedQuickSlotIndex; }
+
+private:
+
+    //////////////////////////////////////////////////////////////////////////
+    // Misc
+    //////////////////////////////////////////////////////////////////////////
 
     /** The added offset to the First Person Camera Component. */
     inline static const FVector TorsoOffset { 0.0f, 0.0f, -50.0f };

@@ -7,10 +7,10 @@
 
 #include "WorldHUD.generated.h"
 
-class UHotbarSelector;
-class UHotbarSlot;
 JAFG_VOID
 
+class UHotbarSelector;
+class UHotbarSlot;
 class UHotbar;
 class UDebugScreen;
 class UCrosshair;
@@ -60,6 +60,8 @@ private:
     TObjectPtr<UCrosshair>   WCrosshair;
 
 public:
+
+    void RefreshHotbarSelectorLocation(void) const;
 
     void ToggleEscapeMenu(const bool bCollapsed) const;
 

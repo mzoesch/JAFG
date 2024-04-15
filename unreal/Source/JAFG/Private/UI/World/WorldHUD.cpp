@@ -115,6 +115,11 @@ void AWorldHUD::BeginPlay(void)
     return;
 }
 
+void AWorldHUD::RefreshHotbarSelectorLocation(void) const
+{
+    this->WHotbar->RefreshSelectorLocation();
+}
+
 void AWorldHUD::ToggleEscapeMenu(const bool bCollapsed) const
 {
     check( PLAYER_CONTROLLER )
