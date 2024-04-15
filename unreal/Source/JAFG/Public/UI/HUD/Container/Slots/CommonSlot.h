@@ -8,9 +8,10 @@
 
 #include "CommonSlot.generated.h"
 
-class UHotbar;
 JAFG_VOID
 
+class USlateSlotData;
+class UHotbar;
 class UTextBlock;
 class UImage;
 
@@ -22,6 +23,11 @@ class JAFG_API UCommonSlot : public UJAFGCommonWidget, public IUserObjectListEnt
 protected:
 
     virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
+
+public:
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    TObjectPtr<USlateSlotData> SlateSlotData;
 
 private:
 

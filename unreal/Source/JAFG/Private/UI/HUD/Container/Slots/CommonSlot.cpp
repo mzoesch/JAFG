@@ -4,10 +4,15 @@
 
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
+#include "UI/HUD/Container/Slots/SlateSlotData.h"
 
 void UCommonSlot::NativeOnListItemObjectSet(UObject* ListItemObject)
 {
     IUserObjectListEntry::NativeOnListItemObjectSet(ListItemObject);
+
+    check( ListItemObject )
+    this->SlateSlotData = Cast<USlateSlotData>(ListItemObject);
+    check( this->SlateSlotData && L"Invalid List Item Object type." )
 
     this->RenderSlot();
 

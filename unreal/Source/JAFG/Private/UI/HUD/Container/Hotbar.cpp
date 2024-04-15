@@ -7,6 +7,7 @@
 #include "Components/CanvasPanelSlot.h"
 #include "UI/HUD/Container/HotbarSelector.h"
 #include "UI/HUD/Container/Slots/HotbarSlot.h"
+#include "UI/HUD/Container/Slots/SlateSlotData.h"
 #include "World/WorldCharacter.h"
 
 #define OWNING_CHARACTER                                                    \
@@ -25,10 +26,10 @@ void UHotbar::InitializeHotbar(const TSubclassOf<UHotbarSlot> HotbarSlotClass, c
 
     UCanvasPanelSlot* CanvasSlotContainer = Cast<UCanvasPanelSlot>(this->B_SlotContainer->Slot);
     check( CanvasSlotContainer )
-    CanvasSlotContainer->SetSize({FVector2D(10 * this->SlotSizeX, this->SlotSizeY)});
-    CanvasSlotContainer->SetPosition(FVector2D(0, -this->BottomMargin));
+    CanvasSlotContainer->SetSize({FVector2D(AWorldCharacter::HotbarSize * this->SlotSizeX, this->SlotSizeY)});
+    CanvasSlotContainer->SetPosition(FVector2D(0.0, -this->BottomMargin));
 
-    for (int i = 0; i < 10; ++i)
+    for (int i = 0; i < AWorldCharacter::HotbarSize; ++i)
     {
         UHotbarSlot* HotbarSlot = CreateWidget<UHotbarSlot>(this->GetWorld(), HotbarSlotClass);
         check( HotbarSlot )
@@ -38,7 +39,7 @@ void UHotbar::InitializeHotbar(const TSubclassOf<UHotbarSlot> HotbarSlotClass, c
         UCanvasPanelSlot* CanvasPanelSlot = this->CP_Slots->AddChildToCanvas(HotbarSlot);
         check( CanvasPanelSlot )
         CanvasPanelSlot->SetSize(FVector2D(this->SlotSizeX, this->SlotSizeY));
-        CanvasPanelSlot->SetPosition(FVector2D(i * this->SlotSizeX, 0.0f));
+        CanvasPanelSlot->SetPosition(FVector2D(i * this->SlotSizeX, 0.0));
 
         continue;
     }
@@ -75,13 +76,27 @@ void UHotbar::NativeConstruct(void)
     return;
 }
 
-void UHotbar::OnRefresh(void) const
+void UHotbar::OnRefresh(void)
 {
     check( CP_Slots )
 
     this->RefreshSelectorLocation();
 
-    LOG_WARNING(LogTemp, "Updating")
+    for (int i = 0; i < AWorldCharacter::HotbarSize; ++i)
+    {
+        UHotbarSlot* HotbarSlot   = Cast<UHotbarSlot>(this->CP_Slots->GetChildAt(i));
+        check( HotbarSlot )
+
+        USlateSlotData* Data      = NewObject<USlateSlotData>(this);
+        Data->Index               = i;
+        Data->Accumulated         = OWNING_CHARACTER->GetInventorySlot(i);
+
+        HotbarSlot->SlateSlotData = Data;
+
+        HotbarSlot->RenderSlot();
+
+        continue;
+    }
 
     return;
 }

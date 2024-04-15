@@ -180,6 +180,8 @@ private:
 
 public:
 
+    inline static constexpr int HotbarSize            { 10 };
+
     FORCEINLINE auto GetSelectedQuickSlotIndex(void) const -> int { return this->SelectedQuickSlotIndex; }
 
     FORCEINLINE auto GetInventory(void) const -> const TArray<FSlot>& { return this->Inventory; }
@@ -208,7 +210,7 @@ private:
 
     /**
      * The maximum distance where we trace for voxels and other hit objects.
-     * Equivalent to 4 x Chunk => 4 x 16 Voxels => 64 Voxels.
+     * Equivalent to four x Chunk => 4 x 16 Voxels => 64 Voxels.
      */
     static constexpr float MaxPOVLineTraceLength { (ChunkWorldSettings::ChunkSize * 4.0f ) * ChunkWorldSettings::JToUScale };
     // ReSharper disable once CppMemberFunctionMayBeStatic

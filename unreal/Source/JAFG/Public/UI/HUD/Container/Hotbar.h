@@ -61,5 +61,5 @@ private:
 protected:
 
     virtual void NativeConstruct(void) override;
-    virtual void OnRefresh(void) const override;
+    virtual void OnRefresh(void) override;
 };

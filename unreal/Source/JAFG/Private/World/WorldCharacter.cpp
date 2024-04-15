@@ -72,6 +72,9 @@ void AWorldCharacter::BeginPlay(void)
     {
     }
 
+    this->Inventory.SetNum(AWorldCharacter::InventoryStartSize, false);
+    this->SelectedQuickSlotIndex = 0;
+
     this->AddToInventory(FAccumulated(ECommonVoxels::Air + 1));
 
     return;

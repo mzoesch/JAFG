@@ -28,7 +28,7 @@ protected:
     virtual void NativeTick(const FGeometry& MyGeometry, const float InDeltaTime) final override;
 
     /** Called on the next tick if the user widget is marked as dirty. */
-    virtual void OnRefresh(void) const PURE_VIRTUAL(UJAFGCommonDirtyWidget::OnRefresh);
+    virtual void OnRefresh(void) PURE_VIRTUAL(UJAFGCommonDirtyWidget::OnRefresh);
 
 private:
 
