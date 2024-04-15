@@ -61,6 +61,7 @@ private:
 
 public:
 
+    void RefreshHotbarSlots(void) const;
     void RefreshHotbarSelectorLocation(void) const;
 
     void ToggleEscapeMenu(const bool bCollapsed) const;

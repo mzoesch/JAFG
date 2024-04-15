@@ -176,9 +176,16 @@ private:
     TArray<FSlot> Inventory;
     int SelectedQuickSlotIndex;
 
+    void AddToInventoryAtSlot(const int Slot, const int Amount, const bool bUpdateHUD = true);
+
 public:
 
     FORCEINLINE auto GetSelectedQuickSlotIndex(void) const -> int { return this->SelectedQuickSlotIndex; }
+
+    FORCEINLINE auto GetInventory(void) const -> const TArray<FSlot>& { return this->Inventory; }
+    FORCEINLINE auto GetInventorySize(void) const -> int { return this->Inventory.Num(); }
+    FORCEINLINE auto GetInventorySlot(const int Slot) const -> FAccumulated { return this->Inventory[Slot].Content; }
+    FORCEINLINE auto AddToInventory(const FAccumulated& Accumulated, const bool bUpdateHUD = true) -> bool;
 
 private:
 

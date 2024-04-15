@@ -3,6 +3,7 @@
 
 #include "World/Voxel/VoxelSubsystem.h"
 
+#include "Jar/Accumulated.h"
 #include "System/MaterialSubsystem.h"
 
 void UVoxelSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -13,6 +14,8 @@ void UVoxelSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
     this->InitializeCommonVoxels();
     this->InitializeOptionalVoxels();
+
+    Accumulated::Initialize(this->GetItemIndexStart());
 
     UE_LOG(LogTemp, Log, TEXT("UVoxelSubsystem::Initialize: Voxel Subsystem initialized with [%d/%d]."), this->GetCommonVoxelNum(), this->VoxelMasks.Num())
 

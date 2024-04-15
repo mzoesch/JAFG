@@ -115,6 +115,11 @@ void AWorldHUD::BeginPlay(void)
     return;
 }
 
+void AWorldHUD::RefreshHotbarSlots(void) const
+{
+    this->WHotbar->MarkAsDirty();
+}
+
 void AWorldHUD::RefreshHotbarSelectorLocation(void) const
 {
     this->WHotbar->RefreshSelectorLocation();

@@ -18,12 +18,12 @@ class JAFG_API UVoxelSubsystem : public UGameInstanceSubsystem
     friend UMaterialSubsystem;
 
 public:
-    
+
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
     virtual void Deinitialize(void) override;
 
 private:
-    
+
     UPROPERTY()
     TArray<FVoxelMask> VoxelMasks;
     /** Wrapped into a variable and not a method to safe some run-time. */
@@ -35,8 +35,10 @@ private:
     void InitializeOptionalVoxels(void);
 
 public:
-    
+
     FORCEINLINE auto GetCommonVoxelNum(void) const -> int32 { return this->CommonVoxelNum; }
+    /** The index where all other accumulates are items and not voxels anymore. */
+    FORCEINLINE auto GetItemIndexStart(void) const -> int32 { return this->VoxelMasks.Num(); }
     FORCEINLINE auto GetTextureIndex(const int32 Voxel, const FVector& Normal) const -> int32 { return this->VoxelMasks[Voxel].GetTextureIndex(Normal); }
     FORCEINLINE auto GetTextureGroup(const int32 Voxel, const FVector& Vector) const -> ETextureGroup::Type { return this->VoxelMasks[Voxel].GetTextureGroup(Vector); }
 };

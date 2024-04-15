@@ -70,8 +70,9 @@ void AWorldCharacter::BeginPlay(void)
 
     if (UNetworkStatics::IsSafeListenServer(this) && this->IsLocallyControlled())
     {
-
     }
+
+    this->AddToInventory(FAccumulated(ECommonVoxels::Air + 1));
 
     return;
 }
@@ -537,6 +538,54 @@ void AWorldCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
     }
 
     return;
+}
+
+void AWorldCharacter::AddToInventoryAtSlot(const int Slot, const int Amount, const bool bUpdateHUD)
+{
+    bool bSuccess;
+    this->Inventory[Slot].Content.SafeAddAmount(Amount, bSuccess);
+    DEFAULT_SLOT_SAFE_ADD_POST_BEHAVIOR(bSuccess, Slot, this->Inventory)
+
+    if (bUpdateHUD)
+    {
+        CHECKED_HEAD_UP_DISPLAY->RefreshHotbarSelectorLocation();
+    }
+
+    return;
+}
+
+auto AWorldCharacter::AddToInventory(const FAccumulated& Accumulated, const bool bUpdateHUD) -> bool
+{
+    /* Check if there is an existing accumulated item already in the character's inventory. */
+    for (int i = 0; i < this->Inventory.Num(); ++i)
+    {
+        if (this->Inventory[i].Content.AccumulatedIndex == Accumulated.AccumulatedIndex)
+        {
+            this->AddToInventoryAtSlot(i, Accumulated.Amount, bUpdateHUD);
+            return true;
+        }
+
+        continue;
+    }
+
+    for (int i = 0; i < this->Inventory.Num(); ++i)
+    {
+        if (this->Inventory[i].Content != Accumulated::Null)
+        {
+            continue;
+        }
+
+        this->Inventory[i].Content = Accumulated;
+
+        if (bUpdateHUD)
+        {
+            CHECKED_HEAD_UP_DISPLAY->RefreshHotbarSlots();
+        }
+
+        return true;
+    }
+
+    return false;
 }
 
 void AWorldCharacter::GetTargetedVoxel(

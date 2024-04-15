@@ -81,6 +81,8 @@ void UHotbar::OnRefresh(void) const
 
     this->RefreshSelectorLocation();
 
+    LOG_WARNING(LogTemp, "Updating")
+
     return;
 }
 
