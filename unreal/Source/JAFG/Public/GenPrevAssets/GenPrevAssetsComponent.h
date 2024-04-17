@@ -7,6 +7,8 @@
 
 #include "GenPrevAssetsComponent.generated.h"
 
+DECLARE_DELEGATE(FOnGenPrevAssetsCompleteEventSignature);
+
 UCLASS(NotBlueprintable)
 class AGenPrevAssetsActor : public AActor
 {
@@ -23,6 +25,8 @@ protected:
 public:
 
     virtual void Tick(const float DeltaTime) override;
+
+    FOnGenPrevAssetsCompleteEventSignature OnGenPrevAssetsCompleteEvent;
 
 private:
 
@@ -75,11 +79,10 @@ public:
 
     explicit UGenPrevAssetsComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
-protected:
-
     virtual void BeginPlay(void) override;
+private:
 
-public:
+    UPROPERTY()
+    TObjectPtr<AGenPrevAssetsActor> GenPrevAssetsActor;
 
-    virtual void TickComponent(const float DeltaTime, const ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 };

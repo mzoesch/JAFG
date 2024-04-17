@@ -32,6 +32,8 @@ AGenPrevAssetsActor::AGenPrevAssetsActor(const FObjectInitializer& ObjectInitial
 
     this->CurrentVoxelIndex = 0;
 
+    this->OnGenPrevAssetsCompleteEvent.Unbind();
+
     return;
 }
 
@@ -62,7 +64,18 @@ void AGenPrevAssetsActor::Tick(const float DeltaTime)
     if (this->CurrentVoxelIndex > this->VoxelNum - 1)
     {
         this->SetActorTickEnabled(false);
-        UE_LOG(LogTemp, Warning, TEXT("AGenPrevAssetsActor::Tick: Finished generating preview textures. Other processes may now continue."))
+
+        LOG_VERBOSE(LogGenPrevAssets, "Finished generating preview textures. Broadcasting.")
+
+        if (this->OnGenPrevAssetsCompleteEvent.ExecuteIfBound() == false)
+        {
+#if WITH_EDITOR
+            LOG_WARNING(LogGenPrevAssets, "Failed to execute bound event. Intentional?")
+#else /* WITH_EDITOR */
+            LOG_FATAL(LogGenPrevAssets, "Failed to execute bound event.")
+#endif /* !WITH_EDITOR */
+        }
+
         return;
     }
 
@@ -264,7 +277,7 @@ int64 AGenPrevAssetsActor::GetBytesPerPixel(const ERawImageFormat::Type Format)
 
 UGenPrevAssetsComponent::UGenPrevAssetsComponent(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-    this->PrimaryComponentTick.bCanEverTick = true;
+    this->PrimaryComponentTick.bCanEverTick = false;
 }
 
 void UGenPrevAssetsComponent::BeginPlay(void)
@@ -272,14 +285,25 @@ void UGenPrevAssetsComponent::BeginPlay(void)
     Super::BeginPlay();
 
     check( this->GetWorld() )
-    AGenPrevAssetsActor* GenPrevAssetsActor = this->GetWorld()->SpawnActor<AGenPrevAssetsActor>(AGenPrevAssetsActor::StaticClass(), FTransform::Identity, FActorSpawnParameters());
+    this->GenPrevAssetsActor = this->GetWorld()->SpawnActor<AGenPrevAssetsActor>(AGenPrevAssetsActor::StaticClass(), FTransform::Identity, FActorSpawnParameters());
     check( GenPrevAssetsActor )
 
+    if (this->GenPrevAssetsActor->OnGenPrevAssetsCompleteEvent.IsBound())
+    {
+        LOG_FATAL(LogGenPrevAssets, "OnGenPrevAssetsCompleteEvent is already bound.")
+        return;
+    }
+
+    this->GenPrevAssetsActor->OnGenPrevAssetsCompleteEvent.BindLambda( [this] (void) -> void
+    {
+        LOG_DISPLAY(LogGenPrevAssets, "Finished generating preview textures. Other processes may now continue.")
+
+        /*
+         * Later on here than load the front end. If shipping ...
+         */
+
+        return;
+    });
+
     return;
-}
-
-
-void UGenPrevAssetsComponent::TickComponent(const float DeltaTime, const ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-    Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
