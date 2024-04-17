@@ -138,6 +138,7 @@ void ACommonChunk::ApplyProceduralMesh(void) const
 void ACommonChunk::ClearMesh()
 {
     /* TODO We might want to use arr.empty? */
+    // Or better reset??
 
     for (int i = 0; i < this->MeshData.Num(); ++i)
     {

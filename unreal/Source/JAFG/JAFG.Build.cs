@@ -20,15 +20,15 @@ public class JAFG : ModuleRules
             "UMG",
         });
 
-        PrivateDependencyModuleNames.AddRange(new string[]
+        PublicDependencyModuleNames.AddRange(new string[]
         {
-            "Sockets",
-            "Networking",
+            "ProceduralMeshComponent",
         });
 
         PrivateDependencyModuleNames.AddRange(new string[]
         {
-            "ProceduralMeshComponent",
+            "Sockets",
+            "Networking",
         });
 
         PrivateDependencyModuleNames.AddRange(new string[]

@@ -14,7 +14,6 @@ AWorldGameMode::AWorldGameMode(const FObjectInitializer& ObjectInitializer) : Su
     this->GameStateClass        = AWorldGameState::StaticClass();
     this->PlayerControllerClass = AWorldPlayerController::StaticClass();
     this->PlayerStateClass      = AWorldPlayerState::StaticClass();
-    this->PlayerControllerClass = AWorldPlayerController::StaticClass();
     this->HUDClass              = AWorldHUD::StaticClass();
     this->DefaultPawnClass      = nullptr; /* Determined at runtime. */
     this->SpectatorClass        = AWorldSimulationSpectatorPawn::StaticClass();

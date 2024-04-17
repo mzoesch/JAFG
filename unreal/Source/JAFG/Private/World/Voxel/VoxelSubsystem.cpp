@@ -29,11 +29,11 @@ void UVoxelSubsystem::Deinitialize(void)
 
 void UVoxelSubsystem::SetCommonVoxelNum(void)
 {
-    /* If only common voxels are currently initialize we need this. */
+    /* If only common voxels are currently initialized, we need this. */
     int32 FallbackRet = -1;
-    for (int32 i = 0; i < this->VoxelMasks.Num(); i++)
+    for (int32 i = 0; i < this->VoxelMasks.Num(); ++i)
     {
-        FallbackRet = ++i;
+        FallbackRet = i + 1;
 
         if (this->VoxelMasks[i].NameSpace == TEXT("COMMON"))
         {
