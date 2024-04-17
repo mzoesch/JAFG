@@ -79,6 +79,23 @@ void AWorldCharacter::BeginPlay(void)
         LocalPlayer->GetSubsystem<ULocalPlayerChunkGeneratorSubsystem>()->ConnectWithHyperlane();
     }
 
+    if ((UNetworkStatics::IsSafeListenServer(this) && this->IsLocallyControlled()) || UNetworkStatics::IsSafeStandalone(this))
+    {
+        this->Inventory.SetNum(AWorldCharacter::InventoryStartSize, false);
+        this->SelectedQuickSlotIndex = 0;
+
+        this->AddToInventory(FAccumulated(ECommonVoxels::Air + 1));
+        this->AddToInventory(FAccumulated(ECommonVoxels::Air + 2));
+        this->AddToInventory(FAccumulated(ECommonVoxels::Air + 3));
+
+        /*
+         * Unnecessary, but we want to make sure that the inventory is dirty.
+         * All properties are dirty by default on Begin Play.
+         */
+        MARK_PROPERTY_DIRTY_FROM_NAME(AWorldCharacter, Inventory, this)
+        MARK_PROPERTY_DIRTY_FROM_NAME(AWorldCharacter, SelectedQuickSlotIndex, this)
+    }
+
     if (UNetworkStatics::IsSafeDedicatedServer(this))
     {
         this->Inventory.SetNum(AWorldCharacter::InventoryStartSize, false);
@@ -409,9 +426,16 @@ void AWorldCharacter::OnQuickSlot(const int Slot)
         return;
     }
 
+    /*
+     * We predict the outcome to allow the client to have a more responsive UI.
+     * We do not want to wait for the server to respond to the client.
+     * The replicated quick slot is just for other clients to see what the player is currently using.
+     */
     this->SelectedQuickSlotIndex = Slot;
 
     CHECKED_HEAD_UP_DISPLAY->RefreshHotbarSelectorLocation();
+
+    this->SetSelectedQuickSlotIndex_ServerRPC(Slot);
 
     return;
 }
@@ -577,14 +601,67 @@ void AWorldCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 void AWorldCharacter::OnRep_Inventory(void)
 {
-    LOG_WARNING(LogWorldChar, "Inventory was replicated.")
+    LOG_VERY_VERBOSE(LogWorldChar, "Called.")
+    /*
+     * We want to do some smart refreshing here in the future and check what we have to update.
+     */
     CHECKED_HEAD_UP_DISPLAY->RefreshHotbarSlots();
 }
 
 void AWorldCharacter::OnRep_SelectedQuickSlotIndex(void)
 {
-    LOG_WARNING(LogWorldChar, "Selected Quick Slot Index was replicated.")
+    if (this->IsLocallyControlled() == false)
+    {
+        /*
+         * Here than update the mesh of the character to show the selected quick slot.
+         */
+        return;
+    }
+
     CHECKED_HEAD_UP_DISPLAY->RefreshHotbarSelectorLocation();
+
+    return;
+}
+
+void AWorldCharacter::SetSelectedQuickSlotIndex_ServerRPC_Implementation(const int Slot)
+{
+#if WITH_ENGINE
+    if (UNetworkStatics::IsSafeServer(this) == false)
+    {
+        LOG_FATAL(LogWorldChar, "Called not on a server. Disallowed.")
+        return;
+    }
+#endif /* WITH_ENGINE */
+
+    if (this->SelectedQuickSlotIndex == Slot)
+    {
+        /*
+         * We predict the outcome already in the input method directly to allow for a more responsive UI and a smoother
+         * experience if the latency to the server is high. This of course is going to update the same variable if the
+         * server is a listen server and this character is locally controlled.
+         * See the AWorldCharacter#OnQuickSlot(int) method for a detailed explanation.
+         */
+        if ((UNetworkStatics::IsSafeListenServer(this) && this->IsLocallyControlled()) || UNetworkStatics::IsSafeStandalone(this))
+        {
+            LOG_VERY_VERBOSE(LogWorldChar, "%s switched quick slot to %d.", *this->GetName(), Slot)
+            MARK_PROPERTY_DIRTY_FROM_NAME(AWorldCharacter, SelectedQuickSlotIndex, this)
+            return;
+        }
+
+        /*
+         * Happens if to many inputs are sent to the server.
+         * Can we prevent the spam of inputs? A future problem.
+         */
+        LOG_WARNING(LogWorldChar, "Selected Quick Slot Index did not change. Faulty input: %s %d.", *this->GetName(), Slot)
+        return;
+    }
+
+    LOG_VERY_VERBOSE(LogWorldChar, "%s switched quick slot to %d.", *this->GetName(), Slot)
+
+    this->SelectedQuickSlotIndex = Slot;
+    MARK_PROPERTY_DIRTY_FROM_NAME(AWorldCharacter, SelectedQuickSlotIndex, this)
+
+    return;
 }
 
 void AWorldCharacter::AddToInventoryAtSlot(const int Slot, const int Amount)

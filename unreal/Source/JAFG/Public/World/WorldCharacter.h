@@ -183,6 +183,8 @@ private:
     void OnRep_SelectedQuickSlotIndex( /* void */ );
     UPROPERTY(ReplicatedUsing=OnRep_SelectedQuickSlotIndex)
     int SelectedQuickSlotIndex;
+    UFUNCTION(Server, Reliable)
+    void SetSelectedQuickSlotIndex_ServerRPC(const int Slot);
 
     void AddToInventoryAtSlot(const int Slot, const int Amount);
 
