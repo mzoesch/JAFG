@@ -55,6 +55,10 @@ void UCommonSlot::RenderSlot(void)
         return;
     }
 
+    this->I_Preview->SetBrushFromTexture(nullptr);
+    this->I_Preview->SetColorAndOpacity(FLinearColor::Transparent);
+
+    LOG_FATAL(LogTemp, "Failed to load any texture for an unkown hotbar slot.")
 
     return;
 }

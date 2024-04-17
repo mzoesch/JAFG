@@ -3,6 +3,8 @@
 #include "System/TextureSubsystem.h"
 
 #include "ImageUtils.h"
+#include "Jar/Accumulated.h"
+#include "World/Voxel/VoxelSubsystem.h"
 
 UTextureSubsystem::UTextureSubsystem(const FObjectInitializer& ObjectInitializer) /* : Super(ObjectInitializer) */
 {
@@ -16,10 +18,17 @@ UTextureSubsystem::UTextureSubsystem(const FObjectInitializer& ObjectInitializer
 
 void UTextureSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
+    /* This subsystem is dependent. */
+    Collection.InitializeDependency<UVoxelSubsystem>();
+
     Super::Initialize(Collection);
 
     /* PIE may not always clean up properly, so we need to do it ourselves. */
     this->ClearCached2DTextures();
+
+    check( this->GetGameInstance() )
+    this->VoxelSubsystem = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>();
+    check( this->VoxelSubsystem )
 
     return;
 }
@@ -36,14 +45,51 @@ void UTextureSubsystem::Deinitialize(void)
 
 UTexture2D* UTextureSubsystem::GetTexture2D(const FAccumulated& Accumulated)
 {
-    if (UTexture2D* Tex = UTextureSubsystem::LoadTexture2DFromDisk(FString::Printf(TEXT("%s.png"),
-        *(UTextureSubsystem::TestDir / "TextureFailure"))))
+    check( this->VoxelSubsystem )
+
+#if WITH_EDITOR
+    if (Accumulated.AccumulatedIndex < this->VoxelSubsystem->GetCommonVoxelNum())
     {
-        UE_LOG(LogTemp, Warning, TEXT("UTextureSubsystem::GetTexture2D: Texture loaded successfully."));
-    return Tex;
+        LOG_FATAL(LogTemp, "Texture requested for a common voxel. This is disallowed. Requested Accumulated: %s.", *Accumulated.ToString())
+        return nullptr;
+    }
+#endif /* WITH_EDITOR */
+
+    if (this->Cached2DTextures.Contains(this->VoxelSubsystem->GetVoxelName(Accumulated.AccumulatedIndex)))
+    {
+        return this->Cached2DTextures[this->VoxelSubsystem->GetVoxelName(Accumulated.AccumulatedIndex)];
     }
 
-    UE_LOG(LogTemp, Error, TEXT("UTextureSubsystem::GetTexture2D: Failed to load texture."));
+    if (UTexture2D* Tex =
+        UTextureSubsystem::LoadTexture2DFromDisk(
+            FString::Printf(
+                TEXT("%s.png"),
+                * ( UTextureSubsystem::GeneratedAssetsDirectoryAbsolute / this->VoxelSubsystem->GetVoxelName(Accumulated.AccumulatedIndex) )
+            )
+        )
+    )
+    {
+        this->Cached2DTextures.Add(this->VoxelSubsystem->GetVoxelName(Accumulated.AccumulatedIndex), Tex);
+        /* Safety net. If everything worked accordingly. */
+        return this->GetTexture2D(Accumulated);
+    }
+
+    /* Failed to find texture. Returning a placeholder to not immediately crash the game. */
+
+    if (this->Cached2DTextures.Contains(UTextureSubsystem::TextureFailureTextureCacheKey))
+    {
+        return this->Cached2DTextures[UTextureSubsystem::TextureFailureTextureCacheKey];
+    }
+
+    if (UTexture2D* Tex = UTextureSubsystem::LoadTexture2DFromDisk(UTextureSubsystem::TextureFailureTextureFilePathAbsolute))
+    {
+        this->Cached2DTextures.Add(UTextureSubsystem::TextureFailureTextureCacheKey, Tex);
+        /* Safety net. If everything worked accordingly. */
+        return this->GetTexture2D(Accumulated);
+    }
+
+    LOG_ERROR(LogTemp, "Failed to load texture for accumulated %s and failed to load the placeholder texture.", *Accumulated.ToString())
+
     return nullptr;
 }
 

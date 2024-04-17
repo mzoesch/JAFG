@@ -76,6 +76,8 @@ void AWorldCharacter::BeginPlay(void)
     this->SelectedQuickSlotIndex = 0;
 
     this->AddToInventory(FAccumulated(ECommonVoxels::Air + 1));
+    this->AddToInventory(FAccumulated(ECommonVoxels::Air + 2));
+    this->AddToInventory(FAccumulated(ECommonVoxels::Air + 3));
 
     return;
 }
