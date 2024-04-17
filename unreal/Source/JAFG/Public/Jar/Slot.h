@@ -24,5 +24,6 @@ struct JAFG_API FSlot
     }
     virtual ~FSlot(void) = default;
 
+    UPROPERTY()
     FAccumulated Content;
 };

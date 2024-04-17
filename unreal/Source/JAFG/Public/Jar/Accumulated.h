@@ -5,6 +5,8 @@
 #include "CommonCore.h"
 #include "World/Voxel/CommonVoxels.h"
 
+#include "Accumulated.generated.h"
+
 JAFG_VOID
 
 #define DEFAULT_SLOT_SAFE_ADD_POST_BEHAVIOR(State, Slot, SlotArray) \
@@ -37,13 +39,18 @@ FORCEINLINE static void Initialize(const int32 InItemIndexStart)
 
 }
 
+USTRUCT()
 struct JAFG_API FAccumulated
 {
+    GENERATED_BODY()
+
     FAccumulated(void);
     explicit FAccumulated(const int32 InAccumulatedIndex);
     explicit FAccumulated(const int32 InAccumulatedIndex, const uint16 InAmount);
 
+    UPROPERTY( /* Replicated */ )
     int32  AccumulatedIndex;
+    UPROPERTY( /* Replicated */ )
     uint16 Amount;
 
     /** Checks for overflow, underflow and if post add amount is zero, the Null Accumulated is set. */

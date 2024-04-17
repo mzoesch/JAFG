@@ -14,6 +14,8 @@
 #include "World/WorldPlayerController.h"
 #include "World/Chunk/CommonChunk.h"
 #include "World/Chunk/LocalChunkValidator.h"
+#include "Net/UnrealNetwork.h"
+#include "Net/Core/PushModel/PushModel.h"
 
 #define PLAYER_CONTROLLER        Cast<AWorldPlayerController>(this->GetWorld()->GetFirstPlayerController())
 #define HEAD_UP_DISPLAY          Cast<AWorldHUD>(this->GetWorld()->GetFirstPlayerController()->GetHUD())
@@ -27,7 +29,8 @@
 AWorldCharacter::AWorldCharacter(const FObjectInitializer& ObjectInitializer):
 IMCFoot(nullptr), IMCMenu(nullptr), IAJump(nullptr), IALook(nullptr), IAMove(nullptr), IAToggleEscapeMenu(nullptr)
 {
-    PrimaryActorTick.bCanEverTick = true;
+    this->PrimaryActorTick.bCanEverTick = true;
+    this->SetActorTickInterval(1.0f);
 
     this->bReplicates = true;
 
@@ -55,6 +58,14 @@ void AWorldCharacter::BeginPlay(void)
 {
     Super::BeginPlay();
 
+    LOG_VERBOSE(LogWorldChar, "Called.")
+
+    if (IS_PUSH_MODEL_ENABLED() == false)
+    {
+        LOG_FATAL(LogWorldChar, "Push Model is not enabled.")
+        return;
+    }
+
     if (UNetworkStatics::IsSafeClient(this) && this->IsLocallyControlled())
     {
         check( GEngine )
@@ -68,16 +79,22 @@ void AWorldCharacter::BeginPlay(void)
         LocalPlayer->GetSubsystem<ULocalPlayerChunkGeneratorSubsystem>()->ConnectWithHyperlane();
     }
 
-    if (UNetworkStatics::IsSafeListenServer(this) && this->IsLocallyControlled())
+    if (UNetworkStatics::IsSafeDedicatedServer(this))
     {
+        this->Inventory.SetNum(AWorldCharacter::InventoryStartSize, false);
+        this->SelectedQuickSlotIndex = 0;
+
+        this->AddToInventory(FAccumulated(ECommonVoxels::Air + 1));
+        this->AddToInventory(FAccumulated(ECommonVoxels::Air + 2));
+        this->AddToInventory(FAccumulated(ECommonVoxels::Air + 3));
+
+        /*
+         * Unnecessary, but we want to make sure that the inventory is dirty.
+         * All properties are dirty by default on Begin Play.
+         */
+        MARK_PROPERTY_DIRTY_FROM_NAME(AWorldCharacter, Inventory, this)
+        MARK_PROPERTY_DIRTY_FROM_NAME(AWorldCharacter, SelectedQuickSlotIndex, this)
     }
-
-    this->Inventory.SetNum(AWorldCharacter::InventoryStartSize, false);
-    this->SelectedQuickSlotIndex = 0;
-
-    this->AddToInventory(FAccumulated(ECommonVoxels::Air + 1));
-    this->AddToInventory(FAccumulated(ECommonVoxels::Air + 2));
-    this->AddToInventory(FAccumulated(ECommonVoxels::Air + 3));
 
     return;
 }
@@ -85,6 +102,19 @@ void AWorldCharacter::BeginPlay(void)
 void AWorldCharacter::Tick(const float DeltaTime)
 {
     Super::Tick(DeltaTime);
+}
+
+void AWorldCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    FDoRepLifetimeParams Params = FDoRepLifetimeParams();
+
+    Params.bIsPushBased = true;
+    DOREPLIFETIME_WITH_PARAMS_FAST(AWorldCharacter, Inventory, Params)
+    DOREPLIFETIME_WITH_PARAMS_FAST(AWorldCharacter, SelectedQuickSlotIndex, Params)
+
+    return;
 }
 
 void AWorldCharacter::OnTriggerJump(const FInputActionValue& Value)
@@ -229,10 +259,10 @@ void AWorldCharacter::OnSecondary(const FInputActionValue& Value)
     FVector             WorldTargetVoxelLocation    = TargetedWorldHitLocation + TargetedWorldNormalHitLocation * 50.0f;
     const FIntVector    LocalTargetVoxelLocation    = FIntVector(TargetedWorldNormalHitLocation + FVector(TargetedLocalHitVoxelLocation));
     WorldTargetVoxelLocation    = FVector(WorldTargetVoxelLocation.X - FMath::Fmod(WorldTargetVoxelLocation.X, 100.0f), WorldTargetVoxelLocation.Y - FMath::Fmod(WorldTargetVoxelLocation.Y, 100.0f), WorldTargetVoxelLocation.Z - FMath::Fmod(WorldTargetVoxelLocation.Z, 100.0f));
-    /* This is kinda sketchy as it does not work around the x|y|z == 0 border. */
+    /* This is kinda sketchy as it does not work around the x|y|z == 0 borders. */
     WorldTargetVoxelLocation    = FVector(WorldTargetVoxelLocation.X + 50.0f * FMath::Sign(WorldTargetVoxelLocation.X), WorldTargetVoxelLocation.Y + 50.0f * FMath::Sign(WorldTargetVoxelLocation.Y), WorldTargetVoxelLocation.Z + 50.0f * FMath::Sign(WorldTargetVoxelLocation.Z));
 
-    /* Only checking ourself currently maybe we want to do some more checks before sending the RPC. */
+    /* Only checking ourselves currently maybe we want to do some more checks before sending the RPC. */
     if (FVector::Dist(this->GetTorsoLocation(), WorldTargetVoxelLocation) < 100.0f)
     {
         return;
@@ -257,7 +287,7 @@ void AWorldCharacter::OnSecondary_ServerRPC_Implementation(const FInputActionVal
         TargetedLocalHitVoxelLocation,
         /*
          * This is super sketchy. But currently we cannot determine if this pawn is the listen server's pawn or not.
-         * In the future we should check with that.
+         * In the future, we should check with that.
          */
         this->GetRemoteViewPitchAsDeg() != 0.0f,
         this->GetCharacterReach()
@@ -272,17 +302,17 @@ void AWorldCharacter::OnSecondary_ServerRPC_Implementation(const FInputActionVal
     FVector             WorldTargetVoxelLocation    = TargetedWorldHitLocation + TargetedWorldNormalHitLocation * 50.0f;
     const FIntVector    LocalTargetVoxelLocation    = FIntVector(TargetedWorldNormalHitLocation + FVector(TargetedLocalHitVoxelLocation));
     WorldTargetVoxelLocation    = FVector(WorldTargetVoxelLocation.X - FMath::Fmod(WorldTargetVoxelLocation.X, 100.0f), WorldTargetVoxelLocation.Y - FMath::Fmod(WorldTargetVoxelLocation.Y, 100.0f), WorldTargetVoxelLocation.Z - FMath::Fmod(WorldTargetVoxelLocation.Z, 100.0f));
-    /* This is kinda sketchy as it does not work around the x|y|z == 0 border. */
+    /* This is kinda sketchy as it does not work around the x|y|z == 0 borders. */
     WorldTargetVoxelLocation    = FVector(WorldTargetVoxelLocation.X + 50.0f * FMath::Sign(WorldTargetVoxelLocation.X), WorldTargetVoxelLocation.Y + 50.0f * FMath::Sign(WorldTargetVoxelLocation.Y), WorldTargetVoxelLocation.Z + 50.0f * FMath::Sign(WorldTargetVoxelLocation.Z));
 
-    /* Only checking ourself currently maybe we want to do some more checks before sending the RPC. */
+    /* Only checking ourselves currently maybe we want to do some more checks before sending the RPC. */
     if (FVector::Dist(this->GetTorsoLocation(), WorldTargetVoxelLocation) < 100.0f)
     {
         UE_LOG(LogTemp, Warning, TEXT("AWorldCharacter::OnSecondary_ServerRPC: Distance is less than 100."))
         return;
     }
 
-    TargetedChunk->ModifySingleVoxel(LocalTargetVoxelLocation, /* Stone */ 2);
+    TargetedChunk->ModifySingleVoxel(LocalTargetVoxelLocation, this->Inventory[this->SelectedQuickSlotIndex].Content.AccumulatedIndex);
 
     return;
 }
@@ -545,28 +575,41 @@ void AWorldCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
     return;
 }
 
-void AWorldCharacter::AddToInventoryAtSlot(const int Slot, const int Amount, const bool bUpdateHUD)
+void AWorldCharacter::OnRep_Inventory(void)
+{
+    LOG_WARNING(LogWorldChar, "Inventory was replicated.")
+    CHECKED_HEAD_UP_DISPLAY->RefreshHotbarSlots();
+}
+
+void AWorldCharacter::OnRep_SelectedQuickSlotIndex(void)
+{
+    LOG_WARNING(LogWorldChar, "Selected Quick Slot Index was replicated.")
+    CHECKED_HEAD_UP_DISPLAY->RefreshHotbarSelectorLocation();
+}
+
+void AWorldCharacter::AddToInventoryAtSlot(const int Slot, const int Amount)
 {
     bool bSuccess;
     this->Inventory[Slot].Content.SafeAddAmount(Amount, bSuccess);
     DEFAULT_SLOT_SAFE_ADD_POST_BEHAVIOR(bSuccess, Slot, this->Inventory)
 
-    if (bUpdateHUD)
-    {
-        CHECKED_HEAD_UP_DISPLAY->RefreshHotbarSelectorLocation();
-    }
-
     return;
 }
 
-auto AWorldCharacter::AddToInventory(const FAccumulated& Accumulated, const bool bUpdateHUD) -> bool
+auto AWorldCharacter::AddToInventory(const FAccumulated& Accumulated) -> bool
 {
+    if (UNetworkStatics::IsSafeServer(this) == false)
+    {
+        LOG_FATAL(LogWorldChar, "Called not on a server. Disallowed.")
+        return false;
+    }
+
     /* Check if there is an existing accumulated item already in the character's inventory. */
     for (int i = 0; i < this->Inventory.Num(); ++i)
     {
         if (this->Inventory[i].Content.AccumulatedIndex == Accumulated.AccumulatedIndex)
         {
-            this->AddToInventoryAtSlot(i, Accumulated.Amount, bUpdateHUD);
+            this->AddToInventoryAtSlot(i, Accumulated.Amount);
             return true;
         }
 
@@ -581,11 +624,6 @@ auto AWorldCharacter::AddToInventory(const FAccumulated& Accumulated, const bool
         }
 
         this->Inventory[i].Content = Accumulated;
-
-        if (bUpdateHUD)
-        {
-            CHECKED_HEAD_UP_DISPLAY->RefreshHotbarSlots();
-        }
 
         return true;
     }
@@ -650,4 +688,5 @@ void AWorldCharacter::GetTargetedVoxel(
 
 #undef PLAYER_CONTROLLER
 #undef HEAD_UP_DISPLAY
+#undef CHECKED_HEAD_UP_DISPLAY
 #undef ENHANCED_INPUT_SUBSYSTEM

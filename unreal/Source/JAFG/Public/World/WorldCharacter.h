@@ -39,6 +39,8 @@ public:
 
     virtual void Tick(const float DeltaTime) override;
 
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 private:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
@@ -173,10 +175,16 @@ private:
     inline static constexpr int InventoryCrafterWidth {  2 };
     inline static constexpr int InventoryCrafterSize  {  4 };
 
+    UFUNCTION()
+    void OnRep_Inventory( /* void */ );
+    UPROPERTY(ReplicatedUsing=OnRep_Inventory)
     TArray<FSlot> Inventory;
+    UFUNCTION()
+    void OnRep_SelectedQuickSlotIndex( /* void */ );
+    UPROPERTY(ReplicatedUsing=OnRep_SelectedQuickSlotIndex)
     int SelectedQuickSlotIndex;
 
-    void AddToInventoryAtSlot(const int Slot, const int Amount, const bool bUpdateHUD = true);
+    void AddToInventoryAtSlot(const int Slot, const int Amount);
 
 public:
 
@@ -187,7 +195,8 @@ public:
     FORCEINLINE auto GetInventory(void) const -> const TArray<FSlot>& { return this->Inventory; }
     FORCEINLINE auto GetInventorySize(void) const -> int { return this->Inventory.Num(); }
     FORCEINLINE auto GetInventorySlot(const int Slot) const -> FAccumulated { return this->Inventory[Slot].Content; }
-    FORCEINLINE auto AddToInventory(const FAccumulated& Accumulated, const bool bUpdateHUD = true) -> bool;
+    /** Server only. */
+    FORCEINLINE auto AddToInventory(const FAccumulated& Accumulated) -> bool;
 
 private:
 

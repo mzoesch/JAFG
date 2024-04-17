@@ -27,6 +27,8 @@ void AWorldHUD::BeginPlay(void)
 {
     Super::BeginPlay();
 
+    this->bRunBeginPlay = true;
+
 #if WITH_EDITOR
     /*
      * May often happen if we simulate the game in the editor using PIE.
@@ -117,12 +119,30 @@ void AWorldHUD::BeginPlay(void)
 
 void AWorldHUD::RefreshHotbarSlots(void) const
 {
-    this->WHotbar->MarkAsDirty();
+    /*
+     * Because of replication in the world character, this will be called before the UWorld is properly initialized.
+     */
+    if (this->bRunBeginPlay)
+    {
+        check( this->WHotbar )
+        this->WHotbar->MarkAsDirty();
+    }
+
+    return;
 }
 
 void AWorldHUD::RefreshHotbarSelectorLocation(void) const
 {
-    this->WHotbar->RefreshSelectorLocation();
+    /*
+     * Because of replication in the world character, this will be called before the UWorld is properly initialized.
+     */
+    if (this->bRunBeginPlay)
+    {
+        check( this->WHotbar )
+        this->WHotbar->RefreshSelectorLocation();
+    }
+
+    return;
 }
 
 void AWorldHUD::ToggleEscapeMenu(const bool bCollapsed) const

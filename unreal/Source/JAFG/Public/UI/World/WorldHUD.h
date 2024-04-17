@@ -53,6 +53,8 @@ public:
 
 private:
 
+    bool bRunBeginPlay = false;
+
     TObjectPtr<UDebugScreen> WDebugScreen;
     TObjectPtr<UHotbar>      WHotbar;
     TObjectPtr<UChatMenu>    WChatMenu;

@@ -4,6 +4,10 @@
 using UnrealBuildTool;
 using System.Collections.Generic;
 
+/*
+ * We somehow have to turn push model on.
+ */
+
 // ReSharper disable once InconsistentNaming
 public class JAFGTarget : TargetRules
 {

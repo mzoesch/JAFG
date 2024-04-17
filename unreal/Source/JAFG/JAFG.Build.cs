@@ -25,9 +25,10 @@ public class JAFG : ModuleRules
             "ProceduralMeshComponent",
         });
 
-        PrivateDependencyModuleNames.AddRange(new string[]
+        PublicDependencyModuleNames.AddRange(new string[]
         {
             "Sockets",
+            "NetCore",
             "Networking",
         });
 
