@@ -8,8 +8,9 @@
 
 #include "ChunkWorldSubsystem.generated.h"
 
-class AChunkMulticasterInfo;
 JAFG_VOID
+
+class AChunkMulticasterInfo;
 
 /*
  * General information:

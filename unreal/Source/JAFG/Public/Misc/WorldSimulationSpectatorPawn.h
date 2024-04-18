@@ -28,7 +28,7 @@ protected:
 
 private:
 
-    IConsoleCommand* CommandToggleDebugScreen = nullptr;
+    IConsoleCommand* ToggleDebugScreenCommand = nullptr;
     void OnToggleDebugScreen(const FInputActionValue& Value);
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))

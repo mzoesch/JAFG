@@ -136,6 +136,7 @@ enum class EKismetFractalType : uint8
     DomainWarpIndependent,
 };
 
+// UENUM <- than we do not need the kismet to cpp functions
 namespace EFractalType
 {
 

@@ -44,13 +44,13 @@ public:
 private:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-    UChatComponent* ChatComponent;
+    TObjectPtr<UChatComponent> ChatComponent;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<ULocalChunkValidator> LocalChunkValidator;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-    UCameraComponent* FirstPersonCameraComponent;
+    TObjectPtr<UCameraComponent> FirstPersonCameraComponent;
 
 public:
 
@@ -59,73 +59,73 @@ public:
     //////////////////////////////////////////////////////////////////////////
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IMC")
-    UInputMappingContext* IMCFoot;
+    TObjectPtr<UInputMappingContext> IMCFoot;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IMC")
-    UInputMappingContext* IMCMenu;
+    TObjectPtr<UInputMappingContext> IMCMenu;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IMC")
-    UInputMappingContext* IMCChatMenu;
+    TObjectPtr<UInputMappingContext> IMCChatMenu;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Movement")
-    UInputAction* IAJump;
+    TObjectPtr<UInputAction> IAJump;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Movement")
-    UInputAction* IALook;
+    TObjectPtr<UInputAction> IALook;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Movement")
-    UInputAction* IAMove;
+    TObjectPtr<UInputAction> IAMove;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Interraction")
-    UInputAction* IAPrimary;
+    TObjectPtr<UInputAction> IAPrimary;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Interraction")
-    UInputAction* IASecondary;
+    TObjectPtr<UInputAction> IASecondary;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
-    UInputAction* IAToggleInventory;
+    TObjectPtr<UInputAction> IAToggleInventory;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
-    UInputAction* IAQuickSlot0;
+    TObjectPtr<UInputAction> IAQuickSlot0;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
-    UInputAction* IAQuickSlot1;
+    TObjectPtr<UInputAction> IAQuickSlot1;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
-    UInputAction* IAQuickSlot2;
+    TObjectPtr<UInputAction> IAQuickSlot2;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
-    UInputAction* IAQuickSlot3;
+    TObjectPtr<UInputAction> IAQuickSlot3;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
-    UInputAction* IAQuickSlot4;
+    TObjectPtr<UInputAction> IAQuickSlot4;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
-    UInputAction* IAQuickSlot5;
+    TObjectPtr<UInputAction> IAQuickSlot5;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
-    UInputAction* IAQuickSlot6;
+    TObjectPtr<UInputAction> IAQuickSlot6;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
-    UInputAction* IAQuickSlot7;
+    TObjectPtr<UInputAction> IAQuickSlot7;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
-    UInputAction* IAQuickSlot8;
+    TObjectPtr<UInputAction> IAQuickSlot8;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
-    UInputAction* IAQuickSlot9;
+    TObjectPtr<UInputAction> IAQuickSlot9;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
-    UInputAction* IAQuickSlotBitwise;
+    TObjectPtr<UInputAction> IAQuickSlotBitwise;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|MISC")
-    UInputAction* IAToggleEscapeMenu;
+    TObjectPtr<UInputAction> IAToggleEscapeMenu;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|MISC")
-    UInputAction* IAToggleChatMenu;
+    TObjectPtr<UInputAction> IAToggleChatMenu;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|MISC")
-    UInputAction* IAToggleDebugScreen;
+    TObjectPtr<UInputAction> IAToggleDebugScreen;
 
 private:
 
@@ -168,7 +168,7 @@ public:
 private:
 
     //////////////////////////////////////////////////////////////////////////
-    // Inventory
+    // Inventory and Hotbar
     //////////////////////////////////////////////////////////////////////////
 
     inline static constexpr int InventoryStartSize    { 78 };
@@ -179,6 +179,7 @@ private:
     void OnRep_Inventory( /* void */ );
     UPROPERTY(ReplicatedUsing=OnRep_Inventory)
     TArray<FSlot> Inventory;
+
     UFUNCTION()
     void OnRep_SelectedQuickSlotIndex( /* void */ );
     UPROPERTY(ReplicatedUsing=OnRep_SelectedQuickSlotIndex)

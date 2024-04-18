@@ -17,17 +17,24 @@
 #include "Net/UnrealNetwork.h"
 #include "Net/Core/PushModel/PushModel.h"
 
-#define PLAYER_CONTROLLER        Cast<AWorldPlayerController>(this->GetWorld()->GetFirstPlayerController())
-#define HEAD_UP_DISPLAY          Cast<AWorldHUD>(this->GetWorld()->GetFirstPlayerController()->GetHUD())
-#define CHECKED_HEAD_UP_DISPLAY  check( this->GetWorld() ) \
-    check( this->GetWorld()->GetFirstPlayerController() ) \
-    check( this->GetWorld()->GetFirstPlayerController()->GetHUD() ) \
+#define PLAYER_CONTROLLER                                                            \
+    Cast<AWorldPlayerController>(this->GetWorld()->GetFirstPlayerController())
+#define HEAD_UP_DISPLAY                                                              \
+    Cast<AWorldHUD>(this->GetWorld()->GetFirstPlayerController()->GetHUD())
+#define CHECKED_HEAD_UP_DISPLAY                                                      \
+    check( this->GetWorld() )                                                        \
+    check( this->GetWorld()->GetFirstPlayerController() )                            \
+    check( this->GetWorld()->GetFirstPlayerController()->GetHUD() )                  \
     check( Cast<AWorldHUD>(this->GetWorld()->GetFirstPlayerController()->GetHUD()) ) \
     HEAD_UP_DISPLAY
-#define ENHANCED_INPUT_SUBSYSTEM ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(Cast<APlayerController>(this->GetWorld()->GetFirstPlayerController())->GetLocalPlayer())
+#define ENHANCED_INPUT_SUBSYSTEM                                                     \
+    ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(                  \
+        Cast<APlayerController>(                                                     \
+            this->GetWorld()->GetFirstPlayerController()                             \
+        )->GetLocalPlayer()                                                          \
+    )
 
-AWorldCharacter::AWorldCharacter(const FObjectInitializer& ObjectInitializer):
-IMCFoot(nullptr), IMCMenu(nullptr), IAJump(nullptr), IALook(nullptr), IAMove(nullptr), IAToggleEscapeMenu(nullptr)
+AWorldCharacter::AWorldCharacter(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
     this->PrimaryActorTick.bCanEverTick = true;
     this->SetActorTickInterval(1.0f);

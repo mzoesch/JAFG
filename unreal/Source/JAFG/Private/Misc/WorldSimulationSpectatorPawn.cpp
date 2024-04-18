@@ -35,7 +35,7 @@ void AWorldSimulationSpectatorPawn::BeginPlay(void)
 {
     Super::BeginPlay();
 
-    this->CommandToggleDebugScreen = IConsoleManager::Get().RegisterConsoleCommand(
+    this->ToggleDebugScreenCommand = IConsoleManager::Get().RegisterConsoleCommand(
         TEXT("j.dbs"),
         TEXT("Toggles the debug screen."),
         FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([&](const TArray<FString>& Args,UWorld* World)
@@ -52,10 +52,10 @@ void AWorldSimulationSpectatorPawn::EndPlay(const EEndPlayReason::Type EndPlayRe
 {
     Super::EndPlay(EndPlayReason);
 
-    if (this->CommandToggleDebugScreen)
+    if (this->ToggleDebugScreenCommand)
     {
-        IConsoleManager::Get().UnregisterConsoleObject(this->CommandToggleDebugScreen);
-        this->CommandToggleDebugScreen = nullptr;
+        IConsoleManager::Get().UnregisterConsoleObject(this->ToggleDebugScreenCommand);
+        this->ToggleDebugScreenCommand = nullptr;
     }
 
     return;
