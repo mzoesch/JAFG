@@ -37,11 +37,14 @@ protected:
 
 public:
 
-    virtual void Tick(const float DeltaTime) override;
-
-    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+    virtual auto Tick(const float DeltaTime) -> void override;
+    virtual auto GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const -> void override;
 
 private:
+
+    //////////////////////////////////////////////////////////////////////////
+    // AActor Components
+    //////////////////////////////////////////////////////////////////////////
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UChatComponent> ChatComponent;
@@ -52,82 +55,81 @@ private:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UCameraComponent> FirstPersonCameraComponent;
 
-public:
-
     //////////////////////////////////////////////////////////////////////////
     // Enhanced Input
     //////////////////////////////////////////////////////////////////////////
 
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IMC")
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IMC", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UInputMappingContext> IMCFoot;
 
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IMC")
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IMC", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UInputMappingContext> IMCMenu;
 
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IMC")
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IMC", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UInputMappingContext> IMCChatMenu;
 
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Movement")
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IMC", meta = (AllowPrivateAccess = "true"))
+    TObjectPtr<UInputMappingContext> IMCInventory;
+
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Movement", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UInputAction> IAJump;
 
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Movement")
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Movement", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UInputAction> IALook;
 
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Movement")
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Movement", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UInputAction> IAMove;
 
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Interraction")
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Interraction", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UInputAction> IAPrimary;
 
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Interraction")
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Interraction", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UInputAction> IASecondary;
 
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UInputAction> IAToggleInventory;
 
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UInputAction> IAQuickSlot0;
 
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UInputAction> IAQuickSlot1;
 
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UInputAction> IAQuickSlot2;
 
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UInputAction> IAQuickSlot3;
 
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UInputAction> IAQuickSlot4;
 
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UInputAction> IAQuickSlot5;
 
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UInputAction> IAQuickSlot6;
 
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UInputAction> IAQuickSlot7;
 
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UInputAction> IAQuickSlot8;
 
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UInputAction> IAQuickSlot9;
 
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory")
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UInputAction> IAQuickSlotBitwise;
 
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|MISC")
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|MISC", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UInputAction> IAToggleEscapeMenu;
 
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|MISC")
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|MISC", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UInputAction> IAToggleChatMenu;
 
-    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|MISC")
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|MISC", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UInputAction> IAToggleDebugScreen;
-
-private:
 
     void OnTriggerJump(const FInputActionValue& Value);
     void OnCompleteJump(const FInputActionValue& Value);

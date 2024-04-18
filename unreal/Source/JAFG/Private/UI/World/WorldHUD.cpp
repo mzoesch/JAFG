@@ -11,6 +11,7 @@
 #include "UI/HUD/Container/HotbarSelector.h"
 #include "UI/HUD/Container/Slots/HotbarSlot.h"
 #include "UI/MISC/ChatMenu.h"
+#include "UI/OSD/Container/CharacterInventory.h"
 #include "World/WorldPlayerController.h"
 
 #define PLAYER_CONTROLLER \
@@ -109,6 +110,12 @@ void AWorldHUD::BeginPlay(void)
     check( this->WEscapeMenu )
     this->WEscapeMenu->AddToViewport();
 
+    check( this->WCharacterInventoryClass )
+    this->WCharacterInventory = CreateWidget<UCharacterInventory>(this->GetWorld(), this->WCharacterInventoryClass);
+    check( this->WCharacterInventory )
+    this->WCharacterInventory->AddToViewport();
+    this->WCharacterInventory->SetVisibility(ESlateVisibility::Collapsed);
+
     check( this->WCrosshairClass )
     this->WCrosshair = CreateWidget<UCrosshair>(this->GetWorld(), this->WCrosshairClass);
     check( this->WCrosshair )
@@ -187,6 +194,17 @@ void AWorldHUD::ToggleDebugScreen(void) const
 {
     check( this->WDebugScreen )
     this->WDebugScreen->Toggle();
+}
+
+void AWorldHUD::ToggleCharacterInventory(const bool bCollapsed) const
+{
+    check( PLAYER_CONTROLLER )
+    PLAYER_CONTROLLER->ShowMouseCursor(bCollapsed == false, true);
+
+    check( this->WCharacterInventory )
+    this->WCharacterInventory->Toggle(bCollapsed);
+
+    return;
 }
 
 #undef PLAYER_CONTROLLER

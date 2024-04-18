@@ -7,6 +7,7 @@
 
 #include "WorldHUD.generated.h"
 
+class UCharacterInventory;
 JAFG_VOID
 
 class UHotbarSelector;
@@ -51,15 +52,19 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widgets")
     TSubclassOf<UCrosshair> WCrosshairClass;
 
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widgets")
+    TSubclassOf<UCharacterInventory> WCharacterInventoryClass;
+
 private:
 
     bool bRunBeginPlay = false;
 
-    TObjectPtr<UDebugScreen> WDebugScreen;
-    TObjectPtr<UHotbar>      WHotbar;
-    TObjectPtr<UChatMenu>    WChatMenu;
-    TObjectPtr<UEscapeMenu>  WEscapeMenu;
-    TObjectPtr<UCrosshair>   WCrosshair;
+    TObjectPtr<UDebugScreen>        WDebugScreen;
+    TObjectPtr<UHotbar>             WHotbar;
+    TObjectPtr<UChatMenu>           WChatMenu;
+    TObjectPtr<UEscapeMenu>         WEscapeMenu;
+    TObjectPtr<UCrosshair>          WCrosshair;
+    TObjectPtr<UCharacterInventory> WCharacterInventory;
 
 public:
 
@@ -72,4 +77,6 @@ public:
     void AddMessageToChat(const FString& Message) const;
 
     void ToggleDebugScreen(void) const;
+
+    void ToggleCharacterInventory(const bool bCollapsed) const;
 };

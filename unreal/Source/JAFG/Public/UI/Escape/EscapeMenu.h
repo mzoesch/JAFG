@@ -14,7 +14,6 @@ class JAFG_API UEscapeMenu : public UJAFGCommonWidget
 {
     GENERATED_BODY()
 
-    
 protected:
 
     virtual void NativeConstruct(void) override;
@@ -34,7 +33,7 @@ protected:
 
     UFUNCTION()
     void OnResumeClicked(/* void */);
-    
+
 public:
 
     void ToggleEscapeMenu(const bool bCollapsed);

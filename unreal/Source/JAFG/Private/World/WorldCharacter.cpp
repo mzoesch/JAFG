@@ -336,13 +336,43 @@ void AWorldCharacter::OnSecondary_ServerRPC_Implementation(const FInputActionVal
         return;
     }
 
+    if (this->Inventory[this->SelectedQuickSlotIndex].Content == Accumulated::Null)
+    {
+        return;
+    }
+
     TargetedChunk->ModifySingleVoxel(LocalTargetVoxelLocation, this->Inventory[this->SelectedQuickSlotIndex].Content.AccumulatedIndex);
 
     return;
 }
 
+/** Do NOT convert to const method, as this is a Rider IDEA false positive error. */
+// ReSharper disable once CppMemberFunctionMayBeConst
 void AWorldCharacter::OnToggleInventory(const FInputActionValue& Value)
 {
+    if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ENHANCED_INPUT_SUBSYSTEM)
+    {
+        if (Subsystem->HasMappingContext(this->IMCInventory))
+        {
+            HEAD_UP_DISPLAY->ToggleCharacterInventory(true);
+
+            Subsystem->ClearAllMappings();
+            Subsystem->AddMappingContext(this->IMCFoot, 0);
+
+            return;
+        }
+
+        HEAD_UP_DISPLAY->ToggleCharacterInventory(false);
+
+        Subsystem->ClearAllMappings();
+        Subsystem->AddMappingContext(this->IMCInventory, 0);
+
+        return;
+    }
+
+    LOG_FATAL(LogWorldChar, "Enhanced Input subsystem is not available.")
+
+    return;
 }
 
 #define QUICK_SLOT_0    0
@@ -555,6 +585,7 @@ void AWorldCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
         check( this->IMCFoot )
         check( this->IMCMenu )
         check( this->IMCChatMenu )
+        check( this->IMCInventory )
 
         check( this->IAJump )
         check( this->IALook )
