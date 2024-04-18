@@ -523,6 +523,15 @@ void AWorldCharacter::OnToggleChatMenu(const FInputActionValue& Value)
 void AWorldCharacter::OnToggleDebugScreen(const FInputActionValue& Value)
 {
     CHECKED_HEAD_UP_DISPLAY->ToggleDebugScreen();
+
+    /*
+     * Just temporary. We probably want to have a better way to handle this in the future.
+     */
+    check( GEngine )
+    check( this->GetWorld() )
+    GEngine->Exec(this->GetWorld(), TEXT("j.ShowChunkBorders"));
+
+    return;
 }
 
 void AWorldCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

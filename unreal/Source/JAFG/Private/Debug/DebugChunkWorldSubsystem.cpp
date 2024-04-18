@@ -13,8 +13,8 @@ ADebugChunkWorldSpline::ADebugChunkWorldSpline(const FObjectInitializer& ObjectI
 
     this->SplineComponent->ClearSplinePoints(false);
 
-    this->SplineComponent->AddSplinePoint(FVector(0.0f, 0.0f, 0.0f), ESplineCoordinateSpace::Local, false);
-    this->SplineComponent->AddSplinePoint(FVector(0.0f, 0.0f, 1000000.0f), ESplineCoordinateSpace::Local, true);
+    this->SplineComponent->AddSplinePoint( FVector(0.0f, 0.0f,      0.0f), ESplineCoordinateSpace::Local, false );
+    this->SplineComponent->AddSplinePoint( FVector(0.0f, 0.0f, 100000.0f), ESplineCoordinateSpace::Local, true  );
 
     this->SplineComponent->bDrawDebug = true;
 
