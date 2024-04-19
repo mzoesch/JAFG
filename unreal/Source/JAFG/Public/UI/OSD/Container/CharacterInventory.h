@@ -19,6 +19,10 @@ protected:
     virtual void NativeConstruct(void) override;
     virtual void OnRefresh(void) override;
 
+private:
+
+    FDelegateHandle OnInventoryChanged_ClientDelegateHandle;
+
 public:
 
     void Toggle(const bool bCollapsed);

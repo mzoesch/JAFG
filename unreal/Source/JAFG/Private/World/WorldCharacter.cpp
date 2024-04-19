@@ -123,6 +123,19 @@ void AWorldCharacter::BeginPlay(void)
     return;
 }
 
+void AWorldCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    Super::EndPlay(EndPlayReason);
+
+    if (this->IsLocallyControlled())
+    {
+        this->OnInventoryChanged_ClientDelegate.Clear();
+        this->OnQuickSlotLocationChanged_ClientDelegate.Clear();
+    }
+
+    return;
+}
+
 void AWorldCharacter::Tick(const float DeltaTime)
 {
     Super::Tick(DeltaTime);
@@ -134,6 +147,7 @@ void AWorldCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 
     FDoRepLifetimeParams Params = FDoRepLifetimeParams();
 
+    Params.Condition    = ELifetimeCondition::COND_OwnerOnly;
     Params.bIsPushBased = true;
     DOREPLIFETIME_WITH_PARAMS_FAST(AWorldCharacter, Inventory, Params)
     DOREPLIFETIME_WITH_PARAMS_FAST(AWorldCharacter, SelectedQuickSlotIndex, Params)
@@ -470,7 +484,7 @@ void AWorldCharacter::OnQuickSlot(const int Slot)
      */
     this->SelectedQuickSlotIndex = Slot;
 
-    CHECKED_HEAD_UP_DISPLAY->RefreshHotbarSelectorLocation();
+    this->OnQuickSlotLocationChanged_ClientDelegate.Broadcast();
 
     this->SetSelectedQuickSlotIndex_ServerRPC(Slot);
 
@@ -648,11 +662,46 @@ void AWorldCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 void AWorldCharacter::OnRep_Inventory(void)
 {
-    LOG_VERY_VERBOSE(LogWorldChar, "Called.")
+    LOG_VERBOSE(LogWorldChar, "Called.")
+
+    this->OnInventoryChanged_ClientDelegate.Broadcast();
+
+    return;
+}
+
+bool AWorldCharacter::OnInventorySlotPrimaryClicked_ServerRPC_Validate(const int Slot)
+{
+    LOG_VERBOSE(LogWorldChar, "Called.")
+
+    bool bContentsChanged = false;
+    this->Inventory[Slot].OnPrimaryClicked(this, bContentsChanged, true);
+
+    if (bContentsChanged == false)
+    {
+        /*
+         * Clients must always only send UI click input events to the server if the contents of the slot actually
+         * are changed.
+         * That is why we disconnect the client from the server here.
+         */
+
+        LOG_ERROR(LogWorldChar, "Contents did not change. Faulty input: %s %d.", *this->GetName(), Slot)
+        return false;
+    }
+
+    return true;
+}
+
+void AWorldCharacter::OnInventorySlotPrimaryClicked_ServerRPC_Implementation(const int Slot)
+{
     /*
-     * We want to do some smart refreshing here in the future and check what we have to update.
+     * See the RPC Validate method for the actual logic.
      */
-    CHECKED_HEAD_UP_DISPLAY->RefreshHotbarSlots();
+
+    LOG_VERBOSE(LogWorldChar, "Called.")
+
+    MARK_PROPERTY_DIRTY_FROM_NAME(AWorldCharacter, Inventory, this)
+
+    return;
 }
 
 void AWorldCharacter::OnRep_SelectedQuickSlotIndex(void)
@@ -665,7 +714,7 @@ void AWorldCharacter::OnRep_SelectedQuickSlotIndex(void)
         return;
     }
 
-    CHECKED_HEAD_UP_DISPLAY->RefreshHotbarSelectorLocation();
+    this->OnQuickSlotLocationChanged_ClientDelegate.Broadcast();
 
     return;
 }
@@ -713,11 +762,57 @@ void AWorldCharacter::SetSelectedQuickSlotIndex_ServerRPC_Implementation(const i
 
 void AWorldCharacter::AddToInventoryAtSlot(const int Slot, const int Amount)
 {
+    if (UNetworkStatics::IsSafeServer(this) == false)
+    {
+        LOG_FATAL(LogWorldChar, "Called not on a server. Disallowed.")
+        return;
+    }
+
     bool bSuccess;
     this->Inventory[Slot].Content.SafeAddAmount(Amount, bSuccess);
     DEFAULT_SLOT_SAFE_ADD_POST_BEHAVIOR(bSuccess, Slot, this->Inventory)
 
     return;
+}
+
+void AWorldCharacter::AskForInventoryChangeDelegateBroadcast(void) const
+{
+    if (this->IsLocallyControlled() == false)
+    {
+        LOG_FATAL(LogWorldChar, "Called not on locally controlled character. Disallowed.")
+        return;
+    }
+
+    this->OnInventoryChanged_ClientDelegate.Broadcast();
+
+    return;
+}
+
+FDelegateHandle AWorldCharacter::SubscribeToInventoryChanged(const FOnClientCharacterPropertyChangedEventSignature::FDelegate& Delegate)
+{
+    if (this->IsLocallyControlled() == false)
+    {
+        LOG_FATAL(LogWorldChar, "Called not on locally controlled character. Disallowed.")
+        return FDelegateHandle();
+    }
+
+    return this->OnInventoryChanged_ClientDelegate.Add(Delegate);
+}
+
+bool AWorldCharacter::UnsubscribeFromInventoryChanged(const FDelegateHandle& Handle)
+{
+    return this->OnInventoryChanged_ClientDelegate.Remove(Handle);
+}
+
+FDelegateHandle AWorldCharacter::SubscribeToQuickSlotLocationChanged(const FOnClientCharacterPropertyChangedEventSignature::FDelegate& Delegate)
+{
+    if (this->IsLocallyControlled() == false)
+    {
+        LOG_FATAL(LogWorldChar, "Called not on locally controlled character. Disallowed.")
+        return FDelegateHandle();
+    }
+
+    return this->OnQuickSlotLocationChanged_ClientDelegate.Add(Delegate);
 }
 
 auto AWorldCharacter::AddToInventory(const FAccumulated& Accumulated) -> bool

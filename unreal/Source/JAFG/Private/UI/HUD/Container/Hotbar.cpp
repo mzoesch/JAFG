@@ -71,6 +71,18 @@ void UHotbar::NativeConstruct(void)
 {
     Super::NativeConstruct();
 
+    CHECK_OWNING_CHARACTER
+
+    const FOnClientCharacterPropertyChangedEventSignature::FDelegate OnInventoryChanged_ClientDelegate =
+        FOnClientCharacterPropertyChangedEventSignature::FDelegate::CreateUObject(this, &UHotbar::MarkAsDirty);
+    this->OnInventoryChanged_ClientDelegateHandle =
+        OWNING_CHARACTER->SubscribeToInventoryChanged(OnInventoryChanged_ClientDelegate);
+
+    const FOnClientCharacterPropertyChangedEventSignature::FDelegate OnQuickSlotLocationChanged_ClientDelegate =
+        FOnClientCharacterPropertyChangedEventSignature::FDelegate::CreateUObject(this, &UHotbar::RefreshSelectorLocation);
+    this->OnQuickSlotLocationChanged_ClientDelegateHandle =
+        OWNING_CHARACTER->SubscribeToQuickSlotLocationChanged(OnQuickSlotLocationChanged_ClientDelegate);
+
     this->MarkAsDirty();
 
     return;

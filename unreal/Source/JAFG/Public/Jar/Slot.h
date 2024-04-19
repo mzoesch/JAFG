@@ -2,16 +2,20 @@
 
 #pragma once
 
-#include "Accumulated.h"
 #include "CommonCore.h"
+#include "Accumulated.h"
 
 #include "Slot.generated.h"
 
 JAFG_VOID
 
+class AWorldCharacter;
+
 /**
  * A generic container slot implementation.
  * This class is only responsible for basic data exchange logic.
+ *
+ * No UI logic should be implemented here.
  */
 USTRUCT()
 struct JAFG_API FSlot
@@ -26,4 +30,6 @@ struct JAFG_API FSlot
 
     UPROPERTY()
     FAccumulated Content;
+
+    void OnPrimaryClicked(AWorldCharacter* Owner, bool& bOutChangedData, const bool bCalledInRPC = false);
 };

@@ -13,6 +13,7 @@
 
 JAFG_VOID
 
+class UCharacterInventorySlot;
 class ULocalChunkValidator;
 class UChatComponent;
 class UChatMenu;
@@ -21,6 +22,9 @@ class UInputAction;
 class UInputComponent;
 class UInputMappingContext;
 struct FInputActionValue;
+
+/** A multicast that is only being broadcasted on the client end. */
+DECLARE_MULTICAST_DELEGATE(FOnClientCharacterPropertyChangedEventSignature)
 
 UCLASS(Abstract, Blueprintable)
 class JAFG_API AWorldCharacter : public ACharacter
@@ -34,6 +38,7 @@ public:
 protected:
 
     virtual void BeginPlay(void) override;
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 public:
 
@@ -181,6 +186,17 @@ private:
     void OnRep_Inventory( /* void */ );
     UPROPERTY(ReplicatedUsing=OnRep_Inventory)
     TArray<FSlot> Inventory;
+    /**
+     * Called from the owning client to the server when a slot in the inventory is clicked and changed.
+     * The client has already predicted the outcome of this method, and the server will validate it and
+     * update all clients accordingly.
+     */
+    UFUNCTION(Server, Reliable, WithValidation)
+    void OnInventorySlotPrimaryClicked_ServerRPC(const int Slot);
+    /* We need to directly access the inventory. Not just by a const reference. */
+    friend UCharacterInventorySlot;
+    /** Called on the client to let UI instances now about pending changes. */
+    FOnClientCharacterPropertyChangedEventSignature OnInventoryChanged_ClientDelegate;
 
     UFUNCTION()
     void OnRep_SelectedQuickSlotIndex( /* void */ );
@@ -188,6 +204,8 @@ private:
     int SelectedQuickSlotIndex;
     UFUNCTION(Server, Reliable)
     void SetSelectedQuickSlotIndex_ServerRPC(const int Slot);
+    /** Called on the client to let UI instances now about pending changes. */
+    FOnClientCharacterPropertyChangedEventSignature OnQuickSlotLocationChanged_ClientDelegate;
 
     void AddToInventoryAtSlot(const int Slot, const int Amount);
 
@@ -195,11 +213,27 @@ public:
 
     inline static constexpr int HotbarSize            { 10 };
 
+    auto AskForInventoryChangeDelegateBroadcast(void) const -> void;
+    auto SubscribeToInventoryChanged(const FOnClientCharacterPropertyChangedEventSignature::FDelegate& Delegate) -> FDelegateHandle;
+    auto UnsubscribeFromInventoryChanged(const FDelegateHandle& Handle) -> bool;
+    auto SubscribeToQuickSlotLocationChanged(const FOnClientCharacterPropertyChangedEventSignature::FDelegate& Delegate) -> FDelegateHandle;
+
     FORCEINLINE auto GetSelectedQuickSlotIndex(void) const -> int { return this->SelectedQuickSlotIndex; }
 
     FORCEINLINE auto GetInventory(void) const -> const TArray<FSlot>& { return this->Inventory; }
     FORCEINLINE auto GetInventorySize(void) const -> int { return this->Inventory.Num(); }
-    FORCEINLINE auto GetInventorySlot(const int Slot) const -> FAccumulated { return this->Inventory[Slot].Content; }
+    FORCEINLINE auto GetInventorySlot(const int Slot) const -> FAccumulated
+    {
+#if WITH_EDITOR
+        if (this->Inventory.Num() <= Slot)
+        {
+            LOG_ERROR(LogCommonSlate, "Inventory slot index %d out of bounds of %d.", Slot, this->Inventory.Num());
+            return Accumulated::Null;
+        }
+#endif /* WITH_EDITOR */
+
+        return this->Inventory[Slot].Content;
+    }
     /** Server only. */
     FORCEINLINE auto AddToInventory(const FAccumulated& Accumulated) -> bool;
 

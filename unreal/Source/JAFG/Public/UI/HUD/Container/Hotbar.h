@@ -60,6 +60,9 @@ private:
 
 protected:
 
+    FDelegateHandle OnInventoryChanged_ClientDelegateHandle;
+    FDelegateHandle OnQuickSlotLocationChanged_ClientDelegateHandle;
+
     virtual void NativeConstruct(void) override;
     virtual void OnRefresh(void) override;
 };

@@ -124,34 +124,6 @@ void AWorldHUD::BeginPlay(void)
     return;
 }
 
-void AWorldHUD::RefreshHotbarSlots(void) const
-{
-    /*
-     * Because of replication in the world character, this will be called before the UWorld is properly initialized.
-     */
-    if (this->bRunBeginPlay)
-    {
-        check( this->WHotbar )
-        this->WHotbar->MarkAsDirty();
-    }
-
-    return;
-}
-
-void AWorldHUD::RefreshHotbarSelectorLocation(void) const
-{
-    /*
-     * Because of replication in the world character, this will be called before the UWorld is properly initialized.
-     */
-    if (this->bRunBeginPlay)
-    {
-        check( this->WHotbar )
-        this->WHotbar->RefreshSelectorLocation();
-    }
-
-    return;
-}
-
 void AWorldHUD::ToggleEscapeMenu(const bool bCollapsed) const
 {
     check( PLAYER_CONTROLLER )
@@ -200,6 +172,9 @@ void AWorldHUD::ToggleCharacterInventory(const bool bCollapsed) const
 {
     check( PLAYER_CONTROLLER )
     PLAYER_CONTROLLER->ShowMouseCursor(bCollapsed == false, true);
+
+    check( this->WCrosshair )
+    this->WCrosshair->SetVisibility(bCollapsed ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 
     check( this->WCharacterInventory )
     this->WCharacterInventory->Toggle(bCollapsed);
