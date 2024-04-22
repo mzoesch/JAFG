@@ -95,6 +95,9 @@ private:
     TObjectPtr<UInputAction> IAToggleInventory;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory", meta = (AllowPrivateAccess = "true"))
+    TObjectPtr<UInputAction> IADropAccumulated;
+
+    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UInputAction> IAQuickSlot0;
 
     UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Input|IA|Inventory", meta = (AllowPrivateAccess = "true"))
@@ -149,6 +152,9 @@ private:
     void OnSecondary_ServerRPC(const FInputActionValue& Value);
 
     void OnToggleInventory(const FInputActionValue& Value);
+    void OnDropAccumulated(const FInputActionValue& Value);
+    UFUNCTION(Server, Reliable, WithValidation)
+    void OnDropAccumulated_ServerRPC(const FInputActionValue& Value);
     void OnQuickSlot0(const FInputActionValue& Value);
     void OnQuickSlot1(const FInputActionValue& Value);
     void OnQuickSlot2(const FInputActionValue& Value);
@@ -292,6 +298,8 @@ public:
 
     FORCEINLINE auto GetFPSCamera(void) const -> UCameraComponent* { return this->FirstPersonCameraComponent; }
     FORCEINLINE auto GetTorsoLocation(void) const -> FVector { return this->FirstPersonCameraComponent->GetComponentLocation() + AWorldCharacter::TorsoOffset; }
+    FORCEINLINE auto GetTorsoRelativeLocation(void) const -> FVector { return this->FirstPersonCameraComponent->GetRelativeLocation() + AWorldCharacter::TorsoOffset; }
+    FORCEINLINE auto GetTorsoTransform(void) const -> FTransform { return FTransform(this->FirstPersonCameraComponent->GetComponentRotation(), this->GetTorsoLocation()); }
 
     FORCEINLINE auto GetCurrentDurationSameVoxelIsMined(void) const -> float { return 0.0f; }
 };

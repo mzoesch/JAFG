@@ -389,6 +389,83 @@ void AWorldCharacter::OnToggleInventory(const FInputActionValue& Value)
     return;
 }
 
+void AWorldCharacter::OnDropAccumulated(const FInputActionValue& Value)
+{
+    /*
+     * We simply ignore all predictions from the client and let the server (that is also us) handle the drop.
+     */
+    if (UNetworkStatics::IsSafeStandalone(this))
+    {
+        if (this->OnDropAccumulated_ServerRPC_Validate(Value))
+        {
+            this->OnDropAccumulated_ServerRPC_Implementation(Value);
+        }
+
+        this->OnInventoryChanged_ClientDelegate.Broadcast();
+
+        return;
+    }
+
+    if (const UEnhancedInputLocalPlayerSubsystem* Subsystem = ENHANCED_INPUT_SUBSYSTEM)
+    {
+        if (Subsystem->HasMappingContext(this->IMCInventory))
+        {
+            return;
+        }
+
+        bool bContentsChanged = false;
+        this->Inventory[this->SelectedQuickSlotIndex].OnDrop(this, bContentsChanged);
+
+        if (bContentsChanged == false)
+        {
+            return;
+        }
+
+        /*
+         * We update the UI immediately to give the player a more responsive UI.
+         * But let all other processes be handled by the server, for example, spawning the accumulated
+         * item as a drop in the UWorld.
+         */
+
+        this->OnInventoryChanged_ClientDelegate.Broadcast();
+        this->OnDropAccumulated_ServerRPC(Value);
+
+        return;
+    }
+
+    LOG_FATAL(LogWorldChar, "Enhanced Input subsystem is not available.")
+
+    return;
+}
+
+bool AWorldCharacter::OnDropAccumulated_ServerRPC_Validate(const FInputActionValue& Value)
+{
+    LOG_VERBOSE(LogWorldChar, "Called.")
+
+    if (const UEnhancedInputLocalPlayerSubsystem* Subsystem = ENHANCED_INPUT_SUBSYSTEM)
+    {
+        if (Subsystem->HasMappingContext(this->IMCInventory))
+        {
+            return false;
+        }
+
+        bool bContentsChanged = false;
+        this->Inventory[this->SelectedQuickSlotIndex].OnDrop(this, bContentsChanged, true);
+
+        return bContentsChanged;
+    }
+
+    LOG_FATAL(LogWorldChar, "Enhanced Input subsystem is not available.")
+
+    return false;
+}
+
+void AWorldCharacter::OnDropAccumulated_ServerRPC_Implementation(const FInputActionValue& Value)
+{
+    MARK_PROPERTY_DIRTY_FROM_NAME(AWorldCharacter, Inventory, this)
+    return;
+}
+
 #define QUICK_SLOT_0    0
 #define QUICK_SLOT_1    1
 #define QUICK_SLOT_2    2
@@ -609,6 +686,7 @@ void AWorldCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
         check( this->IASecondary )
 
         check( this->IAToggleInventory )
+        check( this->IADropAccumulated )
         check( this->IAQuickSlot0 )
         check( this->IAQuickSlot1 )
         check( this->IAQuickSlot2 )
@@ -640,6 +718,7 @@ void AWorldCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
         EnhancedInputComponent->BindAction(this->IASecondary, ETriggerEvent::Started, this, &AWorldCharacter::OnSecondary);
 
         EnhancedInputComponent->BindAction(this->IAToggleInventory, ETriggerEvent::Started, this, &AWorldCharacter::OnToggleInventory);
+        EnhancedInputComponent->BindAction(this->IADropAccumulated, ETriggerEvent::Started, this, &AWorldCharacter::OnDropAccumulated);
         EnhancedInputComponent->BindAction(this->IAQuickSlot0, ETriggerEvent::Started, this, &AWorldCharacter::OnQuickSlot0);
         EnhancedInputComponent->BindAction(this->IAQuickSlot1, ETriggerEvent::Started, this, &AWorldCharacter::OnQuickSlot1);
         EnhancedInputComponent->BindAction(this->IAQuickSlot2, ETriggerEvent::Started, this, &AWorldCharacter::OnQuickSlot2);

@@ -8,6 +8,7 @@
 
 #include "Cuboid.generated.h"
 
+class USphereComponent;
 class UVoxelSubsystem;
 class UProceduralMeshComponent;
 
@@ -18,6 +19,9 @@ struct JAFG_API FCuboidProceduralMeshData
     TArray<FVector>          Normals;
     TArray<FColor>           Colors;
     TArray<FVector2D>        UV0;
+    /**
+     * What the matter with those tangents? Do we even need them? This is to be investigated.
+     */
     TArray<FProcMeshTangent> Tangents;
 };
 
@@ -41,23 +45,60 @@ public:
     {
         this->ClearProceduralMesh();
         this->GenerateProceduralMesh();
+        this->ApplyCollisionConvexMesh();
         this->ApplyProceduralMesh();
 
         return;
     }
 
+protected:
+
+    int32 AccumulatedIndex = 0;
+
+    bool bHasCollisionConvexMesh = false;
+    bool bHasPawnCollision = false;
+
+    int32 CuboidX = ACuboid::DefaultCuboidX;
+    int32 CuboidY = ACuboid::DefaultCuboidY;
+    int32 CuboidZ = ACuboid::DefaultCuboidZ;
+    int32 ConvexX = ACuboid::DefaultConvexX;
+    int32 ConvexY = ACuboid::DefaultConvexY;
+    int32 ConvexZ = ACuboid::DefaultConvexZ;
+
+    int32 CollisionSphereRadius = ACuboid::DefaultCollisionSphereRadius;
+
+    void AddForceToProceduralMesh(const FVector& Force) const;
+
+    UFUNCTION()
+    virtual void OnSphereComponentOverlapBegin(
+        UPrimitiveComponent* OverlappedComponent,
+        AActor* OtherActor,
+        UPrimitiveComponent* OtherComponent,
+        int32 OtherBodyIndex,
+        bool bFromSweep,
+        const FHitResult& SweepResult
+    ) PURE_VIRTUAL(ACuboid::OnSphereComponentOverlapBegin)
+
+    UFUNCTION()
+    virtual void OnSphereComponentOverlapEnd(
+        UPrimitiveComponent* OverlappedComponent,
+        AActor* OtherActor,
+        UPrimitiveComponent* OtherComponent,
+        int32 OtherBodyIndex
+    ) PURE_VIRTUAL(ACuboid::OnSphereComponentOverlapEnd)
+
 private:
 
     /* All measurements in Unreal Coordinate System. */
 
-    inline static constexpr int32 CuboidX { 100 };
-    inline static constexpr int32 CuboidY { 100 };
-    inline static constexpr int32 CuboidZ { 100 };
-    inline static constexpr int32 ConvexX { 100 };
-    inline static constexpr int32 ConvexY { 100 };
-    inline static constexpr int32 ConvexZ { 100 };
+    inline static constexpr int32 DefaultCuboidX { 100 };
+    inline static constexpr int32 DefaultCuboidY { 100 };
+    inline static constexpr int32 DefaultCuboidZ { 100 };
+    inline static constexpr int32 DefaultConvexX { 100 };
+    inline static constexpr int32 DefaultConvexY { 100 };
+    inline static constexpr int32 DefaultConvexZ { 100 };
 
-    int32 AccumulatedIndex = 0;
+    inline static constexpr int32 DefaultCollisionSphereRadius { 100 };
 
     UPROPERTY()
     UVoxelSubsystem* VoxelSubsystem;
@@ -65,13 +106,18 @@ private:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     UProceduralMeshComponent* ProceduralMeshComponent;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    USphereComponent* SphereComponent;
+
     FVector                           PreDefinedShape      [ 8 ];
     TArray<FCuboidProceduralMeshData> ProceduralMeshData;
     TArray<int>                       VertexCounts;
 
-    auto GenerateProceduralMesh(void) -> void;
-    auto ApplyProceduralMesh(void) const -> void;
-    auto ClearProceduralMesh(void) -> void;
+            auto GenerateProceduralMesh(void) -> void;
+    virtual auto GenerateCollisionConvexMesh(TArray<FVector>& OutCollisionConvexMesh) -> void;
+            auto ApplyCollisionConvexMesh(void) -> void;
+            auto ApplyProceduralMesh(void) const -> void;
+            auto ClearProceduralMesh(void) -> void;
 
     /**
      * Adds a quadrilateral to the mesh for the next render sweep.

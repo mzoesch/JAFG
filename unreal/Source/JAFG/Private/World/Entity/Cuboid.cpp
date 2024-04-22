@@ -3,6 +3,7 @@
 #include "World/Entity/Cuboid.h"
 
 #include "ProceduralMeshComponent.h"
+#include "Components/SphereComponent.h"
 #include "Jar/Accumulated.h"
 #include "System/MaterialSubsystem.h"
 #include "World/Voxel/VoxelSubsystem.h"
@@ -11,11 +12,33 @@ ACuboid::ACuboid(const FObjectInitializer& ObjectInitializer) : Super(ObjectInit
 {
     this->PrimaryActorTick.bCanEverTick = false;
 
+    this->bReplicates = false;
+    this->bNetLoadOnClient = false;
+
     this->ProceduralMeshComponent = this->CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("ProceduralMeshComponent"));
     this->SetRootComponent(this->ProceduralMeshComponent);
     this->ProceduralMeshComponent->SetCastShadow(false);
 
+    this->SphereComponent = this->CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
+    this->SphereComponent->SetupAttachment(this->ProceduralMeshComponent);
+    this->SphereComponent->SetSphereRadius(ACuboid::CollisionSphereRadius);
+    this->SphereComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    this->SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &ACuboid::OnSphereComponentOverlapBegin);
+    this->SphereComponent->OnComponentEndOverlap.AddDynamic(this, &ACuboid::OnSphereComponentOverlapEnd);
+
     this->AccumulatedIndex = Accumulated::Null.AccumulatedIndex;
+
+    this->bHasCollisionConvexMesh = false;
+    this->bHasPawnCollision = false;
+
+    this->CuboidX = ACuboid::DefaultCuboidX;
+    this->CuboidY = ACuboid::DefaultCuboidY;
+    this->CuboidZ = ACuboid::DefaultCuboidZ;
+    this->ConvexX = ACuboid::DefaultConvexX;
+    this->ConvexY = ACuboid::DefaultConvexY;
+    this->ConvexZ = ACuboid::DefaultConvexZ;
+
+    this->CollisionSphereRadius = ACuboid::DefaultCollisionSphereRadius;
 
     this->VertexCounts.Empty();
     this->ProceduralMeshData.Empty();
@@ -35,6 +58,11 @@ void ACuboid::BeginPlay(void)
     this->ProceduralMeshData.Empty();
 
     return;
+}
+
+void ACuboid::AddForceToProceduralMesh(const FVector& Force) const
+{
+    this->ProceduralMeshComponent->AddForce(Force);
 }
 
 void ACuboid::GenerateProceduralMesh(void)
@@ -86,6 +114,55 @@ void ACuboid::GenerateProceduralMesh(void)
         FProcMeshTangent( 0.0f, -1.0f, 0.0f ),
         FVector( 0.0f,  0.0f, -1.0f )
     );
+
+    return;
+}
+
+void ACuboid::GenerateCollisionConvexMesh(TArray<FVector>& OutCollisionConvexMesh)
+{
+    OutCollisionConvexMesh.Reset();
+
+    OutCollisionConvexMesh.Add(FVector( this->ConvexX,  this->ConvexY,  this->ConvexZ)); /* Forward  Top    Right */
+    OutCollisionConvexMesh.Add(FVector( this->ConvexX,  this->ConvexY, -this->ConvexZ)); /* Forward  Bottom Right */
+    OutCollisionConvexMesh.Add(FVector( this->ConvexX, -this->ConvexY,  this->ConvexZ)); /* Forward  Top    Left  */
+    OutCollisionConvexMesh.Add(FVector( this->ConvexX, -this->ConvexY, -this->ConvexZ)); /* Forward  Bottom Left  */
+    OutCollisionConvexMesh.Add(FVector(-this->ConvexX, -this->ConvexY,  this->ConvexZ)); /* Backward Top    Left  */
+    OutCollisionConvexMesh.Add(FVector(-this->ConvexX, -this->ConvexY, -this->ConvexZ)); /* Backward Bottom Left  */
+    OutCollisionConvexMesh.Add(FVector(-this->ConvexX,  this->ConvexY,  this->ConvexZ)); /* Backward Top    Right */
+    OutCollisionConvexMesh.Add(FVector(-this->ConvexX,  this->ConvexY, -this->ConvexZ)); /* Backward Bottom Right */
+
+    return;
+}
+
+void ACuboid::ApplyCollisionConvexMesh(void)
+{
+    this->ProceduralMeshComponent->ClearCollisionConvexMeshes();
+
+    if (this->bHasCollisionConvexMesh)
+    {
+        LOG_DISPLAY(LogGenPrevAssets, "Applying collision convex mesh.")
+
+        TArray<FVector> CollisionConvexMesh;
+        this->GenerateCollisionConvexMesh(CollisionConvexMesh);
+        this->ProceduralMeshComponent->AddCollisionConvexMesh(CollisionConvexMesh);
+
+        this->ProceduralMeshComponent->SetSimulatePhysics(true);
+        this->ProceduralMeshComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+    }
+
+    if (this->bHasPawnCollision)
+    {
+        LOG_DISPLAY(LogGenPrevAssets, "Applying pawn collision.")
+
+        this->SphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+        this->SphereComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+        this->SphereComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+    }
+    else
+    {
+        LOG_DISPLAY(LogGenPrevAssets, "Disabling pawn collision.")
+        this->SphereComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    }
 
     return;
 }

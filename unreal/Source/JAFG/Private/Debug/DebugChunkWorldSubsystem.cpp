@@ -50,7 +50,7 @@ bool UDebugChunkWorldSubsystem::ShouldCreateSubsystem(UObject* Outer) const
         return false;
     }
 
-    if (UNetworkStatics::IsSafeDedicatedServer(this))
+    if (UNetworkStatics::IsSafeDedicatedServer(Outer))
     {
         LOG_DISPLAY(LogChunkMisc, "Subsystem will not be created for dedicated server.")
         return false;
