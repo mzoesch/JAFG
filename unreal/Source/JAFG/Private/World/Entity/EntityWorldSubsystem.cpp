@@ -77,11 +77,11 @@ void UEntityWorldSubsystem::CreateDrop(const FAccumulated& Accumulated, const FV
 
     ADrop* Drop = this->GetWorld()->SpawnActorDeferred<ADrop>(ADrop::StaticClass(), FTransform(FRotator::ZeroRotator, Location, FVector::OneVector));
 
-    Drop->SetAccumulatedIndex(Accumulated.AccumulatedIndex);
+    // Drop->SetAccumulatedIndex(Accumulated.AccumulatedIndex);
 
     UGameplayStatics::FinishSpawningActor(Drop, FTransform(FRotator(0.0f, 0.0f, 180.0f), Location, FVector::OneVector));
 
-    Drop->AddForce(Force.GetSafeNormal() * ForceMultiplier);
+    // Drop->AddForce(Force.GetSafeNormal() * ForceMultiplier);
 
     return;
 }

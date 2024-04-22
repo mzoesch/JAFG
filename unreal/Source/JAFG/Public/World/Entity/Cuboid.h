@@ -51,6 +51,9 @@ public:
         return;
     }
 
+    FORCEINLINE auto SetHasCollisionConvexMesh(const bool bInHasCollisionConvexMesh) -> void { this->bHasCollisionConvexMesh = bInHasCollisionConvexMesh; }
+    FORCEINLINE auto SetHasPawnCollision(const bool bInHasPawnCollision) -> void { this->bHasPawnCollision = bInHasPawnCollision; }
+
 protected:
 
     int32 AccumulatedIndex = 0;
@@ -77,7 +80,7 @@ protected:
         int32 OtherBodyIndex,
         bool bFromSweep,
         const FHitResult& SweepResult
-    ) PURE_VIRTUAL(ACuboid::OnSphereComponentOverlapBegin)
+    ) {}
 
     UFUNCTION()
     virtual void OnSphereComponentOverlapEnd(
@@ -85,7 +88,7 @@ protected:
         AActor* OtherActor,
         UPrimitiveComponent* OtherComponent,
         int32 OtherBodyIndex
-    ) PURE_VIRTUAL(ACuboid::OnSphereComponentOverlapEnd)
+    ) {}
 
 private:
 

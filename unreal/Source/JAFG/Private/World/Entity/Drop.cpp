@@ -3,21 +3,18 @@
 #include "World/Entity/Drop.h"
 
 #include "Jar/Accumulated.h"
+#include "Kismet/GameplayStatics.h"
+#include "World/Entity/Cuboid.h"
 
 ADrop::ADrop(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
     this->bReplicates = true;
     this->bNetLoadOnClient = true;
 
-    this->bHasCollisionConvexMesh = true;
-    this->bHasPawnCollision = true;
+    this->SceneComponent = ObjectInitializer.CreateDefaultSubobject<USceneComponent>(this, TEXT("SceneComponent"));
+    this->SetRootComponent(this->SceneComponent);
 
-    this->CuboidX = ADrop::DefaultDropCuboidX;
-    this->CuboidY = ADrop::DefaultDropCuboidY;
-    this->CuboidZ = ADrop::DefaultDropCuboidZ;
-    this->ConvexX = ADrop::DefaultDropConvexX;
-    this->ConvexY = ADrop::DefaultDropConvexY;
-    this->ConvexZ = ADrop::DefaultDropConvexZ;
+    this->Cuboid = nullptr;
 
     return;
 }
@@ -26,45 +23,16 @@ void ADrop::BeginPlay(void)
 {
     Super::BeginPlay();
 
-    if (this->AccumulatedIndex == Accumulated::Null.AccumulatedIndex)
-    {
-        LOG_FATAL(LogEntitySystem, "Accumulated is not set.")
-        return;
-    }
+    this->Cuboid = this->GetWorld()->SpawnActorDeferred<ACuboid>(ACuboid::StaticClass(), FTransform(FRotator::ZeroRotator, FVector::ZeroVector, FVector::OneVector));
+    this->Cuboid->AttachToComponent(this->SceneComponent, FAttachmentTransformRules::KeepRelativeTransform);
 
-    this->RegenerateProceduralMesh();
+    this->Cuboid->SetHasCollisionConvexMesh(true);
+    this->Cuboid->SetHasPawnCollision(true);
+    this->Cuboid->SetAccumulatedIndex(ECommonVoxels::Air + 1);
+
+    UGameplayStatics::FinishSpawningActor(this->Cuboid, FTransform(FRotator::ZeroRotator, FVector::ZeroVector, FVector::OneVector));
+
+    this->Cuboid->RegenerateProceduralMesh();
 
     return;
-}
-
-void ADrop::Tick(const float DeltaTime)
-{
-    Super::Tick(DeltaTime);
-}
-
-void ADrop::AddForce(const FVector& Force) const
-{
-    this->AddForceToProceduralMesh(Force);
-}
-
-void ADrop::OnSphereComponentOverlapBegin(
-    UPrimitiveComponent* OverlappedComponent,
-    AActor* OtherActor,
-    UPrimitiveComponent* OtherComponent,
-    int32 OtherBodyIndex,
-    bool bFromSweep,
-    const FHitResult& SweepResult
-)
-{
-    LOG_VERBOSE(LogEntitySystem, "Called.")
-}
-
-void ADrop::OnSphereComponentOverlapEnd(
-    UPrimitiveComponent* OverlappedComponent,
-    AActor* OtherActor,
-    UPrimitiveComponent* OtherComponent,
-    int32 OtherBodyIndex
-)
-{
-    LOG_VERBOSE(LogEntitySystem, "Called.")
 }

@@ -57,6 +57,32 @@ void ACuboid::BeginPlay(void)
     this->VertexCounts.Empty();
     this->ProceduralMeshData.Empty();
 
+    if (this->bHasCollisionConvexMesh == true)
+    {
+        this->ProceduralMeshComponent->bUseComplexAsSimpleCollision = false;
+
+        TArray<FVector> CollisionConvexMesh;
+        CollisionConvexMesh.Add(FVector( this->ConvexX,  this->ConvexY,  this->ConvexZ)); /* Forward  Top    Right */
+        CollisionConvexMesh.Add(FVector( this->ConvexX,  this->ConvexY, -this->ConvexZ)); /* Forward  Bottom Right */
+        CollisionConvexMesh.Add(FVector( this->ConvexX, -this->ConvexY,  this->ConvexZ)); /* Forward  Top    Left  */
+        CollisionConvexMesh.Add(FVector( this->ConvexX, -this->ConvexY, -this->ConvexZ)); /* Forward  Bottom Left  */
+        CollisionConvexMesh.Add(FVector(-this->ConvexX, -this->ConvexY,  this->ConvexZ)); /* Backward Top    Left  */
+        CollisionConvexMesh.Add(FVector(-this->ConvexX, -this->ConvexY, -this->ConvexZ)); /* Backward Bottom Left  */
+        CollisionConvexMesh.Add(FVector(-this->ConvexX,  this->ConvexY,  this->ConvexZ)); /* Backward Top    Right */
+        CollisionConvexMesh.Add(FVector(-this->ConvexX,  this->ConvexY, -this->ConvexZ)); /* Backward Bottom Right */
+        this->ProceduralMeshComponent->AddCollisionConvexMesh(CollisionConvexMesh);
+
+        this->ProceduralMeshComponent->SetSimulatePhysics(true);
+        this->ProceduralMeshComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+    }
+
+    if (this->bHasPawnCollision)
+    {
+        this->SphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+        this->SphereComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+        this->SphereComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+    }
+
     return;
 }
 
