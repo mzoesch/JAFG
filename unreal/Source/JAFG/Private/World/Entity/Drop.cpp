@@ -11,6 +11,9 @@ ADropImpl::ADropImpl(const FObjectInitializer& ObjectInitializer) : Super(Object
 {
     this->PrimaryActorTick.bCanEverTick = true;
 
+    this->bReplicates      = true;
+    this->bNetLoadOnClient = true;
+
     this->OverlappingCharacters.Empty();
 
     return;
@@ -20,10 +23,20 @@ void ADropImpl::BeginPlay(void)
 {
     Super::BeginPlay();
 
+    this->SetReplicateMovement(true);
+
     if (UNetworkStatics::IsSafeClient(this))
     {
-        LOG_DISPLAY(LogEntitySystem, "Replicated to a client. Disabeling the drop.")
         this->SetActorTickEnabled(false);
+
+        if (this->AccumulatedIndex == Accumulated::Null.AccumulatedIndex)
+        {
+            LOG_FATAL(LogEntitySystem, "No accumulated item is set.")
+            return;
+        }
+
+        this->RegenerateProceduralMesh();
+
         return;
     }
 
@@ -66,6 +79,7 @@ void ADropImpl::Tick(const float DeltaSeconds)
 
         if (OverlappingCharacter->AddToInventory(FAccumulated(this->AccumulatedIndex)))
         {
+            LOG_VERBOSE(LogEntitySystem, "Added accumulated item to character: %s.", *OverlappingCharacter->GetName())
             this->Destroy();
             return;
         }
@@ -104,8 +118,8 @@ void ADropImpl::OnWorldCharacterOverlapEnd(AWorldCharacter* OverlappedCharacter)
 
 ADrop::ADrop(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-    this->bReplicates = true;
-    this->bNetLoadOnClient = true;
+    this->bReplicates = false;
+    this->bNetLoadOnClient = false;
 
     this->SceneComponent = ObjectInitializer.CreateDefaultSubobject<USceneComponent>(this, TEXT("SceneComponent"));
     this->SetRootComponent(this->SceneComponent);
@@ -118,6 +132,13 @@ ADrop::ADrop(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitiali
 void ADrop::BeginPlay(void)
 {
     Super::BeginPlay();
+
+    if (UNetworkStatics::IsSafeServer(this) == false)
+    {
+        LOG_ERROR(LogEntitySystem, "Drop is not on a server. Disabling the drop.")
+        this->Destroy();
+        return;
+    }
 
     check( this->GetWorld() )
 

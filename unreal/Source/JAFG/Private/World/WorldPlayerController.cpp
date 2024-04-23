@@ -17,7 +17,7 @@ void AWorldPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME(AWorldPlayerController, bIsConnectionEstablishedAndValidated);
+    DOREPLIFETIME(AWorldPlayerController, bIsConnectionEstablishedAndValidated)
 
     return;
 }

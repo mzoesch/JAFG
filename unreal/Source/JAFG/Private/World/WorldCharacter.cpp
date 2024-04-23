@@ -414,7 +414,7 @@ void AWorldCharacter::OnDropAccumulated(const FInputActionValue& Value)
         }
 
         bool bContentsChanged = false;
-        this->Inventory[this->SelectedQuickSlotIndex].OnDrop(this, bContentsChanged);
+        this->Inventory[this->SelectedQuickSlotIndex].OnDrop(this, bContentsChanged, UNetworkStatics::IsSafeListenServer(this));
 
         if (bContentsChanged == false)
         {
@@ -428,6 +428,16 @@ void AWorldCharacter::OnDropAccumulated(const FInputActionValue& Value)
          */
 
         this->OnInventoryChanged_ClientDelegate.Broadcast();
+
+        if (UNetworkStatics::IsSafeListenServer(this))
+        {
+            return;
+        }
+
+        /*
+         * Only sent the RPC to the server if we are not the server.
+         * We already handled the drop on the server side.
+         */
         this->OnDropAccumulated_ServerRPC(Value);
 
         return;
@@ -442,22 +452,10 @@ bool AWorldCharacter::OnDropAccumulated_ServerRPC_Validate(const FInputActionVal
 {
     LOG_VERBOSE(LogWorldChar, "Called.")
 
-    if (const UEnhancedInputLocalPlayerSubsystem* Subsystem = ENHANCED_INPUT_SUBSYSTEM)
-    {
-        if (Subsystem->HasMappingContext(this->IMCInventory))
-        {
-            return false;
-        }
+    bool bContentsChanged = false;
+    this->Inventory[this->SelectedQuickSlotIndex].OnDrop(this, bContentsChanged, true);
 
-        bool bContentsChanged = false;
-        this->Inventory[this->SelectedQuickSlotIndex].OnDrop(this, bContentsChanged, true);
-
-        return bContentsChanged;
-    }
-
-    LOG_FATAL(LogWorldChar, "Enhanced Input subsystem is not available.")
-
-    return false;
+    return bContentsChanged;
 }
 
 void AWorldCharacter::OnDropAccumulated_ServerRPC_Implementation(const FInputActionValue& Value)
@@ -849,7 +847,43 @@ void AWorldCharacter::AddToInventoryAtSlot(const int Slot, const int Amount)
 
     bool bSuccess;
     this->Inventory[Slot].Content.SafeAddAmount(Amount, bSuccess);
+
     DEFAULT_SLOT_SAFE_ADD_POST_BEHAVIOR(bSuccess, Slot, this->Inventory)
+
+    MARK_PROPERTY_DIRTY_FROM_NAME(AWorldCharacter, Inventory, this)
+
+    /*
+     * Dirty pushes are not called here. This applies for standalone and listen servers.
+     * See PushModel.h for more information.
+     */
+    if (this->IsLocallyControlled())
+    {
+        this->OnRep_Inventory();
+    }
+
+    return;
+}
+
+void AWorldCharacter::SetInventoryAtSlot(const int Slot, const FAccumulated& Accumulated)
+{
+    if (UNetworkStatics::IsSafeServer(this) == false)
+    {
+        LOG_FATAL(LogWorldChar, "Called not on a server. Disallowed.")
+        return;
+    }
+
+    this->Inventory[Slot].Content = Accumulated;
+
+    MARK_PROPERTY_DIRTY_FROM_NAME(AWorldCharacter, Inventory, this)
+
+    /*
+    * Dirty pushes are not called here. This applies for standalone and listen servers.
+    * See PushModel.h for more information.
+    */
+    if (this->IsLocallyControlled())
+    {
+        this->OnRep_Inventory();
+    }
 
     return;
 }
@@ -894,7 +928,7 @@ FDelegateHandle AWorldCharacter::SubscribeToQuickSlotLocationChanged(const FOnCl
     return this->OnQuickSlotLocationChanged_ClientDelegate.Add(Delegate);
 }
 
-auto AWorldCharacter::AddToInventory(const FAccumulated& Accumulated) -> bool
+bool AWorldCharacter::AddToInventory(const FAccumulated& Accumulated)
 {
     if (UNetworkStatics::IsSafeServer(this) == false)
     {
@@ -921,7 +955,7 @@ auto AWorldCharacter::AddToInventory(const FAccumulated& Accumulated) -> bool
             continue;
         }
 
-        this->Inventory[i].Content = Accumulated;
+        this->SetInventoryAtSlot(i, Accumulated);
 
         return true;
     }

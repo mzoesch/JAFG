@@ -213,7 +213,8 @@ private:
     /** Called on the client to let UI instances now about pending changes. */
     FOnClientCharacterPropertyChangedEventSignature OnQuickSlotLocationChanged_ClientDelegate;
 
-    void AddToInventoryAtSlot(const int Slot, const int Amount);
+    auto AddToInventoryAtSlot(const int Slot, const int Amount) -> void;
+    auto SetInventoryAtSlot(const int Slot, const FAccumulated& Accumulated) -> void;
 
 public:
 

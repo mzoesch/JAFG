@@ -5,6 +5,8 @@
 #include "ProceduralMeshComponent.h"
 #include "Components/SphereComponent.h"
 #include "Jar/Accumulated.h"
+#include "Net/UnrealNetwork.h"
+#include "Network/NetworkStatics.h"
 #include "System/MaterialSubsystem.h"
 #include "World/Chunk/CommonChunk.h"
 #include "World/Voxel/VoxelSubsystem.h"
@@ -13,7 +15,11 @@ ACuboid::ACuboid(const FObjectInitializer& ObjectInitializer) : Super(ObjectInit
 {
     this->PrimaryActorTick.bCanEverTick = false;
 
-    this->bReplicates = false;
+    /*
+     * Default is not to replicate. But this class supports a fully fledged replication system. Derived classes
+     * can set this to true. All necessary properties and functions are replicated.
+     */
+    this->bReplicates      = false;
     this->bNetLoadOnClient = false;
 
     this->ProceduralMeshComponent = this->CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("ProceduralMeshComponent"));
@@ -30,7 +36,7 @@ ACuboid::ACuboid(const FObjectInitializer& ObjectInitializer) : Super(ObjectInit
     this->AccumulatedIndex = Accumulated::Null.AccumulatedIndex;
 
     this->bHasCollisionConvexMesh = false;
-    this->bHasPawnCollision = false;
+    this->bHasPawnCollision       = false;
 
     this->CuboidX = ACuboid::DefaultCuboidX;
     this->CuboidY = ACuboid::DefaultCuboidY;
@@ -43,6 +49,27 @@ ACuboid::ACuboid(const FObjectInitializer& ObjectInitializer) : Super(ObjectInit
 
     this->VertexCounts.Empty();
     this->ProceduralMeshData.Empty();
+
+    return;
+}
+
+void ACuboid::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(ACuboid, AccumulatedIndex)
+
+    DOREPLIFETIME(ACuboid, bHasCollisionConvexMesh)
+    DOREPLIFETIME(ACuboid, bHasPawnCollision)
+
+    DOREPLIFETIME(ACuboid, CuboidX)
+    DOREPLIFETIME(ACuboid, CuboidY)
+    DOREPLIFETIME(ACuboid, CuboidZ)
+    DOREPLIFETIME(ACuboid, ConvexX)
+    DOREPLIFETIME(ACuboid, ConvexY)
+    DOREPLIFETIME(ACuboid, ConvexZ)
+
+    DOREPLIFETIME(ACuboid, CollisionSphereRadius)
 
     return;
 }
@@ -79,7 +106,7 @@ void ACuboid::BeginPlay(void)
 
     if (this->bHasPawnCollision)
     {
-        this->SphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+        this->SphereComponent->SetCollisionEnabled(UNetworkStatics::IsSafeClient(this) ? ECollisionEnabled::NoCollision : ECollisionEnabled::QueryOnly);
         this->SphereComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
         this->SphereComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
     }
@@ -101,6 +128,15 @@ void ACuboid::OnCuboidBeginOverlap(
     const FHitResult& SweepResult
 )
 {
+    if (UNetworkStatics::IsSafeClient(this))
+    {
+        /*
+         * All the logic is done on the server side. We do not need to double-check here.
+         * The authority will always double-check and correct the client anyway on any topic.
+         */
+        return;
+    }
+
     LOG_VERBOSE(LogEntitySystem, "Called.")
 
     if (OtherActor->IsA(ACuboid::StaticClass()) || OtherActor->IsA(ACommonChunk::StaticClass()))
@@ -131,6 +167,15 @@ void ACuboid::OnCuboidEndOverlap(
     const int32 OtherBodyIndex
 )
 {
+    if (UNetworkStatics::IsSafeClient(this))
+    {
+        /*
+         * All the logic is done on the server side. We do not need to double-check here.
+         * The authority will always double-check and correct the client anyway on any topic.
+         */
+        return;
+    }
+
     LOG_VERBOSE(LogEntitySystem, "Called.")
 
     if (OtherActor->IsA(ACuboid::StaticClass()) || OtherActor->IsA(ACommonChunk::StaticClass()))

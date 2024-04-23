@@ -57,6 +57,8 @@ public:
 
     explicit ACuboid(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 protected:
 
     virtual void BeginPlay(void) override;
@@ -113,18 +115,28 @@ public:
 
 protected:
 
+    UPROPERTY(Replicated)
     int32 AccumulatedIndex       = 0;
 
+    UPROPERTY(Replicated)
     bool bHasCollisionConvexMesh = false;
+    UPROPERTY(Replicated)
     bool bHasPawnCollision       = false;
 
+    UPROPERTY(Replicated)
     int32 CuboidX = ACuboid::DefaultCuboidX;
+    UPROPERTY(Replicated)
     int32 CuboidY = ACuboid::DefaultCuboidY;
+    UPROPERTY(Replicated)
     int32 CuboidZ = ACuboid::DefaultCuboidZ;
+    UPROPERTY(Replicated)
     int32 ConvexX = ACuboid::DefaultConvexX;
+    UPROPERTY(Replicated)
     int32 ConvexY = ACuboid::DefaultConvexY;
+    UPROPERTY(Replicated)
     int32 ConvexZ = ACuboid::DefaultConvexZ;
 
+    UPROPERTY(Replicated)
     int32 CollisionSphereRadius = ACuboid::DefaultCollisionSphereRadius;
 
     UFUNCTION()
