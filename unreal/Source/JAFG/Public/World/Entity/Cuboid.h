@@ -8,6 +8,24 @@
 
 #include "Cuboid.generated.h"
 
+DECLARE_DELEGATE_SixParams(
+    FOnCuboidBeginOverlapEventSignature,
+    UPrimitiveComponent* /* OverlappedComponent */ ,
+    AActor* /* OtherActor */ ,
+    UPrimitiveComponent* /* OtherComp */,
+    const int32 /* OtherBodyIndex */,
+    const bool /* bFromSweep */,
+    const FHitResult& /* SweepResult */
+)
+
+DECLARE_DELEGATE_FourParams(
+    FOnCuboidEndOverlapEventSignature,
+    UPrimitiveComponent* /* OverlappedComponent */ ,
+    AActor* /* OtherActor */ ,
+    UPrimitiveComponent* /* OtherComp */,
+    const int32 /* OtherBodyIndex */
+)
+
 class USphereComponent;
 class UVoxelSubsystem;
 class UProceduralMeshComponent;
@@ -25,6 +43,11 @@ struct JAFG_API FCuboidProceduralMeshData
     TArray<FProcMeshTangent> Tangents;
 };
 
+/**
+ * A cuboid based on any accumulated item index than can be spawned in the UWorld
+ * without the need of an owning chunk.
+ * An AActor completely detached from the chunk subsystem.
+ */
 UCLASS(NotBlueprintable)
 class JAFG_API ACuboid : public AActor
 {
@@ -40,7 +63,11 @@ protected:
 
 public:
 
-    FORCEINLINE auto SetAccumulatedIndex(const int32 InAccumulatedIndex) -> void { this->AccumulatedIndex = InAccumulatedIndex; }
+    FORCEINLINE auto SetAccumulatedIndex(const int32 InAccumulatedIndex) -> void
+    {
+        this->AccumulatedIndex = InAccumulatedIndex;
+    }
+
     FORCEINLINE auto RegenerateProceduralMesh(void) -> void
     {
         this->ClearProceduralMesh();
@@ -51,15 +78,45 @@ public:
         return;
     }
 
-    FORCEINLINE auto SetHasCollisionConvexMesh(const bool bInHasCollisionConvexMesh) -> void { this->bHasCollisionConvexMesh = bInHasCollisionConvexMesh; }
-    FORCEINLINE auto SetHasPawnCollision(const bool bInHasPawnCollision) -> void { this->bHasPawnCollision = bInHasPawnCollision; }
+    FORCEINLINE auto SetHasCollisionConvexMesh(const bool bInHasCollisionConvexMesh) -> void
+    {
+        this->bHasCollisionConvexMesh = bInHasCollisionConvexMesh;
+    }
+
+    FORCEINLINE auto SetHasPawnCollision(const bool bInHasPawnCollision) -> void
+    {
+        this->bHasPawnCollision = bInHasPawnCollision;
+    }
+
+    FORCEINLINE auto SetCuboidDimensions(const int32 InCuboidX, const int32 InCuboidY, const int32 InCuboidZ) -> void
+    {
+        this->CuboidX = InCuboidX;
+        this->CuboidY = InCuboidY;
+        this->CuboidZ = InCuboidZ;
+
+        return;
+    }
+
+    FORCEINLINE auto SetConvexDimensions(const int32 InConvexX, const int32 InConvexY, const int32 InConvexZ) -> void
+    {
+        this->ConvexX = InConvexX;
+        this->ConvexY = InConvexY;
+        this->ConvexZ = InConvexZ;
+
+        return;
+    }
+
+                auto AddForceToProceduralMesh(const FVector& Force) const -> void;
+
+    FOnCuboidBeginOverlapEventSignature OnCuboidBeginOverlapEvent;
+    FOnCuboidEndOverlapEventSignature   OnCuboidEndOverlapEvent;
 
 protected:
 
-    int32 AccumulatedIndex = 0;
+    int32 AccumulatedIndex       = 0;
 
     bool bHasCollisionConvexMesh = false;
-    bool bHasPawnCollision = false;
+    bool bHasPawnCollision       = false;
 
     int32 CuboidX = ACuboid::DefaultCuboidX;
     int32 CuboidY = ACuboid::DefaultCuboidY;
@@ -70,25 +127,23 @@ protected:
 
     int32 CollisionSphereRadius = ACuboid::DefaultCollisionSphereRadius;
 
-    void AddForceToProceduralMesh(const FVector& Force) const;
-
     UFUNCTION()
-    virtual void OnSphereComponentOverlapBegin(
+    void OnCuboidBeginOverlap(
         UPrimitiveComponent* OverlappedComponent,
         AActor* OtherActor,
-        UPrimitiveComponent* OtherComponent,
-        int32 OtherBodyIndex,
-        bool bFromSweep,
+        UPrimitiveComponent* OtherComp,
+        const int32 OtherBodyIndex,
+        const bool bFromSweep,
         const FHitResult& SweepResult
-    ) {}
+    );
 
     UFUNCTION()
-    virtual void OnSphereComponentOverlapEnd(
+    void OnCuboidEndOverlap(
         UPrimitiveComponent* OverlappedComponent,
         AActor* OtherActor,
-        UPrimitiveComponent* OtherComponent,
-        int32 OtherBodyIndex
-    ) {}
+        UPrimitiveComponent* OtherComp,
+        const int32 OtherBodyIndex
+    );
 
 private:
 
@@ -104,13 +159,13 @@ private:
     inline static constexpr int32 DefaultCollisionSphereRadius { 100 };
 
     UPROPERTY()
-    UVoxelSubsystem* VoxelSubsystem;
+    TObjectPtr<UVoxelSubsystem> VoxelSubsystem;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-    UProceduralMeshComponent* ProceduralMeshComponent;
-
+    TObjectPtr<UProceduralMeshComponent> ProceduralMeshComponent;
+public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-    USphereComponent* SphereComponent;
+    TObjectPtr<USphereComponent> SphereComponent;
 
     FVector                           PreDefinedShape      [ 8 ];
     TArray<FCuboidProceduralMeshData> ProceduralMeshData;

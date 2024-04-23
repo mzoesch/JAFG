@@ -6,6 +6,7 @@
 #include "Components/SphereComponent.h"
 #include "Jar/Accumulated.h"
 #include "System/MaterialSubsystem.h"
+#include "World/Chunk/CommonChunk.h"
 #include "World/Voxel/VoxelSubsystem.h"
 
 ACuboid::ACuboid(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -23,8 +24,8 @@ ACuboid::ACuboid(const FObjectInitializer& ObjectInitializer) : Super(ObjectInit
     this->SphereComponent->SetupAttachment(this->ProceduralMeshComponent);
     this->SphereComponent->SetSphereRadius(ACuboid::CollisionSphereRadius);
     this->SphereComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-    this->SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &ACuboid::OnSphereComponentOverlapBegin);
-    this->SphereComponent->OnComponentEndOverlap.AddDynamic(this, &ACuboid::OnSphereComponentOverlapEnd);
+    this->SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &ACuboid::OnCuboidBeginOverlap);
+    this->SphereComponent->OnComponentEndOverlap.AddDynamic(this, &ACuboid::OnCuboidEndOverlap);
 
     this->AccumulatedIndex = Accumulated::Null.AccumulatedIndex;
 
@@ -89,6 +90,68 @@ void ACuboid::BeginPlay(void)
 void ACuboid::AddForceToProceduralMesh(const FVector& Force) const
 {
     this->ProceduralMeshComponent->AddForce(Force);
+}
+
+void ACuboid::OnCuboidBeginOverlap(
+    UPrimitiveComponent* OverlappedComponent,
+    AActor* OtherActor,
+    UPrimitiveComponent* OtherComp,
+    const int32 OtherBodyIndex,
+    const bool bFromSweep,
+    const FHitResult& SweepResult
+)
+{
+    LOG_VERBOSE(LogEntitySystem, "Called.")
+
+    if (OtherActor->IsA(ACuboid::StaticClass()) || OtherActor->IsA(ACommonChunk::StaticClass()))
+    {
+        /*
+         * Can happen as we set the collision response during the Begin Play.
+         */
+        return;
+    }
+
+    if (this->OnCuboidBeginOverlapEvent.IsBound())
+    {
+        this->OnCuboidBeginOverlapEvent.Execute(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
+        return;
+    }
+
+    LOG_ERROR(LogEntitySystem, "Corresponding delegate event is not bound. Destroying AActor.")
+
+    this->Destroy();
+
+    return;
+}
+
+void ACuboid::OnCuboidEndOverlap(
+    UPrimitiveComponent* OverlappedComponent,
+    AActor* OtherActor,
+    UPrimitiveComponent* OtherComp,
+    const int32 OtherBodyIndex
+)
+{
+    LOG_VERBOSE(LogEntitySystem, "Called.")
+
+    if (OtherActor->IsA(ACuboid::StaticClass()) || OtherActor->IsA(ACommonChunk::StaticClass()))
+    {
+        /*
+         * Can happen as we set the collision response during the Begin Play.
+         */
+        return;
+    }
+
+    if (this->OnCuboidEndOverlapEvent.IsBound())
+    {
+        this->OnCuboidEndOverlapEvent.Execute(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex);
+        return;
+    }
+
+    LOG_ERROR(LogEntitySystem, "Corresponding delegate event is not bound. Destroying AActor.")
+
+    this->Destroy();
+
+    return;
 }
 
 void ACuboid::GenerateProceduralMesh(void)
@@ -166,7 +229,7 @@ void ACuboid::ApplyCollisionConvexMesh(void)
 
     if (this->bHasCollisionConvexMesh)
     {
-        LOG_DISPLAY(LogGenPrevAssets, "Applying collision convex mesh.")
+        LOG_DISPLAY(LogEntitySystem, "Applying collision convex mesh.")
 
         TArray<FVector> CollisionConvexMesh;
         this->GenerateCollisionConvexMesh(CollisionConvexMesh);
@@ -178,7 +241,7 @@ void ACuboid::ApplyCollisionConvexMesh(void)
 
     if (this->bHasPawnCollision)
     {
-        LOG_DISPLAY(LogGenPrevAssets, "Applying pawn collision.")
+        LOG_DISPLAY(LogEntitySystem, "Applying pawn collision.")
 
         this->SphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
         this->SphereComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
@@ -186,7 +249,7 @@ void ACuboid::ApplyCollisionConvexMesh(void)
     }
     else
     {
-        LOG_DISPLAY(LogGenPrevAssets, "Disabling pawn collision.")
+        LOG_DISPLAY(LogEntitySystem, "Disabling pawn collision.")
         this->SphereComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     }
 
@@ -200,7 +263,7 @@ void ACuboid::ApplyProceduralMesh(void) const
 
     if (MaterialSubsystem == nullptr)
     {
-        LOG_FATAL(LogGenPrevAssets, "Could not get Material Subsystem.")
+        LOG_FATAL(LogEntitySystem, "Could not get Material Subsystem.")
         return;
     }
 
@@ -232,7 +295,7 @@ void ACuboid::ApplyProceduralMesh(void) const
         }
         else
         {
-            LOG_ERROR(LogGenPrevAssets, "Texture group %d not implemented.", i)
+            LOG_ERROR(LogEntitySystem, "Texture group %d not implemented.", i)
             this->ProceduralMeshComponent->SetMaterial(
                 i,
                 MaterialSubsystem->MDynamicOpaque
