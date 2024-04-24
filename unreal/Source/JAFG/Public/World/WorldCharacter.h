@@ -205,6 +205,13 @@ private:
     FOnClientCharacterPropertyChangedEventSignature OnInventoryChanged_ClientDelegate;
 
     UFUNCTION()
+    void OnRep_CursorHand( /* void */ ) const;
+    UPROPERTY(ReplicatedUsing=OnRep_CursorHand)
+    FAccumulated CursorHand;
+    /* The struct to actually handle all container data exchange logic. We need to modify the inventory directly. */
+    friend FSlot;
+
+    UFUNCTION()
     void OnRep_SelectedQuickSlotIndex( /* void */ );
     UPROPERTY(ReplicatedUsing=OnRep_SelectedQuickSlotIndex)
     int SelectedQuickSlotIndex;
@@ -225,8 +232,6 @@ public:
     auto UnsubscribeFromInventoryChanged(const FDelegateHandle& Handle) -> bool;
     auto SubscribeToQuickSlotLocationChanged(const FOnClientCharacterPropertyChangedEventSignature::FDelegate& Delegate) -> FDelegateHandle;
 
-    FORCEINLINE auto GetSelectedQuickSlotIndex(void) const -> int { return this->SelectedQuickSlotIndex; }
-
     FORCEINLINE auto GetInventory(void) const -> const TArray<FSlot>& { return this->Inventory; }
     FORCEINLINE auto GetInventorySize(void) const -> int { return this->Inventory.Num(); }
     FORCEINLINE auto GetInventorySlot(const int Slot) const -> FAccumulated
@@ -243,6 +248,10 @@ public:
     }
     /** Server only. */
     FORCEINLINE auto AddToInventory(const FAccumulated& Accumulated) -> bool;
+
+    FORCEINLINE auto GetCursorHand(void) const -> const FAccumulated& { return this->CursorHand; }
+
+    FORCEINLINE auto GetSelectedQuickSlotIndex(void) const -> int { return this->SelectedQuickSlotIndex; }
 
 private:
 

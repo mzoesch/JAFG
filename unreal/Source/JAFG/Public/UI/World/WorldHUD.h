@@ -7,9 +7,10 @@
 
 #include "WorldHUD.generated.h"
 
-class UCharacterInventory;
 JAFG_VOID
 
+class UCursorHandPreview;
+class UCharacterInventory;
 class UHotbarSelector;
 class UHotbarSlot;
 class UHotbar;
@@ -28,8 +29,6 @@ public:
     explicit AWorldHUD(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
     virtual void BeginPlay(void) override;
-
-public:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widgets")
     TSubclassOf<UDebugScreen> WDebugScreenClass;
@@ -54,6 +53,9 @@ public:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widgets")
     TSubclassOf<UCharacterInventory> WCharacterInventoryClass;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widgets")
+    TSubclassOf<UCursorHandPreview> WCursorHandPreviewClass;
 
 private:
 

@@ -2,6 +2,7 @@
 
 #include "UI/OSD/Container/Slots/CharacterInventorySlot.h"
 
+#include "Network/NetworkStatics.h"
 #include "UI/HUD/Container/Slots/SlateSlotData.h"
 #include "World/WorldCharacter.h"
 
@@ -25,7 +26,10 @@ void UCharacterInventorySlot::OnPrimaryClicked(void)
 
     CHECKED_OWNING_CHARACTER->AskForInventoryChangeDelegateBroadcast();
 
-    CHECKED_OWNING_CHARACTER->OnInventorySlotPrimaryClicked_ServerRPC(this->SlateSlotData->Index);
+    if ((UNetworkStatics::IsStandalone(this) || (UNetworkStatics::IsSafeListenServer(this) && OWNING_CHARACTER->IsLocallyControlled())) == false)
+    {
+        CHECKED_OWNING_CHARACTER->OnInventorySlotPrimaryClicked_ServerRPC(this->SlateSlotData->Index);
+    }
 
     return;
 }

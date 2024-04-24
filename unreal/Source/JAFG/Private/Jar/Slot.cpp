@@ -5,7 +5,7 @@
 #include "World/WorldCharacter.h"
 #include "World/Entity/EntityWorldSubsystem.h"
 
-void FSlot::OnPrimaryClicked(const AWorldCharacter* Owner, bool& bOutChangedData, const bool bCalledInServerRPC /* = false */)
+void FSlot::OnPrimaryClicked(AWorldCharacter* Owner, bool& bOutChangedData, const bool bCalledInServerRPC /* = false */)
 {
     if (bCalledInServerRPC == false && Owner->IsLocallyControlled() == false)
     {
@@ -15,7 +15,46 @@ void FSlot::OnPrimaryClicked(const AWorldCharacter* Owner, bool& bOutChangedData
 
     bOutChangedData = true;
 
-    this->Content = Accumulated::Null;
+    if (Owner->CursorHand == Accumulated::Null)
+    {
+        if (this->Content == Accumulated::Null)
+        {
+            bOutChangedData = false;
+            return;
+        }
+
+        Owner->CursorHand = this->Content;
+        this->Content     = Accumulated::Null;
+
+        return;
+    }
+
+    if (this->Content != Accumulated::Null)
+    {
+        if (this->Content == Owner->CursorHand)
+        {
+            bool bCouldProcess = false;
+            this->Content.SafeAddAmount(Owner->CursorHand.Amount, bCouldProcess);
+            if (bCouldProcess == false)
+            {
+                LOG_FATAL(LogWorldChar, "Failed with an overflow error.")
+                return;
+            }
+
+            Owner->CursorHand = Accumulated::Null;
+
+            return;
+        }
+
+        const FAccumulated Swap = this->Content;
+        this->Content           = Owner->CursorHand;
+        Owner->CursorHand       = Swap;
+
+        return;
+    }
+
+    this->Content     = Owner->CursorHand;
+    Owner->CursorHand = Accumulated::Null;
 
     return;
 }

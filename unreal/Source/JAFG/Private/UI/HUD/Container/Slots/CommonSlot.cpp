@@ -20,7 +20,7 @@ void UCommonSlot::NativeOnListItemObjectSet(UObject* ListItemObject)
     return;
 }
 
-void UCommonSlot::RenderSlot(void)
+void UCommonSlot::RenderSlot(void) const
 {
     check( this->I_Background )
     check( this->I_Preview )
@@ -42,9 +42,9 @@ void UCommonSlot::RenderSlot(void)
     check( TextureSubsystem )
 
     this->TB_Amount->SetText(
-        this->SlateSlotData->Accumulated.Amount != 0
-            ? FText::FromString(FString::FromInt(this->SlateSlotData->Accumulated.Amount))
-            : FText::GetEmpty()
+        this->SlateSlotData->Accumulated.Amount == 1
+            ? FText::GetEmpty()
+            : FText::FromString(FString::FromInt(this->SlateSlotData->Accumulated.Amount))
     );
 
     if (UTexture2D* Texture = TextureSubsystem->GetTexture2D(this->SlateSlotData->Accumulated))

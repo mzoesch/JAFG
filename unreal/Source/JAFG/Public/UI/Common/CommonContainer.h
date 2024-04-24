@@ -7,6 +7,7 @@
 
 #include "CommonContainer.generated.h"
 
+class UCursorHandPreview;
 JAFG_VOID
 
 class UTileView;
@@ -26,5 +27,9 @@ private:
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
     TObjectPtr<UTileView> TV_CharacterInventorySlots;
 
-    void RefreshCharacterInventorySlots(void);
+    UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+    TObjectPtr<UCursorHandPreview> W_CursorHand;
+
+    auto RefreshCharacterInventorySlots(void) -> void;
+    auto ResetCursorHand(void) -> void;
 };

@@ -92,9 +92,9 @@ void AWorldCharacter::BeginPlay(void)
         this->Inventory.SetNum(AWorldCharacter::InventoryStartSize, false);
         this->SelectedQuickSlotIndex = 0;
 
-        this->AddToInventory(FAccumulated(ECommonVoxels::Air + 1));
-        this->AddToInventory(FAccumulated(ECommonVoxels::Air + 2));
-        this->AddToInventory(FAccumulated(ECommonVoxels::Air + 3));
+        this->AddToInventory(FAccumulated(ECommonVoxels::Air + 1, 5));
+        this->AddToInventory(FAccumulated(ECommonVoxels::Air + 2, 50));
+        this->AddToInventory(FAccumulated(ECommonVoxels::Air + 3, 500));
 
         /*
          * Unnecessary, but we want to make sure that the inventory is dirty.
@@ -109,9 +109,9 @@ void AWorldCharacter::BeginPlay(void)
         this->Inventory.SetNum(AWorldCharacter::InventoryStartSize, false);
         this->SelectedQuickSlotIndex = 0;
 
-        this->AddToInventory(FAccumulated(ECommonVoxels::Air + 1));
-        this->AddToInventory(FAccumulated(ECommonVoxels::Air + 2));
-        this->AddToInventory(FAccumulated(ECommonVoxels::Air + 3));
+        this->AddToInventory(FAccumulated(ECommonVoxels::Air + 1, 5));
+        this->AddToInventory(FAccumulated(ECommonVoxels::Air + 2, 50));
+        this->AddToInventory(FAccumulated(ECommonVoxels::Air + 3, 500));
 
         /*
          * Unnecessary, but we want to make sure that the inventory is dirty.
@@ -797,6 +797,13 @@ void AWorldCharacter::OnInventorySlotPrimaryClicked_ServerRPC_Implementation(con
 
     MARK_PROPERTY_DIRTY_FROM_NAME(AWorldCharacter, Inventory, this)
 
+    return;
+}
+
+void AWorldCharacter::OnRep_CursorHand(void) const
+{
+    LOG_VERBOSE(LogWorldChar, "Called.")
+    this->OnInventoryChanged_ClientDelegate.Broadcast();
     return;
 }
 

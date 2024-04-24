@@ -3,36 +3,29 @@
 #pragma once
 
 #include "CommonCore.h"
-#include "Blueprint/IUserObjectListEntry.h"
 #include "UI/Common/JAFGCommonWidget.h"
 
-#include "CommonSlot.generated.h"
+#include "CursorHandPreview.generated.h"
 
 JAFG_VOID
 
-class USlateSlotData;
-class UHotbar;
+class UCanvasPanelSlot;
+class UCanvasPanel;
 class UTextBlock;
 class UImage;
 
-UCLASS(Blueprintable)
-class JAFG_API UCommonSlot : public UJAFGCommonWidget, public IUserObjectListEntry
+UCLASS(Abstract, Blueprintable)
+class JAFG_API UCursorHandPreview : public UJAFGCommonWidget
 {
     GENERATED_BODY()
-
-protected:
-
-    virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
-
-public:
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-    TObjectPtr<USlateSlotData> SlateSlotData;
 
 private:
 
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
-    UImage* I_Background;
+    UCanvasPanel* CP_Wrapper;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+    UCanvasPanelSlot* CPS_Wrapper;
 
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
     UImage* I_Preview;
@@ -40,6 +33,8 @@ private:
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
     UTextBlock* TB_Amount;
 
-    void RenderSlot(void) const;
-    friend UHotbar;
+protected:
+
+    virtual auto NativeConstruct(void) -> void override;
+    virtual auto NativeTick(const FGeometry& MyGeometry, const float InDeltaTime) -> void override;
 };

@@ -12,6 +12,7 @@
 #include "UI/HUD/Container/Slots/HotbarSlot.h"
 #include "UI/MISC/ChatMenu.h"
 #include "UI/OSD/Container/CharacterInventory.h"
+#include "UI/OSD/Container/CursorHandPreview.h"
 #include "World/WorldPlayerController.h"
 
 #define PLAYER_CONTROLLER \
@@ -111,6 +112,7 @@ void AWorldHUD::BeginPlay(void)
     this->WEscapeMenu->AddToViewport();
 
     check( this->WCharacterInventoryClass )
+    check( this->WCursorHandPreviewClass )
     this->WCharacterInventory = CreateWidget<UCharacterInventory>(this->GetWorld(), this->WCharacterInventoryClass);
     check( this->WCharacterInventory )
     this->WCharacterInventory->AddToViewport();
