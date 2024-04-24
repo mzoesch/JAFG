@@ -52,7 +52,10 @@ void FSlot::OnDrop(const AWorldCharacter* Owner, bool& bOutChangedData, const bo
     check( Owner )
     check( Owner->GetWorld() )
     check( Owner->GetWorld()->GetSubsystem<UEntityWorldSubsystem>() )
-    Owner->GetWorld()->GetSubsystem<UEntityWorldSubsystem>()->CreateDrop(FAccumulated(DropAccumulatedIndex), Owner->GetTorsoTransform());
+    Owner->GetWorld()->GetSubsystem<UEntityWorldSubsystem>()->CreateDrop(
+        FAccumulated(DropAccumulatedIndex),
+        Owner->IsLocallyControlled() ? Owner->GetTorsoTransform() : Owner->GetTorsoTransform_DedServer()
+    );
 
     return;
 }
