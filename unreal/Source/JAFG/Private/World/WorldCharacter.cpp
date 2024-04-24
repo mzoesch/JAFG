@@ -16,6 +16,7 @@
 #include "World/Chunk/LocalChunkValidator.h"
 #include "Net/UnrealNetwork.h"
 #include "Net/Core/PushModel/PushModel.h"
+#include "World/Entity/EntityWorldSubsystem.h"
 
 #define PLAYER_CONTROLLER                                                            \
     Cast<AWorldPlayerController>(this->GetWorld()->GetFirstPlayerController())
@@ -224,13 +225,15 @@ void AWorldCharacter::OnPrimary_ServerRPC_Implementation(const FInputActionValue
 {
     LOG_VERY_VERBOSE(LogWorldChar, "tirggered.")
 
+    check( this->GetWorld() )
+
     const FTransform TraceNoPitchStart = this->GetFirstPersonTraceStart();
     const FTransform TraceStart = FTransform(
         FQuat(FRotator(
             /*
              * This is super sketchy. But currently we cannot determine if this pawn is the listen server's pawn
-             * or not. In the future we should check with that.
-             * Also see AWorldCharacter::GetRemoteViewPitchAsDeg.
+             * or not. In the future, we should check with that.
+             * Also see AWorldCharacter#GetRemoteViewPitchAsDeg for more information.
              */
             TraceNoPitchStart.Rotator().Pitch == 0.0f
                 ?
@@ -268,7 +271,6 @@ void AWorldCharacter::OnPrimary_ServerRPC_Implementation(const FInputActionValue
     const FVector    WorldHitLocation      = HitResult.Location - HitResult.Normal;
     const FIntVector LocalHitVoxelLocation = ACommonChunk::WorldToLocalVoxelLocation(WorldHitLocation);
 
-    // ReSharper disable once CppTooWideScopeInitStatement
     const int HitVoxel = Chunk->GetLocalVoxelOnly(LocalHitVoxelLocation);
     if (HitVoxel == ECommonVoxels::Null || HitVoxel == ECommonVoxels::Air)
     {
@@ -277,6 +279,14 @@ void AWorldCharacter::OnPrimary_ServerRPC_Implementation(const FInputActionValue
     }
 
     Chunk->ModifySingleVoxel(LocalHitVoxelLocation, ECommonVoxels::Air);
+
+    check( this->GetWorld()->GetSubsystem<UEntityWorldSubsystem>() )
+    this->GetWorld()->GetSubsystem<UEntityWorldSubsystem>()->CreateDrop(
+        FAccumulated(HitVoxel),
+        HitResult.Location + HitResult.Normal,
+        UEntityWorldSubsystem::GetRandomForceVector(-1.0f, 1.0f, 0.0f, 1.0f),
+        FMath::FRandRange(1000.0f, 150000.0f)
+    );
 
     return;
 }
@@ -313,7 +323,6 @@ void AWorldCharacter::OnSecondary(const FInputActionValue& Value)
 
 void AWorldCharacter::OnSecondary_ServerRPC_Implementation(const FInputActionValue& Value)
 {
-
     ACommonChunk*             TargetedChunk = nullptr;
     FVector                   TargetedWorldHitLocation = FVector::ZeroVector;
     FVector_NetQuantizeNormal TargetedWorldNormalHitLocation = FVector_NetQuantizeNormal::ZeroVector;
@@ -356,6 +365,16 @@ void AWorldCharacter::OnSecondary_ServerRPC_Implementation(const FInputActionVal
     }
 
     TargetedChunk->ModifySingleVoxel(LocalTargetVoxelLocation, this->Inventory[this->SelectedQuickSlotIndex].Content.AccumulatedIndex);
+
+    bool bSuccess = false;
+    this->Inventory[this->SelectedQuickSlotIndex].Content.SafeAddAmount(-1, bSuccess);
+    DEFAULT_SLOT_SAFE_ADD_POST_BEHAVIOR(bSuccess, this->SelectedQuickSlotIndex, this->Inventory)
+    MARK_PROPERTY_DIRTY_FROM_NAME(AWorldCharacter, Inventory, this)
+    /* Dirty pushes are not called on standalone or listen servers. */
+    if (this->IsLocallyControlled())
+    {
+        this->OnRep_Inventory();
+    }
 
     return;
 }

@@ -16,6 +16,9 @@ class JAFG_API UEntityWorldSubsystem : public UWorldSubsystem
 {
     GENERATED_BODY()
 
+    inline static constexpr float MinDefaultForceMultiplier { 250000.0f };
+    inline static constexpr float MaxDefaultForceMultiplier { 500000.0f };
+
 public:
 
     explicit UEntityWorldSubsystem(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
@@ -60,11 +63,6 @@ public:
             SourceTransform.GetRotation().Vector()
         );
     }
-
-private:
-
-    inline static constexpr float MinDefaultForceMultiplier { 250000.0f };
-    inline static constexpr float MaxDefaultForceMultiplier { 500000.0f };
 
     FORCEINLINE static FVector GetRandomForceVector(const float MinRangeXY, const float MaxRangeXY, const float MinRangeZ, const float MaxRangeZ)
     {
