@@ -199,6 +199,13 @@ private:
      */
     UFUNCTION(Server, Reliable, WithValidation)
     void OnInventorySlotPrimaryClicked_ServerRPC(const int Slot);
+    /**
+     * Called from the owning client to the server when a slot in the inventory is clicked and changed.
+     * The client has already predicted the outcome of this method, and the server will validate it and
+     * update all clients accordingly.
+     */
+    UFUNCTION(Server, Reliable, WithValidation)
+    void OnInventorySlotSecondaryClicked_ServerRPC(const int Slot);
     /* We need to directly access the inventory. Not just by a const reference. */
     friend UCharacterInventorySlot;
     /** Called on the client to let UI instances now about pending changes. */

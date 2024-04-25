@@ -36,6 +36,23 @@ void UCharacterInventorySlot::OnPrimaryClicked(void)
 
 void UCharacterInventorySlot::OnSecondaryClicked(void)
 {
+    bool bContentsChanged = false;
+
+    CHECKED_OWNING_CHARACTER->Inventory[this->SlateSlotData->Index].OnSecondaryClicked(OWNING_CHARACTER, bContentsChanged);
+
+    if (bContentsChanged == false)
+    {
+        return;
+    }
+
+    CHECKED_OWNING_CHARACTER->AskForInventoryChangeDelegateBroadcast();
+
+    if ((UNetworkStatics::IsStandalone(this) || (UNetworkStatics::IsSafeListenServer(this) && OWNING_CHARACTER->IsLocallyControlled())) == false)
+    {
+        CHECKED_OWNING_CHARACTER->OnInventorySlotSecondaryClicked_ServerRPC(this->SlateSlotData->Index);
+    }
+
+    return;
 }
 
 #undef OWNING_CHARACTER

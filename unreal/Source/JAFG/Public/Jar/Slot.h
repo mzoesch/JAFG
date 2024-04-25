@@ -32,6 +32,7 @@ struct JAFG_API FSlot
     FAccumulated Content;
 
     auto OnPrimaryClicked(AWorldCharacter* Owner, bool& bOutChangedData, const bool bCalledInServerRPC = false) -> void;
+    auto OnSecondaryClicked(AWorldCharacter* Owner, bool& bOutChangedData, const bool bCalledInServerRPC = false) -> void;
 
     auto OnDrop(const AWorldCharacter* Owner, bool& bOutChangedData, const bool bCalledInServerRPC = false) -> void;
 };

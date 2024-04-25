@@ -17,7 +17,14 @@ FReply UCommonContainerSlot::NativeOnMouseButtonDown(const FGeometry& InGeometry
 {
     this->ChangeForegroundState(ESlotState::Clicked);
 
-    this->OnPrimaryClicked();
+    if (InMouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton))
+    {
+        this->OnPrimaryClicked();
+    }
+    else if (InMouseEvent.IsMouseButtonDown(EKeys::RightMouseButton))
+    {
+        this->OnSecondaryClicked();
+    }
 
     return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 }

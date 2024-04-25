@@ -800,6 +800,41 @@ void AWorldCharacter::OnInventorySlotPrimaryClicked_ServerRPC_Implementation(con
     return;
 }
 
+bool AWorldCharacter::OnInventorySlotSecondaryClicked_ServerRPC_Validate(const int Slot)
+{
+    LOG_VERBOSE(LogWorldChar, "Called.")
+
+    bool bContentsChanged = false;
+    this->Inventory[Slot].OnSecondaryClicked(this, bContentsChanged, true);
+
+    if (bContentsChanged == false)
+    {
+        /*
+         * Clients must always only send UI click input events to the server if the contents of the slot actually
+         * are changed.
+         * That is why we disconnect the client from the server here.
+         */
+
+        LOG_ERROR(LogWorldChar, "Contents did not change. Faulty input: %s %d.", *this->GetName(), Slot)
+        return false;
+    }
+
+    return true;
+}
+
+void AWorldCharacter::OnInventorySlotSecondaryClicked_ServerRPC_Implementation(const int Slot)
+{
+    /*
+     * See the RPC Validate method for the actual logic.
+     */
+
+    LOG_VERBOSE(LogWorldChar, "Called.")
+
+    MARK_PROPERTY_DIRTY_FROM_NAME(AWorldCharacter, Inventory, this)
+
+    return;
+}
+
 void AWorldCharacter::OnRep_CursorHand(void) const
 {
     LOG_VERBOSE(LogWorldChar, "Called.")
