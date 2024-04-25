@@ -1,6 +1,7 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "World/Voxel/VoxelMask.h"
+
 #include "System/MaterialSubsystem.h"
 #include "World/Voxel/CommonVoxels.h"
 
@@ -16,23 +17,37 @@ FVoxelMask::FVoxelMask(const FString& NameSpace, const FString& Name, const ETex
     this->TextureGroups.Add(FTextureGroup(ENormalLookup::Default, TextureGroup));
 
     this->TextureIndices.Empty();
+
+    return;
 }
 
-FVoxelMask::FVoxelMask(const FString& NameSpace, const FString& Name,
-                       const TMap<ENormalLookup::Type, ETextureGroup::Type>& TextureGroup)
+FVoxelMask::FVoxelMask(const FString& NameSpace, const FString& Name, const TMap<ENormalLookup::Type, ETextureGroup::Type>& TextureGroup)
 {
     this->NameSpace = NameSpace;
     this->Name      = Name;
 
     this->TextureGroups.Empty();
-    const ETextureGroup::Type DefaultGroup = TextureGroup.FindChecked(ENormalLookup::Default);
+    const ETextureGroup::Type* DefaultGroup = TextureGroup.Find(ENormalLookup::Default);
+    if (DefaultGroup == nullptr)
+    {
+        LOG_FATAL(LogVoxelSubsystem, "Default group not found in Texture Group map. Faulty Mask: %s::%s.", *NameSpace, *Name)
+        return;
+    }
     for (const TPair<ENormalLookup::Type, ETextureGroup::Type>& Pair : TextureGroup)
     {
+        if (Pair.Key == ENormalLookup::Default)
+        {
+            continue;
+        }
+
         this->TextureGroups.Add(FTextureGroup(Pair.Key, Pair.Value));
     }
-    this->TextureGroups.Add(FTextureGroup(ENormalLookup::Default, DefaultGroup));
+    this->TextureGroups.Add(FTextureGroup(ENormalLookup::Default, *DefaultGroup));
 
+    /* Initialized later on. See the MaterialSubsystem.h for more information. */
     this->TextureIndices.Empty();
+
+    return;
 }
 
 FVoxelMask::FTextureGroup::FTextureGroup(const ENormalLookup::Type Normal, const ETextureGroup::Type TextureGroup)

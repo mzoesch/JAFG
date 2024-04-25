@@ -14,7 +14,7 @@ void UMaterialSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     UE_LOG(LogTemp, Log, TEXT("UMaterialSubsystem::Initialize: Initializing Material Subsystem."))
 
     this->InitializeMaterials();
-    
+
     return;
 }
 
@@ -30,7 +30,7 @@ void UMaterialSubsystem::InitializeMaterials(void)
         UE_LOG(LogTemp, Fatal, TEXT("UMaterialSubsystem::InitializeMaterials: World is nullptr."))
         return;
     }
-    
+
     const UJAFGInstance* JAFGInstance = Cast<UJAFGInstance>(GetWorld()->GetGameInstance());
     if (JAFGInstance == nullptr)
     {
@@ -41,7 +41,7 @@ void UMaterialSubsystem::InitializeMaterials(void)
     this->MDynamicOpaque = UMaterialInstanceDynamic::Create(JAFGInstance->MOpaque, this);
     this->MDynamicFullBlendOpaque = UMaterialInstanceDynamic::Create(JAFGInstance->MFullBlendOpaque, this);
     this->MDynamicFloraBlendOpaque = UMaterialInstanceDynamic::Create(JAFGInstance->MFloraBlendOpaque, this);
-    
+
     UTexture2DArray* TextureArray = UTexture2DArray::CreateTransient(UMaterialSubsystem::TextureArrayWidthHorizontal, UMaterialSubsystem::TextureArrayWidthVertical, 1, EPixelFormat::PF_R8G8B8A8);
     TextureArray->Filter = TextureFilter::TF_Nearest;
     TextureArray->SRGB = true;
@@ -55,7 +55,7 @@ void UMaterialSubsystem::InitializeMaterials(void)
     }
 
     int TextureIndex = 0;
-    constexpr int StoneVoxelIdx = 2; /* two core voxels */ 
+    constexpr int StoneVoxelIdx = 2; /* two core voxels */
     constexpr int DirtVoxelIdx = 3;
     constexpr int GrassVoxelIdx = 4;
 
@@ -65,6 +65,7 @@ void UMaterialSubsystem::InitializeMaterials(void)
     TextureArray->SourceTextures.Add(JAFGInstance->Dirt);
     VoxelSubsystem->VoxelMasks[DirtVoxelIdx].AddTextureIndex(ENormalLookup::Default, TextureIndex++);
 
+    VoxelSubsystem->VoxelMasks[GrassVoxelIdx].AddTextureIndex(ENormalLookup::Bottom, TextureIndex - 1);
     TextureArray->SourceTextures.Add(JAFGInstance->GrassTop);
     VoxelSubsystem->VoxelMasks[GrassVoxelIdx].AddTextureIndex(ENormalLookup::Top, TextureIndex++);
     TextureArray->SourceTextures.Add(JAFGInstance->Grass);

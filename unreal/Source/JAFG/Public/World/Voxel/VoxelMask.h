@@ -2,9 +2,11 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "CommonCore.h"
 
 #include "VoxelMask.generated.h"
+
+JAFG_VOID
 
 class UMaterialSubsystem;
 class IVoxel;
@@ -74,13 +76,13 @@ public:
 	static const FVoxelMask Null;
 	static const FVoxelMask Air;
 
-private:	
+private:
 
 	/**
 	 * Maps a normal vector to a texture group.
 	 * A texture group can be opaque, full blend opaque, or flora blend opaque, transparent, etc.
 	 */
-	struct JAFG_API FTextureGroup 
+	struct JAFG_API FTextureGroup
 	{
 		FTextureGroup(void) = default;
 		FTextureGroup(const ENormalLookup::Type Normal, const ETextureGroup::Type TextureGroup);
@@ -98,13 +100,13 @@ private:
 		ENormalLookup::Type Normal;
 		int32				TextureIndex;
 	};
-	
+
 public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// Data
 	//////////////////////////////////////////////////////////////////////////
-	
+
 	FString NameSpace;
 	FString Name;
 
@@ -116,7 +118,7 @@ private:
 	 * unwanted overhead. There will never be more than 6 elements in this array anyway. But we should to some
 	 * performance tests to be sure later on when we run into problems to find the best solution.
 	 */
-	
+
 	/** The last index must always be the default group of this voxel. */
 	TArray<FTextureGroup> TextureGroups;
 	/** The last index must always be the default texture index of this voxel. */
@@ -130,13 +132,13 @@ private:
 	{ this->TextureIndices.Add(FTextureIndex(Normal, TextureIndex)); }
 
 	friend UMaterialSubsystem;
-	
+
 public:
 
 	/*
 	 * Maybe we can to some caching here? But we should do some performance tests first.
 	 */
-	
+
 	auto GetTextureGroup(const FVector& Normal) const -> ETextureGroup::Type;
 	auto GetTextureIndex(const FVector& Normal) const -> int32;
 };

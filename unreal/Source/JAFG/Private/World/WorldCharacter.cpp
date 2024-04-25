@@ -938,9 +938,9 @@ void AWorldCharacter::SetInventoryAtSlot(const int Slot, const FAccumulated& Acc
     MARK_PROPERTY_DIRTY_FROM_NAME(AWorldCharacter, Inventory, this)
 
     /*
-    * Dirty pushes are not called here. This applies for standalone and listen servers.
-    * See PushModel.h for more information.
-    */
+     * Dirty pushes are not called here. This applies for standalone and listen servers.
+     * See PushModel.h for more information.
+     */
     if (this->IsLocallyControlled())
     {
         this->OnRep_Inventory();

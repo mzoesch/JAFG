@@ -37,6 +37,11 @@ private:
 
 public:
 
+    FORCEINLINE auto AddOptionalVoxelDuringInitialization(const FVoxelMask& VoxelMask) -> void
+    {
+        this->VoxelMasks.Add(VoxelMask);
+    }
+
     FORCEINLINE auto GetCommonVoxelNum(void) const -> int32
     {
         return this->CommonVoxelNum;

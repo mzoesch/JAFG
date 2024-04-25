@@ -3,7 +3,9 @@
 
 #include "World/Voxel/VoxelSubsystem.h"
 
+#include "JAFGNamespace/JAFGNamespaceInitializer.h"
 #include "Jar/Accumulated.h"
+#include "Kismet/GameplayStatics.h"
 #include "System/MaterialSubsystem.h"
 
 void UVoxelSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -66,13 +68,5 @@ void UVoxelSubsystem::InitializeCommonVoxels(void)
 
 void UVoxelSubsystem::InitializeOptionalVoxels(void)
 {
-    this->VoxelMasks.Add(FVoxelMask(TEXT("JAFG"), TEXT("Stone"), ETextureGroup::Opaque));
-    this->VoxelMasks.Add(FVoxelMask(TEXT("JAFG"), TEXT("Dirt"), ETextureGroup::Opaque));
-
-    TMap<ENormalLookup::Type, ETextureGroup::Type> GrassTextureGroups;
-    GrassTextureGroups.Add(ENormalLookup::Default, ETextureGroup::Opaque);
-    GrassTextureGroups.Add(ENormalLookup::Top, ETextureGroup::FullBlendOpaque);
-    GrassTextureGroups.Add(ENormalLookup::Side, ETextureGroup::FloraBlendOpaque);
-    GrassTextureGroups.Add(ENormalLookup::Front, ETextureGroup::FloraBlendOpaque);
-    this->VoxelMasks.Add(FVoxelMask(TEXT("JAFG"), TEXT("Grass"), GrassTextureGroups));
+    UJAFGNamespaceInitializer::InitializeOptionalVoxels(this);
 }
