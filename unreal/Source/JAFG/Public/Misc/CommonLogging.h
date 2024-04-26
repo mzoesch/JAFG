@@ -2,20 +2,30 @@
 
 #pragma once
 
-/**
- * Quick switch.
- * If turned on, all logs that use this macro library will output the line number of the log in addition to the
- * class, if existing, and function name.
- */
-#define LOG_WITH_LINE_NUMBERS 0
-
-#define UNDEF_PRIVATE_LOGS    0
-
 /*
  * Note to self;
  *
  * Enable verbose logging in the Default Engine INI file.
  */
+
+
+/*----------------------------------------------------------------------------
+    Quick switches.
+----------------------------------------------------------------------------*/
+
+/**
+ * If turned on, all logs that use this macro library will output the line number of the log in addition to the
+ * class, if existing, and function name.
+ */
+#define LOG_WITH_LINE_NUMBERS    0
+
+/**
+ * If turned on, all B8G8R8A8 to R8G8B8A8 flips during texture array initialization will be logged.
+ * See MaterialSubsystem.cpp for more information.
+ */
+#define LOG_TEX_ARR_CHANNEL_FLIPS 1
+
+#define UNDEF_PRIVATE_LOGS        0
 
 
 /*----------------------------------------------------------------------------

@@ -5,11 +5,12 @@
 #include "Engine/Texture2DArray.h"
 #include "System/JAFGInstance.h"
 #include "World/Voxel/VoxelSubsystem.h"
-#include "ImageUtils.h"
+#include "System/TextureSubsystem.h"
 
 void UMaterialSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     Collection.InitializeDependency<UVoxelSubsystem>();
+    Collection.InitializeDependency<UTextureSubsystem>();
     Super::Initialize(Collection);
 
     UE_LOG(LogTemp, Log, TEXT("UMaterialSubsystem::Initialize: Initializing Material Subsystem."))
@@ -55,27 +56,39 @@ void UMaterialSubsystem::InitializeMaterials(void)
         return;
     }
 
+    UTextureSubsystem* TextureSubsystem = JAFGInstance->GetSubsystem<UTextureSubsystem>();
+    check( TextureSubsystem )
+
     // Write straight to bulk data
     void* TextureArrayMipData = TextureArray->GetPlatformData()->Mips[0].BulkData.Lock( LOCK_READ_WRITE );
     int64 iCurrentMemoryOffset = 0;
     uint32 iSliceSize = 16 * 16 * 4; /*  SizeX * SizeY * FormatDataSize; */
+    uint32 iSinglePixelSize = 4;
 
     for( int32 SourceTexIndex = 0; SourceTexIndex < 4 /* m_RuntimeSourceTextures.Num() */; ++SourceTexIndex )
     {
         // Offset write location by size of previously written textures
         void* pDestSliceData = (uint8*)TextureArrayMipData + iCurrentMemoryOffset;
 
-        // TODO ...
-        // R G B
-        // But somehow it reads as B G R
-        // We need to read in the other way around
+        //
+        // Okay, so there is a small problem with the RGBA format.
+        // The source texture is in B8G8R8A8 format, but the texture array is in R8G8B8A8 format.
+        // So what we have to do is to flip the red and blue channels.
+        // We do this directly during the memcpy operation. We do not want to modify the bulk data of the source
+        // texture directly, because they are used elsewhere (mainly in the HUD and OSD) where the format is correct.
+        //
+
 
         // Find raw image data in source texture
         UTexture2D* pSliceTexture =
-            SourceTexIndex == 0 ? FImageUtils::ImportFileAsTexture2D( TEXT("E:/dev/ue/prj_bi/JAFGv3/unreal/Content/Assets/Textures/Voxels/JAFG/R.png") ) :
-            SourceTexIndex == 1 ? FImageUtils::ImportFileAsTexture2D( TEXT("E:/dev/ue/prj_bi/JAFGv3/unreal/Content/Assets/Textures/Voxels/JAFG/G.png") ) :
-            SourceTexIndex == 2 ? FImageUtils::ImportFileAsTexture2D( TEXT("E:/dev/ue/prj_bi/JAFGv3/unreal/Content/Assets/Textures/Voxels/JAFG/B.png") ) :
-            SourceTexIndex == 3 ? FImageUtils::ImportFileAsTexture2D( TEXT("E:/dev/ue/prj_bi/JAFGv3/unreal/Content/Assets/Textures/Voxels/JAFG/crafting_table_side.png") ) :
+            SourceTexIndex == 0 ? TextureSubsystem->LoadTexture2DFromDisk( TEXT("E:/dev/ue/prj_bi/JAFGv3/unreal/Content/Assets/Textures/Voxels/JAFG/R.png") ) :
+                //FImageUtils::ImportFileAsTexture2D( TEXT("E:/dev/ue/prj_bi/JAFGv3/unreal/Content/Assets/Textures/Voxels/JAFG/R.png") ) :
+            SourceTexIndex == 1 ? TextureSubsystem->LoadTexture2DFromDisk( TEXT("E:/dev/ue/prj_bi/JAFGv3/unreal/Content/Assets/Textures/Voxels/JAFG/G.png") ) :
+                //FImageUtils::ImportFileAsTexture2D( TEXT("E:/dev/ue/prj_bi/JAFGv3/unreal/Content/Assets/Textures/Voxels/JAFG/G.png") ) :
+            SourceTexIndex == 2 ? TextureSubsystem->LoadTexture2DFromDisk( TEXT("E:/dev/ue/prj_bi/JAFGv3/unreal/Content/Assets/Textures/Voxels/JAFG/B.png") ) :
+                //FImageUtils::ImportFileAsTexture2D( TEXT("E:/dev/ue/prj_bi/JAFGv3/unreal/Content/Assets/Textures/Voxels/JAFG/B.png") ) :
+            SourceTexIndex == 3 ? TextureSubsystem->LoadTexture2DFromDisk( TEXT("E:/dev/ue/prj_bi/JAFGv3/unreal/Content/Assets/Textures/Voxels/JAFG/crafting_table_side.png") ) :
+                //FImageUtils::ImportFileAsTexture2D( TEXT("E:/dev/ue/prj_bi/JAFGv3/unreal/Content/Assets/Textures/Voxels/JAFG/crafting_table_side.png") ) :
             nullptr;
             // m_RuntimeSourceTextures[SourceTexIndex];
 
@@ -83,8 +96,35 @@ void UMaterialSubsystem::InitializeMaterials(void)
         const void* pSourceMipData = pSliceTexture->GetPlatformMips()[0].BulkData.LockReadOnly();
         ensureAlwaysMsgf( pSourceMipData, TEXT( "Missing source texture while making texture array, element: %d" ), SourceTexIndex );
 
-        // Copy from source texture to texture array
-        FMemory::Memcpy( pDestSliceData, pSourceMipData, iSliceSize );
+        // Copy from source texture to the texture array
+
+        for (int channel = 0; channel < 4; channel++)
+        {
+            for (int i = 0; i < 16*16; i++)
+            {
+                /*
+                 * This actually works here (somehow) on my machine. But if this causes problems on other machines, we
+                 * may want to use the FMemory::Memcpy function instead.
+                 */
+                ((uint8*)pDestSliceData)[i * 4 + channel] = ((uint8*)pSourceMipData)[i * 4 + (channel == 0 ? 2 : channel == 2 ? 0 : channel)];
+            }
+        }
+
+#if LOG_TEX_ARR_CHANNEL_FLIPS
+        for (int i = 0; i < 16*16; i++)
+        {
+            UE_LOG(LogTemp, Log, TEXT("px:%d; %d %d %d %d --- %d %d %d %d"),
+                i,
+                ((uint8*)pSourceMipData)[i * 4 + 0],
+                ((uint8*)pSourceMipData)[i * 4 + 1],
+                ((uint8*)pSourceMipData)[i * 4 + 2],
+                ((uint8*)pSourceMipData)[i * 4 + 3],
+                ((uint8*)pDestSliceData)[i * 4 + 0],
+                ((uint8*)pDestSliceData)[i * 4 + 1],
+                ((uint8*)pDestSliceData)[i * 4 + 2],
+                ((uint8*)pDestSliceData)[i * 4 + 3])
+        }
+#endif /* LOG_TEX_ARR_CHANNEL_FLIPS */
 
         // Unlock source texture
         if (pSliceTexture->GetPlatformData()->Mips[0].BulkData.IsLocked())

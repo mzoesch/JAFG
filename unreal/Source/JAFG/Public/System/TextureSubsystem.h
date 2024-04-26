@@ -76,5 +76,6 @@ private:
     TMap<FString, UTexture2D*> Cached2DTextures;
     FORCEINLINE void ClearCached2DTextures(void) { this->Cached2DTextures.Empty(); }
 
+public: // Only temp public
     static UTexture2D* LoadTexture2DFromDisk(const FString& AbsolutePath);
 };
