@@ -129,7 +129,8 @@ void AGenPrevAssetsActor::GenerateForCurrentPrevAsset(void)
     const int64         NumBytes        = NumPixels * BytesPerPixel;
     OutImage.RawData.Empty(NumBytes);
     OutImage.RawData.AddUninitialized(NumBytes);
-    Tex->MipGenSettings                 = TextureMipGenSettings::TMGS_NoMipmaps;
+    // TODO Is this important???
+    // Tex->MipGenSettings                 = TextureMipGenSettings::TMGS_NoMipmaps;
     FTexture2DMipMap*   Mip             = &Tex->GetPlatformData()->Mips[0];
     const uint32        Width           = Mip->SizeX;
     const uint32        Height          = Mip->SizeY;

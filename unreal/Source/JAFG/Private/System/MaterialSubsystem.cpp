@@ -5,6 +5,7 @@
 #include "Engine/Texture2DArray.h"
 #include "System/JAFGInstance.h"
 #include "World/Voxel/VoxelSubsystem.h"
+#include "ImageUtils.h"
 
 void UMaterialSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -38,11 +39,11 @@ void UMaterialSubsystem::InitializeMaterials(void)
         return;
     }
 
-    this->MDynamicOpaque = UMaterialInstanceDynamic::Create(JAFGInstance->MOpaque, this);
-    this->MDynamicFullBlendOpaque = UMaterialInstanceDynamic::Create(JAFGInstance->MFullBlendOpaque, this);
+    this->MDynamicOpaque           = UMaterialInstanceDynamic::Create(JAFGInstance->MOpaque, this);
+    this->MDynamicFullBlendOpaque  = UMaterialInstanceDynamic::Create(JAFGInstance->MFullBlendOpaque, this);
     this->MDynamicFloraBlendOpaque = UMaterialInstanceDynamic::Create(JAFGInstance->MFloraBlendOpaque, this);
 
-    UTexture2DArray* TextureArray = UTexture2DArray::CreateTransient(UMaterialSubsystem::TextureArrayWidthHorizontal, UMaterialSubsystem::TextureArrayWidthVertical, 1, EPixelFormat::PF_R8G8B8A8);
+    UTexture2DArray* TextureArray = UTexture2DArray::CreateTransient(UMaterialSubsystem::TextureArrayWidthHorizontal, UMaterialSubsystem::TextureArrayWidthVertical, 4, EPixelFormat::PF_R8G8B8A8);
     TextureArray->Filter = TextureFilter::TF_Nearest;
     TextureArray->SRGB = true;
     TextureArray->CompressionSettings = TextureCompressionSettings::TC_Default;
@@ -54,27 +55,73 @@ void UMaterialSubsystem::InitializeMaterials(void)
         return;
     }
 
+    // Write straight to bulk data
+    void* TextureArrayMipData = TextureArray->GetPlatformData()->Mips[0].BulkData.Lock( LOCK_READ_WRITE );
+    int64 iCurrentMemoryOffset = 0;
+    uint32 iSliceSize = 16 * 16 * 4; /*  SizeX * SizeY * FormatDataSize; */
+
+    for( int32 SourceTexIndex = 0; SourceTexIndex < 4 /* m_RuntimeSourceTextures.Num() */; ++SourceTexIndex )
+    {
+        // Offset write location by size of previously written textures
+        void* pDestSliceData = (uint8*)TextureArrayMipData + iCurrentMemoryOffset;
+
+        // TODO ...
+        // R G B
+        // But somehow it reads as B G R
+        // We need to read in the other way around
+
+        // Find raw image data in source texture
+        UTexture2D* pSliceTexture =
+            SourceTexIndex == 0 ? FImageUtils::ImportFileAsTexture2D( TEXT("E:/dev/ue/prj_bi/JAFGv3/unreal/Content/Assets/Textures/Voxels/JAFG/R.png") ) :
+            SourceTexIndex == 1 ? FImageUtils::ImportFileAsTexture2D( TEXT("E:/dev/ue/prj_bi/JAFGv3/unreal/Content/Assets/Textures/Voxels/JAFG/G.png") ) :
+            SourceTexIndex == 2 ? FImageUtils::ImportFileAsTexture2D( TEXT("E:/dev/ue/prj_bi/JAFGv3/unreal/Content/Assets/Textures/Voxels/JAFG/B.png") ) :
+            SourceTexIndex == 3 ? FImageUtils::ImportFileAsTexture2D( TEXT("E:/dev/ue/prj_bi/JAFGv3/unreal/Content/Assets/Textures/Voxels/JAFG/crafting_table_side.png") ) :
+            nullptr;
+            // m_RuntimeSourceTextures[SourceTexIndex];
+
+        ensureAlwaysMsgf( pSliceTexture, TEXT( "Missing source texture while making texture array, element: %d" ), SourceTexIndex );
+        const void* pSourceMipData = pSliceTexture->GetPlatformMips()[0].BulkData.LockReadOnly();
+        ensureAlwaysMsgf( pSourceMipData, TEXT( "Missing source texture while making texture array, element: %d" ), SourceTexIndex );
+
+        // Copy from source texture to texture array
+        FMemory::Memcpy( pDestSliceData, pSourceMipData, iSliceSize );
+
+        // Unlock source texture
+        if (pSliceTexture->GetPlatformData()->Mips[0].BulkData.IsLocked())
+        {
+            pSliceTexture->GetPlatformData()->Mips[0].BulkData.Unlock();
+        }
+
+        // Increase memory offset for writing
+        iCurrentMemoryOffset += iSliceSize;
+    }
+    TextureArray->GetPlatformData()->Mips[0].BulkData.Unlock();
+
+    TextureArray->UpdateResource();
+
+#if 1
     int TextureIndex = 0;
     constexpr int StoneVoxelIdx = 2; /* two core voxels */
     constexpr int DirtVoxelIdx = 3;
     constexpr int GrassVoxelIdx = 4;
 
-    TextureArray->SourceTextures.Add(JAFGInstance->Stone);
-    VoxelSubsystem->VoxelMasks[StoneVoxelIdx].AddTextureIndex(ENormalLookup::Default, TextureIndex++);
+    // TextureArray->SourceTextures.Add(JAFGInstance->Stone);
+    VoxelSubsystem->VoxelMasks[StoneVoxelIdx].AddTextureIndex(ENormalLookup::Default, 0);
 
-    TextureArray->SourceTextures.Add(JAFGInstance->Dirt);
-    VoxelSubsystem->VoxelMasks[DirtVoxelIdx].AddTextureIndex(ENormalLookup::Default, TextureIndex++);
+    // TextureArray->SourceTextures.Add(JAFGInstance->Dirt);
+    VoxelSubsystem->VoxelMasks[DirtVoxelIdx].AddTextureIndex(ENormalLookup::Default, 1);
 
-    VoxelSubsystem->VoxelMasks[GrassVoxelIdx].AddTextureIndex(ENormalLookup::Bottom, TextureIndex - 1);
-    TextureArray->SourceTextures.Add(JAFGInstance->GrassTop);
-    VoxelSubsystem->VoxelMasks[GrassVoxelIdx].AddTextureIndex(ENormalLookup::Top, TextureIndex++);
-    TextureArray->SourceTextures.Add(JAFGInstance->Grass);
-    VoxelSubsystem->VoxelMasks[GrassVoxelIdx].AddTextureIndex(ENormalLookup::Default, TextureIndex++);
+    VoxelSubsystem->VoxelMasks[GrassVoxelIdx].AddTextureIndex(ENormalLookup::Bottom, 1);
+    // TextureArray->SourceTextures.Add(JAFGInstance->GrassTop);
+    VoxelSubsystem->VoxelMasks[GrassVoxelIdx].AddTextureIndex(ENormalLookup::Top, 2);
+    // TextureArray->SourceTextures.Add(JAFGInstance->Grass);
+    VoxelSubsystem->VoxelMasks[GrassVoxelIdx].AddTextureIndex(ENormalLookup::Default, 3);
 
     // https://forums.unrealengine.com/t/cant-make-a-a-texture-array-at-runtime/157889/2
 
-    TextureArray->UpdateResource();
-    TextureArray->UpdateSourceFromSourceTextures();
+    // TextureArray->UpdateResource();
+    // TextureArray->UpdateSourceFromSourceTextures();
+#endif
 
     this->MDynamicOpaque->SetTextureParameterValue("TexArr", TextureArray);
     this->MDynamicFullBlendOpaque->SetTextureParameterValue("TexArr", TextureArray);
