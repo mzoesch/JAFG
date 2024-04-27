@@ -17,9 +17,9 @@ enum Type : uint32
  */
 FORCEINLINE uint32 GetBaseVoxel(void)
 {
-#if !WITH_EDITOR /* && !UE_BUILD_SHIPPING */
-    LOG_FATAL(LogChunkMisc, "Disallowed.")
-#endif /* !WITH_EDITOR */
+// #if !WITH_EDITOR /* && !UE_BUILD_SHIPPING */
+//     LOG_FATAL(LogChunkMisc, "Disallowed.")
+// #endif /* !WITH_EDITOR */
     return ECommonVoxels::Air + 1;
 }
 

@@ -53,6 +53,8 @@ void AGenPrevAssetsActor::BeginPlay(void)
     check( this->CurrentVoxelIndex > 0 )
     this->VoxelNum = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>()->GetVoxelNum();
     check( this->CurrentVoxelIndex <= this->VoxelNum )
+    this->TextureSubsystem = this->GetGameInstance()->GetSubsystem<UTextureSubsystem>();
+    check( this->TextureSubsystem )
 
     return;
 }
@@ -198,7 +200,7 @@ void AGenPrevAssetsActor::GenerateForCurrentPrevAsset(void)
     /* Save to extern. */
 
     const FString FileName = FString::Printf(TEXT("%s.png"), *VoxelSubsystem->GetVoxelName(this->CurrentVoxelIndex));
-    const FString OutPath  = UTextureSubsystem::GeneratedAssetsDirectoryRelative / FileName;
+    const FString OutPath  = this->TextureSubsystem->GeneratedAssetsDirectoryRelative / FileName;
     FImageUtils::SaveImageByExtension(*OutPath, OutImage);
 
     /* Cleanup. */

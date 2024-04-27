@@ -38,6 +38,12 @@ void ULocalChunkValidator::BeginPlay(void)
 {
     Super::BeginPlay();
 
+    if (this->GetWorld()->GetName() != TEXT("L_World"))
+    {
+        LOG_ERROR(LogChunkMisc, "Loaded in a non world level: %s.", *this->GetWorld()->GetName())
+        return;
+    }
+
     CHECK_OWNING_PAWN
 
     if (UNetworkStatics::IsSafeStandalone(this) && OWNING_PAWN->IsLocallyControlled())
@@ -45,7 +51,9 @@ void ULocalChunkValidator::BeginPlay(void)
         LOG_VERBOSE(LogChunkValidation, "Spawned on a standalone game (Pawn: %s). Activating.", *OWNING_PAWN->GetName())
 
 #if !WITH_EDITOR
-        LOG_FATAL(LogChunkValidation, "Standalone game is not supported outside the editor.")
+        LOG_ERROR(LogChunkValidation, "Standalone game is not supported outside the editor.")
+        // CHANGE BACK
+        // LOG_FATAL(LogChunkValidation, "Standalone game is not supported outside the editor.")
 #endif /* !WITH_EDITOR */
 
         this->SetComponentTickEnabled(true);

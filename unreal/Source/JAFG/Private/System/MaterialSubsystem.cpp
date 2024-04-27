@@ -79,18 +79,12 @@ void UMaterialSubsystem::InitializeMaterials(void)
         //
 
 
-        // Find raw image data in source texture
         UTexture2D* pSliceTexture =
-            SourceTexIndex == 0 ? TextureSubsystem->LoadTexture2DFromDisk( TEXT("E:/dev/ue/prj_bi/JAFGv3/unreal/Content/Assets/Textures/Voxels/JAFG/R.png") ) :
-                //FImageUtils::ImportFileAsTexture2D( TEXT("E:/dev/ue/prj_bi/JAFGv3/unreal/Content/Assets/Textures/Voxels/JAFG/R.png") ) :
-            SourceTexIndex == 1 ? TextureSubsystem->LoadTexture2DFromDisk( TEXT("E:/dev/ue/prj_bi/JAFGv3/unreal/Content/Assets/Textures/Voxels/JAFG/G.png") ) :
-                //FImageUtils::ImportFileAsTexture2D( TEXT("E:/dev/ue/prj_bi/JAFGv3/unreal/Content/Assets/Textures/Voxels/JAFG/G.png") ) :
-            SourceTexIndex == 2 ? TextureSubsystem->LoadTexture2DFromDisk( TEXT("E:/dev/ue/prj_bi/JAFGv3/unreal/Content/Assets/Textures/Voxels/JAFG/B.png") ) :
-                //FImageUtils::ImportFileAsTexture2D( TEXT("E:/dev/ue/prj_bi/JAFGv3/unreal/Content/Assets/Textures/Voxels/JAFG/B.png") ) :
-            SourceTexIndex == 3 ? TextureSubsystem->LoadTexture2DFromDisk( TEXT("E:/dev/ue/prj_bi/JAFGv3/unreal/Content/Assets/Textures/Voxels/JAFG/crafting_table_side.png") ) :
-                //FImageUtils::ImportFileAsTexture2D( TEXT("E:/dev/ue/prj_bi/JAFGv3/unreal/Content/Assets/Textures/Voxels/JAFG/crafting_table_side.png") ) :
+            SourceTexIndex == 0 ? TextureSubsystem->GetWorldTexture2D( "JAFG", "StoneVoxel" ) :
+            SourceTexIndex == 1 ? TextureSubsystem->GetWorldTexture2D( "JAFG", "DirtVoxel" ) :
+            SourceTexIndex == 2 ? TextureSubsystem->GetWorldTexture2D( "JAFG", "GrassVoxelTop" ) :
+            SourceTexIndex == 3 ? TextureSubsystem->GetWorldTexture2D( "JAFG", "GrassVoxel" ) :
             nullptr;
-            // m_RuntimeSourceTextures[SourceTexIndex];
 
         ensureAlwaysMsgf( pSliceTexture, TEXT( "Missing source texture while making texture array, element: %d" ), SourceTexIndex );
         const void* pSourceMipData = pSliceTexture->GetPlatformMips()[0].BulkData.LockReadOnly();
@@ -167,7 +161,7 @@ void UMaterialSubsystem::InitializeMaterials(void)
     this->MDynamicFullBlendOpaque->SetTextureParameterValue("TexArr", TextureArray);
     this->MDynamicFloraBlendOpaque->SetTextureParameterValue("TexArr", TextureArray);
 
-    UE_LOG(LogTemp, Log, TEXT("UMaterialSubsystem::InitializeMaterials: Texture array size: %d"), TextureArray->SourceTextures.Num());
+    // UE_LOG(LogTemp, Log, TEXT("UMaterialSubsystem::InitializeMaterials: Texture array size: %d"), TextureArray->SourceTextures.Num());
 
     return;
 }

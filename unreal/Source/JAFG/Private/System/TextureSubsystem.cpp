@@ -30,6 +30,22 @@ void UTextureSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     this->VoxelSubsystem = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>();
     check( this->VoxelSubsystem )
 
+    this->GeneratedAssetsDirectoryRelative = FPaths::ProjectSavedDir() / TEXT("Gen/");
+    this->GeneratedAssetsDirectoryAbsolute = FPaths::ConvertRelativePathToFull(this->GeneratedAssetsDirectoryRelative);
+
+    this->RootTextureDirectoryRelative = FPaths::ProjectContentDir() / "Assets/Textures/";
+    this->RootTextureDirectoryAbsolute = FPaths::ConvertRelativePathToFull(this->RootTextureDirectoryRelative);
+
+    this->VoxelTextureDirectoryRelative = this->RootTextureDirectoryRelative / "Voxels/";
+    this->VoxelTextureDirectoryAbsolute = this->RootTextureDirectoryAbsolute / "Voxels/";
+
+    this->TextureFailureTextureCacheKey                = "TFT";
+    this->TextureFailureTextureFileName                = "TextureFailure.png";
+    this->TextureFailureTextureFilePathAbsolute        = this->RootTextureDirectoryAbsolute / this->TextureFailureTextureFileName;
+    this->TextureFailureHighResTextureCacheKey         = "TFTHR";
+    this->TextureFailureHighResTextureFileName         = "TextureFailureHighRes.png";
+    this->TextureFailureHighResTextureFilePathAbsolute = this->RootTextureDirectoryAbsolute / this->TextureFailureHighResTextureFileName;
+
     return;
 }
 
@@ -64,7 +80,7 @@ UTexture2D* UTextureSubsystem::GetTexture2D(const FAccumulated& Accumulated)
         UTextureSubsystem::LoadTexture2DFromDisk(
             FString::Printf(
                 TEXT("%s.png"),
-                * ( UTextureSubsystem::GeneratedAssetsDirectoryAbsolute / this->VoxelSubsystem->GetVoxelName(Accumulated.AccumulatedIndex) )
+                * ( this->GeneratedAssetsDirectoryAbsolute / this->VoxelSubsystem->GetVoxelName(Accumulated.AccumulatedIndex) )
             )
         )
     )
@@ -76,19 +92,61 @@ UTexture2D* UTextureSubsystem::GetTexture2D(const FAccumulated& Accumulated)
 
     /* Failed to find texture. Returning a placeholder to not immediately crash the game. */
 
-    if (this->Cached2DTextures.Contains(UTextureSubsystem::TextureFailureTextureCacheKey))
+    if (this->Cached2DTextures.Contains(this->TextureFailureTextureCacheKey))
     {
-        return this->Cached2DTextures[UTextureSubsystem::TextureFailureTextureCacheKey];
+        return this->Cached2DTextures[this->TextureFailureTextureCacheKey];
     }
 
-    if (UTexture2D* Tex = UTextureSubsystem::LoadTexture2DFromDisk(UTextureSubsystem::TextureFailureTextureFilePathAbsolute))
+    if (UTexture2D* Tex = UTextureSubsystem::LoadTexture2DFromDisk(this->TextureFailureTextureFilePathAbsolute))
     {
-        this->Cached2DTextures.Add(UTextureSubsystem::TextureFailureTextureCacheKey, Tex);
+        this->Cached2DTextures.Add(this->TextureFailureTextureCacheKey, Tex);
         /* Safety net. If everything worked accordingly. */
         return this->GetTexture2D(Accumulated);
     }
 
     LOG_ERROR(LogTemp, "Failed to load texture for accumulated %s and failed to load the placeholder texture.", *Accumulated.ToString())
+
+    return nullptr;
+}
+
+UTexture2D* UTextureSubsystem::GetWorldTexture2D(const FString& NameSpace, const FString& TextureName)
+{
+    const FString Key = FString::Printf(TEXT("%s_%s::%s"), *this->WorldTextureCachePrefix, *NameSpace, *TextureName);
+
+    if (this->Cached2DTextures.Contains(Key))
+    {
+        return this->Cached2DTextures[Key];
+    }
+
+    if (UTexture2D* Tex =
+        UTextureSubsystem::LoadTexture2DFromDisk(
+            FString::Printf(
+                TEXT("%s.png"),
+                * (this->VoxelTextureDirectoryAbsolute / NameSpace / TextureName)
+            )
+        )
+    )
+    {
+        this->Cached2DTextures.Add(Key, Tex);
+        /* Safety net. If everything worked accordingly. */
+        return this->GetWorldTexture2D(NameSpace, TextureName);
+    }
+
+    /* Failed to find texture. Returning a placeholder to not immediately crash the game. */
+
+    if (this->Cached2DTextures.Contains(this->TextureFailureTextureCacheKey))
+    {
+        return this->Cached2DTextures[this->TextureFailureTextureCacheKey];
+    }
+
+    if (UTexture2D* Tex = UTextureSubsystem::LoadTexture2DFromDisk(this->TextureFailureTextureFilePathAbsolute))
+    {
+        this->Cached2DTextures.Add(this->TextureFailureTextureCacheKey, Tex);
+        /* Safety net. If everything worked accordingly. */
+        return this->GetWorldTexture2D(NameSpace, TextureName);
+    }
+
+    LOG_ERROR(LogTemp, "Failed to load world texture [%s::%s] and failed to load the placeholder texture.", *NameSpace, *TextureName)
 
     return nullptr;
 }
@@ -116,12 +174,12 @@ UTexture2D* UTextureSubsystem::LoadTexture2DFromDisk(const FString& AbsolutePath
     NormalizedPath.RemoveFromEnd(TEXT("/"));
     FPlatformMisc::NormalizePath(NormalizedPath);
 
-    UTexture2D* Tex = FImageUtils::ImportFileAsTexture2D(NormalizedPath);
-    Tex->MipGenSettings = TMGS_NoMipmaps;
+    UTexture2D* Tex          = FImageUtils::ImportFileAsTexture2D(NormalizedPath);
+    // Tex->MipGenSettings      = TMGS_NoMipmaps;
     Tex->CompressionSettings = TC_VectorDisplacementmap;
-    Tex->SRGB = false;
-    Tex->Filter = TextureFilter::TF_Nearest;
-    Tex->LODGroup = TextureGroup::TEXTUREGROUP_Pixels2D;
+    Tex->SRGB                = false;
+    Tex->Filter              = TextureFilter::TF_Nearest;
+    Tex->LODGroup            = TextureGroup::TEXTUREGROUP_Pixels2D;
 
     return Tex;
 }

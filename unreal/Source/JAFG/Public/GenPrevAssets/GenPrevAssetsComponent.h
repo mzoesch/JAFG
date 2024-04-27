@@ -7,6 +7,7 @@
 
 #include "GenPrevAssetsComponent.generated.h"
 
+class UTextureSubsystem;
 DECLARE_DELEGATE(FOnGenPrevAssetsCompleteEventSignature);
 
 UCLASS(NotBlueprintable)
@@ -35,6 +36,8 @@ private:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
     USceneCaptureComponent2D* CaptureComponent;
+
+    TObjectPtr<UTextureSubsystem> TextureSubsystem;
 
     /**
      * The threshold where all channels will be discarded if all
