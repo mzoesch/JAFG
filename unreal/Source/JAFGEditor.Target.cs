@@ -5,11 +5,11 @@ using System.Collections.Generic;
 
 public class JAFGEditorTarget : TargetRules
 {
-	public JAFGEditorTarget( TargetInfo Target) : base(Target)
-	{
-		Type = TargetType.Editor;
-		DefaultBuildSettings = BuildSettingsVersion.V4;
-		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_3;
-		ExtraModuleNames.Add("JAFG");
-	}
+    public JAFGEditorTarget(TargetInfo Target) : base(Target)
+    {
+        Type = TargetType.Editor;
+        DefaultBuildSettings = BuildSettingsVersion.V4;
+        IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_3;
+        ExtraModuleNames.Add("JAFG");
+    }
 }
