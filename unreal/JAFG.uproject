@@ -7,6 +7,27 @@
 		{
 			"Name": "JAFG",
 			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine"
+			]
+		},
+		{
+			"Name": "JAFGCore",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine"
+			]
+		},
+		{
+			"Name": "Menu",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "CommonLogging",
+			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}
 	],
@@ -18,5 +39,12 @@
 				"Editor"
 			]
 		}
+	],
+	"TargetPlatforms": [
+		"Mac",
+		"Win64",
+		"LinuxArm64",
+		"Linux",
+		"Windows"
 	]
 }

@@ -1,4 +1,5 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright 2024 mzoesch. All rights reserved.
 
 using UnrealBuildTool;
 
@@ -8,12 +9,38 @@ public class JAFG : ModuleRules
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" });
+        PublicDependencyModuleNames.AddRange(
+        new string[]
+        {
+            "Core",
+            "CoreUObject",
+            "Engine",
+            "InputCore",
+        }
+        );
 
-        PrivateDependencyModuleNames.AddRange(new string[] { });
+        PublicDependencyModuleNames.AddRange(
+        new string[]
+        {
+            "JAFGCore",
+            "Menu",
+        }
+        );
 
-        // Uncomment if you are using Slate UI
-        // PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
+        // PublicDependencyModuleNames.AddRange(
+        // new string[]
+        // {
+        //     "Slate",
+        //     "SlateCore",
+        //     "UMG",
+        // }
+        // );
+
+        PrivateDependencyModuleNames.AddRange(
+        new string[]
+        {
+        }
+        );
 
         // Uncomment if you are using online features
         // PrivateDependencyModuleNames.Add("OnlineSubsystem");
