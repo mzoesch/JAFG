@@ -78,7 +78,7 @@ private:
      * Allows Blueprints to also crash the application if needed. There are no more log verbosity levels to use as if
      * you need to log something, then this should probably be implemented in CPP anyway.
      */
-    UFUNCTION(BlueprintCallable, Category = "Common", meta = (AllowPrivateAccess = "true"))
+    UFUNCTION(BlueprintCallable, Category = "JAFG|Common", meta = (AllowPrivateAccess = "true"))
     static void LogFatal(const FString& Message)
     {
         LOG_FATAL(LogCommonSlate, "Kismet logged: [%s].", *Message)

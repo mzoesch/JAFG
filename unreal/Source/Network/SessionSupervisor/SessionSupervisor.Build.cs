@@ -2,9 +2,9 @@
 
 using UnrealBuildTool;
 
-public class Menu : ModuleRules
+public class SessionSupervisor : ModuleRules
 {
-    public Menu(ReadOnlyTargetRules Target) : base(Target)
+    public SessionSupervisor(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
@@ -13,18 +13,25 @@ public class Menu : ModuleRules
         {
             "Core",
             "JAFGCore",
-            "SessionSupervisor",
         }
         );
+
+        PublicDependencyModuleNames.AddRange(new string[]
+        {
+            "Sockets",
+            "NetCore",
+            "Networking",
+            "OnlineSubsystem",
+            "OnlineSubsystemNull",
+            "OnlineSubsystemUtils",
+            "OnlineSubsystemSteam",
+        });
 
         PrivateDependencyModuleNames.AddRange(
         new string[]
         {
             "CoreUObject",
             "Engine",
-            "SlateCore",
-            "Slate",
-            "UMG",
         }
         );
     }

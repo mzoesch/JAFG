@@ -2,6 +2,7 @@
 
 #include "JAFGFrontEnd.h"
 
+#include "LocalSessionSupervisorSubsystem.h"
 #include "MenuHUD.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/SafeZone.h"
@@ -149,6 +150,7 @@ void UJAFGFrontEnd::OpenMenuTab(const EMenuFrontEndTab::Type MenuTab) const
 
 void UJAFGFrontEnd::OnNewSessionClicked(void) const
 {
+    this->GetGameInstance()->GetSubsystem<ULocalSessionSupervisorSubsystem>()->HostListenServer(TEXT("Some Generic Session Name"), 2, true);
     return;
 }
 
