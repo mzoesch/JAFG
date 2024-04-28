@@ -17,4 +17,8 @@ class MENU_API AMenuGameMode : public AGameModeBase
 public:
 
     explicit AMenuGameMode(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+protected:
+
+    virtual void BeginPlay(void) override;
 };

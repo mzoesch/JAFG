@@ -5,4 +5,10 @@
 void UJAFGWidget::NativeConstruct(void)
 {
     Super::NativeConstruct();
+
+    this->MyCommonForegroundColor             = UJAFGWidget::CommonForegroundColor;
+    this->MyCommonForegroundColorReducedAlpha = UJAFGWidget::CommonForegroundColorReducedAlpha;
+    this->MyCommonBackgroundColor             = UJAFGWidget::CommonBackgroundColor;
+
+    return;
 }

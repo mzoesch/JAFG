@@ -11,6 +11,8 @@ public class JAFGTarget : TargetRules
         DefaultBuildSettings = BuildSettingsVersion.V4;
         IncludeOrderVersion  = EngineIncludeOrderVersion.Unreal5_3;
 
+        bWithPushModel = true;
+
         ExtraModuleNames.Add("JAFG");
 
         ExtraModuleNames.AddRange(
