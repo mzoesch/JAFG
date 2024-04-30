@@ -30,7 +30,9 @@ public:
      * @return False, if input was rejected. Will not return false if the session creation failed in some other matter
      *         as it is the responsibility of the asynchronous delegate to handle that.
      */
-    bool HostListenServer(const FString& InSessionName, const int InMaxPublicConnections, const bool bInLAN);
+    auto HostListenServer(const FString& InSessionName, const int InMaxPublicConnections, const bool bInLAN) -> bool;
+
+    auto ForceActiveSessionDestroy(void) -> bool;
 
 protected:
 

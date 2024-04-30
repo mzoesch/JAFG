@@ -9,10 +9,21 @@
 
 JAFG_VOID
 
+class ULocalSaveEntry;
+class UScrollBox;
+class UButton;
+
 UCLASS(Abstract, Blueprintable)
 class MENU_API UNewSessionFrontEnd : public UJAFGWidget
 {
     GENERATED_BODY()
+
+public:
+
+    FORCEINLINE auto DeepReset(void) -> void
+    {
+        this->ReloadLocalSaves();
+    }
 
 protected:
 
@@ -21,6 +32,24 @@ protected:
     //////////////////////////////////////////////////////////////////////////
     // Bindings
     //////////////////////////////////////////////////////////////////////////
+
+    UPROPERTY(BlueprintReadOnly, Category = "JAFG|Menu", meta = (AllowPrivateAccess = "true", BindWidget))
+    UButton* B_HostFromExistingSave;
+
+    UPROPERTY(BlueprintReadOnly, Category = "JAFG|Menu", meta = (AllowPrivateAccess = "true", BindWidget))
+    UButton* B_HostFromNewSave;
+
+    UPROPERTY(BlueprintReadOnly, Category = "JAFG|Menu", meta = (AllowPrivateAccess = "true", BindWidget))
+    UButton* B_DeleteLocalSave;
+
+    UPROPERTY(BlueprintReadOnly, Category = "JAFG|Menu", meta = (AllowPrivateAccess = "true", BindWidget))
+    UButton* B_CancelHosting;
+
+    UPROPERTY(BlueprintReadOnly, Category = "JAFG|Menu", meta = (AllowPrivateAccess = "true", BindWidget))
+    UScrollBox* SB_LocalSaves;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "JAFG|Menu")
+    TSubclassOf<ULocalSaveEntry> WB_SaveSlotClass;
 
     //////////////////////////////////////////////////////////////////////////
     // Pure Properties
@@ -61,5 +90,8 @@ protected:
 private:
 
     UFUNCTION(BlueprintCallable, Category = "JAFG|System", meta = (AllowPrivateAccess = "true"))
-    void HostListenServerAsync( /* void */ );
+    void HostListenServerAsync( /* void */ ) const;
+
+    UFUNCTION(BlueprintCallable, Category = "JAFG|Menu", meta = (AllowPrivateAccess = "true"))
+    void ReloadLocalSaves( /* void */ );
 };

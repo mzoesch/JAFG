@@ -3,6 +3,8 @@
 #include "SubMenus/NewSessionFrontEnd.h"
 
 #include "LocalSessionSupervisorSubsystem.h"
+#include "Components/ScrollBox.h"
+#include "SubMenus/Entries/LocalSaveEntry.h"
 
 void UNewSessionFrontEnd::NativeConstruct(void)
 {
@@ -18,7 +20,7 @@ void UNewSessionFrontEnd::NativeConstruct(void)
     return;
 }
 
-void UNewSessionFrontEnd::HostListenServerAsync(void)
+void UNewSessionFrontEnd::HostListenServerAsync(void) const
 {
     // All checks should have been done prior to calling this function in the blueprint implementation of this widget.
 
@@ -54,6 +56,38 @@ void UNewSessionFrontEnd::HostListenServerAsync(void)
         LOG_FATAL(LogCommonSlate, "Failed to host listen server.")
         return;
     }
+
+    return;
+}
+
+void UNewSessionFrontEnd::ReloadLocalSaves(void)
+{
+    if (this->WB_SaveSlotClass == nullptr)
+    {
+        LOG_FATAL(LogCommonSlate, "Save slot class is invalid.")
+        return;
+    }
+
+    this->NewSessionName       = UNewSessionFrontEnd::DefaultSessionName;
+    this->MaxPublicConnections = UNewSessionFrontEnd::DefaultMaxPublicConnections;
+    this->bLAN                 = UNewSessionFrontEnd::bDefaultLAN;
+
+    this->SB_LocalSaves->ClearChildren();
+
+    for (int32 i = 0; i < 32; ++i)
+    {
+        FLocalSaveEntryData EntryData;
+        EntryData.SaveEntryIndex = i;
+        EntryData.SaveEntryName  = FString::Printf(TEXT("Save Slot %d"), i);
+
+        UJAFGWidget* Entry = CreateWidget<UJAFGWidget>(this->GetWorld(), this->WB_SaveSlotClass);
+        Entry->PassDataToWidget(EntryData);
+        this->SB_LocalSaves->AddChild(Entry);
+
+        continue;
+    }
+
+    this->OnDeferredConstruct();
 
     return;
 }

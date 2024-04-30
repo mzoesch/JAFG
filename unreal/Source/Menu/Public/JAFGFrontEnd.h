@@ -8,10 +8,10 @@
 
 #include "JAFGFrontEnd.generated.h"
 
+class UJAFGSettingScreen;
 JAFG_VOID
 
 class UCreditsFrontEnd;
-class UOptionsFrontEnd;
 class UEditorFrontEnd;
 class UNewSessionFrontEnd;
 class UJoinSessionFrontEnd;
@@ -50,7 +50,7 @@ class MENU_API UJAFGFrontEnd : public UJAFGWidget
     TSubclassOf<UEditorFrontEnd> EditorFrontEndClass;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-    TSubclassOf<UOptionsFrontEnd> OptionsFrontEndClass;
+    TSubclassOf<UJAFGSettingScreen> SettingsFrontEndClass;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
     TSubclassOf<UCreditsFrontEnd> CreditsFrontEndClass;

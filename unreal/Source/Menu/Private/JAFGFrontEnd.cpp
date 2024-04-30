@@ -5,12 +5,11 @@
 #include "LocalSessionSupervisorSubsystem.h"
 #include "MenuHUD.h"
 #include "Blueprint/WidgetTree.h"
-#include "Components/SafeZone.h"
 #include "Components/TextBlock.h"
 #include "SubMenus/NewSessionFrontEnd.h"
 #include "SubMenus/JoinSessionFrontEnd.h"
 #include "SubMenus/EditorFrontEnd.h"
-#include "SubMenus/OptionsFrontEnd.h"
+#include "Settings/JAFGSettingScreen.h"
 #include "SubMenus/CreditsFrontEnd.h"
 
 void UJAFGFrontEnd::NativeConstruct(void)
@@ -43,7 +42,7 @@ void UJAFGFrontEnd::ConstructWidgetSwitcher(void) const
         return;
     }
 
-    if (this->OptionsFrontEndClass == nullptr)
+    if (this->SettingsFrontEndClass == nullptr)
     {
         LOG_FATAL(LogCommonSlate, "Options Front End class is invalid.")
         return;
@@ -60,19 +59,19 @@ void UJAFGFrontEnd::ConstructWidgetSwitcher(void) const
     UNewSessionFrontEnd* NewSessionFrontEnd   = CreateWidget<UNewSessionFrontEnd>(this->GetWorld(), this->NewSessionFrontEndClass);
     UJoinSessionFrontEnd* JoinSessionFrontEnd = CreateWidget<UJoinSessionFrontEnd>(this->GetWorld(), this->JoinSessionFrontEndClass);
     UEditorFrontEnd* EditorFrontEnd           = CreateWidget<UEditorFrontEnd>(this->GetWorld(), this->EditorFrontEndClass);
-    UOptionsFrontEnd* OptionsFrontEnd         = CreateWidget<UOptionsFrontEnd>(this->GetWorld(), this->OptionsFrontEndClass);
+    UJAFGSettingScreen* SettingFrontEnd       = CreateWidget<UJAFGSettingScreen>(this->GetWorld(), this->SettingsFrontEndClass);
     UCreditsFrontEnd* CreditsFrontEnd         = CreateWidget<UCreditsFrontEnd>(this->GetWorld(), this->CreditsFrontEndClass);
 
     check( NewSessionFrontEnd )
     check( JoinSessionFrontEnd )
     check( EditorFrontEnd )
-    check( OptionsFrontEnd )
+    check( SettingFrontEnd )
 
     this->WS_Menu->AddChild(NewSessionFrontEnd);
     this->WS_Menu->AddChild(JoinSessionFrontEnd);
     this->WS_Menu->AddChild(EditorFrontEnd);
 
-    this->WS_Menu->AddChild(OptionsFrontEnd);
+    this->WS_Menu->AddChild(SettingFrontEnd);
     this->WS_Menu->AddChild(CreditsFrontEnd);
 
     this->OpenMenuTab(EMenuFrontEndTab::Invalid);
@@ -150,7 +149,16 @@ void UJAFGFrontEnd::OpenMenuTab(const EMenuFrontEndTab::Type MenuTab) const
 
 void UJAFGFrontEnd::OnNewSessionClicked(void) const
 {
-    this->GetGameInstance()->GetSubsystem<ULocalSessionSupervisorSubsystem>()->HostListenServer(TEXT("Some Generic Session Name"), 2, true);
+    if (UNewSessionFrontEnd* Widget = Cast<UNewSessionFrontEnd>(this->WS_Menu->GetActiveWidget()); Widget == nullptr)
+    {
+        LOG_FATAL(LogCommonSlate, "Failed to cast active widget to New Session Front End.")
+        return;
+    }
+    else
+    {
+        Widget->DeepReset();
+    }
+
     return;
 }
 

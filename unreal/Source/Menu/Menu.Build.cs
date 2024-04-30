@@ -13,6 +13,7 @@ public class Menu : ModuleRules
         {
             "Core",
             "JAFGCore",
+            "CommonOSD",
             "SessionSupervisor",
         }
         );

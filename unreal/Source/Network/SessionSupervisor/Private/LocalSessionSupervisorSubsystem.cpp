@@ -39,6 +39,23 @@ void ULocalSessionSupervisorSubsystem::Deinitialize(void)
     Super::Deinitialize();
 
     LOG_VERBOSE(LogMyNetwork, "Called.")
+
+    if (this->OnlineSessionInterface.IsValid() == false)
+    {
+        LOG_ERROR(LogMyNetwork, "Session interface is invalid.")
+        return;
+    }
+
+    if (this->ActiveSessionSettings == nullptr)
+    {
+        LOG_VERBOSE(LogMyNetwork, "No active session to destroy.")
+    }
+    else
+    {
+        this->ForceActiveSessionDestroy();
+    }
+
+    return;
 }
 
 bool ULocalSessionSupervisorSubsystem::HostListenServer(const FString& InSessionName, const int InMaxPublicConnections, const bool bInLAN)
@@ -96,6 +113,20 @@ bool ULocalSessionSupervisorSubsystem::HostListenServer(const FString& InSession
     }
 
     return true;
+}
+
+bool ULocalSessionSupervisorSubsystem::ForceActiveSessionDestroy(void)
+{
+    if (this->OnlineSessionInterface->DestroySession(FName(this->ActiveSessionSettings->Name)))
+    {
+        LOG_DISPLAY(LogMyNetwork, "Session destruction request sent for [%s].", *this->ActiveSessionSettings->Name)
+        delete this->ActiveSessionSettings;
+        this->ActiveSessionSettings = nullptr;
+        return true;
+    }
+
+    LOG_ERROR(LogMyNetwork, "Failed to send session destruction request.")
+    return false;
 }
 
 void ULocalSessionSupervisorSubsystem::OnCreateSessionCompleteDelegate(const FName SessionName, const bool bSuccess)

@@ -20,7 +20,7 @@ public class JAFGEditorTarget : TargetRules
         {
             "JAFGCore",
             "Menu",
-            /* Game ... */
+            "WorldCore",
         }
         );
     }

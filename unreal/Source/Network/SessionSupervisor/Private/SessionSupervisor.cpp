@@ -1,4 +1,6 @@
-﻿#include "SessionSupervisor.h"
+﻿// Copyright 2024 mzoesch. All rights reserved.
+
+#include "SessionSupervisor.h"
 
 #define LOCTEXT_NAMESPACE "FSessionSupervisorModule"
 

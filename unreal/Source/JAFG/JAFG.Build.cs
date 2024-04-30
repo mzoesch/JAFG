@@ -24,17 +24,9 @@ public class JAFG : ModuleRules
         {
             "JAFGCore",
             "Menu",
+            "WorldCore",
         }
         );
-
-        // PublicDependencyModuleNames.AddRange(
-        // new string[]
-        // {
-        //     "Slate",
-        //     "SlateCore",
-        //     "UMG",
-        // }
-        // );
 
         PrivateDependencyModuleNames.AddRange(
         new string[]
