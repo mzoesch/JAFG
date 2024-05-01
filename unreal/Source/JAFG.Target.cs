@@ -7,20 +7,18 @@ public class JAFGTarget : TargetRules
 {
     public JAFGTarget(TargetInfo Target) : base(Target)
     {
-        Type                 = TargetType.Game;
+        Type = TargetType.Game;
         DefaultBuildSettings = BuildSettingsVersion.V4;
-        IncludeOrderVersion  = EngineIncludeOrderVersion.Unreal5_3;
-
-        bWithPushModel = true;
+        IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_3;
 
         ExtraModuleNames.Add("JAFG");
 
         ExtraModuleNames.AddRange(
         new string[]
         {
-            "JAFGCore",
-            "Menu",
-            "WorldCore",
+            "JAFGLogging",
+            "JAFGNetCore",
+            "JAFGSlateCore"
         }
         );
     }

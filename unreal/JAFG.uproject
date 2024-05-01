@@ -7,41 +7,20 @@
 		{
 			"Name": "JAFG",
 			"Type": "Runtime",
-			"LoadingPhase": "Default",
-			"AdditionalDependencies": [
-				"Engine"
-			]
+			"LoadingPhase": "Default"
 		},
 		{
-			"Name": "JAFGCore",
-			"Type": "Runtime",
-			"LoadingPhase": "Default",
-			"AdditionalDependencies": [
-				"Engine"
-			]
-		},
-		{
-			"Name": "Menu",
+			"Name": "JAFGLogging",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		},
 		{
-			"Name": "CommonLogging",
+			"Name": "JAFGNetCore",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		},
 		{
-			"Name": "SessionSupervisor",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		},
-		{
-			"Name": "WorldCore",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		},
-		{
-			"Name": "CommonOSD",
+			"Name": "JAFGSlateCore",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}
@@ -54,12 +33,5 @@
 				"Editor"
 			]
 		}
-	],
-	"TargetPlatforms": [
-		"Mac",
-		"Win64",
-		"LinuxArm64",
-		"Linux",
-		"Windows"
 	]
 }
