@@ -7,6 +7,7 @@
 
 #include "WorldCharacter.generated.h"
 
+struct FInputActionValue;
 class UInputComponent;
 
 UCLASS(NotBlueprintable)
@@ -25,4 +26,6 @@ protected:
 public:
 
     virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+
+    void Test(const FInputActionValue& Value);
 };
