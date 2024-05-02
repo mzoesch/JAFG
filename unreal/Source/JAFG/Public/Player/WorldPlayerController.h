@@ -39,7 +39,8 @@ private:
 
 protected:
 
-    void SetupCommonPlayerInput();
+    /** Should bind common behavior that is not unique to any character and should always be bound. */
+    void SetupCommonPlayerInput(void);
 
     /** Override this method to add custom key bindings in derived classes. */
     virtual auto BindAction(const FString& ActionName, UEnhancedInputComponent* EnhancedInputComponent) -> void;
@@ -52,7 +53,7 @@ private:
         const FString& ActionName,
         UEnhancedInputComponent* EnhancedInputComponent,
         const ETriggerEvent Event,
-        void (AWorldPlayerController::*Method) (const FInputActionValue& Value)
+        void (AWorldPlayerController::* Method) (const FInputActionValue& Value)
     ) -> void;
 
 #pragma endregion Enhanced Input

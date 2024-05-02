@@ -73,32 +73,30 @@ void AWorldPlayerController::SetupCommonPlayerInput(void)
     }
 #endif /* WITH_EDITOR */
 
-    // UJAFGInputSubsystem* JAFGInputSubsystem = this->GetLocalPlayer()->GetSubsystem<UJAFGInputSubsystem>();
+    UJAFGInputSubsystem* JAFGInputSubsystem = this->GetLocalPlayer()->GetSubsystem<UJAFGInputSubsystem>();
 
-// #if WITH_EDITOR
-//     if (JAFGInputSubsystem == nullptr)
-//     {
-//         LOG_FATAL(LogWorldChar, "JAFG Input Subsystem is invalid.")
-//         return;
-//     }
-// #endif /* WITH_EDITOR */
+#if WITH_EDITOR
+    if (JAFGInputSubsystem == nullptr)
+    {
+        LOG_FATAL(LogWorldChar, "JAFG Input Subsystem is invalid.")
+        return;
+    }
+#endif /* WITH_EDITOR */
 
-    // EnhancedSubsystem->ClearAllMappings();
-    // UInputMappingContext* Context = JAFGInputSubsystem->GetSafeContextByName(InputContexts::Foot);
-    // check( Context )
-    // EnhancedSubsystem->AddMappingContext(Context, 0);
+    EnhancedSubsystem->ClearAllMappings();
+    EnhancedSubsystem->AddMappingContext(JAFGInputSubsystem->GetSafeContextByName(InputContexts::Foot), 0);
 
-    // for (const FString& Name : JAFGInputSubsystem->GetAllActionNames())
-    // {
-    //     this->BindAction(Name, EnhancedInputComponent);
-    // }
+    for (const FString& Name : JAFGInputSubsystem->GetAllActionNames())
+    {
+        this->BindAction(Name, EnhancedInputComponent);
+    }
 
     return;
 }
 
 void AWorldPlayerController::BindAction(const FString& ActionName, UEnhancedInputComponent* EnhancedInputComponent)
 {
-    if (ActionName.Equals(InputActions::ToggleEscapeMenu))
+    if (ActionName == InputActions::ToggleEscapeMenu)
     {
         this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldPlayerController::OnToggleEscapeMenu);
     }
@@ -119,15 +117,15 @@ void AWorldPlayerController::BindAction(
 )
 {
     /* Maybe we want to make this a member variable? */
-    // UJAFGInputSubsystem* JAFGInputSubsystem = this->GetLocalPlayer()->GetSubsystem<UJAFGInputSubsystem>();
-    // check( JAFGInputSubsystem )
-    //
-    // EnhancedInputComponent->BindAction(
-    //     JAFGInputSubsystem->GetActionByName(ActionName),
-    //     Event,
-    //     this,
-    //     Method
-    // );
+    UJAFGInputSubsystem* JAFGInputSubsystem = this->GetLocalPlayer()->GetSubsystem<UJAFGInputSubsystem>();
+    check( JAFGInputSubsystem )
+
+    EnhancedInputComponent->BindAction(
+        JAFGInputSubsystem->GetActionByName(ActionName),
+        Event,
+        this,
+        Method
+    );
 
     return;
 }

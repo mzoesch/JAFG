@@ -22,5 +22,6 @@ namespace InputActions
 {
 
 extern inline JAFG_API const FString ToggleEscapeMenu = TEXT("ToggleEscapeMenu");
+extern inline JAFG_API const FString Jump = TEXT("Jump");
 
 }

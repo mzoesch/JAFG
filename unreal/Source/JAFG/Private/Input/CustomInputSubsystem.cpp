@@ -44,13 +44,28 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
     FootContext.Name = InputContexts::Foot;
     InputSubsystem->AddContext(FootContext);
 
-    FJAFGInputAction ToggleEscapeMenuAction;
-    ToggleEscapeMenuAction.Name = InputActions::ToggleEscapeMenu;
-    ToggleEscapeMenuAction.DefaultKeyA = EKeys::Escape;
-    ToggleEscapeMenuAction.DefaultKeyB = EKeys::Invalid;
-    ToggleEscapeMenuAction.Contexts.Add(InputContexts::Escape);
-    ToggleEscapeMenuAction.Contexts.Add(InputContexts::Foot);
-    InputSubsystem->AddAction(ToggleEscapeMenuAction);
+    // Toggle Escape Menu
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGInputAction Action;
+        Action.Name        = InputActions::ToggleEscapeMenu;
+        Action.DefaultKeyA = EKeys::Escape;
+        Action.DefaultKeyB = EKeys::Invalid;
+        Action.Contexts.Add(InputContexts::Escape);
+        Action.Contexts.Add(InputContexts::Foot);
+        InputSubsystem->AddAction(Action);
+    }
+
+    // Jump
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGInputAction Action;
+        Action.Name        = InputActions::Jump;
+        Action.DefaultKeyA = EKeys::SpaceBar;
+        Action.DefaultKeyB = EKeys::Invalid;
+        Action.Contexts.Add(InputContexts::Foot);
+        InputSubsystem->AddAction(Action);
+    }
 
     return;
 }

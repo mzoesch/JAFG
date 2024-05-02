@@ -25,10 +25,11 @@ struct FJAFGInputAction
     TArray<FString> Contexts;
 };
 
-
 #pragma region Private And Internal
 
-// Private structs for the subsystem. Do not use.
+//////////////////////////////////////////////////////////////////////////
+// Private and internal structs for the subsystem. Do not use. Use above.
+//////////////////////////////////////////////////////////////////////////
 
 USTRUCT(NotBlueprintType)
 struct FJAFGPrivateInputAction
@@ -40,7 +41,7 @@ struct FJAFGPrivateInputAction
     TObjectPtr<UInputAction> Action;
 };
 
-USTRUCT()
+USTRUCT(NotBlueprintType)
 struct FJAFGPrivateInputContext
 {
     GENERATED_BODY()
