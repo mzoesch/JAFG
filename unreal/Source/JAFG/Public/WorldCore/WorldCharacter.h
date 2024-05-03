@@ -46,6 +46,8 @@ protected:
     /** Override this method to add custom key bindings in derived classes. */
     virtual auto BindAction(const FString& ActionName, UEnhancedInputComponent* EnhancedInputComponent) -> void;
 
+    virtual void OnMove(const FInputActionValue& Value);
+    virtual void OnLook(const FInputActionValue& Value);
     virtual void OnTriggerJump(const FInputActionValue& Value);
     virtual void OnCompleteJump(const FInputActionValue& Value);
 

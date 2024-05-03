@@ -4,6 +4,7 @@
 
 #include "MyCore.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "InputMappingContext.h"
 
 #include "JAFGInputSubsystem.generated.h"
 
@@ -25,21 +26,31 @@ struct FJAFGInputAction
     TArray<FString> Contexts;
 };
 
+struct FJAFG2DInputAction
+{
+    FString         Name;
+    FKey            NorthDefaultKeyA;
+    FKey            NorthDefaultKeyB;
+    FKey            SouthDefaultKeyA;
+    FKey            SouthDefaultKeyB;
+    FKey            WestDefaultKeyA;
+    FKey            WestDefaultKeyB;
+    FKey            EastDefaultKeyA;
+    FKey            EastDefaultKeyB;
+    TArray<FString> Contexts;
+};
+
+struct FJAFG2DMouseInputAction
+{
+    FString         Name;
+    TArray<FString> Contexts;
+};
+
 #pragma region Private And Internal
 
 //////////////////////////////////////////////////////////////////////////
 // Private and internal structs for the subsystem. Do not use. Use above.
 //////////////////////////////////////////////////////////////////////////
-
-USTRUCT(NotBlueprintType)
-struct FJAFGPrivateInputAction
-{
-    GENERATED_BODY()
-
-    FJAFGInputAction         Config;
-    UPROPERTY() /* Do not remove UPROPERTY - Garbage Collection!!! */
-    TObjectPtr<UInputAction> Action;
-};
 
 USTRUCT(NotBlueprintType)
 struct FJAFGPrivateInputContext
@@ -49,6 +60,29 @@ struct FJAFGPrivateInputContext
     FJAFGInputContext                Config;
     UPROPERTY() /* Do not remove UPROPERTY - Garbage Collection!!! */
     TObjectPtr<UInputMappingContext> Context;
+};
+
+USTRUCT(NotBlueprintType)
+struct FJAFGPrivateInputAction
+{
+    GENERATED_BODY()
+
+    /* Values copied from FJAFGInputAction and FJAFG2DInputAction. */
+    FString                  Name;
+    FKey                     NorthDefaultKeyA;
+    FKey                     NorthDefaultKeyB;
+    FKey                     SouthDefaultKeyA;
+    FKey                     SouthDefaultKeyB;
+    FKey                     WestDefaultKeyA;
+    FKey                     WestDefaultKeyB;
+    FKey                     EastDefaultKeyA;
+    FKey                     EastDefaultKeyB;
+    TArray<FString>          Contexts;
+
+    bool bIs2DAction;
+
+    UPROPERTY() /* Do not remove UPROPERTY - Garbage Collection!!! */
+    TObjectPtr<UInputAction> Action;
 };
 
 #pragma endregion Private And Internal
@@ -72,7 +106,9 @@ public:
     // ~Subsystem implementation
 
     auto AddContext(const FJAFGInputContext& InContext) -> void;
-    auto AddAction(const FJAFGInputAction& InAction) -> void;
+    auto AddAction(FJAFGInputAction& InAction) -> void;
+    auto AddAction(FJAFG2DInputAction& InAction) -> void;
+    auto AddAction(FJAFG2DMouseInputAction& InAction) -> void;
 
     auto GetContextByName(const FString& Name) -> UInputMappingContext*;
     auto GetSafeContextByName(const FString& Name) -> UInputMappingContext*;

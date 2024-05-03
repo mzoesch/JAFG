@@ -55,11 +55,37 @@ void AWorldCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 void AWorldCharacter::BindAction(const FString& ActionName, UEnhancedInputComponent* EnhancedInputComponent)
 {
+    if (ActionName == InputActions::Move)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Triggered, &AWorldCharacter::OnMove);
+    }
+
+    if (ActionName == InputActions::Look)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Triggered, &AWorldCharacter::OnLook);
+    }
+
     if (ActionName == InputActions::Jump)
     {
         this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Triggered, &AWorldCharacter::OnTriggerJump);
         this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Completed, &AWorldCharacter::OnCompleteJump);
     }
+
+    return;
+}
+
+void AWorldCharacter::OnMove(const FInputActionValue& Value)
+{
+    this->AddMovementInput(this->GetActorForwardVector(), Value.Get<FVector2D>().Y);
+    this->AddMovementInput(this->GetActorRightVector(), Value.Get<FVector2D>().X);
+
+    return;
+}
+
+void AWorldCharacter::OnLook(const FInputActionValue& Value)
+{
+    this->AddControllerYawInput(Value.Get<FVector2D>().X * 0.2f);
+    this->AddControllerPitchInput(Value.Get<FVector2D>().Y * -0.2f);
 
     return;
 }
@@ -85,12 +111,7 @@ void AWorldCharacter::BindAction(
     UJAFGInputSubsystem* JAFGInputSubsystem = this->GetWorld()->GetFirstPlayerController()->GetLocalPlayer()->GetSubsystem<UJAFGInputSubsystem>();
     check( JAFGInputSubsystem )
 
-    EnhancedInputComponent->BindAction(
-        JAFGInputSubsystem->GetActionByName(ActionName),
-        Event,
-        this,
-        Method
-    );
+    EnhancedInputComponent->BindAction(JAFGInputSubsystem->GetActionByName(ActionName), Event, this, Method);
 
     return;
 }
