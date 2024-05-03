@@ -19,14 +19,17 @@ public class JAFG : ModuleRules
         }
         );
 
-        PublicDependencyModuleNames.AddRange(new string[]
+        PublicDependencyModuleNames.AddRange(
+        new string[]
         {
-            "JAFGLogging"
+            "JAFGLogging",
+            "JAFGSettings",
+            "JAFGSlateCore",
         }
         );
 
-        PrivateDependencyModuleNames.AddRange
-        (new string[]
+        PrivateDependencyModuleNames.AddRange(
+        new string[]
         {
             "Slate",
             "SlateCore",

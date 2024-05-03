@@ -2,13 +2,21 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "MyCore.h"
 #include "GameFramework/PlayerController.h"
 
 #include "CommonPlayerController.generated.h"
+
+JAFG_VOID
 
 UCLASS(NotBlueprintable)
 class JAFG_API ACommonPlayerController : public APlayerController
 {
     GENERATED_BODY()
+
+public:
+
+    explicit ACommonPlayerController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+    void ShowMouseCursor(const bool bShow, const bool bCenter = true);
 };

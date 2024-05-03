@@ -11,7 +11,6 @@
 struct FInputActionValue;
 class UInputComponent;
 
-
 UCLASS(NotBlueprintable)
 class JAFG_API AWorldCharacter : public ACharacter
 {
@@ -23,7 +22,10 @@ public:
 
 protected:
 
+    // AActor implementation
     virtual void BeginPlay(void) override;
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+    // ~AActor implementation
 
 #pragma region Enhanced Input
 
@@ -62,4 +64,12 @@ private:
 
 #pragma endregion Enhanced Input
 
+protected:
+
+    //////////////////////////////////////////////////////////////////////////
+    // Enhanced Event Bindings
+    //////////////////////////////////////////////////////////////////////////
+
+    FDelegateHandle EscapeMenuVisibilityChangedHandle;
+    virtual auto OnEscapeMenuVisibilityChanged(const bool bVisible) -> void;
 };

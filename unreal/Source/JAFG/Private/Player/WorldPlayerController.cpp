@@ -14,6 +14,7 @@
 
 AWorldPlayerController::AWorldPlayerController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
+    this->bEscapeMenuVisible = false;
     return;
 }
 
@@ -23,11 +24,9 @@ void AWorldPlayerController::BeginPlay(void)
 
     if (this->IsLocalController() == false)
     {
-        LOG_WARNING(LogWorldChar, "Initialized on sv")
         return;
     }
 
-    LOG_WARNING(LogWorldChar, "Initialized on cl")
     this->SetupCommonPlayerInput();
 
     return;
@@ -35,8 +34,26 @@ void AWorldPlayerController::BeginPlay(void)
 
 #pragma region Enhanced Input
 
+FDelegateHandle AWorldPlayerController::SubscribeToEscapeMenuVisibilityChanged(const FSlateVisibilityChangedSignature::FDelegate& Delegate)
+{
+    if (this->IsLocalController() == false)
+    {
+        LOG_FATAL(LogWorldChar, "Not a local controller.")
+        return FDelegateHandle();
+    }
+
+    return this->EscapeMenuVisibilityChangedDelegate.Add(Delegate);
+}
+
+bool AWorldPlayerController::UnSubscribeToEscapeMenuVisibilityChanged(const FDelegateHandle& Handle)
+{
+    return this->EscapeMenuVisibilityChangedDelegate.Remove(Handle);
+}
+
 void AWorldPlayerController::SetupCommonPlayerInput(void)
 {
+    LOG_VERBOSE(LogWorldChar, "Called.")
+
     if (this->InputEnabled() == false)
     {
         LOG_FATAL(LogWorldChar, "Input not enabled.")
@@ -106,7 +123,18 @@ void AWorldPlayerController::BindAction(const FString& ActionName, UEnhancedInpu
 
 void AWorldPlayerController::OnToggleEscapeMenu(const FInputActionValue& Value)
 {
-    LOG_WARNING(LogWorldChar, "Toggling escape menu.")
+    if (this->EscapeMenuVisibilityChangedDelegate.IsBound() == false)
+    {
+        LOG_FATAL(LogWorldChar, "No subscribers to Escape Menu Visibility Changed.")
+        return;
+    }
+
+    this->bEscapeMenuVisible = !this->bEscapeMenuVisible;
+    this->EscapeMenuVisibilityChangedDelegate.Broadcast(this->bEscapeMenuVisible);
+
+    this->ShowMouseCursor(this->bEscapeMenuVisible);
+
+    return;
 }
 
 void AWorldPlayerController::BindAction(

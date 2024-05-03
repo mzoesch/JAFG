@@ -15,5 +15,4 @@ class JAFG_API AWorldGameMode : public AGameModeBase
 public:
 
     explicit AWorldGameMode(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
-
 };

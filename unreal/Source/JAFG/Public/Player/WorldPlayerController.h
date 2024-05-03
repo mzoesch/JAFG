@@ -10,6 +10,11 @@
 
 JAFG_VOID
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FSlateVisibilityChangedSignature, const bool /* bVisible */ )
+
+#define ADD_SLATE_VIS_DELG(Method)                                            \
+    FSlateVisibilityChangedSignature::FDelegate::CreateUObject(this, &Method)
+
 UCLASS(NotBlueprintable)
 class JAFG_API AWorldPlayerController : public ACommonPlayerController
 {
@@ -21,7 +26,9 @@ public:
 
 protected:
 
+    // AActor implementation
     virtual void BeginPlay(void) override;
+    // ~AActor implementation
 
 #pragma region Enhanced Input
 
@@ -33,9 +40,13 @@ public:
 
     // Some subscribe methods
 
+    auto SubscribeToEscapeMenuVisibilityChanged(const FSlateVisibilityChangedSignature::FDelegate& Delegate) -> FDelegateHandle;
+    auto UnSubscribeToEscapeMenuVisibilityChanged(const FDelegateHandle& Handle) -> bool;
+
 private:
 
-    // The actual events
+    /** Obviously client only. */
+    FSlateVisibilityChangedSignature EscapeMenuVisibilityChangedDelegate;
 
 protected:
 
@@ -55,6 +66,8 @@ private:
         const ETriggerEvent Event,
         void (AWorldPlayerController::* Method) (const FInputActionValue& Value)
     ) -> void;
+
+    bool bEscapeMenuVisible;
 
 #pragma endregion Enhanced Input
 

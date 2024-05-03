@@ -17,6 +17,8 @@ public class JAFGEditorTarget : TargetRules
         new string[]
         {
             "JAFGLogging",
+            "JAFGSettings",
+            "JAFGSlateCore",
         }
         );
     }

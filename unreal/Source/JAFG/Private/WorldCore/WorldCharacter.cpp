@@ -7,6 +7,7 @@
 #include "InputMappingContext.h"
 #include "Input/CustomInputNames.h"
 #include "Input/JAFGInputSubsystem.h"
+#include "Player/WorldPlayerController.h"
 
 class UEnhancedInputLocalPlayerSubsystem;
 
@@ -18,6 +19,47 @@ AWorldCharacter::AWorldCharacter(const FObjectInitializer& ObjectInitializer) : 
 void AWorldCharacter::BeginPlay(void)
 {
     Super::BeginPlay();
+
+    if (this->IsLocallyControlled() == false)
+    {
+        return;
+    }
+
+    AWorldPlayerController* WorldPlayerController = Cast<AWorldPlayerController>(this->GetController());
+
+    if (WorldPlayerController == nullptr)
+    {
+        LOG_ERROR(LogWorldChar, "Owning World PlayerController is invalid. Cannot bind to events.")
+        return;
+    }
+
+    this->EscapeMenuVisibilityChangedHandle = WorldPlayerController->SubscribeToEscapeMenuVisibilityChanged(ADD_SLATE_VIS_DELG(AWorldCharacter::OnEscapeMenuVisibilityChanged));
+
+    return;
+}
+
+void AWorldCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    Super::EndPlay(EndPlayReason);
+
+    if (this->IsLocallyControlled() == false)
+    {
+        return;
+    }
+
+    AWorldPlayerController* WorldPlayerController = Cast<AWorldPlayerController>(this->GetController());
+
+    if (WorldPlayerController == nullptr)
+    {
+        return;
+    }
+
+    if (WorldPlayerController->UnSubscribeToEscapeMenuVisibilityChanged(this->EscapeMenuVisibilityChangedHandle) == false)
+    {
+        LOG_ERROR(LogWorldChar, "Failed to unsubscribe from Escape Menu Visibility Changed event.")
+    }
+
+    return;
 }
 
 #pragma region Enhanced Input
@@ -112,6 +154,20 @@ void AWorldCharacter::BindAction(
     check( JAFGInputSubsystem )
 
     EnhancedInputComponent->BindAction(JAFGInputSubsystem->GetActionByName(ActionName), Event, this, Method);
+
+    return;
+}
+
+void AWorldCharacter::OnEscapeMenuVisibilityChanged(const bool bVisible)
+{
+    UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(this->GetWorld()->GetFirstPlayerController()->GetLocalPlayer());
+    check( Subsystem )
+
+    UJAFGInputSubsystem* JAFGSubsystem = ULocalPlayer::GetSubsystem<UJAFGInputSubsystem>(this->GetWorld()->GetFirstPlayerController()->GetLocalPlayer());
+    check( JAFGSubsystem )
+
+    Subsystem->ClearAllMappings();
+    Subsystem->AddMappingContext(JAFGSubsystem->GetContextByName(bVisible ? InputContexts::Escape : InputContexts::Foot), 0);
 
     return;
 }

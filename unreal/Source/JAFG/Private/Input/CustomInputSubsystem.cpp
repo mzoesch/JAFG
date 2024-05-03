@@ -10,7 +10,7 @@ void UCustomInputSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     Collection.InitializeDependency<UJAFGInputSubsystem>();
     Super::Initialize(Collection);
 
-    LOG_ERROR(LogGameSettings, "Called.")
+    LOG_VERBOSE(LogGameSettings, "Called.")
 
     this->AddAllKeyMappings();
 
@@ -26,7 +26,7 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
 {
     LOG_VERBOSE(LogGameSettings, "Called.")
 
-     UJAFGInputSubsystem* InputSubsystem = this->GetLocalPlayer()->GetSubsystem<UJAFGInputSubsystem>();
+    UJAFGInputSubsystem* InputSubsystem = this->GetLocalPlayer()->GetSubsystem<UJAFGInputSubsystem>();
 
 #if WITH_EDITOR
     if (InputSubsystem == nullptr)

@@ -4,9 +4,13 @@
 
 #include "JAFG/Public/Player/WorldPlayerController.h"
 #include "JAFG/Public/WorldCore/WorldCharacter.h"
+#include "UI/WorldHUD.h"
 
 AWorldGameMode::AWorldGameMode(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
+    this->HUDClass = AWorldHUD::StaticClass();
     this->PlayerControllerClass = AWorldPlayerController::StaticClass();
     this->DefaultPawnClass = AWorldCharacter::StaticClass();
+
+    return;
 }
