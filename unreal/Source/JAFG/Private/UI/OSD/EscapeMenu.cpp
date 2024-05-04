@@ -2,6 +2,7 @@
 
 #include "UI/OSD/EscapeMenu.h"
 
+#include "Concretes/CommonBarEntryWidget.h"
 #include "Player/WorldPlayerController.h"
 
 UEscapeMenu::UEscapeMenu(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -25,6 +26,8 @@ void UEscapeMenu::NativeConstruct(void)
     }
 
     this->EscapeMenuVisibilityChangedDelegateHandle = WorldPlayerController->SubscribeToEscapeMenuVisibilityChanged(ADD_SLATE_VIS_DELG(UEscapeMenu::OnEscapeMenuVisibilityChanged));
+
+    this->RegisterAllTabs();
 
     return;
 }
@@ -58,6 +61,38 @@ void UEscapeMenu::OnEscapeMenuVisibilityChanged(const bool bVisible)
     {
         this->SetVisibility(ESlateVisibility::Collapsed);
     }
+
+    return;
+}
+
+void UEscapeMenu::RegisterAllTabs(void)
+{
+    check( this->DefaultEntryWidget && "Default Entry Widget is not set." )
+
+    FCommonBarTabDescriptor Resume;
+    Resume.Identifier = TEXT("Resume");
+    Resume.DisplayName = TEXT("Resume");
+    Resume.EntryWidgetClass = this->ResumeWidgetClass ? this->ResumeWidgetClass : this->DefaultEntryWidget;
+
+    FCommonBarTabDescriptor Settings;
+    Settings.Identifier = TEXT("Settings");
+    Settings.DisplayName = TEXT("Settings");
+    Settings.EntryWidgetClass = this->SettingsWidgetClass ? this->SettingsWidgetClass : this->DefaultEntryWidget;
+
+    FCommonBarTabDescriptor ExitToMenu;
+    ExitToMenu.Identifier = TEXT("ExitToMenu");
+    ExitToMenu.DisplayName = TEXT("Exit to Menu");
+    ExitToMenu.EntryWidgetClass = this->ExitToMainMenuWidgetClass ? this->ExitToMainMenuWidgetClass : this->DefaultEntryWidget;
+
+    FCommonBarTabDescriptor ExitToDesktop;
+    ExitToDesktop.Identifier = TEXT("ExitToDesktop");
+    ExitToDesktop.DisplayName = TEXT("Exit to Desktop");
+    ExitToDesktop.EntryWidgetClass = this->ExitToDesktopWidgetClass ? this->ExitToDesktopWidgetClass : this->DefaultEntryWidget;
+
+    this->RegisterTab(Resume);
+    this->RegisterTab(Settings);
+    this->RegisterTab(ExitToMenu);
+    this->RegisterTab(ExitToDesktop);
 
     return;
 }

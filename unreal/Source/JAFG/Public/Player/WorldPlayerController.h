@@ -10,6 +10,8 @@
 
 JAFG_VOID
 
+class UResumeEntryWidget;
+
 DECLARE_MULTICAST_DELEGATE_OneParam(FSlateVisibilityChangedSignature, const bool /* bVisible */ )
 
 #define ADD_SLATE_VIS_DELG(Method)                                            \
@@ -38,8 +40,6 @@ public:
     // Enhanced Input Extern Events
     //////////////////////////////////////////////////////////////////////////
 
-    // Some subscribe methods
-
     auto SubscribeToEscapeMenuVisibilityChanged(const FSlateVisibilityChangedSignature::FDelegate& Delegate) -> FDelegateHandle;
     auto UnSubscribeToEscapeMenuVisibilityChanged(const FDelegateHandle& Handle) -> bool;
 
@@ -50,6 +50,10 @@ private:
 
 protected:
 
+    //////////////////////////////////////////////////////////////////////////
+    // Enhanced Input
+    //////////////////////////////////////////////////////////////////////////
+
     /** Should bind common behavior that is not unique to any character and should always be bound. */
     void SetupCommonPlayerInput(void);
 
@@ -57,6 +61,8 @@ protected:
     virtual auto BindAction(const FString& ActionName, UEnhancedInputComponent* EnhancedInputComponent) -> void;
 
     void OnToggleEscapeMenu(const FInputActionValue& Value);
+    /* Needs to call this method. */
+    friend UResumeEntryWidget;
 
 private:
 

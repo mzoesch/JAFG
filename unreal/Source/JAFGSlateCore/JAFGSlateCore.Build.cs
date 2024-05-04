@@ -15,6 +15,7 @@ public class JAFGSlateCore : ModuleRules
             "Slate",
             "SlateCore",
             "UMG",
+            "JAFGLogging",
         }
         );
 
