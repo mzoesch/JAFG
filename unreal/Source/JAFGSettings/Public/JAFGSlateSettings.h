@@ -8,6 +8,8 @@
 #include "JAFGSlateSettings.generated.h"
 
 class UJAFGWidget;
+class UWarningPopUp;
+class UWarningPopUpYesNo;
 struct FPropertyChangedEvent;
 
 UCLASS(Config=JAFG, DefaultConfig, meta=(DisplayName="JAFG Slate Settings"))
@@ -37,4 +39,10 @@ public:
      */
     UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Slate")
     TSubclassOf<UJAFGWidget> EscapeMenuWidgetClass;
+
+    UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Slate")
+    TSubclassOf<UWarningPopUp> WarningPopUpWidgetClass;
+
+    UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Slate")
+    TSubclassOf<UWarningPopUpYesNo> WarningPopUpYesNoWidgetClass;
 };

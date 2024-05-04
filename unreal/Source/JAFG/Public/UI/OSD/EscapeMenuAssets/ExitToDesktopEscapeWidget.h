@@ -5,21 +5,23 @@
 #include "MyCore.h"
 #include "Concretes/CommonBarEntryWidget.h"
 
-#include "ResumeEntryWidget.generated.h"
+#include "ExitToDesktopEscapeWidget.generated.h"
 
 JAFG_VOID
 
 UCLASS(Abstract, Blueprintable)
-class JAFG_API UResumeEntryWidget : public UCommonBarEntryWidget
+class JAFG_API UExitToDesktopEscapeWidget : public UCommonBarEntryWidget
 {
     GENERATED_BODY()
 
 public:
 
-    explicit UResumeEntryWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+    explicit UExitToDesktopEscapeWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 protected:
 
     virtual void OnThisTabPressed(void) const override;
     virtual auto OnTabPressed(const FString& Identifier) -> void override;
+
+    virtual void OnPopUpClosed(const bool bAccepted) const;
 };

@@ -24,6 +24,7 @@ public class JAFGSlateCore : ModuleRules
         {
             "CoreUObject",
             "Engine",
+            "JAFGSettings",
         }
         );
     }

@@ -15,4 +15,11 @@ class JAFGSLATECORE_API ACommonHUD : public AHUD
 public:
 
     explicit ACommonHUD(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+                auto CreateWarningPopup(const FString& Message, const FString& Header = TEXT("Warning")) -> void;
+                auto CreateWarningPopup(const FString& Message, const FString& Header, const TFunction<void(bool bAccepted)>& OnPopupClosedDelegate) -> void;
+    FORCEINLINE void CreateWarningPopup(const FString& Message, const TFunction<void(bool bAccepted)>& OnPopupClosedDelegate)
+    {
+        this->CreateWarningPopup(Message, TEXT("Warning"), OnPopupClosedDelegate);
+    }
 };
