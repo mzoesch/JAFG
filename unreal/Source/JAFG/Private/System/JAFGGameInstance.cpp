@@ -63,7 +63,7 @@ bool UJAFGGameInstance::UnsubscribeFromShutdownRequest(const FDelegateHandle& Ha
     return ReturnCode;
 }
 
-void UJAFGGameInstance::RequestShutdown(void)
+void UJAFGGameInstance::RequestControlledShutdown(void)
 {
     LOG_DISPLAY(LogSystem, "Shutdown requested.")
 

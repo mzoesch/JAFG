@@ -12,8 +12,6 @@ UExitToDesktopEscapeWidget::UExitToDesktopEscapeWidget(const FObjectInitializer&
 
 void UExitToDesktopEscapeWidget::OnThisTabPressed(void) const
 {
-    Super::OnThisTabPressed();
-
     ACommonHUD* HUD = Cast<ACommonHUD>(this->GetOwningPlayer()->GetHUD());
     check( HUD )
     HUD->CreateWarningPopup(TEXT("Are you sure you want to exit to desktop?"), [this] (const bool bAccepted) { this->OnPopUpClosed(bAccepted); });
@@ -36,7 +34,7 @@ void UExitToDesktopEscapeWidget::OnPopUpClosed(const bool bAccepted) const
     UJAFGGameInstance* Instance = Cast<UJAFGGameInstance>(this->GetGameInstance());
     check( Instance )
 
-    Instance->RequestShutdown();
+    Instance->RequestControlledShutdown();
 
     return;
 }

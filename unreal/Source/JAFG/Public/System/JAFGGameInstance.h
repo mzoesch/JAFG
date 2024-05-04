@@ -40,7 +40,7 @@ public:
      */
     auto UnsubscribeFromShutdownRequest(const FDelegateHandle& Handle, const FString& Holder) -> bool;
 
-    auto RequestShutdown(void) -> void;
+    auto RequestControlledShutdown(void) -> void;
 
 private:
 

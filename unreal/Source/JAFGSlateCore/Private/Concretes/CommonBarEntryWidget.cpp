@@ -57,6 +57,12 @@ void UCommonBarEntryWidget::OnTabPressed(const FString& Identifier)
     return;
 }
 
+int32 UCommonBarEntryWidget::GetPreferredFontSize(void) const
+{
+    check( this->Owner )
+    return 12;
+}
+
 FString UCommonBarEntryWidget::GetTabDisplayName(void) const
 {
     return this->TabDescriptor.DisplayName;

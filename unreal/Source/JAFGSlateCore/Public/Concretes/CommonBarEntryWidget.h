@@ -60,6 +60,9 @@ protected:
 private:
 
     UFUNCTION(BlueprintPure, Category = "JAFG|Widget", meta = (AllowPrivateAccess = "true"))
+    int32 GetPreferredFontSize( /* void */ ) const;
+
+    UFUNCTION(BlueprintPure, Category = "JAFG|Widget", meta = (AllowPrivateAccess = "true"))
     FString GetTabDisplayName( /* void */ ) const;
     /**
      * Called after tab data was set, but before the tab is being deferred constructed in kismet.

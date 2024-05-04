@@ -37,6 +37,17 @@ struct JAFGSLATECORE_API FCommonBarTabDescriptor
      */
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     TSubclassOf<UCommonBarPanelWidget> PanelWidgetClass;
+
+    /**
+     * Optional padding that can be applied to an entry widget.
+     * Currently only vertical and horizontal boxes are supported for the padding.
+     */
+    FMargin Padding = FMargin(0.0f);
+
+    /**
+     * Optional font size that can be applied to an entry widget.
+     */
+    int32 PreferredFontSize = -1;
 };
 
 /**

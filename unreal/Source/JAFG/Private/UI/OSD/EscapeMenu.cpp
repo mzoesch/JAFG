@@ -70,27 +70,41 @@ void UEscapeMenu::RegisterAllTabs(void)
     check( this->DefaultEntryWidget && "Default Entry Widget is not set." )
 
     FCommonBarTabDescriptor Resume;
-    Resume.Identifier = TEXT("Resume");
-    Resume.DisplayName = TEXT("Resume");
+    Resume.Identifier       = TEXT("Resume");
+    Resume.DisplayName      = TEXT("Resume");
     Resume.EntryWidgetClass = this->ResumeWidgetClass ? this->ResumeWidgetClass : this->DefaultEntryWidget;
 
+    FCommonBarTabDescriptor Achievements;
+    Achievements.Identifier       = TEXT("Achievements");
+    Achievements.DisplayName      = TEXT("Achievements");
+    Achievements.EntryWidgetClass = this->AchievementsWidgetClass ? this->AchievementsWidgetClass : this->DefaultEntryWidget;
+    Achievements.Padding          = FMargin(0.0f, 200.0f, 0.0f, 0.0f);
+
     FCommonBarTabDescriptor Settings;
-    Settings.Identifier = TEXT("Settings");
-    Settings.DisplayName = TEXT("Settings");
+    Settings.Identifier       = TEXT("Settings");
+    Settings.DisplayName      = TEXT("Settings");
     Settings.EntryWidgetClass = this->SettingsWidgetClass ? this->SettingsWidgetClass : this->DefaultEntryWidget;
 
+    FCommonBarTabDescriptor SessionOptions;
+    SessionOptions.Identifier       = TEXT("SessionOptions");
+    SessionOptions.DisplayName      = TEXT("Session Options");
+    SessionOptions.EntryWidgetClass = this->SessionOptionsWidgetClass ? this->SessionOptionsWidgetClass : this->DefaultEntryWidget;
+
     FCommonBarTabDescriptor ExitToMenu;
-    ExitToMenu.Identifier = TEXT("ExitToMenu");
-    ExitToMenu.DisplayName = TEXT("Exit to Menu");
+    ExitToMenu.Identifier       = TEXT("ExitToMenu");
+    ExitToMenu.DisplayName      = TEXT("Exit to Menu");
     ExitToMenu.EntryWidgetClass = this->ExitToMainMenuWidgetClass ? this->ExitToMainMenuWidgetClass : this->DefaultEntryWidget;
+    ExitToMenu.Padding          = FMargin(0.0f, 25.0f, 0.0f, 0.0f);
 
     FCommonBarTabDescriptor ExitToDesktop;
-    ExitToDesktop.Identifier = TEXT("ExitToDesktop");
-    ExitToDesktop.DisplayName = TEXT("Exit to Desktop");
+    ExitToDesktop.Identifier       = TEXT("ExitToDesktop");
+    ExitToDesktop.DisplayName      = TEXT("Exit to Desktop");
     ExitToDesktop.EntryWidgetClass = this->ExitToDesktopWidgetClass ? this->ExitToDesktopWidgetClass : this->DefaultEntryWidget;
 
     this->RegisterTab(Resume);
+    this->RegisterTab(Achievements);
     this->RegisterTab(Settings);
+    this->RegisterTab(SessionOptions);
     this->RegisterTab(ExitToMenu);
     this->RegisterTab(ExitToDesktop);
 

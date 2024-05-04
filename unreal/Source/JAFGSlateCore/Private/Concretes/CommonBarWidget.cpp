@@ -3,7 +3,10 @@
 #include "Concretes/CommonBarWidget.h"
 
 #include "Blueprint/WidgetTree.h"
+#include "Components/HorizontalBoxSlot.h"
 #include "Components/Overlay.h"
+#include "Components/VerticalBox.h"
+#include "Components/VerticalBoxSlot.h"
 #include "Components/WidgetSwitcher.h"
 #include "Concretes/CommonBarPanelWidget.h"
 #include "Concretes/CommonBarEntryWidget.h"
@@ -50,7 +53,26 @@ void UCommonBarWidget::RegisterTab(const FCommonBarTabDescriptor& Descriptor)
     PassedTabDescriptor.Owner      = this;
     PassedTabDescriptor.Descriptor = Descriptor;
     Tab->PassDataToWidget(PassedTabDescriptor);
-    this->P_BarEntries->AddChild(Tab);
+    UPanelSlot* MySlot = this->P_BarEntries->AddChild(Tab);
+
+    /*
+     * Kinda sketchy. Not a fan of this. But it works for now.
+     */
+    if (Descriptor.Padding != FMargin(0.0f))
+    {
+        if (UVerticalBoxSlot* VSlot = Cast<UVerticalBoxSlot>(MySlot); MySlot)
+        {
+            VSlot->SetPadding(Descriptor.Padding);
+        }
+        else if (UHorizontalBoxSlot* HSlot = Cast<UHorizontalBoxSlot>(MySlot); MySlot)
+        {
+            HSlot->SetPadding(Descriptor.Padding);
+        }
+        else
+        {
+            LOG_ERROR(LogCommonSlate, "The padding slot of %s is not supported. Not applying any padding.", *Descriptor.Identifier)
+        }
+    }
 
     if (Descriptor.PanelWidgetClass != nullptr)
     {

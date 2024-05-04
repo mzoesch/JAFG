@@ -41,7 +41,19 @@ protected:
      * Optional. Will override the default entry widget.
      */
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    TSubclassOf<UCommonBarEntryWidget> AchievementsWidgetClass;
+
+    /**
+     * Optional. Will override the default entry widget.
+     */
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
     TSubclassOf<UCommonBarEntryWidget> SettingsWidgetClass;
+
+    /**
+     * Optional. Will override the default entry widget.
+     */
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    TSubclassOf<UCommonBarEntryWidget> SessionOptionsWidgetClass;
 
     /**
      * Optional. Will override the default entry widget.
