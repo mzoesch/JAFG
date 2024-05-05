@@ -16,6 +16,7 @@ public class JAFG : ModuleRules
             "Engine",
             "InputCore",
             "EnhancedInput",
+            "ProceduralMeshComponent",
         }
         );
 

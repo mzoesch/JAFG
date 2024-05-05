@@ -20,5 +20,14 @@
     Commonly used headers.
 ----------------------------------------------------------------------------*/
 
+#include "Jar/Accumulated.h"
+#include "System/Types.h"
+#include "WorldCore/Voxels/CommonVoxels.h"
+#include "WorldCore/WorldTypes.h"
+
+/*----------------------------------------------------------------------------
+    Commonly used extern modules headers.
+----------------------------------------------------------------------------*/
+
 #include "JAFGLogging/Public/Definitions.h"
 // #include "Network/JAFGNetCore/Public/CommonNetStatics.h"
