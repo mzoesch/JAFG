@@ -16,7 +16,9 @@ public class JAFGEditorTarget : TargetRules
         ExtraModuleNames.AddRange(
         new string[]
         {
+            "Hyperlane",
             "JAFGLogging",
+            "JAFGNetCore",
             "JAFGSettings",
             "JAFGSlateCore",
         }
