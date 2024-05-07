@@ -21,32 +21,39 @@ void UTextureSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     /* PIE may not always clean up properly, so we need to do it ourselves. */
     this->ClearCached2DTextures();
 
-    this->VoxelSubsystem = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>();
-    check( this->VoxelSubsystem )
-
     this->TexSectionDivider = TCHAR_TO_UTF8(&this->TexSectionDividerChar);
 
-    this->GeneratedAssetsDirectoryRelative = FPaths::ProjectSavedDir() / TEXT("Gen/");
-    this->GeneratedAssetsDirectoryAbsolute = FPaths::ConvertRelativePathToFull(this->GeneratedAssetsDirectoryRelative);
+    // Common paths.
+    //////////////////////////////////////////////////////////////////////////
+    this->GeneratedAssetsDirectoryRelative             = FPaths::ProjectSavedDir() / TEXT("Gen/");
+    this->GeneratedAssetsDirectoryAbsolute             = FPaths::ConvertRelativePathToFull(this->GeneratedAssetsDirectoryRelative);
 
-    this->RootTextureDirectoryRelative = FPaths::ProjectContentDir() / "Assets/Textures/";
-    this->RootTextureDirectoryAbsolute = FPaths::ConvertRelativePathToFull(this->RootTextureDirectoryRelative);
+    this->RootAssetsDirectoryRelative                  = FPaths::ProjectContentDir() / "Assets/";
+    this->RootAssetsDirectoryAbsolute                  = FPaths::ConvertRelativePathToFull(this->RootAssetsDirectoryRelative);
 
-    this->VoxelTextureDirectoryRelative = this->RootTextureDirectoryRelative / "Voxels/";
-    this->VoxelTextureDirectoryAbsolute = this->RootTextureDirectoryAbsolute / "Voxels/";
+    this->RootTextureDirectoryRelative                 = this->RootAssetsDirectoryRelative / "Textures/";
+    this->RootTextureDirectoryAbsolute                 = this->RootAssetsDirectoryAbsolute / "Textures/";
 
-    this->BlendTextureDirectoryRelative = this->VoxelTextureDirectoryRelative / "Alpha/";
-    this->BlendTextureDirectoryAbsolute = this->VoxelTextureDirectoryAbsolute / "Alpha/";
+    this->VoxelTextureDirectoryRelative                = this->RootTextureDirectoryRelative / "Voxels/";
+    this->VoxelTextureDirectoryAbsolute                = this->RootTextureDirectoryAbsolute / "Voxels/";
 
-    this->TextureFailureTextureCacheKey                = "TFT";
+    this->BlendTextureDirectoryRelative                = this->VoxelTextureDirectoryRelative / "Alpha/";
+    this->BlendTextureDirectoryAbsolute                = this->VoxelTextureDirectoryAbsolute / "Alpha/";
+
+    // MISC
+    //////////////////////////////////////////////////////////////////////////
     this->TextureFailureTextureFileName                = "TextureFailure.png";
     this->TextureFailureTextureFilePathAbsolute        = this->RootTextureDirectoryAbsolute / this->TextureFailureTextureFileName;
-    this->TextureFailureHighResTextureCacheKey         = "TFTHR";
     this->TextureFailureHighResTextureFileName         = "TextureFailureHighRes.png";
     this->TextureFailureHighResTextureFilePathAbsolute = this->RootTextureDirectoryAbsolute / this->TextureFailureHighResTextureFileName;
 
-    this->WorldTextureCachePrefix = "WTC";
-    this->BlendTextureCachePrefix = "BTC";
+    this->VoxelSubsystem = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>();
+    check( this->VoxelSubsystem )
+
+    this->TextureFailureTextureCacheKey                = "TFT";
+    this->TextureFailureHighResTextureCacheKey         = "TFTHR";
+    this->WorldTextureCachePrefix                      = "WTC";
+    this->BlendTextureCachePrefix                      = "BTC";
 
     return;
 }
@@ -178,7 +185,7 @@ UTexture2D* UTextureSubsystem::GetBlendTexture2D(const FString& BlendName)
 
 void UTextureSubsystem::LoadTextureNamesForNamespace(const FString& NameSpace)
 {
-    if (this->HasWorldTextureNames(NameSpace))
+    if (this->HasLoadedTextureNamesForNameSpace(NameSpace))
     {
         LOG_WARNING(LogTextureSubsystem, "World texture names already contains the namespace [%s].", *NameSpace)
         return;
@@ -206,7 +213,7 @@ void UTextureSubsystem::LoadTextureNamesForNamespace(const FString& NameSpace)
 
 int32 UTextureSubsystem::GetWorldTexture2DCount(const FString& NameSpace)
 {
-    if (this->HasWorldTextureNames(NameSpace))
+    if (this->HasLoadedTextureNamesForNameSpace(NameSpace))
     {
         return this->GetWorldTextureNamesForNamespace(NameSpace).Num();
     }
@@ -216,13 +223,18 @@ int32 UTextureSubsystem::GetWorldTexture2DCount(const FString& NameSpace)
     return this->GetWorldTexture2DCount(NameSpace);
 }
 
-const FString& UTextureSubsystem::GetWorldTexture2DNameByIndex(const FString& NameSpace, const int32 Index) const
+const FString& UTextureSubsystem::GetWorldTexture2DNameByIndex(const FString& NameSpace, const int32 Index)
 {
     return this->GetWorldTextureNamesForNamespace(NameSpace)[Index];
 }
 
-const TArray<FString>& UTextureSubsystem::GetWorldTextureNamesForNamespace(const FString& InNameSpace) const
+const TArray<FString>& UTextureSubsystem::GetWorldTextureNamesForNamespace(const FString& InNameSpace)
 {
+    if (this->HasLoadedTextureNamesForNameSpace(InNameSpace) == false)
+    {
+        this->LoadTextureNamesForNamespace(InNameSpace);
+    }
+
     for (const auto& [NameSpace, TextureNames] : this->WorldTextureNames)
     {
         if (NameSpace == InNameSpace)
@@ -285,9 +297,8 @@ int64 UTextureSubsystem::GetBytesPerPixel(const ERawImageFormat::Type Format)
      *
      * error LNK2019: unresolved external symbol
      *      "__declspec(dllimport) public: void __cdecl FImage::Init(int,int,enum ERawImageFormat::Type,enum EGammaSpace)"
-     *      (__imp_?Init@FImage@@QEAAXHHW4Type@ERawImageFormat@@W4EGammaSpace@@@Z) referenced in function "public: virtual void __cdecl AGenPrevAssets::Tick(float)" (?Tick@AGenPrevAssets@@UEAAXM@Z)
-     *      [...]\JAFGv3\unreal\Binaries\Win64\UnrealEditor-JAFG.patch_YXZ.exe : fatal error LNK1120: 1 unresolved externals
-     *
+     *      (__imp_?Init@FImage@@QEAAXHHW4Type@ERawImageFormat@@W4EGammaSpace@@@Z) referenced in function "public: virtual void __cdecl UTextureSubsystem::MyMethod(void)" (?MyMethod@UTextureSubsystem@@UEAAXM@Z)
+     *      [...]\JAFG\unreal\Binaries\Win64\UnrealEditor-JAFG.patch_YXZ.exe : fatal error LNK1120: 1 unresolved externals
      */
 
     int64 OutBytesPerPixel = 0;
@@ -296,50 +307,89 @@ int64 UTextureSubsystem::GetBytesPerPixel(const ERawImageFormat::Type Format)
     {
 
     case ERawImageFormat::G8:
+    {
         OutBytesPerPixel = 1;
         break;
+    }
 
     case ERawImageFormat::G16:
     case ERawImageFormat::R16F:
+    {
         OutBytesPerPixel = 2;
         break;
+    }
 
     case ERawImageFormat::R32F:
     case ERawImageFormat::BGRA8:
     case ERawImageFormat::BGRE8:
+    {
         OutBytesPerPixel = 4;
         break;
+    }
 
     case ERawImageFormat::RGBA16:
     case ERawImageFormat::RGBA16F:
+    {
         OutBytesPerPixel = 8;
         break;
+    }
 
     case ERawImageFormat::RGBA32F:
+    {
         OutBytesPerPixel = 16;
         break;
+    }
 
     default:
-        check(0);
+    {
+        checkNoEntry()
         break;
+    }
 
     }
 
     return OutBytesPerPixel;
 }
 
+TArray<FString> UTextureSubsystem::SplitTextureName(const FString& TextureName) const
+{
+    TArray<FString> Out;
+
+    FString Current = "";
+    for (const TCHAR& Char : TextureName)
+    {
+        if (Char == this->TexSectionDividerChar)
+        {
+            Out.Add(Current);
+            Current = "";
+        }
+        else
+        {
+            Current.AppendChar(Char);
+        }
+    }
+
+    if (Current.Len() > 0)
+    {
+        Out.Add(Current);
+    }
+
+    return Out;
+}
+
 UTexture2D* UTextureSubsystem::LoadTexture2DFromDisk(const FString& AbsolutePath)
 {
-    UE_LOG(LogTemp, Warning, TEXT("UTextureSubsystem::LoadTexture2DFromDisk: Loading texture from disk: %s."), *AbsolutePath);
+    LOG_VERBOSE(LogTextureSubsystem, "Loading texture from disk: %s.", *AbsolutePath)
 
     if (!FPaths::FileExists(AbsolutePath))
     {
-        UE_LOG(LogTemp, Error, TEXT("UTextureSubsystem::LoadTexture2DFromDisk: File does not exist: %s."), *AbsolutePath);
+        LOG_ERROR(LogTextureSubsystem, "File does not exist: %s.", *AbsolutePath)
         return nullptr;
     }
 
     if (AbsolutePath.Len() <= 0)
     {
+        LOG_ERROR(LogTextureSubsystem, "File path is empty.")
         return nullptr;
     }
 
@@ -352,8 +402,9 @@ UTexture2D* UTextureSubsystem::LoadTexture2DFromDisk(const FString& AbsolutePath
     FPlatformMisc::NormalizePath(NormalizedPath);
 
     UTexture2D* Tex          = FImageUtils::ImportFileAsTexture2D(NormalizedPath);
-    // Tex->MipGenSettings      = TMGS_NoMipmaps;
-    Tex->CompressionSettings = TC_VectorDisplacementmap;
+
+    /* We always want sharp textures and not blur them as we are working with pixel art. */
+    Tex->CompressionSettings = TextureCompressionSettings::TC_VectorDisplacementmap;
     Tex->SRGB                = false;
     Tex->Filter              = TextureFilter::TF_Nearest;
     Tex->LODGroup            = TextureGroup::TEXTUREGROUP_Pixels2D;
