@@ -28,6 +28,24 @@ bool UJAFGWorldSubsystem::ShouldCreateSubsystem(UObject* Outer) const
 
 UJAFGTickableWorldSubsystem::UJAFGTickableWorldSubsystem(void) : Super()
 {
+    this->TickInterval      = 0.0f;
+    this->TimeSinceLastTick = 0.0f;
+
+    return;
+}
+
+void UJAFGTickableWorldSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+{
+    Super::Initialize(Collection);
+
+    this->TickInterval      = this->DefaultTickInterval;
+
+    /*
+     * We want to call the tick method in the first tick of this subsystem begin play.
+     * Minus 10 seconds, else we would get an immediate float overflow in the first tick of the subsystem.
+     */
+    this->TimeSinceLastTick = FLT_MAX - 10.0f;
+
     return;
 }
 
@@ -44,4 +62,32 @@ bool UJAFGTickableWorldSubsystem::ShouldCreateSubsystem(UObject* Outer) const
     }
 
     return false;
+}
+
+void UJAFGTickableWorldSubsystem::Tick(const float DeltaTime)
+{
+    Super::Tick(DeltaTime);
+
+    if (this->TickInterval == 0.0f)
+    {
+        this->MyTick(DeltaTime);
+        return;
+    }
+
+    this->TimeSinceLastTick += DeltaTime;
+
+    if (this->TimeSinceLastTick >= this->TickInterval)
+    {
+        this->MyTick(DeltaTime);
+        LOG_VERBOSE(LogTemp, "%f %f", this->TimeSinceLastTick, this->TickInterval)
+        this->TimeSinceLastTick -= this->TickInterval;
+
+        /* May happen during lag spikes. We do not want to tick than every frame */
+        if (this->TimeSinceLastTick > this->TickInterval)
+        {
+            this->TimeSinceLastTick = 0.0f;
+        }
+    }
+
+    return;
 }

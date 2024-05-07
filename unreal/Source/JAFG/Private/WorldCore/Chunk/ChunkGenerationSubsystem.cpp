@@ -16,6 +16,8 @@ void UChunkGenerationSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     Collection.InitializeDependency<ULocalChunkWorldSettings>();
     Super::Initialize(Collection);
 
+    this->SetTickInterval(this->ChunkGenerationInterval);
+
     return;
 }
 
@@ -25,6 +27,34 @@ void UChunkGenerationSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 
     this->LocalChunkWorldSettings = this->GetWorld()->GetSubsystem<ULocalChunkWorldSettings>();
     check( this->LocalChunkWorldSettings )
+
+    return;
+}
+
+void UChunkGenerationSubsystem::MyTick(const float DeltaTime)
+{
+    Super::MyTick(DeltaTime);
+
+    /* Early exit if there are no chunks to generate. */
+    if (this->ChunkToGenerateAsyncQueue.IsEmpty())
+    {
+        return;
+    }
+
+    int32 ChunksGenerated = 0;
+    while (ChunksGenerated < this->MaxChunksToGeneratePerTick)
+    {
+        FChunkKey NewChunkKey;
+        if (this->ChunkToGenerateAsyncQueue.Dequeue(NewChunkKey) == false)
+        {
+            /* The Queue was empty. */
+            break;
+        }
+
+        this->SpawnChunk(NewChunkKey);
+
+        ChunksGenerated++;
+    }
 
     return;
 }

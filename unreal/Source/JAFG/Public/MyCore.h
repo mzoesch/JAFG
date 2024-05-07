@@ -40,4 +40,4 @@
 ----------------------------------------------------------------------------*/
 
 #include "JAFGLogging/Public/Definitions.h"
-// #include "Network/JAFGNetCore/Public/CommonNetStatics.h"
+#include "JAFGNetCore/Public/CommonNetworkStatics.h"

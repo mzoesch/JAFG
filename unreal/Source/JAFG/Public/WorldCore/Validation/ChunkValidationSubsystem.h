@@ -27,19 +27,32 @@ public:
     UChunkValidationSubsystem();
 
     // WorldSubsystem implementation
-    virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-    virtual void OnWorldBeginPlay(UWorld& InWorld) override;
+    virtual auto Initialize(FSubsystemCollectionBase& Collection) -> void override;
+    virtual auto OnWorldBeginPlay(UWorld& InWorld) -> void override;
     // ~WorldSubsystem implementation
 
     // FTickableGameObject implementation
-                virtual auto Tick(const float DeltaTime) -> void override;
     FORCEINLINE virtual auto GetStatId(void) const -> TStatId override
     {
         RETURN_QUICK_DECLARE_CYCLE_STAT(UChunkValidationSubsystem, STATGROUP_Tickables);
     }
     // ~FTickableGameObject implementation
 
+    // UJAFGTickableWorldSubsystem implementation
+    virtual auto MyTick(const float DeltaTime) -> void override;
+    // ~UJAFGTickableWorldSubsystem implementation
+
 private:
 
+#if !UE_BUILD_SHIPPING
+    int32      MockCursor                      = 1;
+    int32      CurrentMoveIndex                = 0;
+    FChunkKey2 TargetPoint                     = FChunkKey2(0, 0);
+    int32      TimesToMove                     = 1;
+
+    bool       bFinishedMockingChunkGeneration = false;
+
     void CreateMockChunks(void);
+#endif /* !UE_BUILD_SHIPPING */
+
 };

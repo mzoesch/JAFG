@@ -1,4 +1,5 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright 2024 mzoesch. All rights reserved.
 
 using UnrealBuildTool;
 
@@ -26,6 +27,8 @@ public class JAFG : ModuleRules
             "JAFGLogging",
             "JAFGSettings",
             "JAFGSlateCore",
+            "JAFGNetCore",
+            "Hyperlane",
         }
         );
 
@@ -35,6 +38,15 @@ public class JAFG : ModuleRules
             "Slate",
             "SlateCore",
             "UMG",
+        }
+        );
+
+        PrivateDependencyModuleNames.AddRange(
+        new string[]
+        {
+            "Sockets",
+            "NetCore",
+            "Networking",
         }
         );
     }

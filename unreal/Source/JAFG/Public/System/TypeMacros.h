@@ -12,6 +12,12 @@
 #define FChunkKey FIntVector
 
 /**
+ * Uniquely defines a vertical chunk.
+ */
+// ReSharper disable once CppUE4CodingStandardNamingViolationWarning
+#define FChunkKey2 FIntVector2
+
+/**
  * Uniquely defines a voxel in a chunk.
  */
 // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
@@ -32,8 +38,6 @@
 
 /**
  * Defines the number of accumulated items that can be at most stored.
- * If we change this, we have to also change the FSlot struct in the Accumulated module (because there we check
- * for overflow and underflow errors).
  */
 // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
 #define accamount_t uint16

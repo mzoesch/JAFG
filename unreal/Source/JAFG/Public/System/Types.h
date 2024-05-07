@@ -12,7 +12,7 @@ enum Type : int8
 {
     Core = -1,
     Opaque,
-    /* All other groups are determined at runtime */
+    /* All other groups are determined at runtime. See the MaterialSubsystem.h for more information. */
 };
 
 /**
