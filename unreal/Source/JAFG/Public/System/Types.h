@@ -17,9 +17,13 @@ enum Type : int8
 {
     Core = -1,
     Opaque,
-    FullBlendOpaque,
-    FloraBlendOpaque,
+    // All other groups are determined at runtime
 };
+
+FORCEINLINE ETextureGroup::Type FromBlendArrIdx(const int32 BlendArrIdx)
+{
+    return static_cast<ETextureGroup::Type>(BlendArrIdx + 1);
+}
 
 }
 

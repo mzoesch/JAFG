@@ -33,8 +33,5 @@ public:
     const TSoftObjectPtr<UMaterialInterface> MOpaque;
 
     UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Material")
-    const TSoftObjectPtr<UMaterialInterface> MFullBlendOpaque;
-
-    UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Material")
-    const TSoftObjectPtr<UMaterialInterface> MFloraBlendOpaque;
+    const TSoftObjectPtr<UMaterialInterface> MOpaqueBlend;
 };

@@ -78,6 +78,17 @@ public:
      *         nullptr will be returned.
      */
     UTexture2D* GetBlendTexture2D(const FString& BlendName);
+    FORCEINLINE auto GetSafeBlendTexture2D(const FString& BlendName) -> UTexture2D*
+    {
+        UTexture2D* Texture = this->GetBlendTexture2D(BlendName);
+        if (Texture == nullptr)
+        {
+            LOG_FATAL(LogTextureSubsystem, "Failed to load blend texture: %s", *BlendName)
+            return nullptr;
+        }
+
+        return Texture;
+    }
 
     auto LoadTextureNamesForNamespace(const FString& NameSpace) -> void;
     auto GetWorldTexture2DCount(const FString& NameSpace) -> int32;
@@ -96,6 +107,32 @@ public:
     //////////////////////////////////////////////////////////////////////////
 
     static int64 GetBytesPerPixel(const ERawImageFormat::Type Format);
+
+    FORCEINLINE TArray<FString> SplitTextureName(const FString& TextureName) const
+    {
+        TArray<FString> Out;
+
+        FString Current = "";
+        for (const TCHAR& Char : TextureName)
+        {
+            if (Char == this->TexSectionDividerChar)
+            {
+                Out.Add(Current);
+                Current = "";
+            }
+            else
+            {
+                Current.AppendChar(Char);
+            }
+        }
+
+        if (Current.Len() > 0)
+        {
+            Out.Add(Current);
+        }
+
+        return Out;
+    }
 
 private:
 

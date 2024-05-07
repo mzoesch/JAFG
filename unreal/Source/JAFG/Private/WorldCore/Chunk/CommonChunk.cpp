@@ -59,25 +59,27 @@ void ACommonChunk::ApplyProceduralMesh(void)
 
     for (int i = 0; i < this->MeshData.Num(); ++i)
     {
-        if (i == ETextureGroup::Opaque)
-        {
-            this->ProceduralMeshComponent->SetMaterial(ETextureGroup::Opaque, MaterialSubsystem->MDynamicOpaque);
-        }
-        else if (i == ETextureGroup::FullBlendOpaque)
-        {
-            this->ProceduralMeshComponent->SetMaterial(ETextureGroup::FullBlendOpaque,
-                                                       MaterialSubsystem->MDynamicFullBlendOpaque);
-        }
-        else if (i == ETextureGroup::FloraBlendOpaque)
-        {
-            this->ProceduralMeshComponent->SetMaterial(ETextureGroup::FloraBlendOpaque,
-                                                       MaterialSubsystem->MDynamicFloraBlendOpaque);
-        }
-        else
-        {
-            UE_LOG(LogTemp, Error, TEXT("ACommonChunk::ApplyProceduralMesh: Texture group %d not implemented."), i)
-            this->ProceduralMeshComponent->SetMaterial(i, MaterialSubsystem->MDynamicOpaque);
-        }
+        this->ProceduralMeshComponent->SetMaterial(i, MaterialSubsystem->MDynamicGroups[i]);
+
+        // if (i == ETextureGroup::Opaque)
+        // {
+        //     this->ProceduralMeshComponent->SetMaterial(ETextureGroup::Opaque, MaterialSubsystem->MDynamicOpaque);
+        // }
+        // else if (i == ETextureGroup::FullBlendOpaque)
+        // {
+        //     this->ProceduralMeshComponent->SetMaterial(ETextureGroup::FullBlendOpaque,
+        //                                                MaterialSubsystem->MDynamicFullBlendOpaque);
+        // }
+        // else if (i == ETextureGroup::FloraBlendOpaque)
+        // {
+        //     this->ProceduralMeshComponent->SetMaterial(ETextureGroup::FloraBlendOpaque,
+        //                                                MaterialSubsystem->MDynamicFloraBlendOpaque);
+        // }
+        // else
+        // {
+        //     UE_LOG(LogTemp, Error, TEXT("ACommonChunk::ApplyProceduralMesh: Texture group %d not implemented."), i)
+        //     this->ProceduralMeshComponent->SetMaterial(i, MaterialSubsystem->MDynamicOpaque);
+        // }
 
         this->ProceduralMeshComponent->CreateMeshSection(
             i,

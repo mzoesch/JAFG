@@ -24,6 +24,19 @@ struct JAFG_API FVoxelMask
     // Constructors
     FVoxelMask(void) = default;
 
+    FORCEINLINE explicit FVoxelMask(const FString& NameSpace, const FString& Name)
+    {
+        this->NameSpace = NameSpace;
+        this->Name      = Name;
+
+        /* Filled later on during the game boot-up by the Material Subsystem. */
+        this->TextureGroups.Empty();
+        /* Filled later on during the game boot-up by the Material Subsystem. */
+        this->TextureIndices.Empty();
+
+        return;
+    }
+
     FORCEINLINE explicit FVoxelMask(const FString& NameSpace, const FString& Name, const ETextureGroup::Type TextureGroup)
     {
         this->NameSpace = NameSpace;
@@ -40,36 +53,36 @@ struct JAFG_API FVoxelMask
         return;
     }
 
-    FORCEINLINE explicit FVoxelMask(const FString& NameSpace, const FString& Name, const TMap<ENormalLookup::Type, ETextureGroup::Type>& TextureGroup)
-    {
-        this->NameSpace = NameSpace;
-        this->Name      = Name;
-
-        this->TextureGroups.Empty();
-        const ETextureGroup::Type* DefaultGroup = TextureGroup.Find(ENormalLookup::Default);
-        if (DefaultGroup == nullptr)
-        {
-            LOG_FATAL(LogVoxelSubsystem, "Default group not found in Texture Group map. Faulty Mask: %s::%s.", *NameSpace, *Name)
-            return;
-        }
-        for (const TPair<ENormalLookup::Type, ETextureGroup::Type>& Pair : TextureGroup)
-        {
-            if (Pair.Key == ENormalLookup::Default)
-            {
-                continue;
-            }
-
-            this->TextureGroups.Add(FTextureGroup(Pair.Key, Pair.Value));
-        }
-        this->TextureGroups.Add(FTextureGroup(ENormalLookup::Default, *DefaultGroup));
-
-        /**
-         * Filled later on during the game boot-up by the Material Subsystem.
-         */
-        this->TextureIndices.Empty();
-
-        return;
-    }
+    // FORCEINLINE explicit FVoxelMask(const FString& NameSpace, const FString& Name, const TMap<ENormalLookup::Type, ETextureGroup::Type>& TextureGroup)
+    // {
+    //     this->NameSpace = NameSpace;
+    //     this->Name      = Name;
+    //
+    //     this->TextureGroups.Empty();
+    //     const ETextureGroup::Type* DefaultGroup = TextureGroup.Find(ENormalLookup::Default);
+    //     if (DefaultGroup == nullptr)
+    //     {
+    //         LOG_FATAL(LogVoxelSubsystem, "Default group not found in Texture Group map. Faulty Mask: %s::%s.", *NameSpace, *Name)
+    //         return;
+    //     }
+    //     for (const TPair<ENormalLookup::Type, ETextureGroup::Type>& Pair : TextureGroup)
+    //     {
+    //         if (Pair.Key == ENormalLookup::Default)
+    //         {
+    //             continue;
+    //         }
+    //
+    //         this->TextureGroups.Add(FTextureGroup(Pair.Key, Pair.Value));
+    //     }
+    //     this->TextureGroups.Add(FTextureGroup(ENormalLookup::Default, *DefaultGroup));
+    //
+    //     /**
+    //      * Filled later on during the game boot-up by the Material Subsystem.
+    //      */
+    //     this->TextureIndices.Empty();
+    //
+    //     return;
+    // }
     // ~Constructors
     //////////////////////////////////////////////////////////////////////////
 
@@ -172,6 +185,37 @@ private:
     TArray<FTextureGroup> TextureGroups;
     /** The last index must always be the default texture index of this voxel. */
     TArray<FTextureIndex> TextureIndices;
+
+    /**
+     * Only during initialization. The last call to this method of an
+     * object must always contain the default texture group.
+     */
+    FORCEINLINE void AddTextureGroup(const ENormalLookup::Type Normal, const ETextureGroup::Type TextureGroup)
+    {
+        this->TextureGroups.Add(FTextureGroup(Normal, TextureGroup));
+    }
+
+    /**
+     * Only during initialization. Always ensures that the default texture group is the last one.
+     * See FVoxelMask#TextureGroups for more information.
+     */
+    FORCEINLINE void AddSafeTextureGroup(const ENormalLookup::Type Normal, const ETextureGroup::Type TextureGroup)
+    {
+        if (Normal == ENormalLookup::Default)
+        {
+            this->TextureGroups.Add(FTextureGroup(Normal, TextureGroup));
+            return;
+        }
+
+        if (this->TextureGroups.Num() == 0)
+        {
+            this->TextureGroups.Add(FTextureGroup(ENormalLookup::Default, TextureGroup));
+            return;
+        }
+
+        this->TextureGroups.Insert(FTextureGroup(Normal, TextureGroup), this->TextureGroups.Num() - 1);
+        return;
+    }
 
     /**
      * Only during initialization. The last call to this method of an

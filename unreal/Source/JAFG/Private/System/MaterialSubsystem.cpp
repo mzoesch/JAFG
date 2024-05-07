@@ -22,6 +22,8 @@ void UMaterialSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
     LOG_VERBOSE(LogMaterialSubsystem, "Called.")
 
+    this->MDynamicGroups.Empty();
+
     this->InitializeMaterials();
 
     return;
@@ -73,8 +75,8 @@ void UMaterialSubsystem::InitializeMaterials(void)
         return;
     }
 
-          UVoxelSubsystem*       VoxelSubsystem   = MyGameInstance->GetSubsystem<UVoxelSubsystem>();
-          UTextureSubsystem*     TextureSubsystem = MyGameInstance->GetSubsystem<UTextureSubsystem>();
+    UVoxelSubsystem*       VoxelSubsystem   = MyGameInstance->GetSubsystem<UVoxelSubsystem>();
+    UTextureSubsystem*     TextureSubsystem = MyGameInstance->GetSubsystem<UTextureSubsystem>();
     const UJAFGMaterialSettings* MaterialSettings = GetDefault<UJAFGMaterialSettings>();
 
     if (VoxelSubsystem == nullptr)
@@ -107,10 +109,32 @@ void UMaterialSubsystem::InitializeMaterials(void)
         /* EPixelFormat::PF_R8G8B8A8, */
         EPixelFormat::PF_B8G8R8A8
     );
-
     TexArr->Filter              = TextureFilter::TF_Nearest;
     TexArr->SRGB                = true;
     TexArr->CompressionSettings = TextureCompressionSettings::TC_Default;
+
+    /*
+     * This is maybe a bit unnecessary. Instead of an array, we could just create different materials for each blend.
+     * As a blend cannot be changed individually per voxel-face but only for the whole array instance.
+     * But if we use normal UTexture2Ds for the blends, these blends get a lot blurry. This is not what we want as
+     * we want to have sharp transitions between the different textures.
+     * If we can fix this, we should use this approach instead.
+     */
+    UTexture2DArray* BlendTexArr = UTexture2DArray::CreateTransient(
+        UMaterialSubsystem::TexArrWidthHorizontal,
+        UMaterialSubsystem::TexArrWidthVertical,
+        /*
+         * No need to add here additional spaces (e.g., opaque)
+         * as they will use a different arr instance as a parent.
+         */
+        this->Blends.Num(),
+        /* The old pixel format. Look at Tex Channel flips for more information. */
+        /* EPixelFormat::PF_R8G8B8A8, */
+        EPixelFormat::PF_B8G8R8A8
+    );
+    BlendTexArr->Filter              = TextureFilter::TF_Nearest;
+    BlendTexArr->SRGB                = true;
+    BlendTexArr->CompressionSettings = TextureCompressionSettings::TC_Default;
 
     /*
      * Note that we are using here the pixel format of FColor. But we are actually reading the pixel format of
@@ -124,24 +148,19 @@ void UMaterialSubsystem::InitializeMaterials(void)
         UMaterialSubsystem::TexArrWidthVertical   *
         SinglePixelSize;
 
+    // Texture Texture-Array
+    //////////////////////////////////////////////////////////////////////////
     void* TexArrMipDataPtr          = TexArr->GetPlatformData()->Mips[0].BulkData.Lock( LOCK_READ_WRITE );
     int64 CurrentTexArrMemoryOffset = 0;
 
     for (int32 SourceTexIndex = 0; SourceTexIndex < NamespaceTexCount; ++SourceTexIndex)
     {
         const FString& CurrentTexName    = TextureSubsystem->GetWorldTexture2DNameByIndex("JAFG", SourceTexIndex);
-        int32 CurrentTexBlend = this->NoBlend;
+        /* Of type: Name, <Top>, <Flora> */
+        TArray<FString> TexNameParts = TextureSubsystem->SplitTextureName(CurrentTexName);
+        check( TexNameParts.Num() > 0 && TexNameParts.Num() < 4 )
 
-        FString CurrentVoxelName = L"";
-        if (CurrentTexName.Contains(TextureSubsystem->TexSectionDivider))
-        {
-            CurrentVoxelName = CurrentTexName.Left(CurrentTexName.Find(TextureSubsystem->TexSectionDivider));
-        }
-        else
-        {
-            CurrentVoxelName = CurrentTexName;
-        }
-
+        FString CurrentVoxelName = TexNameParts[0];
         const voxel_t  CurrentVoxelIndex = VoxelSubsystem->GetVoxelIndex("JAFG", CurrentVoxelName);
         if (CurrentVoxelIndex == ECommonVoxels::Null)
         {
@@ -149,70 +168,64 @@ void UMaterialSubsystem::InitializeMaterials(void)
             return;
         }
 
-        if (CurrentTexName.Contains(TextureSubsystem->TexSectionDivider))
+        // We have something like StoneVoxel
+        if (TexNameParts.Num() == 1)
         {
-            int32 DividerCount = 0;
-            for (int32 i = 0; i < CurrentTexName.Len(); ++i)
-            {
-                if (CurrentTexName[i] == TextureSubsystem->TexSectionDividerChar)
-                {
-                    DividerCount++;
-                }
-            }
-            check( DividerCount > 0 )
-
-            // For example, GrassVoxel_Top_Full;
-
-            int32 LastDividerIndex = -1;
-            CurrentTexName.FindLastChar(TextureSubsystem->TexSectionDividerChar, LastDividerIndex);
-            check( LastDividerIndex != -1 )
-            const FString SectionAfterLastDivider = CurrentTexName.Right(CurrentTexName.Len() - LastDividerIndex - 1);
-
-            if (this->Blends.Contains(SectionAfterLastDivider))
-            {
-                CurrentTexBlend = this->Blends.Find(SectionAfterLastDivider);
-            }
-            else
-            {
-                /* Has to have a blend tex. For example, GrassVoxel_Top_Full */
-                if (DividerCount == 2)
-                {
-                    LOG_FATAL(LogMaterialSubsystem, "Blend texture not found for voxel [%s::%s].", *FString("JAFG"), *CurrentTexName)
-                }
-
-                // We have something like GrassVoxel_Top
-
-                if (ENormalLookup::IsValid(SectionAfterLastDivider) == false)
-                {
-                    LOG_FATAL(LogMaterialSubsystem, "Invalid normal lookup for voxel [%s::%s]. Faulty texture: %s.", *FString("JAFG"), *CurrentVoxelName, *CurrentTexName)
-                    return;
-                }
-
-                ENormalLookup::Type NormalLookup = ENormalLookup::FromString(SectionAfterLastDivider);
-                VoxelSubsystem->VoxelMasks[CurrentVoxelIndex].AddSafeTextureIndex(NormalLookup, SourceTexIndex);
-            }
-
-            if (DividerCount == 2)
-            {
-                // We have something like GrassVoxel_Top_Full
-                FString LeftPad = CurrentTexName.Left(LastDividerIndex);
-                FString SectionInMiddle = LeftPad.Right(LeftPad.Len() - LeftPad.Find(TextureSubsystem->TexSectionDivider) - 1);
-                if (ENormalLookup::IsValid(SectionInMiddle) == false)
-                {
-                    LOG_FATAL(LogMaterialSubsystem, "Invalid normal lookup for voxel [%s::%s]. Faulty texture: %s.", *FString("JAFG"), *CurrentVoxelName, *CurrentTexName)
-                    return;
-                }
-
-                ENormalLookup::Type NormalLookup = ENormalLookup::FromString(SectionInMiddle);
-                VoxelSubsystem->VoxelMasks[CurrentVoxelIndex].AddSafeTextureIndex(NormalLookup, SourceTexIndex);
-            }
-        }
-        else // Does not have a _ divider; For example, DirtVoxel
-        {
+            VoxelSubsystem->VoxelMasks[CurrentVoxelIndex].AddTextureGroup(ENormalLookup::Default, ETextureGroup::Opaque);
             VoxelSubsystem->VoxelMasks[CurrentVoxelIndex].AddTextureIndex(ENormalLookup::Default, SourceTexIndex);
         }
 
-        /* Offset write location by size of previously written textures */
+        // We have something like GrassVoxel_Top_Full
+        else if (TexNameParts.Num() == 3)
+        {
+            const FString NormalAsText = TexNameParts[1];
+            const FString BlendAsText  = TexNameParts[2];
+            check( NormalAsText.IsEmpty() == false )
+            check( BlendAsText.IsEmpty() == false )
+
+            const int32 Blend = this->Blends.Find(BlendAsText);
+            check( Blend != this->NoBlend )
+
+            if (ENormalLookup::IsValid(NormalAsText) == false)
+            {
+                LOG_FATAL(LogMaterialSubsystem, "Invalid normal lookup for voxel [%s::%s]. Faulty texture: %s.", *FString("JAFG"), *CurrentVoxelName, *CurrentTexName)
+                return;
+            }
+
+            VoxelSubsystem->VoxelMasks[CurrentVoxelIndex].AddSafeTextureGroup(ENormalLookup::FromString(NormalAsText), ETextureGroup::FromBlendArrIdx(Blend));
+            VoxelSubsystem->VoxelMasks[CurrentVoxelIndex].AddSafeTextureIndex(ENormalLookup::FromString(NormalAsText), SourceTexIndex);
+        }
+
+        else if (TexNameParts.Num() == 2)
+        {
+            // We have something like GrassVoxel_Flora
+            if (this->Blends.Contains(TexNameParts[1]))
+            {
+                const int32 Blend = this->Blends.Find(TexNameParts[1]);
+                check( Blend != this->NoBlend )
+                VoxelSubsystem->VoxelMasks[CurrentVoxelIndex].AddTextureGroup(ENormalLookup::Default, ETextureGroup::FromBlendArrIdx(Blend));
+                VoxelSubsystem->VoxelMasks[CurrentVoxelIndex].AddTextureIndex(ENormalLookup::Default, SourceTexIndex);
+            }
+
+            // We have something like GrassVoxel_Top
+            else if (ENormalLookup::IsValid(TexNameParts[1]))
+            {
+                VoxelSubsystem->VoxelMasks[CurrentVoxelIndex].AddSafeTextureGroup(ENormalLookup::FromString(TexNameParts[1]), ETextureGroup::Opaque);
+                VoxelSubsystem->VoxelMasks[CurrentVoxelIndex].AddSafeTextureIndex(ENormalLookup::FromString(TexNameParts[1]), SourceTexIndex);
+            }
+            else
+            {
+                LOG_FATAL(LogMaterialSubsystem, "Invalid normal lookup for voxel [%s::%s]. Faulty texture: %s.", *FString("JAFG"), *CurrentVoxelName, *CurrentTexName)
+                return;
+            }
+        }
+        else
+        {
+            checkNoEntry()
+            LOG_FATAL(LogMaterialSubsystem, "Invalid texture name parts for voxel [%s::%s]. Faulty texture: %s.", *FString("JAFG"), *CurrentVoxelName, *CurrentTexName)
+            return;
+        }
+
         void* DestSliceMipDataPtr = static_cast<uint8*>(TexArrMipDataPtr) + CurrentTexArrMemoryOffset;
 
         UTexture2D* CurrentSlicePtr = TextureSubsystem->GetWorldTexture2D("JAFG", CurrentTexName);
@@ -248,7 +261,6 @@ void UMaterialSubsystem::InitializeMaterials(void)
         //         ((uint8*)pDestSliceData)[i * 4 + channel] = ((uint8*)pSourceMipData)[i * 4 + (channel == 0 ? 2 : channel == 2 ? 0 : channel)];
         //     }
         // }
-
 #if 0// LOG_TEX_ARR_CHANNEL_FLIPS
         for (int i = 0; i < 16*16; i++)
         {
@@ -271,46 +283,81 @@ void UMaterialSubsystem::InitializeMaterials(void)
             CurrentSlicePtr->GetPlatformData()->Mips[0].BulkData.Unlock();
         }
 
-        // Increase memory offset for writing
         CurrentTexArrMemoryOffset += SliceSize;
+
+        continue;
     }
     TexArr->GetPlatformData()->Mips[0].BulkData.Unlock();
 
     TexArr->UpdateResource();
 
-#if 1
-    int TextureIndex = 0;
-    constexpr int StoneVoxelIdx = 2; /* two core voxels */
-    constexpr int DirtVoxelIdx = 3;
-    constexpr int GrassVoxelIdx = 4;
+    // Blend Texture-Array
+    //////////////////////////////////////////////////////////////////////////
+    check( this->Blends.Num() > 0 )
 
-    // TextureArray->SourceTextures.Add(JAFGInstance->Stone);
-    // VoxelSubsystem->VoxelMasks[StoneVoxelIdx].AddTextureIndex(ENormalLookup::Default, 0);
+    void* BlendTexArrMipDataPtr          = BlendTexArr->GetPlatformData()->Mips[0].BulkData.Lock( LOCK_READ_WRITE );
+    int64 CurrentBlendTexArrMemoryOffset = 0;
 
-    // TextureArray->SourceTextures.Add(JAFGInstance->Dirt);
-    // VoxelSubsystem->VoxelMasks[DirtVoxelIdx].AddTextureIndex(ENormalLookup::Default, 1);
+    for (int i = 0; i < this->Blends.Num(); ++i)
+    {
+        void* DestSliceMipDataPtr = static_cast<uint8*>(BlendTexArrMipDataPtr) + CurrentBlendTexArrMemoryOffset;
 
-    // VoxelSubsystem->VoxelMasks[GrassVoxelIdx].AddTextureIndex(ENormalLookup::Bottom, 1);
-    // TextureArray->SourceTextures.Add(JAFGInstance->GrassTop);
-    // VoxelSubsystem->VoxelMasks[GrassVoxelIdx].AddTextureIndex(ENormalLookup::Top, 2);
-    // TextureArray->SourceTextures.Add(JAFGInstance->Grass);
-    // VoxelSubsystem->VoxelMasks[GrassVoxelIdx].AddTextureIndex(ENormalLookup::Default, 3);
+        UTexture2D* CurrentSlicePtr = TextureSubsystem->GetSafeBlendTexture2D(this->Blends[i]);
+        if (CurrentSlicePtr == nullptr)
+        {
+            LOG_FATAL(LogMaterialSubsystem, "Missing source texture while making blend texture array, element: %d. For %s.", i, *this->Blends[i])
+            return;
+        }
 
-    // https://forums.unrealengine.com/t/cant-make-a-a-texture-array-at-runtime/157889/2
+        const void* CurrentSliceMipDataPtr = CurrentSlicePtr->GetPlatformMips()[0].BulkData.LockReadOnly();
+        if (CurrentSliceMipDataPtr == nullptr)
+        {
+            LOG_FATAL(LogMaterialSubsystem, "Failed to aquire read only lock for source texture while making blend texture array, element: %d. For %s.", i, *this->Blends[i])
+            return;
+        }
 
-    // TextureArray->UpdateResource();
-    // TextureArray->UpdateSourceFromSourceTextures();
-#endif
+        FMemory::Memcpy( DestSliceMipDataPtr, CurrentSliceMipDataPtr, SliceSize );
 
-    this->MDynamicOpaque           = UMaterialInstanceDynamic::Create(MaterialSettings->MOpaque.LoadSynchronous(), this);
-    this->MDynamicFullBlendOpaque  = UMaterialInstanceDynamic::Create(MaterialSettings->MFullBlendOpaque.LoadSynchronous(), this);
-    this->MDynamicFloraBlendOpaque = UMaterialInstanceDynamic::Create(MaterialSettings->MFloraBlendOpaque.LoadSynchronous(), this);
+        if (CurrentSlicePtr->GetPlatformData()->Mips[0].BulkData.IsLocked())
+        {
+            CurrentSlicePtr->GetPlatformData()->Mips[0].BulkData.Unlock();
+        }
 
-    this->MDynamicOpaque->SetTextureParameterValue("TexArr", TexArr);
-    this->MDynamicFullBlendOpaque->SetTextureParameterValue("TexArr", TexArr);
-    this->MDynamicFloraBlendOpaque->SetTextureParameterValue("TexArr", TexArr);
+        CurrentBlendTexArrMemoryOffset += SliceSize;
 
-    // UE_LOG(LogTemp, Log, TEXT("UMaterialSubsystem::InitializeMaterials: Texture array size: %d"), TextureArray->SourceTextures.Num());
+        continue;
+    }
+
+    // UTexture2D* CurrentAlphaSlice = TextureSubsystem->GetSafeBlendTexture2D("Flora");
+    // const void* CurrentAlphaSliceMipDataPtr = CurrentAlphaSlice->GetPlatformMips()[0].BulkData.LockReadOnly();
+    // FMemory::Memcpy( BlendTexArrMipDataPtr, CurrentAlphaSliceMipDataPtr, SliceSize );
+    // if (CurrentAlphaSlice->GetPlatformData()->Mips[0].BulkData.IsLocked())
+    // {
+    //     CurrentAlphaSlice->GetPlatformData()->Mips[0].BulkData.Unlock();
+    // }
+
+    BlendTexArr->GetPlatformData()->Mips[0].BulkData.Unlock();
+
+    BlendTexArr->UpdateResource();
+
+    // Apply texture arrays to materials
+    //////////////////////////////////////////////////////////////////////////
+    check( this->MDynamicGroups.IsEmpty() )
+
+    this->MDynamicGroups.Add(UMaterialInstanceDynamic::Create(MaterialSettings->MOpaque.LoadSynchronous(), this));
+    this->MDynamicGroups[0]->SetTextureParameterValue("TexArr", TexArr);
+
+    for (int i = 1; i < this->Blends.Num() + 1; ++i)
+    {
+        this->MDynamicGroups.Add(UMaterialInstanceDynamic::Create(MaterialSettings->MOpaqueBlend.LoadSynchronous(), this));
+
+        this->MDynamicGroups[i]->SetTextureParameterValue("TexArr", TexArr);
+
+        this->MDynamicGroups[i]->SetScalarParameterValue("BlendGroup", i - 1);
+        this->MDynamicGroups[i]->SetTextureParameterValue("BlendTexArr", BlendTexArr);
+
+        continue;
+    }
 
     return;
 }
