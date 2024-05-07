@@ -2,10 +2,9 @@
 
 #pragma once
 
-// ReSharper disable once CppUE4CodingStandardNamingViolationWarning
-#define voxel_t uint32
-// ReSharper disable once CppUE4CodingStandardNamingViolationWarning
-#define voxel_t_signed int64
+/* Part of the MyCore package. */
+#include "CoreMinimal.h"
+#include "System/TypeMacros.h"
 
 namespace ECommonVoxels
 {

@@ -2,13 +2,11 @@
 
 #pragma once
 
+/* Part of the MyCore package. */
 #include "CoreMinimal.h"
 #include "WorldCore/Voxels/CommonVoxels.h"
 
 #include "Accumulated.generated.h"
-
-// ReSharper disable once CppUE4CodingStandardNamingViolationWarning
-#define accamount_t uint16
 
 namespace Accumulated
 {

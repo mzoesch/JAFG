@@ -20,10 +20,20 @@
     Commonly used headers.
 ----------------------------------------------------------------------------*/
 
-#include "Jar/Accumulated.h"
+/*
+ * This is all super, super like really super cheeky and dirty.
+ * All these includes are sometimes using each other.
+ * That's why we define the most import stuff really early and then the rest.
+ *
+ * So change the order with caution.
+ */
+
+#include "System/TypeMacros.h"
 #include "System/Types.h"
+#include "Jar/Accumulated.h"
 #include "WorldCore/Voxels/CommonVoxels.h"
 #include "WorldCore/WorldTypes.h"
+
 
 /*----------------------------------------------------------------------------
     Commonly used extern modules headers.

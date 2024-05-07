@@ -78,9 +78,9 @@ void UVoxelSubsystem::InitializeCommonVoxels(void)
 
 void UVoxelSubsystem::InitializeOptionalVoxels(void)
 {
-    this->VoxelMasks.Add(FVoxelMask(JAFGNamespace, TEXT("StoneVoxel")));
-    this->VoxelMasks.Add(FVoxelMask(JAFGNamespace, TEXT("DirtVoxel")));
-    this->VoxelMasks.Add(FVoxelMask(JAFGNamespace, TEXT("GrassVoxel")));
+    this->VoxelMasks.Add(FVoxelMask("JAFG", TEXT("StoneVoxel")));
+    this->VoxelMasks.Add(FVoxelMask("JAFG", TEXT("DirtVoxel")));
+    this->VoxelMasks.Add(FVoxelMask("JAFG", TEXT("GrassVoxel")));
 
     return;
 }

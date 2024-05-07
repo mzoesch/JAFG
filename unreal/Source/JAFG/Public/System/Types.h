@@ -2,13 +2,8 @@
 
 #pragma once
 
+/* Part of the MyCore package. */
 #include "CoreMinimal.h"
-
-// ReSharper disable once CppUE4CodingStandardNamingViolationWarning
-#define FChunkKey FIntVector
-
-// ReSharper disable once CppUE4CodingStandardNamingViolationWarning
-#define FVoxelKey FIntVector
 
 namespace ETextureGroup
 {
@@ -17,11 +12,19 @@ enum Type : int8
 {
     Core = -1,
     Opaque,
-    // All other groups are determined at runtime
+    /* All other groups are determined at runtime */
 };
 
+/**
+ * @param BlendArrIdx The index in the blend array (see MaterialSubsystem.h for more information).
+ * @return The texture group.
+ */
 FORCEINLINE ETextureGroup::Type FromBlendArrIdx(const int32 BlendArrIdx)
 {
+    /*
+     * Currently this is really simple, but as we will increase groups (like transparent, animated, etc.) this
+     * will get a bit more complex.
+     */
     return static_cast<ETextureGroup::Type>(BlendArrIdx + 1);
 }
 

@@ -2,20 +2,12 @@
 
 #pragma once
 
+/* Part of the MyCore package. */
 #include "CoreMinimal.h"
 
 #include "WorldTypes.generated.h"
 
 extern inline JAFG_API const FString CommonNamespace = TEXT("COMMON");
-/**
- * Kinda sketchy because JAFG is just a "mod" onto this game. That should always be (in theory) replaceable by
- * any other third-party mod.
- * This is so that we can drastically split the game's code and enforce code separation. Makes it overall more
- * maintainable and easier to understand, debug and write.
- * So whenever referencing JAFG, this should be done only in the JAFG namespace.
- * But never in the game's namespace.
- */
-extern inline JAFG_API const FString JAFGNamespace   = TEXT("JAFG");
 
 UENUM(BlueprintType)
 namespace EChunkType
