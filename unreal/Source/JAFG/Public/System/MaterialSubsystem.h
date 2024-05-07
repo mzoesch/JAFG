@@ -26,26 +26,23 @@ public:
     inline static constexpr int TexArrWidthHorizontal { 16 };
     inline static constexpr int TexArrWidthVertical   { 16 };
 
-    // UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Materials", meta = (ToolTip = "Automatically set by the subsystem."))
-    // TObjectPtr<UMaterialInstanceDynamic> MDynamicOpaque;
-    //
-    // UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Materials", meta = (ToolTip = "Automatically set by the subsystem."))
-    // TObjectPtr<UMaterialInstanceDynamic> MDynamicFullBlendOpaque;
-    //
-    // UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Materials", meta = (ToolTip = "Automatically set by the subsystem."))
-    // TObjectPtr<UMaterialInstanceDynamic> MDynamicFloraBlendOpaque;
-
-    // The first one must always be the opaque material.
+    /**
+     * All dynamic created materials.
+     * See ETextureGroup for the indices.
+     */
+    UPROPERTY()
     TArray<TObjectPtr<UMaterialInstanceDynamic>> MDynamicGroups;
 
 private:
 
-    void InitializeAlphaMasks(void);
+    /**
+     *
+     */
     void InitializeMaterials(void);
 
     /**
      * All the blend texture names that where found at application boot-up.
-     * The indices are not the same as in MDynamicGroups, but +1 because we have to add the opaque material.
+     * Never assume that the indices are the same as the ones in MDynamicGroups.
      */
     TArray<FString> Blends;
     const int32 NoBlend = -1;
