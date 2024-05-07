@@ -23,8 +23,8 @@ public:
     virtual void Deinitialize(void) override;
     // ~Subsystem implementation
 
-    inline static constexpr int TextureArrayWidthHorizontal { 16 };
-    inline static constexpr int TextureArrayWidthVertical   { 16 };
+    inline static constexpr int TexArrWidthHorizontal { 16 };
+    inline static constexpr int TexArrWidthVertical   { 16 };
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Materials", meta = (ToolTip = "Automatically set by the subsystem."))
     TObjectPtr<UMaterialInstanceDynamic> MDynamicOpaque;
@@ -37,5 +37,12 @@ public:
 
 private:
 
+    void InitializeAlphaMasks(void);
     void InitializeMaterials(void);
+
+    /**
+     * All the blend texture names that where found at application boot-up.
+     */
+    TArray<FString> Blends;
+    const int32 NoBlend = -1;
 };

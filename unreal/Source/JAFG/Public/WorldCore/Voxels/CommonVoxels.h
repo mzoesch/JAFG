@@ -4,6 +4,8 @@
 
 // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
 #define voxel_t uint32
+// ReSharper disable once CppUE4CodingStandardNamingViolationWarning
+#define voxel_t_signed int64
 
 namespace ECommonVoxels
 {

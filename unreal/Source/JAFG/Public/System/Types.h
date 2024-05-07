@@ -61,4 +61,35 @@ FORCEINLINE ENormalLookup::Type FromVector(const FVector& Normal)
     return ENormalLookup::Default;
 };
 
+FORCEINLINE bool IsValid(const FString& Normal)
+{
+    return Normal == TEXT("Top") || Normal == TEXT("Bot") || Normal == TEXT("Front") || Normal == TEXT("Side");
+}
+
+FORCEINLINE ENormalLookup::Type FromString(const FString& Normal)
+{
+    if (Normal == TEXT("Top"))
+    {
+        return ENormalLookup::Top;
+    }
+
+    if (Normal == TEXT("Bot"))
+    {
+        return ENormalLookup::Bottom;
+    }
+
+    if (Normal == TEXT("Front"))
+    {
+        return ENormalLookup::Front;
+    }
+
+    if (Normal == TEXT("Side"))
+    {
+        return ENormalLookup::Side;
+    }
+
+    checkNoEntry()
+    return ENormalLookup::Default;
+}
+
 }

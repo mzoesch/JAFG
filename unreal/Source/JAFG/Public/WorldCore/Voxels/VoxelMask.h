@@ -182,6 +182,28 @@ private:
         this->TextureIndices.Add(FTextureIndex(Normal, TextureIndex));
     }
 
+    /**
+     * Only during initialization. Always ensures that the default texture index is the last one.
+     * See FVoxelMask#TextureIndices for more information.
+     */
+    FORCEINLINE void AddSafeTextureIndex(ENormalLookup::Type Normal, const int32 TextureIndex)
+    {
+        if (Normal == ENormalLookup::Default)
+        {
+            this->TextureIndices.Add(FTextureIndex(Normal, TextureIndex));
+            return;
+        }
+
+        if (this->TextureIndices.Num() == 0)
+        {
+            this->TextureIndices.Add(FTextureIndex(ENormalLookup::Default, TextureIndex));
+            return;
+        }
+
+        this->TextureIndices.Insert(FTextureIndex(Normal, TextureIndex), this->TextureIndices.Num() - 1);
+        return;
+    }
+
     /* Needs to add some textures at game boot-up. */
     friend UMaterialSubsystem;
 };

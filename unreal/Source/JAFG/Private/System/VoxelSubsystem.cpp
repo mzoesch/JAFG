@@ -28,6 +28,19 @@ void UVoxelSubsystem::Deinitialize(void)
     Super::Deinitialize();
 }
 
+auto UVoxelSubsystem::GetVoxelIndex(const FString& NameSpace, const FString& Name) const -> uint32
+{
+    for (voxel_t_signed i = 0; i < this->VoxelMasks.Num(); ++i)
+    {
+        if (this->VoxelMasks[i].NameSpace == NameSpace && this->VoxelMasks[i].Name == Name)
+        {
+            return i;
+        }
+    }
+
+    return ECommonVoxels::Null;
+}
+
 void UVoxelSubsystem::SetCommonVoxelNum(void)
 {
     /* If only common voxels are currently initialized, we need this. */
@@ -65,9 +78,9 @@ void UVoxelSubsystem::InitializeCommonVoxels(void)
 
 void UVoxelSubsystem::InitializeOptionalVoxels(void)
 {
-    this->VoxelMasks.Add(FVoxelMask(JAFGNamespace, TEXT("Stone"), ETextureGroup::Opaque));
-    this->VoxelMasks.Add(FVoxelMask(JAFGNamespace, TEXT("Dirt"), ETextureGroup::Opaque));
-    this->VoxelMasks.Add(FVoxelMask(JAFGNamespace, TEXT("Grass"), ETextureGroup::Opaque));
+    this->VoxelMasks.Add(FVoxelMask(JAFGNamespace, TEXT("StoneVoxel"), ETextureGroup::Opaque));
+    this->VoxelMasks.Add(FVoxelMask(JAFGNamespace, TEXT("DirtVoxel"), ETextureGroup::Opaque));
+    this->VoxelMasks.Add(FVoxelMask(JAFGNamespace, TEXT("GrassVoxel"), ETextureGroup::Opaque));
 
     return;
 }
