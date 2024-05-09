@@ -63,10 +63,11 @@
 
 #include <cmath>
 
-UENUM()
+UENUM(BlueprintType)
 namespace ENoiseType
 {
-enum NoiseType
+
+enum Type
 {
     OpenSimplex2,
     OpenSimplex2S,
@@ -75,23 +76,28 @@ enum NoiseType
     ValueCubic,
     Value
 };
+
 }
 
-UENUM()
+UENUM(BlueprintType)
 namespace ERotationType3D
 {
-enum RotationType3D
+
+enum Type
 {
+
     None,
     ImproveXYPlanes,
     ImproveXZPlanes
 };
+
 }
 
-UENUM()
+UENUM(BlueprintType)
 namespace EFractalType
 {
-enum FractalType
+
+enum Type
 {
     None,
     FBm,
@@ -100,24 +106,28 @@ enum FractalType
     DomainWarpProgressive,
     DomainWarpIndependent
 };
+
 }
 
-UENUM()
+UENUM(BlueprintType)
 namespace ECellularDistanceFunction
 {
-enum CellularDistanceFunction
+
+enum Type
 {
     Euclidean,
     EuclideanSq,
     Manhattan,
     Hybrid
 };
+
 }
 
-UENUM()
+UENUM(BlueprintType)
 namespace ECellularReturnType
 {
-enum CellularReturnType
+
+enum Type
 {
     CellValue,
     Distance,
@@ -127,17 +137,20 @@ enum CellularReturnType
     Distance2Mul,
     Distance2Div
 };
+
 }
 
-UENUM()
+UENUM(BlueprintType)
 namespace EDomainWarpType
 {
-enum DomainWarpType
+
+enum Type
 {
     OpenSimplex2,
     OpenSimplex2Reduced,
     BasicGrid
 };
+
 }
 
 class FFastNoiseLite
@@ -195,7 +208,7 @@ public:
     /// <remarks>
     /// Default: OpenSimplex2
     /// </remarks>
-    void SetNoiseType(ENoiseType::NoiseType noiseType)
+    void SetNoiseType(ENoiseType::Type noiseType)
     {
         mNoiseType = noiseType;
         UpdateTransformType3D();
@@ -208,7 +221,7 @@ public:
     /// <remarks>
     /// Default: None
     /// </remarks>
-    void SetRotationType3D(ERotationType3D::RotationType3D rotationType3D)
+    void SetRotationType3D(ERotationType3D::Type rotationType3D)
     {
         mRotationType3D = rotationType3D;
         UpdateTransformType3D();
@@ -222,7 +235,7 @@ public:
     /// Default: None
     /// Note: FractalType_DomainWarp... only affects DomainWarp(...)
     /// </remarks>
-    void SetFractalType(EFractalType::FractalType fractalType) { mFractalType = fractalType; }
+    void SetFractalType(EFractalType::Type fractalType) { mFractalType = fractalType; }
 
     /// <summary>
     /// Sets octave count for all fractal noise types
@@ -280,7 +293,7 @@ public:
     /// <remarks>
     /// Default: Distance
     /// </remarks>
-    void SetCellularDistanceFunction(ECellularDistanceFunction::CellularDistanceFunction cellularDistanceFunction) { mCellularDistanceFunction = cellularDistanceFunction; }
+    void SetCellularDistanceFunction(ECellularDistanceFunction::Type cellularDistanceFunction) { mCellularDistanceFunction = cellularDistanceFunction; }
 
     /// <summary>
     /// Sets return type from cellular noise calculations
@@ -288,7 +301,7 @@ public:
     /// <remarks>
     /// Default: EuclideanSq
     /// </remarks>
-    void SetCellularReturnType(ECellularReturnType::CellularReturnType cellularReturnType) { mCellularReturnType = cellularReturnType; }
+    void SetCellularReturnType(ECellularReturnType::Type cellularReturnType) { mCellularReturnType = cellularReturnType; }
 
     /// <summary>
     /// Sets the maximum distance a cellular point can move from it's grid position
@@ -306,7 +319,7 @@ public:
     /// <remarks>
     /// Default: OpenSimplex2
     /// </remarks>
-    void SetDomainWarpType(EDomainWarpType::DomainWarpType domainWarpType)
+    void SetDomainWarpType(EDomainWarpType::Type domainWarpType)
     {
         mDomainWarpType = domainWarpType;
         UpdateWarpTransformType3D();
@@ -443,11 +456,11 @@ private:
 
     int mSeed;
     float mFrequency;
-    ENoiseType::NoiseType mNoiseType;
-    ERotationType3D::RotationType3D mRotationType3D;
+    ENoiseType::Type mNoiseType;
+    ERotationType3D::Type mRotationType3D;
     TransformType3D mTransformType3D;
 
-    EFractalType::FractalType mFractalType;
+    EFractalType::Type mFractalType;
     int mOctaves;
     float mLacunarity;
     float mGain;
@@ -456,11 +469,11 @@ private:
 
     float mFractalBounding;
 
-    ECellularDistanceFunction::CellularDistanceFunction mCellularDistanceFunction;
-    ECellularReturnType::CellularReturnType mCellularReturnType;
+    ECellularDistanceFunction::Type mCellularDistanceFunction;
+    ECellularReturnType::Type mCellularReturnType;
     float mCellularJitterModifier;
 
-    EDomainWarpType::DomainWarpType mDomainWarpType;
+    EDomainWarpType::Type mDomainWarpType;
     TransformType3D mWarpTransformType3D;
     float mDomainWarpAmp;
 
