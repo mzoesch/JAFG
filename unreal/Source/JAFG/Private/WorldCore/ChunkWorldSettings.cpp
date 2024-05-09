@@ -8,3 +8,24 @@ ULocalChunkWorldSettings::ULocalChunkWorldSettings(void) : Super()
 
     return;
 }
+
+UServerChunkWorldSettings::UServerChunkWorldSettings(void) : Super()
+{
+    this->WorldGenerationType = EWorldGenerationType::Superflat;
+    return;
+}
+
+bool UServerChunkWorldSettings::ShouldCreateSubsystem(UObject* Outer) const
+{
+    if (Super::ShouldCreateSubsystem(Outer) == false)
+    {
+        return false;
+    }
+
+    if (UNetStatics::IsSafeClient(Outer))
+    {
+        return false;
+    }
+
+    return true;
+}

@@ -36,30 +36,56 @@ void UChunkGenerationSubsystem::MyTick(const float DeltaTime)
     Super::MyTick(DeltaTime);
 
     /* Early exit if there are no chunks to generate. */
-    if (this->ChunkToGenerateAsyncQueue.IsEmpty())
+    if (this->ActiveChunksToGenerateAsyncQueue.IsEmpty())
     {
         return;
     }
 
     int32 ChunksGenerated = 0;
-    while (ChunksGenerated < this->MaxChunksToGeneratePerTick)
+    while (ChunksGenerated < this->MaxChunksToGeneratePerTick && this->ActiveChunksToGenerateAsyncQueue.IsEmpty() == false)
     {
-        FChunkKey NewChunkKey;
-        if (this->ChunkToGenerateAsyncQueue.Dequeue(NewChunkKey) == false)
-        {
-            /* The Queue was empty. */
-            break;
-        }
-
-        this->SpawnChunk(NewChunkKey);
-
+        this->DequeueNextActiveChunk();
         ChunksGenerated++;
     }
 
     return;
 }
 
-void UChunkGenerationSubsystem::SpawnChunk(const FChunkKey& ChunkKey)
+void UChunkGenerationSubsystem::SpawnActiveChunkAsync(const FIntVector& ChunkKey)
+{
+    this->ActiveChunksToGenerateAsyncQueue.Enqueue(ChunkKey);
+}
+
+void UChunkGenerationSubsystem::DequeueNextActiveChunk(void)
+{
+    FChunkKey NewActiveKey;
+    if (this->ActiveChunksToGenerateAsyncQueue.Dequeue(NewActiveKey) == false)
+    {
+        LOG_WARNING(LogChunkGeneration, "Called but the queue was empty.")
+        return;
+    }
+
+    ACommonChunk* NewActiveChunk;
+    if (this->ChunkMap.Contains(NewActiveKey) == false)
+    {
+        NewActiveChunk = this->SpawnChunk(NewActiveKey);
+        this->ChunkMap.Add(NewActiveKey, NewActiveChunk);
+
+    }
+    else
+    {
+        NewActiveChunk = this->ChunkMap[NewActiveKey];
+    }
+
+    NewActiveChunk->SetChunkState(EChunkState::Spawned);
+    NewActiveChunk->SetChunkState(EChunkState::Shaped);
+    NewActiveChunk->SetChunkState(EChunkState::SurfaceReplaced);
+    NewActiveChunk->SetChunkState(EChunkState::Active);
+
+    return;
+}
+
+ACommonChunk* UChunkGenerationSubsystem::SpawnChunk(const FChunkKey& ChunkKey) const
 {
     LOG_VERY_VERBOSE(LogChunkGeneration, "Spawning chunk at %s.", *ChunkKey.ToString())
 
@@ -79,5 +105,5 @@ void UChunkGenerationSubsystem::SpawnChunk(const FChunkKey& ChunkKey)
         TargetedChunkTransform
     );
 
-    return;
+    return Chunk;
 }

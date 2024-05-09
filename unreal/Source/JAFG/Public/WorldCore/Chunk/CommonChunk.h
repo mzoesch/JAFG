@@ -5,14 +5,18 @@
 #include "MyCore.h"
 #include "ChunkMeshData.h"
 #include "GameFramework/Actor.h"
+#include "WorldCore/Chunk/ChunkState.h"
 
 #include "CommonChunk.generated.h"
 
 JAFG_VOID
 
+class UServerChunkWorldSettings;
 class UVoxelSubsystem;
-
 class UProceduralMeshComponent;
+class UChunkGenerationSubsystem;
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FChunkStateChangeSignature, const EChunkState::Type /* NewChunkState */ )
 
 UCLASS(Abstract, NotBlueprintable)
 class JAFG_API ACommonChunk : public AActor
@@ -25,20 +29,90 @@ public:
 
 protected:
 
-    virtual void BeginPlay(void) override;
+    // AActor implementation
+    virtual auto BeginPlay(void) -> void override;
+    virtual auto EndPlay(const EEndPlayReason::Type EndPlayReason) -> void override;
+    // ~AActor implementation
 
     /**
      * Sets up data that is valid throughout the lifetime of a chunk and needed for the chunk to be able to
      * generate itself.
      * Called before ACommonChunk#Initialize.
      */
-    virtual void PreInitialize(void);
+    virtual auto PreInitialize(void) -> void;
 
+    /**
+     * Use as a last resort only.
+     * Will delete without any pity this chunk from the UWorld.
+     * No cleanup will be done.
+     */
+    virtual auto KillUncontrolled(void) -> void;
+    bool bUncontrolledKill = false;
+
+#pragma region Chunk State
+
+    //////////////////////////////////////////////////////////////////////////
+    // Chunk State
+    //////////////////////////////////////////////////////////////////////////
+
+public:
+
+    FORCEINLINE auto SubscribeToChunkStateChange(const FChunkStateChangeSignature::FDelegate& Delegate) -> FDelegateHandle
+    {
+        return this->ChunkStateChangeEvent.Add(Delegate);
+    }
+
+    FORCEINLINE auto UnsubscribeFromChunkStateChange(const FDelegateHandle& Handle) -> bool
+    {
+        return this->ChunkStateChangeEvent.Remove(Handle);
+    }
+
+    FORCEINLINE auto GetChunkState(void) const -> EChunkState::Type
+    {
+        return this->ChunkState;
+    }
+
+private:
+
+    EChunkState::Type          ChunkState = EChunkState::Invalid;
+    FChunkStateChangeSignature ChunkStateChangeEvent;
+
+    FDelegateHandle SpawnedHandle;
+    FDelegateHandle ShapedHandle;
+    FDelegateHandle SurfaceReplacedHandle;
+
+    FDelegateHandle ActiveHandle;
+
+    FDelegateHandle CreateOnSpawnedDelegateHandle(void);
+    FDelegateHandle CreateOnShapedDelegateHandle(void);
+    FDelegateHandle CreateOnSurfaceReplacedDelegateHandle(void);
+    FDelegateHandle CreateOnActiveDelegateHandle(void);
+
+protected:
+
+    virtual void SetChunkState(const EChunkState::Type NewChunkState);
+    friend UChunkGenerationSubsystem;
+
+#pragma endregion Chunk State
+
+#pragma region MISC
+
+    //////////////////////////////////////////////////////////////////////////
+    // MISC
+    //////////////////////////////////////////////////////////////////////////
+
+    // TODO Check what this value can be in edge cases
     FVector   JChunkPosition;
     FChunkKey ChunkKey;
 
     UPROPERTY()
     TObjectPtr<UVoxelSubsystem> VoxelSubsystem;
+
+    /** As the name suggests only valid on the server or in a standalone game. */
+    UPROPERTY()
+    TObjectPtr<UServerChunkWorldSettings> ServerChunkWorldSettings;
+
+#pragma endregion MISC
 
 #pragma region Procedural Mesh
 
@@ -139,11 +213,16 @@ private:
     // Chunk World Generation
     //////////////////////////////////////////////////////////////////////////
 
-    void GenerateVoxels(void);
-
+    void Shape(void);
     void GenerateSuperFlatWorld(void);
+    void GenerateDefaultWorld(void);
+
+    void ReplaceSurface(void);
+    void GenerateSurface(void);
 
 #pragma endregion Chunk World Generation
+
+#pragma region Getters
 
 public:
 
@@ -175,4 +254,7 @@ public:
 
         return this->RawVoxelData[ACommonChunk::GetVoxelIndex(LocalVoxelPosition)];
     }
+
+#pragma endregion Getters
+
 };

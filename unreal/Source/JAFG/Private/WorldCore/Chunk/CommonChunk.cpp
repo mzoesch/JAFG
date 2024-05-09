@@ -4,6 +4,7 @@
 
 #include "System/MaterialSubsystem.h"
 #include "System/VoxelSubsystem.h"
+#include "WorldCore/ChunkWorldSettings.h"
 
 ACommonChunk::ACommonChunk(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -24,11 +25,20 @@ void ACommonChunk::BeginPlay(void)
 {
     Super::BeginPlay();
 
-    this->PreInitialize();
+    this->ChunkState    = EChunkState::PreSpawned;
+    this->SpawnedHandle = this->CreateOnSpawnedDelegateHandle(); check( this->SpawnedHandle.IsValid() )
 
-    this->GenerateVoxels();
+    return;
+}
 
-    this->RegenerateProceduralMesh();
+void ACommonChunk::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    Super::EndPlay(EndPlayReason);
+
+    if (bUncontrolledKill)
+    {
+        return;
+    }
 
     return;
 }
@@ -42,8 +52,162 @@ void ACommonChunk::PreInitialize(void)
     this->VoxelSubsystem = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>();
     check( this->VoxelSubsystem )
 
+    this->ServerChunkWorldSettings = this->GetWorld()->GetSubsystem<UServerChunkWorldSettings>();
+    if (this->ServerChunkWorldSettings == nullptr && UNetStatics::IsSafeServer(this))
+    {
+        LOG_FATAL(LogChunkGeneration, "Could not get Server Chunk World Settings.")
+        return;
+    }
+
     return;
 }
+
+void ACommonChunk::KillUncontrolled(void)
+{
+    this->bUncontrolledKill = true;
+    this->Destroy();
+
+    return;
+}
+
+#pragma region Chunk State
+
+FDelegateHandle ACommonChunk::CreateOnSpawnedDelegateHandle(void)
+{
+    return this->SubscribeToChunkStateChange(FChunkStateChangeSignature::FDelegate::CreateLambda(
+        [this] (const EChunkState::Type NewChunkState) -> void
+        {
+            if (NewChunkState != EChunkState::Spawned)
+            {
+                LOG_ERROR(LogChunkGeneration, "Unknown chunk waiting for its minimal state to be set but got %s.", *EChunkState::LexToString(NewChunkState))
+                return;
+            }
+
+            this->PreInitialize();
+
+            if (this->SpawnedHandle.IsValid() == false)
+            {
+                LOG_ERROR(LogChunkGeneration, "Failed to unsubscribe from Chunk State Change Event because the Spawned Hanlde was invalid.")
+            }
+            else if (this->UnsubscribeFromChunkStateChange(this->SpawnedHandle) == false)
+            {
+                LOG_ERROR(LogChunkGeneration, "Failed to unsubscribe from Chunk State Change Event due to an unknown error.")
+            }
+
+            /*
+             * The chunk has now the spawned-state. Therefore, we now need to crate the new subscriber to listen for
+             * the next step in the chunk's lifecycle.
+             */
+            this->ShapedHandle = this->CreateOnShapedDelegateHandle(); check( this->ShapedHandle.IsValid() )
+
+            return;
+        }
+    ));
+}
+
+FDelegateHandle ACommonChunk::CreateOnShapedDelegateHandle(void)
+{
+    return this->SubscribeToChunkStateChange(FChunkStateChangeSignature::FDelegate::CreateLambda(
+        [this] (const EChunkState::Type NewChunkState) -> void
+        {
+            if (NewChunkState != EChunkState::Shaped)
+            {
+                LOG_ERROR(LogChunkGeneration, "Unknown chunk waiting for its shaped state to be set but got %s.", *EChunkState::LexToString(NewChunkState))
+                return;
+            }
+
+            this->Shape();
+
+            if (this->ShapedHandle.IsValid() == false)
+            {
+                LOG_ERROR(LogChunkGeneration, "Failed to unsubscribe from Chunk State Change Event because the Shaped Hanlde was invalid.")
+            }
+            else if (this->UnsubscribeFromChunkStateChange(this->ShapedHandle) == false)
+            {
+                LOG_ERROR(LogChunkGeneration, "Failed to unsubscribe from Chunk State Change Event due to an unknown error.")
+            }
+
+            /*
+             * The chunk has now the shaped-state. Therefore, we now need to crate the new subscriber to listen for
+             * the next step in the chunk's lifecycle.
+             */
+            this->SurfaceReplacedHandle = this->CreateOnSurfaceReplacedDelegateHandle(); check( this->SurfaceReplacedHandle.IsValid() )
+
+            return;
+        }
+    ));
+}
+
+FDelegateHandle ACommonChunk::CreateOnSurfaceReplacedDelegateHandle(void)
+{
+    return this->SubscribeToChunkStateChange(FChunkStateChangeSignature::FDelegate::CreateLambda(
+        [this] (const EChunkState::Type NewChunkState) -> void
+        {
+            if (NewChunkState != EChunkState::SurfaceReplaced)
+            {
+                LOG_ERROR(LogChunkGeneration, "Unknown chunk waiting for its surface replaced state to be set but got %s.", *EChunkState::LexToString(NewChunkState))
+                return;
+            }
+
+            this->ReplaceSurface();
+
+            if (this->SurfaceReplacedHandle.IsValid() == false)
+            {
+                LOG_ERROR(LogChunkGeneration, "Failed to unsubscribe from Chunk State Change Event because the Surface Replaced Hanlde was invalid.")
+            }
+            else if (this->UnsubscribeFromChunkStateChange(this->SurfaceReplacedHandle) == false)
+            {
+                LOG_ERROR(LogChunkGeneration, "Failed to unsubscribe from Chunk State Change Event due to an unknown error.")
+            }
+
+            /*
+             * The chunk has now the surface-replaced-state. Therefore, we now need to crate the new subscriber to listen
+             * for the next step in the chunk's lifecycle.
+             */
+            this->ActiveHandle = this->CreateOnActiveDelegateHandle(); check( this->ActiveHandle.IsValid() )
+
+            return;
+        }
+    ));
+}
+
+FDelegateHandle ACommonChunk::CreateOnActiveDelegateHandle(void)
+{
+    return this->SubscribeToChunkStateChange(FChunkStateChangeSignature::FDelegate::CreateLambda(
+        [this] (const EChunkState::Type NewChunkState) -> void
+        {
+            if (NewChunkState != EChunkState::Active)
+            {
+                LOG_ERROR(LogChunkGeneration, "Unknown chunk waiting for its active state to be set but got %s.", *EChunkState::LexToString(NewChunkState))
+                return;
+            }
+
+            this->RegenerateProceduralMesh();
+
+            if (this->ActiveHandle.IsValid() == false)
+            {
+                LOG_ERROR(LogChunkGeneration, "Failed to unsubscribe from Chunk State Change Event because the Active Hanlde was invalid.")
+            }
+            else if (this->UnsubscribeFromChunkStateChange(this->ActiveHandle) == false)
+            {
+                LOG_ERROR(LogChunkGeneration, "Failed to unsubscribe from Chunk State Change Event due to an unknown error.")
+            }
+
+            return;
+        }
+    ));
+}
+
+void ACommonChunk::SetChunkState(const EChunkState::Type NewChunkState)
+{
+    this->ChunkState = NewChunkState;
+
+    this->ChunkStateChangeEvent.Broadcast(NewChunkState);
+
+    return;
+}
+
+#pragma endregion Chunk State
 
 #pragma region Procedural Mesh
 
@@ -100,9 +264,28 @@ void ACommonChunk::ApplyProceduralMesh(void)
 
 #pragma region Chunk World Generation
 
-void ACommonChunk::GenerateVoxels(void)
+void ACommonChunk::Shape(void)
 {
-    this->GenerateSuperFlatWorld();
+    switch (this->ServerChunkWorldSettings->GetWorldGenerationType())
+    {
+    case EWorldGenerationType::Default:
+    {
+        this->GenerateDefaultWorld();
+        break;
+    }
+    case EWorldGenerationType::Superflat:
+    {
+        this->GenerateSuperFlatWorld();
+        break;
+    }
+    default:
+    {
+        checkNoEntry()
+        break;
+    }
+    }
+
+    return;
 }
 
 void ACommonChunk::GenerateSuperFlatWorld(void)
@@ -153,6 +336,43 @@ void ACommonChunk::GenerateSuperFlatWorld(void)
     }
 
     return;
+}
+
+void ACommonChunk::GenerateDefaultWorld(void)
+{
+    checkNoEntry()
+}
+
+void ACommonChunk::ReplaceSurface(void)
+{
+    switch (this->ServerChunkWorldSettings->GetWorldGenerationType())
+    {
+    case EWorldGenerationType::Default:
+    {
+        this->GenerateSurface();
+        break;
+    }
+    case EWorldGenerationType::Superflat:
+    {
+        /*
+         * As the superflat world does not require neighbors chunks to shape themselves and then create the surface
+         * of this chunk based on them, we can just skip this step.
+         */
+        break;
+    }
+    default:
+    {
+        checkNoEntry()
+        break;
+    }
+    }
+
+    return;
+}
+
+void ACommonChunk::GenerateSurface(void)
+{
+    checkNoEntry()
 }
 
 #pragma endregion Chunk World Generation

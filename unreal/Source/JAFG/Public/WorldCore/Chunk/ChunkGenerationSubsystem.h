@@ -7,6 +7,7 @@
 
 #include "ChunkGenerationSubsystem.generated.h"
 
+class ACommonChunk;
 JAFG_VOID
 
 class ULocalChunkWorldSettings;
@@ -39,26 +40,35 @@ public:
     virtual auto MyTick(const float DeltaTime) -> void override;
     // ~UJAFGTickableWorldSubsystem implementation
 
-    FORCEINLINE void SpawnChunkAsync(const FChunkKey& ChunkKey)
-    {
-        this->ChunkToGenerateAsyncQueue.Enqueue(ChunkKey);
-    }
+    /**
+     * Spawns this chunk at an unknown time in the future.
+     * This chunk is going to be an active chunk. Meaning all other chunks that this chunk depends on are going to be
+     * spawned as well and set to their appropriate states.
+     */
+    void SpawnActiveChunkAsync(const FChunkKey& ChunkKey);
 
 private:
 
-    const float ChunkGenerationInterval = 1.0f;
-
+    const float ChunkGenerationInterval    = 1.0f;
     const int32 MaxChunksToGeneratePerTick = 500;
 
+    /** Copied for faster access. */
     UPROPERTY()
     TObjectPtr<ULocalChunkWorldSettings> LocalChunkWorldSettings;
 
-    /**
-     * Chunks added to this queue will be generated as soon as possible asynchronously.
-     */
-    TQueue<FChunkKey> ChunkToGenerateAsyncQueue;
+    /** Chunks added to this queue will be generated as soon as possible asynchronously. */
+    TQueue<FChunkKey> ActiveChunksToGenerateAsyncQueue;
+    /** Chunks that have a counterpart in the UWorld. */
+    TMap<FChunkKey, TObjectPtr<ACommonChunk>> ChunkMap;
 
-    void SpawnChunk(const FChunkKey& ChunkKey);
-    // Only temporary
-    friend class UChunkValidationSubsystem;
+    /**
+     * Dequeues the next chunk from the UChunkGenerationSubsystem#ActiveChunksToGenerateAsyncQueue and spawns it
+     * as well all other chunks that this chunk depends on.
+     */
+    void DequeueNextActiveChunk(void);
+
+
+
+
+    ACommonChunk* SpawnChunk(const FChunkKey& ChunkKey) const;
 };

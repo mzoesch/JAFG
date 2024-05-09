@@ -20,6 +20,9 @@ enum Type : uint8
 
 }
 
+namespace EChunkType
+{
+
 FORCEINLINE FString LexToString(const EChunkType::Type ChunkType)
 {
     switch (ChunkType)
@@ -34,6 +37,46 @@ FORCEINLINE FString LexToString(const EChunkType::Type ChunkType)
         return TEXT("Unknown");
     }
     }
+}
+
+}
+
+UENUM(BlueprintType)
+namespace EWorldGenerationType
+{
+
+enum Type : uint8
+{
+    Invalid,
+    Default,
+    Superflat,
+};
+
+}
+
+namespace EWorldGenerationType
+{
+
+FORCEINLINE FString LexToString(const EWorldGenerationType::Type GenerationType)
+{
+    switch (GenerationType)
+    {
+    case EWorldGenerationType::Superflat:
+    {
+        return TEXT("Superflat");
+    }
+    case EWorldGenerationType::Default:
+    {
+        return TEXT("Default");
+    }
+    default:
+    {
+        checkNoEntry()
+        return TEXT("Unknown");
+    }
+    }
+}
+
 }
 
 namespace WorldStatics

@@ -24,6 +24,8 @@ void UChunkValidationSubsystem::OnWorldBeginPlay(UWorld& InWorld)
     Super::OnWorldBeginPlay(InWorld);
 
     this->CreateMockChunks();
+
+    return;
 }
 
 void UChunkValidationSubsystem::MyTick(const float DeltaTime)
@@ -85,7 +87,7 @@ void UChunkValidationSubsystem::CreateMockChunks(void)
 
         for (int Z = ChunksAboveZeroClient; Z >= 0; --Z)
         {
-            ChunkGenerationSubsystem->SpawnChunkAsync(FIntVector(0, 0, Z));
+            ChunkGenerationSubsystem->SpawnActiveChunkAsync(FIntVector(0, 0, Z));
         }
     }
 
@@ -102,7 +104,7 @@ void UChunkValidationSubsystem::CreateMockChunks(void)
                 ++SpiralsAddedThisTick;
                 for (int Z = ChunksAboveZeroClient; Z >= 0; --Z)
                 {
-                    ChunkGenerationSubsystem->SpawnChunkAsync(FIntVector(this->TargetPoint.X, this->TargetPoint.Y, Z));
+                    ChunkGenerationSubsystem->SpawnActiveChunkAsync(FIntVector(this->TargetPoint.X, this->TargetPoint.Y, Z));
                 }
 
                 continue;

@@ -9,7 +9,7 @@
 
 JAFG_VOID
 
-DECLARE_MULTICAST_DELEGATE(FOnShutdownRequestSignature);
+DECLARE_MULTICAST_DELEGATE(FOnShutdownRequestSignature)
 
 UCLASS(NotBlueprintable)
 class JAFG_API UJAFGGameInstance : public UGameInstance
