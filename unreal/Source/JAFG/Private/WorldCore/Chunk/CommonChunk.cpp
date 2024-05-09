@@ -80,6 +80,7 @@ FDelegateHandle ACommonChunk::CreateOnSpawnedDelegateHandle(void)
             if (NewChunkState != EChunkState::Spawned)
             {
                 LOG_ERROR(LogChunkGeneration, "Unknown chunk waiting for its minimal state to be set but got %s.", *EChunkState::LexToString(NewChunkState))
+                this->KillUncontrolled();
                 return;
             }
 
@@ -88,10 +89,12 @@ FDelegateHandle ACommonChunk::CreateOnSpawnedDelegateHandle(void)
             if (this->SpawnedHandle.IsValid() == false)
             {
                 LOG_ERROR(LogChunkGeneration, "Failed to unsubscribe from Chunk State Change Event because the Spawned Hanlde was invalid.")
+                this->KillUncontrolled();
             }
             else if (this->UnsubscribeFromChunkStateChange(this->SpawnedHandle) == false)
             {
                 LOG_ERROR(LogChunkGeneration, "Failed to unsubscribe from Chunk State Change Event due to an unknown error.")
+                this->KillUncontrolled();
             }
 
             /*
@@ -113,6 +116,7 @@ FDelegateHandle ACommonChunk::CreateOnShapedDelegateHandle(void)
             if (NewChunkState != EChunkState::Shaped)
             {
                 LOG_ERROR(LogChunkGeneration, "Unknown chunk waiting for its shaped state to be set but got %s.", *EChunkState::LexToString(NewChunkState))
+                this->KillUncontrolled();
                 return;
             }
 
@@ -121,10 +125,12 @@ FDelegateHandle ACommonChunk::CreateOnShapedDelegateHandle(void)
             if (this->ShapedHandle.IsValid() == false)
             {
                 LOG_ERROR(LogChunkGeneration, "Failed to unsubscribe from Chunk State Change Event because the Shaped Hanlde was invalid.")
+                this->KillUncontrolled();
             }
             else if (this->UnsubscribeFromChunkStateChange(this->ShapedHandle) == false)
             {
                 LOG_ERROR(LogChunkGeneration, "Failed to unsubscribe from Chunk State Change Event due to an unknown error.")
+                this->KillUncontrolled();
             }
 
             /*
@@ -146,6 +152,7 @@ FDelegateHandle ACommonChunk::CreateOnSurfaceReplacedDelegateHandle(void)
             if (NewChunkState != EChunkState::SurfaceReplaced)
             {
                 LOG_ERROR(LogChunkGeneration, "Unknown chunk waiting for its surface replaced state to be set but got %s.", *EChunkState::LexToString(NewChunkState))
+                this->KillUncontrolled();
                 return;
             }
 
@@ -154,10 +161,12 @@ FDelegateHandle ACommonChunk::CreateOnSurfaceReplacedDelegateHandle(void)
             if (this->SurfaceReplacedHandle.IsValid() == false)
             {
                 LOG_ERROR(LogChunkGeneration, "Failed to unsubscribe from Chunk State Change Event because the Surface Replaced Hanlde was invalid.")
+                this->KillUncontrolled();
             }
             else if (this->UnsubscribeFromChunkStateChange(this->SurfaceReplacedHandle) == false)
             {
                 LOG_ERROR(LogChunkGeneration, "Failed to unsubscribe from Chunk State Change Event due to an unknown error.")
+                this->KillUncontrolled();
             }
 
             /*

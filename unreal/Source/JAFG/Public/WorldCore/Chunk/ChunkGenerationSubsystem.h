@@ -7,9 +7,9 @@
 
 #include "ChunkGenerationSubsystem.generated.h"
 
-class ACommonChunk;
 JAFG_VOID
 
+class ACommonChunk;
 class ULocalChunkWorldSettings;
 
 /**

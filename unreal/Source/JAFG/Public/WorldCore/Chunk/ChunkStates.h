@@ -2,9 +2,8 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "MyCore.h"
 
-UENUM()
 namespace EChunkState
 {
 
@@ -30,17 +29,31 @@ enum Type
      */
     Spawned,
 
+    /**
+     * The chunk has been shaped. The chunk-raw-data must now consist of two different voxels.
+     * The air voxel and the base voxel.
+     */
     Shaped,
+
+    /**
+     * The surface voxels of the chunk have been replaced based on the neighboring chunks.
+     * This state requires that all six of its neighbors have at least the state EChunkState::Shaped.
+     */
     SurfaceReplaced,
 
+    /**
+     * The chunk is now complete-active, and the local player can interact with it.
+     * This is the first time that the mesh of the chunks is actually generated.
+     */
     Active,
+
+    /**
+     * Chunk has been marked as a pending kill and is no longer visible to the player and the UWorld (the mesh
+     * has been cleared to save memory).
+     * The validation system will remove this chunk from the UWorld in the near future.
+     */
     PendingKill,
 };
-
-}
-
-namespace EChunkState
-{
 
 FORCEINLINE auto LexToString(const EChunkState::Type ChunkState) -> FString
 {

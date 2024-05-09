@@ -5,6 +5,7 @@
 #include "WorldCore/ChunkWorldSettings.h"
 #include "WorldCore/Chunk/CommonChunk.h"
 #include "WorldCore/Chunk/GreedyChunk.h"
+#include "WorldCore/Chunk/ChunkStates.h"
 
 UChunkGenerationSubsystem::UChunkGenerationSubsystem(void) : Super()
 {

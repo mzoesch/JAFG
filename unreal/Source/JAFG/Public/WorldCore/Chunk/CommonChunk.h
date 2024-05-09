@@ -5,7 +5,7 @@
 #include "MyCore.h"
 #include "ChunkMeshData.h"
 #include "GameFramework/Actor.h"
-#include "WorldCore/Chunk/ChunkState.h"
+#include "WorldCore/Chunk/ChunkStates.h"
 
 #include "CommonChunk.generated.h"
 
