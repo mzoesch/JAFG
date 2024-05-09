@@ -79,6 +79,47 @@ enum Type
 
 }
 
+namespace ENoiseType
+{
+
+FORCEINLINE FString LexToString(const ENoiseType::Type NoiseType)
+{
+    switch (NoiseType)
+    {
+    case ENoiseType::OpenSimplex2:
+    {
+        return TEXT("OpenSimplex2");
+    }
+    case ENoiseType::OpenSimplex2S:
+    {
+        return TEXT("OpenSimplex2S");
+    }
+    case ENoiseType::Cellular:
+    {
+        return TEXT("Cellular");
+    }
+    case ENoiseType::Perlin:
+    {
+        return TEXT("Perlin");
+    }
+    case ENoiseType::ValueCubic:
+    {
+        return TEXT("ValueCubic");
+    }
+    case ENoiseType::Value:
+    {
+        return TEXT("Value");
+    }
+    default:
+    {
+        checkNoEntry()
+        return TEXT("Invalid");
+    }
+    }
+}
+
+}
+
 UENUM(BlueprintType)
 namespace ERotationType3D
 {
@@ -106,6 +147,47 @@ enum Type
     DomainWarpProgressive,
     DomainWarpIndependent
 };
+
+}
+
+namespace EFractalType
+{
+
+FORCEINLINE FString LexToString(const EFractalType::Type FractalType)
+{
+    switch (FractalType)
+    {
+    case EFractalType::None:
+    {
+        return TEXT("None");
+    }
+    case EFractalType::FBm:
+    {
+        return TEXT("FBm");
+    }
+    case EFractalType::Ridged:
+    {
+        return TEXT("Ridged");
+    }
+    case EFractalType::PingPong:
+    {
+        return TEXT("PingPong");
+    }
+    case EFractalType::DomainWarpProgressive:
+    {
+        return TEXT("DomainWarpProgressive");
+    }
+    case EFractalType::DomainWarpIndependent:
+    {
+        return TEXT("DomainWarpIndependent");
+    }
+    default:
+    {
+        checkNoEntry()
+        return TEXT("Invalid");
+    }
+    }
+}
 
 }
 

@@ -349,7 +349,41 @@ void ACommonChunk::GenerateSuperFlatWorld(void)
 
 void ACommonChunk::GenerateDefaultWorld(void)
 {
-    checkNoEntry()
+    for (int X = 0; X < WorldStatics::ChunkSize; ++X)
+    {
+        const float WorldX = this->JChunkPosition.X + X;
+
+        for (int Y = 0; Y < WorldStatics::ChunkSize; ++Y)
+        {
+            const float WorldY = this->JChunkPosition.Y + Y;
+
+            const float ContinentalnessNoiseValue = this->ServerChunkWorldSettings->NoiseContinentalness.GetNoise(WorldX, WorldY);
+
+            const float ContinentalnessTargetHeight = NoiseSpline::GetTargetHeight(this->ServerChunkWorldSettings->ContinentalnessSpline, ContinentalnessNoiseValue);
+
+            for (int Z = 0; Z < WorldStatics::ChunkSize; ++Z)
+            {
+                const float WorldZ = this->JChunkPosition.Z + Z;
+                const float CurrentPercentageWorldZ = WorldZ / this->ServerChunkWorldSettings->GetFakeHighestPoint();
+
+                const float Density = CurrentPercentageWorldZ < ContinentalnessTargetHeight ? 1.0f : -1.0f;
+
+                this->ModifyRawVoxelData(
+                    FVoxelKey(X, Y, Z),
+                      this->ServerChunkWorldSettings->NoiseWorld.GetNoise(WorldX, WorldY, WorldZ)
+                    >
+                      Density
+                        ? ECommonVoxels::Air : ECommonVoxels::GetBaseVoxel()
+                );
+            }
+
+            continue;
+        }
+
+        continue;
+    }
+
+    return;
 }
 
 void ACommonChunk::ReplaceSurface(void)
@@ -381,7 +415,7 @@ void ACommonChunk::ReplaceSurface(void)
 
 void ACommonChunk::GenerateSurface(void)
 {
-    checkNoEntry()
+    // checkNoEntry()
 }
 
 #pragma endregion Chunk World Generation

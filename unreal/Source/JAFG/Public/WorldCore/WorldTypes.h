@@ -15,7 +15,9 @@ namespace EChunkType
 
 enum Type : uint8
 {
+    Naive,
     Greedy,
+    Marching,
 };
 
 }
