@@ -83,20 +83,40 @@ void UChunkValidationSubsystem::LoadUnloadChunks(const FVector& LocalPlayerLocat
 {
     constexpr int RenderDistance { 10 };
 
-    int32 NewChunksCounter = 0;
-    for (
-        const FChunkKey2& Preferred :
-        this->GetAllChunksInDistance(ChunkConversion::WorldToVerticalChunkKey(LocalPlayerLocation), RenderDistance)
-    )
+    if (this->ChunkGenerationSubsystem->PendingKillVerticalChunks.IsEmpty() == false)
     {
-        if (this->ChunkGenerationSubsystem->IsVerticalChunkActive(Preferred) == false)
+        LOG_ERROR(LogChunkValidation, "Pending kill vertical chunks is not empty.")
+    }
+
+    this->ChunkGenerationSubsystem->ActiveVerticalChunksToGenerateAsyncQueue.Empty();
+
+    TArray<FChunkKey2> PreferredChunks = this->GetAllChunksInDistance(ChunkConversion::WorldToVerticalChunkKey(LocalPlayerLocation) , RenderDistance);
+
+    // Loading
+    //////////////////////////////////////////////////////////////////////////
+    int32 NewChunksCounter = 0;
+    for (const FChunkKey2& Preferred : PreferredChunks)
+    {
+        if (this->ChunkGenerationSubsystem->ActiveVerticalChunks.Contains(Preferred) == false)
         {
-            this->ChunkGenerationSubsystem->SpawnActiveVerticalChunkAsync(Preferred);
+            this->ChunkGenerationSubsystem->ActiveVerticalChunksToGenerateAsyncQueue.Enqueue(Preferred);
             NewChunksCounter++;
         }
     }
 
-    LOG_VERBOSE(LogChunkValidation, "Loaded %d new chunks.", NewChunksCounter)
+    // Unloading
+    //////////////////////////////////////////////////////////////////////////
+    int32 UnloadedChunksCounter = 0;
+    for (const FChunkKey2& ActiveChunk : this->ChunkGenerationSubsystem->ActiveVerticalChunks)
+    {
+        if (PreferredChunks.Contains(ActiveChunk) == false)
+        {
+            this->ChunkGenerationSubsystem->AddVerticalChunkToKillQueue(ActiveChunk);
+            UnloadedChunksCounter++;
+        }
+    }
+
+    LOG_VERY_VERBOSE(LogChunkValidation, "Decided to load %d and unload %d chunks.", NewChunksCounter, UnloadedChunksCounter)
 
     return;
 }
@@ -170,7 +190,7 @@ void UChunkValidationSubsystem::CreateMockChunks(void)
         // {
         //     ChunkGenerationSubsystem->SpawnActiveChunkAsync(FChunkKey(0, 0, Z));
         // }
-        this->ChunkGenerationSubsystem->SpawnActiveVerticalChunkAsync(FChunkKey2(0, 0));
+        // this->ChunkGenerationSubsystem->SpawnActiveVerticalChunkAsync(FChunkKey2(0, 0));
     }
 
     while (true)
@@ -188,7 +208,7 @@ void UChunkValidationSubsystem::CreateMockChunks(void)
                 // {
                 //     ChunkGenerationSubsystem->SpawnActiveChunkAsync(FIntVector(this->TargetPoint.X, this->TargetPoint.Y, Z));
                 // }
-                this->ChunkGenerationSubsystem->SpawnActiveVerticalChunkAsync(FChunkKey2(this->TargetPoint.X, this->TargetPoint.Y));
+                // this->ChunkGenerationSubsystem->SpawnActiveVerticalChunkAsync(FChunkKey2(this->TargetPoint.X, this->TargetPoint.Y));
 
                 continue;
             }

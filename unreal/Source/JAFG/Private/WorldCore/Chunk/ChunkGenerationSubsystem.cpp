@@ -27,7 +27,6 @@ void UChunkGenerationSubsystem::OnWorldBeginPlay(UWorld& InWorld)
     Super::OnWorldBeginPlay(InWorld);
 
     /* PIE may not always clean up properly, so we need to do it ourselves. */
-    this->ActiveChunksToGenerateAsyncQueue.Empty();
     this->ActiveVerticalChunksToGenerateAsyncQueue.Empty();
     this->ChunkMap.Empty();
     this->ActiveVerticalChunks.Empty();
@@ -42,38 +41,66 @@ void UChunkGenerationSubsystem::MyTick(const float DeltaTime)
 {
     Super::MyTick(DeltaTime);
 
-    if (this->ActiveVerticalChunksToGenerateAsyncQueue.IsEmpty() == false)
-    {
-        this->DequeueAllActiveVerticalChunks();
-    }
-
-    /* Early exit if there are no chunks to generate. */
-    if (this->ActiveChunksToGenerateAsyncQueue.IsEmpty())
+    if (this->ActiveVerticalChunksToGenerateAsyncQueue.IsEmpty())
     {
         return;
     }
 
-    int32 ChunksGenerated = 0;
-    while (ChunksGenerated < this->MaxChunksToGeneratePerTick && this->ActiveChunksToGenerateAsyncQueue.IsEmpty() == false)
+    // Unloading
+    //////////////////////////////////////////////////////////////////////////
+    while (this->PendingKillVerticalChunks.IsEmpty() == false)
     {
-        this->DequeueNextActiveChunk();
+        this->DequeueNextVerticalChunkToKill();
+    }
+
+    // Loading
+    //////////////////////////////////////////////////////////////////////////
+    int32 ChunksGenerated = 0;
+    while (
+           ChunksGenerated < this->MaxVerticalChunksToGeneratePerTick
+        && this->ActiveVerticalChunksToGenerateAsyncQueue.IsEmpty() == false
+    )
+    {
+        this->DequeueNextActiveVerticalChunk();
         ChunksGenerated++;
     }
 
     return;
 }
 
-void UChunkGenerationSubsystem::SpawnActiveVerticalChunkAsync(const FIntVector2& VerticalChunkKey)
+void UChunkGenerationSubsystem::AddVerticalChunkToKillQueue(const FChunkKey2& ChunkKey)
 {
-    this->ActiveVerticalChunksToGenerateAsyncQueue.Enqueue(VerticalChunkKey);
+    this->PendingKillVerticalChunks.Enqueue(ChunkKey);
+    for (int32 Z = 0; Z < this->LocalChunkWorldSettings->ReplicatedChunksAboveZero; ++Z)
+    {
+        this->ChunkMap[FChunkKey(ChunkKey.X, ChunkKey.Y, Z)]->SetChunkState(EChunkState::PendingKill);
+    }
+
+    return;
 }
 
-void UChunkGenerationSubsystem::DequeueAllActiveVerticalChunks(void)
+void UChunkGenerationSubsystem::DequeueNextVerticalChunkToKill(void)
 {
-    while (this->ActiveVerticalChunksToGenerateAsyncQueue.IsEmpty() == false)
+    FChunkKey2 NewKillKey;
+    if (this->PendingKillVerticalChunks.Dequeue(NewKillKey) == false)
     {
-        this->DequeueNextActiveVerticalChunk();
+        LOG_WARNING(LogChunkGeneration, "Called but the queue was empty.")
+        return;
     }
+
+    for (int32 Z = 0; Z < this->LocalChunkWorldSettings->ReplicatedChunksAboveZero; ++Z)
+    {
+        this->ChunkMap.FindAndRemoveChecked(FChunkKey(NewKillKey.X, NewKillKey.Y, Z))->KillUncontrolled();
+    }
+
+    if (this->ActiveVerticalChunks.Remove(NewKillKey) != 1)
+    {
+        LOG_ERROR(LogChunkGeneration, "Something went wrong while removeing the vertical chunk [%d::%d].", NewKillKey.X, NewKillKey.Y)
+    }
+
+#if LOG_PERFORMANCE_CRITICAL_SECTIONS
+    LOG_VERY_VERBOSE(LogChunkGeneration, "Removed vertical chunk [%d::%d].", NewKillKey.X, NewKillKey.Y)
+#endif /* LOG_PERFORMANCE_CRITICAL_SECTIONS */
 
     return;
 }
@@ -87,42 +114,44 @@ void UChunkGenerationSubsystem::DequeueNextActiveVerticalChunk(void)
         return;
     }
 
+    TArray<FChunkKey> NewChunks = TArray<FChunkKey>();
+    NewChunks.Reserve(this->LocalChunkWorldSettings->ReplicatedChunksAboveZero);
+
     for (int32 Z = 0; Z < this->LocalChunkWorldSettings->ReplicatedChunksAboveZero; ++Z)
     {
-        FChunkKey NewActiveChunkKey = FChunkKey(NewActiveKey.X, NewActiveKey.Y, Z);
-        this->ActiveChunksToGenerateAsyncQueue.Enqueue(NewActiveChunkKey);
+        NewChunks.Add(FChunkKey(NewActiveKey.X, NewActiveKey.Y, Z));
     }
 
     this->ActiveVerticalChunks.Add(NewActiveKey);
 
+    this->SafeLoadVerticalChunk(NewChunks);
+
     return;
 }
 
-void UChunkGenerationSubsystem::DequeueNextActiveChunk(void)
+void UChunkGenerationSubsystem::SafeLoadVerticalChunk(const TArray<FChunkKey>& Chunks)
 {
-    FChunkKey NewActiveKey;
-    if (this->ActiveChunksToGenerateAsyncQueue.Dequeue(NewActiveKey) == false)
+    for (const FChunkKey& Chunk : Chunks)
     {
-        LOG_WARNING(LogChunkGeneration, "Called but the queue was empty.")
-        return;
-    }
+        const TObjectPtr<ACommonChunk>* MapPtr = this->ChunkMap.Find(Chunk);
+        ACommonChunk* ChunkPtr;
+        if (MapPtr == nullptr)
+        {
+            ChunkPtr = this->SpawnChunk(Chunk);
+            this->ChunkMap.Add(Chunk, ChunkPtr);
+        }
+        else
+        {
+            ChunkPtr = *MapPtr;
+        }
 
-    ACommonChunk* NewActiveChunk;
-    if (this->ChunkMap.Contains(NewActiveKey) == false)
-    {
-        NewActiveChunk = this->SpawnChunk(NewActiveKey);
-        this->ChunkMap.Add(NewActiveKey, NewActiveChunk);
+        ChunkPtr->SetChunkState(EChunkState::Spawned);
+        ChunkPtr->SetChunkState(EChunkState::Shaped);
+        ChunkPtr->SetChunkState(EChunkState::SurfaceReplaced);
+        ChunkPtr->SetChunkState(EChunkState::Active);
 
+        continue;
     }
-    else
-    {
-        NewActiveChunk = this->ChunkMap[NewActiveKey];
-    }
-
-    NewActiveChunk->SetChunkState(EChunkState::Spawned);
-    NewActiveChunk->SetChunkState(EChunkState::Shaped);
-    NewActiveChunk->SetChunkState(EChunkState::SurfaceReplaced);
-    NewActiveChunk->SetChunkState(EChunkState::Active);
 
     return;
 }

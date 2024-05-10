@@ -43,39 +43,28 @@ public:
     virtual auto MyTick(const float DeltaTime) -> void override;
     // ~UJAFGTickableWorldSubsystem implementation
 
-    /**
-     * Spawns these chunks at an unknown time in the future.
-     * These chunks are going to be active chunks. Meaning all other chunks that these chunks depend on are going to be
-     * spawned as well and set to their appropriate states.
-     */
-    void SpawnActiveVerticalChunkAsync(const FChunkKey2& VerticalChunkKey);
-
 private:
 
-    const float ChunkGenerationInterval    = 0.1f;
-    const int32 MaxChunksToGeneratePerTick = 50;
+    const float ChunkGenerationInterval            = 0.1f;
+    const int32 MaxVerticalChunksToGeneratePerTick = 20;
 
     /** Copied for faster access. */
     UPROPERTY()
     TObjectPtr<ULocalChunkWorldSettings> LocalChunkWorldSettings;
 
-    /** Chunks added to this queue will be generated as soon as possible asynchronously. */
-    TQueue<FChunkKey>  ActiveChunksToGenerateAsyncQueue;
-    TQueue<FChunkKey2> ActiveVerticalChunksToGenerateAsyncQueue;
+    /** Never enqueue here directly. */
+    TQueue<FChunkKey2> PendingKillVerticalChunks;
+    auto AddVerticalChunkToKillQueue(const FChunkKey2& ChunkKey) -> void;
+    auto DequeueNextVerticalChunkToKill(void) -> void;
 
+    TQueue<FChunkKey2> ActiveVerticalChunksToGenerateAsyncQueue;
     /** Chunks that have a counterpart in the UWorld. */
     TMap<FChunkKey, TObjectPtr<ACommonChunk>> ChunkMap;
-
+    /** Active vertical chunks. All sub-chunks must be inside the UChunkGenerationSubsystem#ChunkMap. */
     TSet<FChunkKey2> ActiveVerticalChunks;
-    FORCEINLINE auto IsVerticalChunkActive(const FChunkKey2& ChunkKey) const -> bool { return this->ActiveVerticalChunks.Contains(ChunkKey); }
 
-    void DequeueAllActiveVerticalChunks(void);
     void DequeueNextActiveVerticalChunk(void);
-    /**
-     * Dequeues the next chunk from the UChunkGenerationSubsystem#ActiveChunksToGenerateAsyncQueue and spawns it
-     * as well all other chunks that this chunk depends on.
-     */
-    void DequeueNextActiveChunk(void);
+    void SafeLoadVerticalChunk(const TArray<FChunkKey>& Chunks);
 
     /** Low-level implementation of spawning a chunk. Never call directly. */
     ACommonChunk* SpawnChunk(const FChunkKey& ChunkKey) const;

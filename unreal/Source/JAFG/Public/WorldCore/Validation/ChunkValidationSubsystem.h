@@ -20,7 +20,7 @@ JAFG_VOID
  * wants. See UChunkValidationSubsystemDedSv for the server side.
  */
 UCLASS()
-class JAFG_API UChunkValidationSubsystem : public UJAFGTickableWorldSubsystem
+class JAFG_API UChunkValidationSubsystem final : public UJAFGTickableWorldSubsystem
 {
     GENERATED_BODY()
 
