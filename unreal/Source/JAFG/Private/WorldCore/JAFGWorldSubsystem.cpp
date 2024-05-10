@@ -42,9 +42,9 @@ void UJAFGTickableWorldSubsystem::Initialize(FSubsystemCollectionBase& Collectio
 
     /*
      * We want to call the tick method in the first tick of this subsystem begin play.
-     * Minus 10 seconds, else we would get an immediate float overflow in the first tick of the subsystem.
+     * Minus 100 seconds, else we would get an immediate float overflow in the first tick of the subsystem.
      */
-    this->TimeSinceLastTick = FLT_MAX - 10.0f;
+    this->TimeSinceLastTick = FLT_MAX - 100.0f;
 
     return;
 }

@@ -2,8 +2,14 @@
 
 #include "WorldCore/Validation/ChunkValidationSubsystem.h"
 
+#include "Editor.h"
+#include "LevelEditorViewport.h"
 #include "WorldCore/ChunkWorldSettings.h"
 #include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
+
+#if !UE_BUILD_SHIPPING
+#define CREATE_MOCK_CHUNKS 0
+#endif /* !UE_BUILD_SHIPPING */
 
 UChunkValidationSubsystem::UChunkValidationSubsystem() : Super()
 {
@@ -16,14 +22,36 @@ void UChunkValidationSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     Collection.InitializeDependency<UChunkGenerationSubsystem>();
     Super::Initialize(Collection);
 
+    this->SetTickInterval(2.0f);
+
     return;
+}
+
+bool UChunkValidationSubsystem::ShouldCreateSubsystem(UObject* Outer) const
+{
+    if (Super::ShouldCreateSubsystem(Outer) == false)
+    {
+        return false;
+    }
+
+    if (UNetStatics::IsSafeDedicatedServer(Outer))
+    {
+        return false;
+    }
+
+    return true;
 }
 
 void UChunkValidationSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 {
     Super::OnWorldBeginPlay(InWorld);
 
+    this->ChunkGenerationSubsystem = this->GetWorld()->GetSubsystem<UChunkGenerationSubsystem>();
+    check( this->ChunkGenerationSubsystem )
+
+#if !UE_BUILD_SHIPPING && CREATE_MOCK_CHUNKS
     this->CreateMockChunks();
+#endif /* !UE_BUILD_SHIPPING && CREATE_MOCK_CHUNKS */
 
     return;
 }
@@ -31,6 +59,61 @@ void UChunkValidationSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 void UChunkValidationSubsystem::MyTick(const float DeltaTime)
 {
     Super::MyTick(DeltaTime);
+
+    FVector LocalPlayerLocation;
+#if WITH_EDITOR
+    if (GEditor->bIsSimulatingInEditor)
+    {
+        LocalPlayerLocation = GCurrentLevelEditingViewportClient->ViewTransformPerspective.GetLocation();
+    }
+    else
+    {
+        LocalPlayerLocation = GEngine->GetFirstLocalPlayerController(this->GetWorld())->GetPawnOrSpectator()->GetActorLocation();
+    }
+#else /* WITH_EDITOR */
+    LocalPlayerLocation = GEngine->GetFirstLocalPlayerController(this->GetWorld())->GetPawnOrSpectator()->GetActorLocation();
+#endif /* !WITH_EDITOR */
+
+    this->LoadUnloadChunks(LocalPlayerLocation);
+
+    return;
+}
+
+void UChunkValidationSubsystem::LoadUnloadChunks(const FVector& LocalPlayerLocation) const
+{
+    constexpr int RenderDistance { 10 };
+
+    int32 NewChunksCounter = 0;
+    for (
+        const FChunkKey2& Preferred :
+        this->GetAllChunksInDistance(ChunkConversion::WorldToVerticalChunkKey(LocalPlayerLocation), RenderDistance)
+    )
+    {
+        if (this->ChunkGenerationSubsystem->IsVerticalChunkActive(Preferred) == false)
+        {
+            this->ChunkGenerationSubsystem->SpawnActiveVerticalChunkAsync(Preferred);
+            NewChunksCounter++;
+        }
+    }
+
+    LOG_VERBOSE(LogChunkValidation, "Loaded %d new chunks.", NewChunksCounter)
+
+    return;
+}
+
+TArray<FChunkKey2> UChunkValidationSubsystem::GetAllChunksInDistance(const FChunkKey2& Center, const int32 Distance)
+{
+    TArray<FChunkKey2> Out; Out.Reserve((Distance * 2 + 1) * (Distance * 2 + 1));
+
+    for (int X = -Distance; X <= Distance; ++X)
+    {
+        for (int Y = -Distance; Y <= Distance; ++Y)
+        {
+            Out.Emplace(Center.X + X, Center.Y + Y);
+        }
+    }
+
+    return Out;
 }
 
 void UChunkValidationSubsystem::CreateMockChunks(void)
@@ -45,8 +128,6 @@ void UChunkValidationSubsystem::CreateMockChunks(void)
         LOG_FATAL(LogChunkValidation, "Disallowed call on server.")
         return;
     }
-
-    UChunkGenerationSubsystem* ChunkGenerationSubsystem = this->GetWorld()->GetSubsystem<UChunkGenerationSubsystem>();
 
     // ReSharper disable once CppTooWideScopeInitStatement
     constexpr int ChunksAboveZeroClient {  4 };
@@ -85,10 +166,11 @@ void UChunkValidationSubsystem::CreateMockChunks(void)
     {
         SpiralsAddedThisTick++;
 
-        for (int Z = ChunksAboveZeroClient; Z >= 0; --Z)
-        {
-            ChunkGenerationSubsystem->SpawnActiveChunkAsync(FIntVector(0, 0, Z));
-        }
+        // for (int Z = ChunksAboveZeroClient; Z >= 0; --Z)
+        // {
+        //     ChunkGenerationSubsystem->SpawnActiveChunkAsync(FChunkKey(0, 0, Z));
+        // }
+        this->ChunkGenerationSubsystem->SpawnActiveVerticalChunkAsync(FChunkKey2(0, 0));
     }
 
     while (true)
@@ -102,10 +184,11 @@ void UChunkValidationSubsystem::CreateMockChunks(void)
 
                 ++this->MockCursor;
                 ++SpiralsAddedThisTick;
-                for (int Z = ChunksAboveZeroClient; Z >= 0; --Z)
-                {
-                    ChunkGenerationSubsystem->SpawnActiveChunkAsync(FIntVector(this->TargetPoint.X, this->TargetPoint.Y, Z));
-                }
+                // for (int Z = ChunksAboveZeroClient; Z >= 0; --Z)
+                // {
+                //     ChunkGenerationSubsystem->SpawnActiveChunkAsync(FIntVector(this->TargetPoint.X, this->TargetPoint.Y, Z));
+                // }
+                this->ChunkGenerationSubsystem->SpawnActiveVerticalChunkAsync(FChunkKey2(this->TargetPoint.X, this->TargetPoint.Y));
 
                 continue;
             }
@@ -126,3 +209,7 @@ void UChunkValidationSubsystem::CreateMockChunks(void)
 
     return;
 }
+
+#if !UE_BUILD_SHIPPING
+#undef CREATE_MOCK_CHUNKS
+#endif /* !UE_BUILD_SHIPPING */

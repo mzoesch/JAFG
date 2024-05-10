@@ -26,6 +26,12 @@ void UChunkGenerationSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 {
     Super::OnWorldBeginPlay(InWorld);
 
+    /* PIE may not always clean up properly, so we need to do it ourselves. */
+    this->ActiveChunksToGenerateAsyncQueue.Empty();
+    this->ActiveVerticalChunksToGenerateAsyncQueue.Empty();
+    this->ChunkMap.Empty();
+    this->ActiveVerticalChunks.Empty();
+
     this->LocalChunkWorldSettings = this->GetWorld()->GetSubsystem<ULocalChunkWorldSettings>();
     check( this->LocalChunkWorldSettings )
 
@@ -35,6 +41,11 @@ void UChunkGenerationSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 void UChunkGenerationSubsystem::MyTick(const float DeltaTime)
 {
     Super::MyTick(DeltaTime);
+
+    if (this->ActiveVerticalChunksToGenerateAsyncQueue.IsEmpty() == false)
+    {
+        this->DequeueAllActiveVerticalChunks();
+    }
 
     /* Early exit if there are no chunks to generate. */
     if (this->ActiveChunksToGenerateAsyncQueue.IsEmpty())
@@ -52,9 +63,39 @@ void UChunkGenerationSubsystem::MyTick(const float DeltaTime)
     return;
 }
 
-void UChunkGenerationSubsystem::SpawnActiveChunkAsync(const FIntVector& ChunkKey)
+void UChunkGenerationSubsystem::SpawnActiveVerticalChunkAsync(const FIntVector2& VerticalChunkKey)
 {
-    this->ActiveChunksToGenerateAsyncQueue.Enqueue(ChunkKey);
+    this->ActiveVerticalChunksToGenerateAsyncQueue.Enqueue(VerticalChunkKey);
+}
+
+void UChunkGenerationSubsystem::DequeueAllActiveVerticalChunks(void)
+{
+    while (this->ActiveVerticalChunksToGenerateAsyncQueue.IsEmpty() == false)
+    {
+        this->DequeueNextActiveVerticalChunk();
+    }
+
+    return;
+}
+
+void UChunkGenerationSubsystem::DequeueNextActiveVerticalChunk(void)
+{
+    FIntVector2 NewActiveKey;
+    if (this->ActiveVerticalChunksToGenerateAsyncQueue.Dequeue(NewActiveKey) == false)
+    {
+        LOG_WARNING(LogChunkGeneration, "Called but the queue was empty.")
+        return;
+    }
+
+    for (int32 Z = 0; Z < this->LocalChunkWorldSettings->ReplicatedChunksAboveZero; ++Z)
+    {
+        FChunkKey NewActiveChunkKey = FChunkKey(NewActiveKey.X, NewActiveKey.Y, Z);
+        this->ActiveChunksToGenerateAsyncQueue.Enqueue(NewActiveChunkKey);
+    }
+
+    this->ActiveVerticalChunks.Add(NewActiveKey);
+
+    return;
 }
 
 void UChunkGenerationSubsystem::DequeueNextActiveChunk(void)
@@ -88,7 +129,9 @@ void UChunkGenerationSubsystem::DequeueNextActiveChunk(void)
 
 ACommonChunk* UChunkGenerationSubsystem::SpawnChunk(const FChunkKey& ChunkKey) const
 {
+#if LOG_PERFORMANCE_CRITICAL_SECTIONS
     LOG_VERY_VERBOSE(LogChunkGeneration, "Spawning chunk at %s.", *ChunkKey.ToString())
+#endif /* LOG_PERFORMANCE_CRITICAL_SECTIONS */
 
     const FTransform TargetedChunkTransform = FTransform(
         FRotator::ZeroRotator,

@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "CoreMinimal.h"
+
 
 /*----------------------------------------------------------------------------
     Quick switches.
@@ -10,16 +12,27 @@
 /**
  * If turned on, all logs that use this macro library will output the line number of the log in addition to the
  * class, if existing, and function name.
+ * This will never affect performance as the compiler will directly add the line number to the concrete log message.
  */
-#define LOG_WITH_LINE_NUMBERS    0
+#define LOG_WITH_LINE_NUMBERS             0
 
 /**
  * If turned on, all B8G8R8A8 to R8G8B8A8 flips during texture array initialization will be logged.
  * See MaterialSubsystem.cpp for more information.
  */
-#define LOG_TEX_ARR_CHANNEL_FLIPS 1
+#define LOG_TEX_ARR_CHANNEL_FLIPS         1
 
-#define UNDEF_PRIVATE_LOGS        0
+/**
+ * If turned off, all logs that are located in critical sections where even in the editor we may not want to log
+ * very specific logs, will be compiled out.
+ * Some logs may be absolutely crucial for development and debugging but will be too verbose when not explicitly
+ * testing this part of the code.
+ * Will only log the performance-critical sections if the log category specified at the concrete logs is active at
+ * the requested verbosity level for the specific log category respectively.
+ */
+#define LOG_PERFORMANCE_CRITICAL_SECTIONS 0
+
+#define UNDEF_PRIVATE_LOGS                0
 
 
 /*----------------------------------------------------------------------------

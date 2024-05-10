@@ -12,6 +12,19 @@
 #define FChunkKey FIntVector
 
 /**
+ * Uniquely defines a vertical chunk block.
+ */
+// ReSharper disable once CppUE4CodingStandardNamingViolationWarning
+#define FChunkBlockKey FIntVector
+
+namespace ChunkBlockKey
+{
+
+FORCEINLINE TArray<FChunkKey> GetChunkKeys(const FChunkBlockKey& ChunkBlockKey, const FChunkKey& ChunkKey) { checkNoEntry() return TArray<FChunkKey>(); };
+
+}
+
+/**
  * Uniquely defines a vertical chunk.
  */
 // ReSharper disable once CppUE4CodingStandardNamingViolationWarning

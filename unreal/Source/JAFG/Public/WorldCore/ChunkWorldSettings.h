@@ -32,6 +32,9 @@ public:
 
     EChunkType::Type LocalChunkType;
     FORCEINLINE auto GetLocalChunkType(void) const -> EChunkType::Type { return this->LocalChunkType; }
+
+    // TODO Ofc make the replication for this.
+    int ReplicatedChunksAboveZero = 4;
 };
 
 /**

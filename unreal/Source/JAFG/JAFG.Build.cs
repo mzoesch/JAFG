@@ -49,5 +49,12 @@ public class JAFG : ModuleRules
             "Networking",
         }
         );
+
+        PrivateDependencyModuleNames.AddRange(
+        new string[]
+        {
+            "UnrealEd",
+        }
+        );
     }
 }
