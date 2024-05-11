@@ -8,14 +8,12 @@
 /**
  * Uniquely defines a chunk.
  */
-// ReSharper disable once CppUE4CodingStandardNamingViolationWarning
-#define FChunkKey FIntVector
+typedef FIntVector FChunkKey;
 
 /**
  * Uniquely defines a vertical chunk block.
  */
-// ReSharper disable once CppUE4CodingStandardNamingViolationWarning
-#define FChunkBlockKey FIntVector
+typedef FIntVector FChunkBlockKey;
 
 namespace ChunkBlockKey
 {
@@ -27,30 +25,28 @@ FORCEINLINE TArray<FChunkKey> GetChunkKeys(const FChunkBlockKey& ChunkBlockKey, 
 /**
  * Uniquely defines a vertical chunk.
  */
-// ReSharper disable once CppUE4CodingStandardNamingViolationWarning
-#define FChunkKey2 FIntVector2
+typedef FIntVector2 FChunkKey2;
 
 /**
  * Uniquely defines a voxel in a chunk.
  */
-// ReSharper disable once CppUE4CodingStandardNamingViolationWarning
-#define FVoxelKey FIntVector
+typedef FIntVector FVoxelKey;
 
 /**
  * Uniquely defines a voxel in the application.
  */
 // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
-#define voxel_t uint32
+typedef uint32 voxel_t;
 
 /**
  * Uniquely defines a voxel in the application.
  * Use this sparingly and never store this type in a variable, only use it for loops or similar.
  */
 // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
-#define voxel_t_signed int64
+typedef int64 voxel_t_signed;
 
 /**
  * Defines the number of accumulated items that can be at most stored.
  */
 // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
-#define accamount_t uint16
+typedef uint16 accamount_t;

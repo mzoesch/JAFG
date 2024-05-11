@@ -34,6 +34,7 @@
 #include "WorldCore/Voxels/CommonVoxels.h"
 #include "WorldCore/WorldTypes.h"
 #include "WorldCore/Chunk/ChunkStatics.h"
+#include "WorldCore/Validation/CommonValidation.h"
 
 
 /*----------------------------------------------------------------------------
