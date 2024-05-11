@@ -11,21 +11,12 @@ JAFG_VOID
 
 class ACommonChunk;
 class ULocalChunkWorldSettings;
-class UChunkValidationSubsystemCl;
-class UChunkValidationSubsystemDedSv;
-class UChunkValidationSubsystemLitSv;
-class UChunkValidationSubsystemStandalone;
 
 /** Loads and unloads chunk into / from the UWorld based on what a current validation subsystem has determined. */
 UCLASS(NotBlueprintable)
 class JAFG_API UChunkGenerationSubsystem final : public UJAFGTickableWorldSubsystem
 {
     GENERATED_BODY()
-
-    friend UChunkValidationSubsystemCl;
-    friend UChunkValidationSubsystemDedSv;
-    friend UChunkValidationSubsystemLitSv;
-    friend UChunkValidationSubsystemStandalone;
 
 public:
 
@@ -47,6 +38,15 @@ public:
     virtual auto MyTick(const float DeltaTime) -> void override;
     // ~UJAFGTickableWorldSubsystem implementation
 
+    FORCEINLINE auto GenerateVerticalChunkAsync(const FChunkKey2& ChunkKey) -> void { this->VerticalChunkQueue.Enqueue(ChunkKey); }
+    FORCEINLINE auto GetVerticalChunkQueue(void) -> const TQueue<FChunkKey2>& { return this->VerticalChunkQueue; }
+    FORCEINLINE auto ClearVerticalChunkQueue(void) -> void { this->VerticalChunkQueue.Empty(); }
+
+                auto AddVerticalChunkToPendingKillQueue(const FChunkKey2& ChunkKey) -> void;
+    FORCEINLINE auto GetPendingKillVerticalChunkQueue(void) -> const TQueue<FChunkKey2>& { return this->PendingKillVerticalChunkQueue; }
+
+    FORCEINLINE auto GetVerticalChunks(void) const -> const TSet<FChunkKey2>& { return this->VerticalChunks; }
+
 private:
 
     const float ChunkGenerationInterval            = 0.1f;
@@ -56,20 +56,17 @@ private:
     UPROPERTY()
     TObjectPtr<ULocalChunkWorldSettings> LocalChunkWorldSettings;
 
-    /** Never enqueue here directly. */
-    TQueue<FChunkKey2> PendingKillVerticalChunks;
-    auto AddVerticalChunkToKillQueue(const FChunkKey2& ChunkKey) -> void;
+    TQueue<FChunkKey2> VerticalChunkQueue;
+    auto DequeueNextVerticalChunk(void) -> void;
+    auto SafeLoadVerticalChunk(const TArray<FChunkKey>& Chunks) -> void;
+
+    TQueue<FChunkKey2> PendingKillVerticalChunkQueue;
     auto DequeueNextVerticalChunkToKill(void) -> void;
 
-    TQueue<FChunkKey2> ActiveVerticalChunksToGenerateAsyncQueue;
     /** Chunks that have a counterpart in the UWorld. */
     TMap<FChunkKey, TObjectPtr<ACommonChunk>> ChunkMap;
-    /** Active vertical chunks. All sub-chunks must be inside the UChunkGenerationSubsystem#ChunkMap. */
-    TSet<FChunkKey2> ActiveVerticalChunks;
+    TSet<FChunkKey2> VerticalChunks;
 
-    void DequeueNextActiveVerticalChunk(void);
-    void SafeLoadVerticalChunk(const TArray<FChunkKey>& Chunks);
-
-    /** Low-level implementation of spawning a chunk. Never call directly. */
-    ACommonChunk* SpawnChunk(const FChunkKey& ChunkKey) const;
+    /** Spawns a chunk in the EChunkState#PreSpawned state. */
+    auto SpawnChunk(const FChunkKey& ChunkKey) const -> ACommonChunk*;
 };

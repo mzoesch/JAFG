@@ -2,9 +2,8 @@
 
 #include "WorldCore/Validation/ChunkValidationSubsystemCl.h"
 
-#include "Editor.h"
-#include "LevelEditorViewport.h"
 #include "WorldCore/ChunkWorldSettings.h"
+#include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
 #include "WorldCore/Validation/ChunkValidationSubsystemDedSv.h"
 #include "WorldCore/Validation/ChunkValidationSubsystemLitSv.h"
 #include "WorldCore/Validation/ChunkValidationSubsystemStandalone.h"
@@ -58,21 +57,54 @@ void UChunkValidationSubsystemCl::MyTick(const float DeltaTime)
 {
     Super::MyTick(DeltaTime);
 
-    FVector LocalPlayerLocation;
-#if WITH_EDITOR
-    if (GEditor->bIsSimulatingInEditor)
-    {
-        LocalPlayerLocation = GCurrentLevelEditingViewportClient->ViewTransformPerspective.GetLocation();
-    }
-    else
-    {
-        LocalPlayerLocation = GEngine->GetFirstLocalPlayerController(this->GetWorld())->GetPawnOrSpectator()->GetActorLocation();
-    }
-#else /* WITH_EDITOR */
-    LocalPlayerLocation = GEngine->GetFirstLocalPlayerController(this->GetWorld())->GetPawnOrSpectator()->GetActorLocation();
-#endif /* !WITH_EDITOR */
+    this->LoadUnLoadChunks(GEngine->GetFirstLocalPlayerController(this->GetWorld())->GetPawnOrSpectator()->GetActorLocation());
 
-    checkNoEntry()
+    return;
+}
+
+void UChunkValidationSubsystemCl::LoadUnLoadChunks(const FVector& LocalPlayerLocation) const
+{
+    constexpr int RenderDistance { 10 };
+
+    if (this->ChunkGenerationSubsystem->GetPendingKillVerticalChunkQueue().IsEmpty() == false)
+    {
+        LOG_ERROR(LogChunkValidation, "Pending kill vertical chunks is not empty.")
+    }
+
+    this->ChunkGenerationSubsystem->ClearVerticalChunkQueue();
+
+    TArray<FChunkKey2> PreferredChunks = Validation::GetAllChunksInDistance(ChunkConversion::WorldToVerticalChunkKey(LocalPlayerLocation), RenderDistance);
+
+    // Loading
+    //////////////////////////////////////////////////////////////////////////
+    int32 NewChunksCounter = 0;
+    for (const FChunkKey2& Preferred : PreferredChunks)
+    {
+        if (this->ChunkGenerationSubsystem->GetVerticalChunks().Contains(Preferred) == false)
+        {
+            this->ChunkGenerationSubsystem->GenerateVerticalChunkAsync(Preferred);
+            NewChunksCounter++;
+        }
+    }
+
+    // Unloading
+    //////////////////////////////////////////////////////////////////////////
+    int32 UnloadedChunksCounter = 0;
+    for (const FChunkKey2& ActiveChunk : this->ChunkGenerationSubsystem->GetVerticalChunks())
+    {
+        if (PreferredChunks.Contains(ActiveChunk) == false)
+        {
+            this->ChunkGenerationSubsystem->AddVerticalChunkToPendingKillQueue(ActiveChunk);
+            UnloadedChunksCounter++;
+        }
+    }
+
+#if !UE_BUILD_SHIPPING
+    if ((NewChunksCounter == 0 && UnloadedChunksCounter == 0) == false)
+    {
+        LOG_VERY_VERBOSE(LogChunkValidation, "Decided to load %d and unload %d chunks.", NewChunksCounter, UnloadedChunksCounter)
+    }
+#endif
 
     return;
 }

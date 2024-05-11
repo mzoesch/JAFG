@@ -83,12 +83,12 @@ void UChunkValidationSubsystemStandalone::LoadUnloadChunks(const FVector& LocalP
 {
     constexpr int RenderDistance { 10 };
 
-    if (this->ChunkGenerationSubsystem->PendingKillVerticalChunks.IsEmpty() == false)
+    if (this->ChunkGenerationSubsystem->GetPendingKillVerticalChunkQueue().IsEmpty() == false)
     {
         LOG_ERROR(LogChunkValidation, "Pending kill vertical chunks is not empty.")
     }
 
-    this->ChunkGenerationSubsystem->ActiveVerticalChunksToGenerateAsyncQueue.Empty();
+    this->ChunkGenerationSubsystem->ClearVerticalChunkQueue();
 
     TArray<FChunkKey2> PreferredChunks = Validation::GetAllChunksInDistance(ChunkConversion::WorldToVerticalChunkKey(LocalPlayerLocation), RenderDistance);
 
@@ -97,9 +97,9 @@ void UChunkValidationSubsystemStandalone::LoadUnloadChunks(const FVector& LocalP
     int32 NewChunksCounter = 0;
     for (const FChunkKey2& Preferred : PreferredChunks)
     {
-        if (this->ChunkGenerationSubsystem->ActiveVerticalChunks.Contains(Preferred) == false)
+        if (this->ChunkGenerationSubsystem->GetVerticalChunks().Contains(Preferred) == false)
         {
-            this->ChunkGenerationSubsystem->ActiveVerticalChunksToGenerateAsyncQueue.Enqueue(Preferred);
+            this->ChunkGenerationSubsystem->GenerateVerticalChunkAsync(Preferred);
             NewChunksCounter++;
         }
     }
@@ -107,11 +107,11 @@ void UChunkValidationSubsystemStandalone::LoadUnloadChunks(const FVector& LocalP
     // Unloading
     //////////////////////////////////////////////////////////////////////////
     int32 UnloadedChunksCounter = 0;
-    for (const FChunkKey2& ActiveChunk : this->ChunkGenerationSubsystem->ActiveVerticalChunks)
+    for (const FChunkKey2& ActiveChunk : this->ChunkGenerationSubsystem->GetVerticalChunks())
     {
         if (PreferredChunks.Contains(ActiveChunk) == false)
         {
-            this->ChunkGenerationSubsystem->AddVerticalChunkToKillQueue(ActiveChunk);
+            this->ChunkGenerationSubsystem->AddVerticalChunkToPendingKillQueue(ActiveChunk);
             UnloadedChunksCounter++;
         }
     }
