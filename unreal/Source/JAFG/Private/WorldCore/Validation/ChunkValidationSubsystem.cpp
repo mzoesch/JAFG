@@ -8,7 +8,7 @@
 #include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
 
 #if !UE_BUILD_SHIPPING
-#define CREATE_MOCK_CHUNKS 0
+    #define CREATE_MOCK_CHUNKS 0
 #endif /* !UE_BUILD_SHIPPING */
 
 UChunkValidationSubsystem::UChunkValidationSubsystem() : Super()
@@ -123,17 +123,62 @@ void UChunkValidationSubsystem::LoadUnloadChunks(const FVector& LocalPlayerLocat
 
 TArray<FChunkKey2> UChunkValidationSubsystem::GetAllChunksInDistance(const FChunkKey2& Center, const int32 Distance)
 {
-    TArray<FChunkKey2> Out; Out.Reserve((Distance * 2 + 1) * (Distance * 2 + 1));
+    const int PredictedVerticalChunkCount = (Distance * 2 + 1) * (Distance * 2 + 1);
+    TArray<FChunkKey2> Out; Out.Reserve(PredictedVerticalChunkCount);
 
-    for (int X = -Distance; X <= Distance; ++X)
+    auto MoveCursorRight = [] (const FIntVector2& CursorLocation) { return FIntVector2( CursorLocation.X + 1, CursorLocation.Y     ); };
+    auto MoveCursorDown  = [] (const FIntVector2& CursorLocation) { return FIntVector2( CursorLocation.X,     CursorLocation.Y - 1 ); };
+    auto MoveCursorLeft  = [] (const FIntVector2& CursorLocation) { return FIntVector2( CursorLocation.X - 1, CursorLocation.Y     ); };
+    auto MoveCursorUp    = [] (const FIntVector2& CursorLocation) { return FIntVector2( CursorLocation.X,     CursorLocation.Y + 1 ); };
+    const TArray<FIntVector2(*) (const FIntVector2&)> Moves =
+          TArray<FIntVector2(*) (const FIntVector2&)>( { MoveCursorRight, MoveCursorDown, MoveCursorLeft, MoveCursorUp } );
+
+    int Cursor = 1;
+    int CurrentMoveIndex = 0;
+    int TimesToMove = 1;
+    FChunkKey2 TargetPoint = Center;
+
+    Out.Emplace(Center.X, Center.Y);
+
+    while (true)
     {
-        for (int Y = -Distance; Y <= Distance; ++Y)
+        for (int _ = 0; _ < 2; ++_)
         {
-            Out.Emplace(Center.X + X, Center.Y + Y);
+            CurrentMoveIndex = (CurrentMoveIndex + 1) % Moves.Num();
+            for (int __ = 0; __ < TimesToMove; ++__)
+            {
+                TargetPoint = Moves[CurrentMoveIndex](TargetPoint);
+
+                if (Cursor++ >= PredictedVerticalChunkCount)
+                {
+                    goto MethodEnd;
+                }
+
+                Out.Emplace(TargetPoint.X, TargetPoint.Y);
+
+                continue;
+            }
+
+            continue;
         }
+
+        ++TimesToMove;
+        continue;
     }
 
-    return Out;
+    MethodEnd:
+
+        checkCode(
+            for (int i = 0; i < Out.Num(); ++i)
+            {
+                for (int j = i + 1; j < Out.Num(); ++j)
+                {
+                    check( Out[i] != Out[j] )
+                }
+            }
+        )
+
+        return Out;
 }
 
 void UChunkValidationSubsystem::CreateMockChunks(void)
@@ -197,10 +242,10 @@ void UChunkValidationSubsystem::CreateMockChunks(void)
     {
         for (int _ = 0; _ < 2; ++_)
         {
-            this->CurrentMoveIndex = (this->CurrentMoveIndex + 1) % Moves.Num();
-            for (int __ = 0; __ < this->TimesToMove; ++__)
+            this->MockCurrentMoveIndex = (this->MockCurrentMoveIndex + 1) % Moves.Num();
+            for (int __ = 0; __ < this->MockTimesToMove; ++__)
             {
-                this->TargetPoint = Moves[this->CurrentMoveIndex](this->TargetPoint);
+                this->MockTargetPoint = Moves[this->MockCurrentMoveIndex](this->MockTargetPoint);
 
                 ++this->MockCursor;
                 ++SpiralsAddedThisTick;
@@ -216,7 +261,7 @@ void UChunkValidationSubsystem::CreateMockChunks(void)
             continue;
         }
 
-        ++this->TimesToMove;
+        ++this->MockTimesToMove;
 
         if (this->MockCursor >= MaxSpiralPointsClient)
         {
@@ -231,5 +276,5 @@ void UChunkValidationSubsystem::CreateMockChunks(void)
 }
 
 #if !UE_BUILD_SHIPPING
-#undef CREATE_MOCK_CHUNKS
+    #undef CREATE_MOCK_CHUNKS
 #endif /* !UE_BUILD_SHIPPING */

@@ -56,10 +56,10 @@ private:
     static auto GetAllChunksInDistance(const FChunkKey2& Center, const int32 Distance) -> TArray<FChunkKey2>;
 
 #if !UE_BUILD_SHIPPING
-    int32      MockCursor                      = 1;
-    int32      CurrentMoveIndex                = 0;
-    FChunkKey2 TargetPoint                     = FChunkKey2(0, 0);
-    int32      TimesToMove                     = 1;
+    int32      MockCursor           = 1;
+    int32      MockCurrentMoveIndex = 0;
+    FChunkKey2 MockTargetPoint      = FChunkKey2(0, 0);
+    int32      MockTimesToMove      = 1;
 
     bool       bFinishedMockingChunkGeneration = false;
 
