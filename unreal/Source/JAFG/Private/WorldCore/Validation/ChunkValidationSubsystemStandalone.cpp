@@ -63,21 +63,18 @@ void UChunkValidationSubsystemStandalone::MyTick(const float DeltaTime)
 {
     Super::MyTick(DeltaTime);
 
-    FVector LocalPlayerLocation;
 #if WITH_EDITOR
     if (GEditor->bIsSimulatingInEditor)
     {
-        LocalPlayerLocation = GCurrentLevelEditingViewportClient->ViewTransformPerspective.GetLocation();
+        this->LoadUnloadChunks(GCurrentLevelEditingViewportClient->ViewTransformPerspective.GetLocation());
     }
     else
     {
-        LocalPlayerLocation = GEngine->GetFirstLocalPlayerController(this->GetWorld())->GetPawnOrSpectator()->GetActorLocation();
+        this->LoadUnloadChunks(GEngine->GetFirstLocalPlayerController(this->GetWorld())->GetPawnOrSpectator()->GetActorLocation());
     }
 #else /* WITH_EDITOR */
-    LocalPlayerLocation = GEngine->GetFirstLocalPlayerController(this->GetWorld())->GetPawnOrSpectator()->GetActorLocation();
+    this->LoadUnloadChunks(GEngine->GetFirstLocalPlayerController(this->GetWorld())->GetPawnOrSpectator()->GetActorLocation());
 #endif /* !WITH_EDITOR */
-
-    this->LoadUnloadChunks(LocalPlayerLocation);
 
     return;
 }

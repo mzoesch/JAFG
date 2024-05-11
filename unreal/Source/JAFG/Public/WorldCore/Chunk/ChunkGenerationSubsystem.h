@@ -11,8 +11,10 @@ JAFG_VOID
 
 class ACommonChunk;
 class ULocalChunkWorldSettings;
-class UChunkValidationSubsystemStandalone;
+class UChunkValidationSubsystemCl;
 class UChunkValidationSubsystemDedSv;
+class UChunkValidationSubsystemLitSv;
+class UChunkValidationSubsystemStandalone;
 
 /** Loads and unloads chunk into / from the UWorld based on what a current validation subsystem has determined. */
 UCLASS(NotBlueprintable)
@@ -20,8 +22,10 @@ class JAFG_API UChunkGenerationSubsystem final : public UJAFGTickableWorldSubsys
 {
     GENERATED_BODY()
 
-    friend UChunkValidationSubsystemStandalone;
+    friend UChunkValidationSubsystemCl;
     friend UChunkValidationSubsystemDedSv;
+    friend UChunkValidationSubsystemLitSv;
+    friend UChunkValidationSubsystemStandalone;
 
 public:
 
