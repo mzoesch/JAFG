@@ -9,6 +9,7 @@
 
 #include "CommonChunk.generated.h"
 
+class UMaterialSubsystem;
 JAFG_VOID
 
 class UServerChunkWorldSettings;
@@ -77,20 +78,24 @@ private:
     EChunkState::Type          ChunkState = EChunkState::Invalid;
     FChunkStateChangeSignature ChunkStateChangeEvent;
 
-    FDelegateHandle SpawnedHandle;
-    FDelegateHandle ShapedHandle;
-    FDelegateHandle SurfaceReplacedHandle;
+    FDelegateHandle PrivateCurrentStateHandle;
 
-    FDelegateHandle ActiveHandle;
+    void UnsubscribePrivateStateDelegateHandle(void);
 
-    FDelegateHandle CreateOnSpawnedDelegateHandle(void);
-    FDelegateHandle CreateOnShapedDelegateHandle(void);
-    FDelegateHandle CreateOnSurfaceReplacedDelegateHandle(void);
-    FDelegateHandle CreateOnActiveDelegateHandle(void);
+    void SetPrivateStateDelegateHandle_Invalid(void);
+    void SetPrivateStateDelegateHandle_PreSpawned(void);
+    void SetPrivateStateDelegateHandle_Spawned(void);
+    void SetPrivateStateDelegateHandle_Shaped(void);
+    void SetPrivateStateDelegateHandle_SurfaceReplaced(void);
+    void SetPrivateStateDelegateHandle_Active(void);
 
 protected:
 
-    virtual void SetChunkState(const EChunkState::Type NewChunkState);
+    FORCEINLINE virtual auto SetChunkState(const EChunkState::Type NewChunkState) -> void
+    {
+        this->ChunkState = NewChunkState;
+        this->ChunkStateChangeEvent.Broadcast(NewChunkState);
+    }
     friend UChunkGenerationSubsystem;
 
 #pragma endregion Chunk State
@@ -107,6 +112,9 @@ protected:
 
     UPROPERTY()
     TObjectPtr<UVoxelSubsystem> VoxelSubsystem;
+
+    UPROPERTY()
+    TObjectPtr<UMaterialSubsystem> MaterialSubsystem;
 
     /** As the name suggests only valid on the server or in a standalone game. */
     UPROPERTY()

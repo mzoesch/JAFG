@@ -98,6 +98,30 @@ void UChunkGenerationSubsystem::DequeueNextVerticalChunk(void)
     return;
 }
 
+void UChunkGenerationSubsystem::SafeLoadClientVerticalChunkAsync(const TArray<FChunkKey>& Chunks)
+{
+    for (const FChunkKey& Chunk : Chunks)
+    {
+        const TObjectPtr<ACommonChunk>* MapPtr = this->ChunkMap.Find(Chunk);
+        ACommonChunk* ChunkPtr;
+        if (MapPtr == nullptr)
+        {
+            ChunkPtr = this->SpawnChunk(Chunk);
+            this->ChunkMap.Add(Chunk, ChunkPtr);
+        }
+        else
+        {
+            ChunkPtr = *MapPtr;
+        }
+
+        ChunkPtr->SetChunkState(EChunkState::BlockedByHyperlane);
+
+        continue;
+    }
+
+    return;
+}
+
 void UChunkGenerationSubsystem::SafeLoadVerticalChunk(const TArray<FChunkKey>& Chunks)
 {
     for (const FChunkKey& Chunk : Chunks)

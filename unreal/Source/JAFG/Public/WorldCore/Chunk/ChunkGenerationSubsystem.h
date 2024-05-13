@@ -58,6 +58,7 @@ private:
 
     TQueue<FChunkKey2> VerticalChunkQueue;
     auto DequeueNextVerticalChunk(void) -> void;
+    auto SafeLoadClientVerticalChunkAsync(const TArray<FChunkKey>& Chunks) -> void;
     auto SafeLoadVerticalChunk(const TArray<FChunkKey>& Chunks) -> void;
 
     TQueue<FChunkKey2> PendingKillVerticalChunkQueue;

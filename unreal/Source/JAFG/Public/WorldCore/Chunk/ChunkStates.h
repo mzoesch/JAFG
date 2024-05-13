@@ -7,7 +7,7 @@
 namespace EChunkState
 {
 
-enum Type
+enum Type : uint8
 {
     /**
      * Marks an invalid state. A chunk must never have this state.
@@ -53,6 +53,13 @@ enum Type
      * The validation system will remove this chunk from the UWorld in the near future.
      */
     PendingKill,
+
+    /**
+     * This chunk cannot progress to the next or any other state until the hyperlane has answered this chunk's request
+     * to be generated.
+     * The only exception is the state EChunkState::PendingKill.
+     */
+    BlockedByHyperlane,
 };
 
 FORCEINLINE auto LexToString(const EChunkState::Type ChunkState) -> FString
@@ -86,6 +93,10 @@ FORCEINLINE auto LexToString(const EChunkState::Type ChunkState) -> FString
     case EChunkState::PendingKill:
     {
         return TEXT("PendingKill");
+    }
+    case EChunkState::BlockedByHyperlane:
+    {
+        return TEXT("BlockedByHyperlane");
     }
     default:
     {

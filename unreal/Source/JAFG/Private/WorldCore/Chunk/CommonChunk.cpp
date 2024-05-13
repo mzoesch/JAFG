@@ -18,6 +18,8 @@ ACommonChunk::ACommonChunk(const FObjectInitializer& ObjectInitializer) : Super(
     /* this->ProceduralMeshComponent->bUseAsyncCooking = true; */
     this->ProceduralMeshComponent->SetCastShadow(true);
 
+    this->SetPrivateStateDelegateHandle_Invalid();
+
     return;
 }
 
@@ -25,8 +27,7 @@ void ACommonChunk::BeginPlay(void)
 {
     Super::BeginPlay();
 
-    this->ChunkState    = EChunkState::PreSpawned;
-    this->SpawnedHandle = this->CreateOnSpawnedDelegateHandle(); check( this->SpawnedHandle.IsValid() )
+    this->SetChunkState(EChunkState::PreSpawned);
 
     return;
 }
@@ -35,7 +36,7 @@ void ACommonChunk::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
     Super::EndPlay(EndPlayReason);
 
-    if (bUncontrolledKill)
+    if (this->bUncontrolledKill)
     {
         return;
     }
@@ -51,6 +52,9 @@ void ACommonChunk::PreInitialize(void)
 
     this->VoxelSubsystem = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>();
     check( this->VoxelSubsystem )
+
+    this->MaterialSubsystem = this->GetGameInstance()->GetSubsystem<UMaterialSubsystem>();
+    check( this->MaterialSubsystem )
 
     this->ServerChunkWorldSettings = this->GetWorld()->GetSubsystem<UServerChunkWorldSettings>();
     if (this->ServerChunkWorldSettings == nullptr && UNetStatics::IsSafeServer(this))
@@ -72,146 +76,150 @@ void ACommonChunk::KillUncontrolled(void)
 
 #pragma region Chunk State
 
-FDelegateHandle ACommonChunk::CreateOnSpawnedDelegateHandle(void)
+void ACommonChunk::UnsubscribePrivateStateDelegateHandle()
 {
-    return this->SubscribeToChunkStateChange(FChunkStateChangeSignature::FDelegate::CreateLambda(
+    if (this->PrivateCurrentStateHandle.IsValid() == false)
+    {
+        LOG_ERROR(LogChunkGeneration, "Failed to unsubscribe from Chunk State Change Event because the Hanlde was invalid.")
+        this->KillUncontrolled();
+        return;
+    }
+    if (this->UnsubscribeFromChunkStateChange(this->PrivateCurrentStateHandle) == false)
+    {
+        LOG_ERROR(LogChunkGeneration, "Failed to unsubscribe from Chunk State Change Event due to an unknown error.")
+        this->KillUncontrolled();
+        return;
+    }
+    this->PrivateCurrentStateHandle.Reset();
+
+    return;
+}
+
+void ACommonChunk::SetPrivateStateDelegateHandle_Invalid(void)
+{
+    this->PrivateCurrentStateHandle = this->SubscribeToChunkStateChange(FChunkStateChangeSignature::FDelegate::CreateLambda(
         [this] (const EChunkState::Type NewChunkState) -> void
         {
-            if (NewChunkState != EChunkState::Spawned)
+            this->UnsubscribePrivateStateDelegateHandle();
+
+            if (NewChunkState != EChunkState::PreSpawned)
             {
-                LOG_ERROR(LogChunkGeneration, "Unknown chunk waiting for its minimal state to be set but got %s.", *EChunkState::LexToString(NewChunkState))
-                this->KillUncontrolled();
+                LOG_FATAL(LogChunkGeneration, "Waited for Pre Spawned state but got %s.", *EChunkState::LexToString(NewChunkState))
                 return;
             }
 
-            this->PreInitialize();
-
-            if (this->SpawnedHandle.IsValid() == false)
-            {
-                LOG_ERROR(LogChunkGeneration, "Failed to unsubscribe from Chunk State Change Event because the Spawned Hanlde was invalid.")
-                this->KillUncontrolled();
-            }
-            else if (this->UnsubscribeFromChunkStateChange(this->SpawnedHandle) == false)
-            {
-                LOG_ERROR(LogChunkGeneration, "Failed to unsubscribe from Chunk State Change Event due to an unknown error.")
-                this->KillUncontrolled();
-            }
-
-            /*
-             * The chunk has now the spawned-state. Therefore, we now need to crate the new subscriber to listen for
-             * the next step in the chunk's lifecycle.
-             */
-            this->ShapedHandle = this->CreateOnShapedDelegateHandle(); check( this->ShapedHandle.IsValid() )
+            this->SetPrivateStateDelegateHandle_PreSpawned();
 
             return;
-        }
-    ));
+        }));
+
+    return;
 }
 
-FDelegateHandle ACommonChunk::CreateOnShapedDelegateHandle(void)
+void ACommonChunk::SetPrivateStateDelegateHandle_PreSpawned()
 {
-    return this->SubscribeToChunkStateChange(FChunkStateChangeSignature::FDelegate::CreateLambda(
+    this->PrivateCurrentStateHandle = this->SubscribeToChunkStateChange(FChunkStateChangeSignature::FDelegate::CreateLambda(
         [this] (const EChunkState::Type NewChunkState) -> void
         {
+            this->UnsubscribePrivateStateDelegateHandle();
+
+           if (NewChunkState != EChunkState::Spawned)
+           {
+               LOG_FATAL(LogChunkGeneration, "Waited for Pre Spawned state but got %s.", *EChunkState::LexToString(NewChunkState))
+               return;
+           }
+
+            this->PreInitialize();
+
+            this->SetPrivateStateDelegateHandle_Spawned();
+
+            return;
+        }));
+
+    return;
+}
+
+void ACommonChunk::SetPrivateStateDelegateHandle_Spawned()
+{
+    this->PrivateCurrentStateHandle = this->SubscribeToChunkStateChange(FChunkStateChangeSignature::FDelegate::CreateLambda(
+        [this] (const EChunkState::Type NewChunkState) -> void
+        {
+            this->UnsubscribePrivateStateDelegateHandle();
+
             if (NewChunkState != EChunkState::Shaped)
             {
-                LOG_ERROR(LogChunkGeneration, "Unknown chunk waiting for its shaped state to be set but got %s.", *EChunkState::LexToString(NewChunkState))
-                this->KillUncontrolled();
+                LOG_FATAL(LogChunkGeneration, "Waited for Shaped state but got %s.", *EChunkState::LexToString(NewChunkState))
                 return;
             }
 
             this->Shape();
 
-            if (this->ShapedHandle.IsValid() == false)
-            {
-                LOG_ERROR(LogChunkGeneration, "Failed to unsubscribe from Chunk State Change Event because the Shaped Hanlde was invalid.")
-                this->KillUncontrolled();
-            }
-            else if (this->UnsubscribeFromChunkStateChange(this->ShapedHandle) == false)
-            {
-                LOG_ERROR(LogChunkGeneration, "Failed to unsubscribe from Chunk State Change Event due to an unknown error.")
-                this->KillUncontrolled();
-            }
-
-            /*
-             * The chunk has now the shaped-state. Therefore, we now need to crate the new subscriber to listen for
-             * the next step in the chunk's lifecycle.
-             */
-            this->SurfaceReplacedHandle = this->CreateOnSurfaceReplacedDelegateHandle(); check( this->SurfaceReplacedHandle.IsValid() )
+            this->SetPrivateStateDelegateHandle_Shaped();
 
             return;
         }
     ));
+
+    return;
 }
 
-FDelegateHandle ACommonChunk::CreateOnSurfaceReplacedDelegateHandle(void)
+void ACommonChunk::SetPrivateStateDelegateHandle_Shaped()
 {
-    return this->SubscribeToChunkStateChange(FChunkStateChangeSignature::FDelegate::CreateLambda(
+    this->PrivateCurrentStateHandle = this->SubscribeToChunkStateChange(FChunkStateChangeSignature::FDelegate::CreateLambda(
         [this] (const EChunkState::Type NewChunkState) -> void
         {
+            this->UnsubscribePrivateStateDelegateHandle();
+
             if (NewChunkState != EChunkState::SurfaceReplaced)
             {
-                LOG_ERROR(LogChunkGeneration, "Unknown chunk waiting for its surface replaced state to be set but got %s.", *EChunkState::LexToString(NewChunkState))
-                this->KillUncontrolled();
+                LOG_FATAL(LogChunkGeneration, "Waited for Surface Replaced state but got %s.", *EChunkState::LexToString(NewChunkState))
                 return;
             }
 
             this->ReplaceSurface();
 
-            if (this->SurfaceReplacedHandle.IsValid() == false)
-            {
-                LOG_ERROR(LogChunkGeneration, "Failed to unsubscribe from Chunk State Change Event because the Surface Replaced Hanlde was invalid.")
-                this->KillUncontrolled();
-            }
-            else if (this->UnsubscribeFromChunkStateChange(this->SurfaceReplacedHandle) == false)
-            {
-                LOG_ERROR(LogChunkGeneration, "Failed to unsubscribe from Chunk State Change Event due to an unknown error.")
-                this->KillUncontrolled();
-            }
-
-            /*
-             * The chunk has now the surface-replaced-state. Therefore, we now need to crate the new subscriber to listen
-             * for the next step in the chunk's lifecycle.
-             */
-            this->ActiveHandle = this->CreateOnActiveDelegateHandle(); check( this->ActiveHandle.IsValid() )
+            this->SetPrivateStateDelegateHandle_SurfaceReplaced();
 
             return;
         }
     ));
+
+    return;
 }
 
-FDelegateHandle ACommonChunk::CreateOnActiveDelegateHandle(void)
+void ACommonChunk::SetPrivateStateDelegateHandle_SurfaceReplaced(void)
 {
-    return this->SubscribeToChunkStateChange(FChunkStateChangeSignature::FDelegate::CreateLambda(
+    this->PrivateCurrentStateHandle = this->SubscribeToChunkStateChange(FChunkStateChangeSignature::FDelegate::CreateLambda(
         [this] (const EChunkState::Type NewChunkState) -> void
         {
+            this->UnsubscribePrivateStateDelegateHandle();
+
             if (NewChunkState != EChunkState::Active)
             {
-                LOG_ERROR(LogChunkGeneration, "Unknown chunk waiting for its active state to be set but got %s.", *EChunkState::LexToString(NewChunkState))
+                LOG_FATAL(LogChunkGeneration, "Waited for Active state but got %s.", *EChunkState::LexToString(NewChunkState))
                 return;
             }
 
             this->RegenerateProceduralMesh();
 
-            if (this->ActiveHandle.IsValid() == false)
-            {
-                LOG_ERROR(LogChunkGeneration, "Failed to unsubscribe from Chunk State Change Event because the Active Hanlde was invalid.")
-            }
-            else if (this->UnsubscribeFromChunkStateChange(this->ActiveHandle) == false)
-            {
-                LOG_ERROR(LogChunkGeneration, "Failed to unsubscribe from Chunk State Change Event due to an unknown error.")
-            }
+            this->SetPrivateStateDelegateHandle_Active();
 
             return;
         }
     ));
+
+    return;
 }
 
-void ACommonChunk::SetChunkState(const EChunkState::Type NewChunkState)
+void ACommonChunk::SetPrivateStateDelegateHandle_Active()
 {
-    this->ChunkState = NewChunkState;
-
-    this->ChunkStateChangeEvent.Broadcast(NewChunkState);
+    // Why does this cause a crash?
+    this->ChunkStateChangeEvent.AddLambda(
+        [this] (const EChunkState::Type NewChunkState) -> void
+        {
+            LOG_WARNING(LogChunkGeneration, "Yea.")
+        }
+    );
 
     return;
 }
@@ -222,38 +230,15 @@ void ACommonChunk::SetChunkState(const EChunkState::Type NewChunkState)
 
 void ACommonChunk::ApplyProceduralMesh(void)
 {
-    const UMaterialSubsystem* MaterialSubsystem = this->GetGameInstance()->GetSubsystem<UMaterialSubsystem>();
-
     if (MaterialSubsystem == nullptr)
     {
-        UE_LOG(LogTemp, Fatal, TEXT("ACommonChunk::ApplyProceduralMesh: Could not get Material Subsystem."))
+        LOG_FATAL(LogChunkMisc, "Could not get Material Subsystem.")
         return;
     }
 
     for (int i = 0; i < this->MeshData.Num(); ++i)
     {
         this->ProceduralMeshComponent->SetMaterial(i, MaterialSubsystem->MDynamicGroups[i]);
-
-        // if (i == ETextureGroup::Opaque)
-        // {
-        //     this->ProceduralMeshComponent->SetMaterial(ETextureGroup::Opaque, MaterialSubsystem->MDynamicOpaque);
-        // }
-        // else if (i == ETextureGroup::FullBlendOpaque)
-        // {
-        //     this->ProceduralMeshComponent->SetMaterial(ETextureGroup::FullBlendOpaque,
-        //                                                MaterialSubsystem->MDynamicFullBlendOpaque);
-        // }
-        // else if (i == ETextureGroup::FloraBlendOpaque)
-        // {
-        //     this->ProceduralMeshComponent->SetMaterial(ETextureGroup::FloraBlendOpaque,
-        //                                                MaterialSubsystem->MDynamicFloraBlendOpaque);
-        // }
-        // else
-        // {
-        //     UE_LOG(LogTemp, Error, TEXT("ACommonChunk::ApplyProceduralMesh: Texture group %d not implemented."), i)
-        //     this->ProceduralMeshComponent->SetMaterial(i, MaterialSubsystem->MDynamicOpaque);
-        // }
-
         this->ProceduralMeshComponent->CreateMeshSection(
             i,
             this->MeshData[i].Vertices,
@@ -264,6 +249,8 @@ void ACommonChunk::ApplyProceduralMesh(void)
             this->MeshData[i].Tangents,
             true
         );
+
+        continue;
     }
 
     return;
