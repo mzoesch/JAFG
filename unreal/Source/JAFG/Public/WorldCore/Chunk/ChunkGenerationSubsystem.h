@@ -9,6 +9,7 @@
 
 JAFG_VOID
 
+class UServerChunkWorldSettings;
 class ACommonChunk;
 class ULocalChunkWorldSettings;
 
@@ -51,10 +52,19 @@ private:
 
     const float ChunkGenerationInterval            = 0.1f;
     const int32 MaxVerticalChunksToGeneratePerTick = 20;
+    /** True if this subsystem was spawned in a client UWorld. */
+          bool  bInClientMode                      = false;
+
+    /** Copied so we do not have to deal with checking the local and server config every time. */
+    int CopiedChunksAboveZero = 0;
 
     /** Copied for faster access. */
     UPROPERTY()
     TObjectPtr<ULocalChunkWorldSettings> LocalChunkWorldSettings;
+
+    /** Copied for faster access. */
+    UPROPERTY()
+    TObjectPtr<UServerChunkWorldSettings> ServerChunkWorldSettings;
 
     TQueue<FChunkKey2> VerticalChunkQueue;
     auto DequeueNextVerticalChunk(void) -> void;

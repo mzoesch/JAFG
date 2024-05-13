@@ -31,8 +31,30 @@ void UChunkGenerationSubsystem::OnWorldBeginPlay(UWorld& InWorld)
     this->ChunkMap.Empty();
     this->VerticalChunks.Empty();
 
-    this->LocalChunkWorldSettings = this->GetWorld()->GetSubsystem<ULocalChunkWorldSettings>();
-    check( this->LocalChunkWorldSettings )
+    if (UNetStatics::IsSafeDedicatedServer(&InWorld) == false)
+    {
+        this->LocalChunkWorldSettings = InWorld.GetSubsystem<ULocalChunkWorldSettings>();
+        check( this->LocalChunkWorldSettings )
+    }
+
+    if (UNetStatics::IsSafeServer(&InWorld))
+    {
+        this->ServerChunkWorldSettings = InWorld.GetSubsystem<UServerChunkWorldSettings>();
+        check( this->ServerChunkWorldSettings )
+    }
+
+    if (UNetStatics::IsSafeClient(&InWorld))
+    {
+        this->bInClientMode = true;
+    }
+
+    this->CopiedChunksAboveZero =
+        this->LocalChunkWorldSettings
+            ? this->LocalChunkWorldSettings->ReplicatedChunksAboveZero
+            : this->ServerChunkWorldSettings->ChunksAboveZero;
+
+    this->PendingKillVerticalChunkQueue.Enqueue(FChunkKey2(0, 0));
+    this->PendingKillVerticalChunkQueue.Empty();
 
     return;
 }
@@ -66,10 +88,11 @@ void UChunkGenerationSubsystem::MyTick(const float DeltaTime)
 void UChunkGenerationSubsystem::AddVerticalChunkToPendingKillQueue(const FChunkKey2& ChunkKey)
 {
     this->PendingKillVerticalChunkQueue.Enqueue(ChunkKey);
-    for (int32 Z = 0; Z < this->LocalChunkWorldSettings->ReplicatedChunksAboveZero; ++Z)
+    for (int32 Z = 0; Z < this->CopiedChunksAboveZero; ++Z)
     {
         this->ChunkMap[FChunkKey(ChunkKey.X, ChunkKey.Y, Z)]->SetChunkState(EChunkState::PendingKill);
     }
+
 
     return;
 }
@@ -84,16 +107,23 @@ void UChunkGenerationSubsystem::DequeueNextVerticalChunk(void)
     }
 
     TArray<FChunkKey> NewChunks = TArray<FChunkKey>();
-    NewChunks.Reserve(this->LocalChunkWorldSettings->ReplicatedChunksAboveZero);
+    NewChunks.Reserve(this->CopiedChunksAboveZero);
 
-    for (int32 Z = 0; Z < this->LocalChunkWorldSettings->ReplicatedChunksAboveZero; ++Z)
+    for (int32 Z = 0; Z < this->CopiedChunksAboveZero; ++Z)
     {
         NewChunks.Add(FChunkKey(NewActiveKey.X, NewActiveKey.Y, Z));
     }
 
     this->VerticalChunks.Add(NewActiveKey);
 
-    this->SafeLoadVerticalChunk(NewChunks);
+    if (this->bInClientMode)
+    {
+        this->SafeLoadClientVerticalChunkAsync(NewChunks);
+    }
+    else
+    {
+        this->SafeLoadVerticalChunk(NewChunks);
+    }
 
     return;
 }
@@ -158,7 +188,7 @@ void UChunkGenerationSubsystem::DequeueNextVerticalChunkToKill(void)
         return;
     }
 
-    for (int32 Z = 0; Z < this->LocalChunkWorldSettings->ReplicatedChunksAboveZero; ++Z)
+    for (int32 Z = 0; Z < this->CopiedChunksAboveZero; ++Z)
     {
         this->ChunkMap.FindAndRemoveChecked(FChunkKey(NewKillKey.X, NewKillKey.Y, Z))->KillUncontrolled();
     }

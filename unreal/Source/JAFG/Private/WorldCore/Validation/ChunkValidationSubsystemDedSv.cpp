@@ -53,5 +53,4 @@ void UChunkValidationSubsystemDedSv::OnWorldBeginPlay(UWorld& InWorld)
 void UChunkValidationSubsystemDedSv::MyTick(const float DeltaTime)
 {
     Super::MyTick(DeltaTime);
-    checkNoEntry()
 }

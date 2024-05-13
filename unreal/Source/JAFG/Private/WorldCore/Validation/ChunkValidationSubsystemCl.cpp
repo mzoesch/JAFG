@@ -50,6 +50,9 @@ void UChunkValidationSubsystemCl::OnWorldBeginPlay(UWorld& InWorld)
         LOG_FATAL(LogChunkValidation, "Found other validation subsystem. Disallowed. Faulty subsystems: Standalone.")
     }
 
+    this->ChunkGenerationSubsystem = this->GetWorld()->GetSubsystem<UChunkGenerationSubsystem>();
+    check( this->ChunkGenerationSubsystem )
+
     return;
 }
 
@@ -57,7 +60,10 @@ void UChunkValidationSubsystemCl::MyTick(const float DeltaTime)
 {
     Super::MyTick(DeltaTime);
 
-    this->LoadUnLoadChunks(GEngine->GetFirstLocalPlayerController(this->GetWorld())->GetPawnOrSpectator()->GetActorLocation());
+    if (const APawn* LocalPlayerPawn = GEngine->GetFirstLocalPlayerController(this->GetWorld())->GetPawnOrSpectator(); LocalPlayerPawn)
+    {
+        this->LoadUnLoadChunks(LocalPlayerPawn->GetActorLocation());
+    }
 
     return;
 }

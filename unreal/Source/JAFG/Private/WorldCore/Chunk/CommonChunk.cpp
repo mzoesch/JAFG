@@ -136,6 +136,10 @@ void ACommonChunk::SubscribeWithPrivateStateDelegate(void)
                 this->OnPendingKill();
                 break;
             }
+            case EChunkState::BlockedByHyperlane:
+            {
+                break;
+            }
             default:
             {
                 checkNoEntry()
