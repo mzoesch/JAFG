@@ -27,6 +27,7 @@ class JAFG_API ACommonChunk : public AActor
 public:
 
     explicit ACommonChunk(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+    virtual ~ACommonChunk(void) override;
 
 protected:
 
@@ -38,9 +39,8 @@ protected:
     /**
      * Sets up data that is valid throughout the lifetime of a chunk and needed for the chunk to be able to
      * generate itself.
-     * Called before ACommonChunk#Initialize.
      */
-    virtual auto PreInitialize(void) -> void;
+    virtual auto InitializeCommonStuff(void) -> void;
 
     /**
      * Use as a last resort only.
@@ -76,9 +76,9 @@ public:
 private:
 
     EChunkState::Type          ChunkState = EChunkState::Invalid;
-    FChunkStateChangeSignature ChunkStateChangeEvent;
+    FChunkStateChangeSignature ChunkStateChangeEvent = FChunkStateChangeSignature();
 
-    FDelegateHandle PrivateStateHandle;
+    FDelegateHandle PrivateStateHandle = FDelegateHandle();
     auto SubscribeWithPrivateStateDelegate(void) -> void;
 
 protected:
@@ -103,19 +103,30 @@ protected:
     // MISC
     //////////////////////////////////////////////////////////////////////////
 
-    // TODO Check what this value can be in edge cases
-    FVector   JChunkPosition;
-    FChunkKey ChunkKey;
+    /**
+     * The chunk position in the world based on the J coordinate system.
+     * Meaning the Chunk Key multiplied by the Chunk Size.
+     * This should actually be a FIntVector, but FVector is more convenient to work with because we often
+     * use this in calculations with floats. Use the ACommonChunk#ChunkPosition when calculating with other integers.
+     * Be aware:
+     * Always, when converting to any kind of J-Coordinate, be aware of flooring. IEEE 754 floating point precision
+     * errors are no joke, they exist, never deny their unwanted existence, and there is definitely no fun in debugging
+     * them. !!!Always make sure to round then!!!
+     * (This variable is based on the actual AActor location that's why we have some float precision errors here.)
+     */
+    FVector      JChunkPosition = FVector::ZeroVector;
+    FJCoordinate ChunkPosition  = FJCoordinate::ZeroValue;
+    FChunkKey    ChunkKey       = FChunkKey::ZeroValue;
 
     UPROPERTY()
-    TObjectPtr<UVoxelSubsystem> VoxelSubsystem;
+    TObjectPtr<UVoxelSubsystem> VoxelSubsystem = nullptr;
 
     UPROPERTY()
-    TObjectPtr<UMaterialSubsystem> MaterialSubsystem;
+    TObjectPtr<UMaterialSubsystem> MaterialSubsystem = nullptr;
 
     /** As the name suggests only valid on the server or in a standalone game. */
     UPROPERTY()
-    TObjectPtr<UServerChunkWorldSettings> ServerChunkWorldSettings;
+    TObjectPtr<UServerChunkWorldSettings> ServerChunkWorldSettings = nullptr;
 
 #pragma endregion MISC
 
@@ -126,7 +137,7 @@ protected:
     //////////////////////////////////////////////////////////////////////////
 
     UPROPERTY()
-    TObjectPtr<UProceduralMeshComponent> ProceduralMeshComponent;
+    TObjectPtr<UProceduralMeshComponent> ProceduralMeshComponent = nullptr;
 
     virtual auto GenerateProceduralMesh(void) -> void PURE_VIRTUAL(ACommonChunk::GenerateProceduralMesh)
             auto ApplyProceduralMesh(void) -> void;
@@ -159,12 +170,16 @@ protected:
     // Raw Data
     //////////////////////////////////////////////////////////////////////////
 
-    TArray<voxel_t> RawVoxelData;
+    /**
+     * If this chunk has been pre-initialized, this array will have a size of WorldStatics::ChunkSize to the power of 3.
+     * Not initialized at object construction to save memory.
+     */
+    voxel_t* RawVoxelData = nullptr;
 
     /** It is up to the client and the derived class on them on how to feed this array. */
-    TArray<FChunkMeshData> MeshData;
+    TArray<FChunkMeshData> MeshData = TArray<FChunkMeshData>();
     /** It is up to the client and the derived class on them on how to feed this array. */
-    TArray<int32>          VertexCounts;
+    TArray<int32>          VertexCounts = TArray<int32>();
 
 #if !UE_BUILD_SHIPPING
     /**
@@ -192,6 +207,8 @@ protected:
         return this->RawVoxelData[ACommonChunk::GetVoxelIndex(LocalVoxelLocation)];
     }
 
+    /* Never make this const, please?? We are freaking changing the voxels. */
+    // ReSharper disable once CppMemberFunctionMayBeConst
     FORCEINLINE void ModifyRawVoxelData(const FVoxelKey& LocalVoxelLocation, const voxel_t NewVoxel)
     {
         this->RawVoxelData[ACommonChunk::GetVoxelIndex(LocalVoxelLocation)] = NewVoxel;

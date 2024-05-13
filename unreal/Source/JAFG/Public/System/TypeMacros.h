@@ -6,6 +6,11 @@
 #include "CoreMinimal.h"
 
 /**
+ * Uniquely defines a coordinate in the j coordinate system.
+ */
+typedef FIntVector FJCoordinate;
+
+/**
  * Uniquely defines a chunk.
  */
 typedef FIntVector FChunkKey;

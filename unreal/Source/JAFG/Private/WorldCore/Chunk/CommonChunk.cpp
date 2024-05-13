@@ -23,6 +23,11 @@ ACommonChunk::ACommonChunk(const FObjectInitializer& ObjectInitializer) : Super(
     return;
 }
 
+ACommonChunk::~ACommonChunk(void)
+{
+    delete[] this->RawVoxelData;
+}
+
 void ACommonChunk::BeginPlay(void)
 {
     Super::BeginPlay();
@@ -44,11 +49,25 @@ void ACommonChunk::EndPlay(const EEndPlayReason::Type EndPlayReason)
     return;
 }
 
-void ACommonChunk::PreInitialize(void)
+void ACommonChunk::InitializeCommonStuff(void)
 {
-    this->RawVoxelData.SetNum(WorldStatics::ChunkSize * WorldStatics::ChunkSize * WorldStatics::ChunkSize, false);
+#if WITH_EDITOR
+    /* PIE May not always clean up correctly. */
+    if (this->RawVoxelData != nullptr)
+    {
+        delete[] this->RawVoxelData;
+    }
+#endif /* WITH_EDITOR */
+
+    this->RawVoxelData   = new voxel_t[WorldStatics::ChunkSize * WorldStatics::ChunkSize * WorldStatics::ChunkSize];
     this->JChunkPosition = this->GetActorLocation() * WorldStatics::UToJScale;
-    this->ChunkKey       = FChunkKey(this->JChunkPosition / (WorldStatics::ChunkSize - 1));
+    this->ChunkPosition  = FJCoordinate(
+        /* We have to round here to make up on some IEEE 754 floating point precision errors. */
+        FMath::RoundToFloat( this->GetActorLocation().X * WorldStatics::UToJScale ),
+        FMath::RoundToFloat( this->GetActorLocation().Y * WorldStatics::UToJScale ),
+        FMath::RoundToFloat( this->GetActorLocation().Z * WorldStatics::UToJScale )
+    );
+    this->ChunkKey       = FChunkKey(this->ChunkPosition / WorldStatics::ChunkSize);
 
     this->VoxelSubsystem = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>();
     check( this->VoxelSubsystem )
@@ -177,7 +196,7 @@ bool ACommonChunk::IsStateChangeValid(const EChunkState::Type NewChunkState)
 
 void ACommonChunk::OnSpawned(void)
 {
-    this->PreInitialize();
+    this->InitializeCommonStuff();
 }
 
 void ACommonChunk::OnShaped(void)
