@@ -9,9 +9,9 @@
 
 #include "CommonChunk.generated.h"
 
-class UMaterialSubsystem;
 JAFG_VOID
 
+class UMaterialSubsystem;
 class UServerChunkWorldSettings;
 class UVoxelSubsystem;
 class UProceduralMeshComponent;
@@ -78,24 +78,21 @@ private:
     EChunkState::Type          ChunkState = EChunkState::Invalid;
     FChunkStateChangeSignature ChunkStateChangeEvent;
 
-    FDelegateHandle PrivateCurrentStateHandle;
-
-    void UnsubscribePrivateStateDelegateHandle(void);
-
-    void SetPrivateStateDelegateHandle_Invalid(void);
-    void SetPrivateStateDelegateHandle_PreSpawned(void);
-    void SetPrivateStateDelegateHandle_Spawned(void);
-    void SetPrivateStateDelegateHandle_Shaped(void);
-    void SetPrivateStateDelegateHandle_SurfaceReplaced(void);
-    void SetPrivateStateDelegateHandle_Active(void);
+    FDelegateHandle PrivateStateHandle;
+    auto SubscribeWithPrivateStateDelegate(void) -> void;
 
 protected:
 
-    FORCEINLINE virtual auto SetChunkState(const EChunkState::Type NewChunkState) -> void
-    {
-        this->ChunkState = NewChunkState;
-        this->ChunkStateChangeEvent.Broadcast(NewChunkState);
-    }
+    virtual bool IsStateChangeValid(const EChunkState::Type NewChunkState);
+
+    virtual auto OnSpawned(void) -> void;
+    virtual auto OnShaped(void) -> void;
+    virtual auto OnSurfaceReplaced(void) -> void;
+    virtual auto OnActive(void) -> void;
+    virtual auto OnPendingKill(void) -> void;
+
+    /** @return True, if state change was accepted. */
+    virtual auto SetChunkState(const EChunkState::Type NewChunkState) -> bool;
     friend UChunkGenerationSubsystem;
 
 #pragma endregion Chunk State

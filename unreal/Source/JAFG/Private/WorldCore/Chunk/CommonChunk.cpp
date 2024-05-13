@@ -18,7 +18,7 @@ ACommonChunk::ACommonChunk(const FObjectInitializer& ObjectInitializer) : Super(
     /* this->ProceduralMeshComponent->bUseAsyncCooking = true; */
     this->ProceduralMeshComponent->SetCastShadow(true);
 
-    this->SetPrivateStateDelegateHandle_Invalid();
+    this->SubscribeWithPrivateStateDelegate();
 
     return;
 }
@@ -76,152 +76,146 @@ void ACommonChunk::KillUncontrolled(void)
 
 #pragma region Chunk State
 
-void ACommonChunk::UnsubscribePrivateStateDelegateHandle()
+void ACommonChunk::SubscribeWithPrivateStateDelegate(void)
 {
-    if (this->PrivateCurrentStateHandle.IsValid() == false)
+    this->PrivateStateHandle = this->SubscribeToChunkStateChange(FChunkStateChangeSignature::FDelegate::CreateLambda(
+        [this] (const EChunkState::Type NewChunkState)
+        {
+            switch (NewChunkState)
+            {
+            case EChunkState::Invalid:
+            {
+                checkNoEntry()
+                break;
+            }
+            case EChunkState::PreSpawned:
+            {
+                break;
+            }
+            case EChunkState::Spawned:
+            {
+                this->OnSpawned();
+                break;
+            }
+            case EChunkState::Shaped:
+            {
+                this->OnShaped();
+                break;
+            }
+            case EChunkState::SurfaceReplaced:
+            {
+                this->OnSurfaceReplaced();
+                break;
+            }
+            case EChunkState::Active:
+            {
+                this->OnActive();
+                break;
+            }
+            case EChunkState::PendingKill:
+            {
+                this->OnPendingKill();
+                break;
+            }
+            default:
+            {
+                checkNoEntry()
+                break;
+            }
+            }
+
+            return;
+        }
+    ));
+
+    return;
+}
+
+bool ACommonChunk::IsStateChangeValid(const EChunkState::Type NewChunkState)
+{
+    switch (NewChunkState)
     {
-        LOG_ERROR(LogChunkGeneration, "Failed to unsubscribe from Chunk State Change Event because the Hanlde was invalid.")
-        this->KillUncontrolled();
-        return;
-    }
-    if (this->UnsubscribeFromChunkStateChange(this->PrivateCurrentStateHandle) == false)
+    case EChunkState::Invalid:
     {
-        LOG_ERROR(LogChunkGeneration, "Failed to unsubscribe from Chunk State Change Event due to an unknown error.")
-        this->KillUncontrolled();
-        return;
+        return false;
     }
-    this->PrivateCurrentStateHandle.Reset();
-
-    return;
+    case EChunkState::PreSpawned:
+    {
+        return this->ChunkState == EChunkState::Invalid;
+    }
+    case EChunkState::Spawned:
+    {
+        return this->ChunkState == EChunkState::PreSpawned;
+    }
+    case EChunkState::Shaped:
+    {
+        return this->ChunkState == EChunkState::Spawned;
+    }
+    case EChunkState::SurfaceReplaced:
+    {
+        return this->ChunkState == EChunkState::Shaped;
+    }
+    case EChunkState::Active:
+    {
+        return this->ChunkState == EChunkState::SurfaceReplaced;
+    }
+    case EChunkState::PendingKill:
+    {
+        return true;
+    }
+    case EChunkState::BlockedByHyperlane:
+    {
+        return this->ChunkState == EChunkState::PreSpawned;
+    }
+    default:
+    {
+        LOG_FATAL(LogChunkValidation, "Unsupported chunk state %s.", *EChunkState::LexToString(NewChunkState))
+        return false;
+    }
+    }
 }
 
-void ACommonChunk::SetPrivateStateDelegateHandle_Invalid(void)
+void ACommonChunk::OnSpawned(void)
 {
-    this->PrivateCurrentStateHandle = this->SubscribeToChunkStateChange(FChunkStateChangeSignature::FDelegate::CreateLambda(
-        [this] (const EChunkState::Type NewChunkState) -> void
-        {
-            this->UnsubscribePrivateStateDelegateHandle();
-
-            if (NewChunkState != EChunkState::PreSpawned)
-            {
-                LOG_FATAL(LogChunkGeneration, "Waited for Pre Spawned state but got %s.", *EChunkState::LexToString(NewChunkState))
-                return;
-            }
-
-            this->SetPrivateStateDelegateHandle_PreSpawned();
-
-            return;
-        }));
-
-    return;
+    this->PreInitialize();
 }
 
-void ACommonChunk::SetPrivateStateDelegateHandle_PreSpawned()
+void ACommonChunk::OnShaped(void)
 {
-    this->PrivateCurrentStateHandle = this->SubscribeToChunkStateChange(FChunkStateChangeSignature::FDelegate::CreateLambda(
-        [this] (const EChunkState::Type NewChunkState) -> void
-        {
-            this->UnsubscribePrivateStateDelegateHandle();
-
-           if (NewChunkState != EChunkState::Spawned)
-           {
-               LOG_FATAL(LogChunkGeneration, "Waited for Pre Spawned state but got %s.", *EChunkState::LexToString(NewChunkState))
-               return;
-           }
-
-            this->PreInitialize();
-
-            this->SetPrivateStateDelegateHandle_Spawned();
-
-            return;
-        }));
-
-    return;
+    this->Shape();
 }
 
-void ACommonChunk::SetPrivateStateDelegateHandle_Spawned()
+void ACommonChunk::OnSurfaceReplaced(void)
 {
-    this->PrivateCurrentStateHandle = this->SubscribeToChunkStateChange(FChunkStateChangeSignature::FDelegate::CreateLambda(
-        [this] (const EChunkState::Type NewChunkState) -> void
-        {
-            this->UnsubscribePrivateStateDelegateHandle();
-
-            if (NewChunkState != EChunkState::Shaped)
-            {
-                LOG_FATAL(LogChunkGeneration, "Waited for Shaped state but got %s.", *EChunkState::LexToString(NewChunkState))
-                return;
-            }
-
-            this->Shape();
-
-            this->SetPrivateStateDelegateHandle_Shaped();
-
-            return;
-        }
-    ));
-
-    return;
+    this->ReplaceSurface();
 }
 
-void ACommonChunk::SetPrivateStateDelegateHandle_Shaped()
+void ACommonChunk::OnActive(void)
 {
-    this->PrivateCurrentStateHandle = this->SubscribeToChunkStateChange(FChunkStateChangeSignature::FDelegate::CreateLambda(
-        [this] (const EChunkState::Type NewChunkState) -> void
-        {
-            this->UnsubscribePrivateStateDelegateHandle();
-
-            if (NewChunkState != EChunkState::SurfaceReplaced)
-            {
-                LOG_FATAL(LogChunkGeneration, "Waited for Surface Replaced state but got %s.", *EChunkState::LexToString(NewChunkState))
-                return;
-            }
-
-            this->ReplaceSurface();
-
-            this->SetPrivateStateDelegateHandle_SurfaceReplaced();
-
-            return;
-        }
-    ));
-
-    return;
+    this->RegenerateProceduralMesh();
 }
 
-void ACommonChunk::SetPrivateStateDelegateHandle_SurfaceReplaced(void)
+void ACommonChunk::OnPendingKill(void)
 {
-    this->PrivateCurrentStateHandle = this->SubscribeToChunkStateChange(FChunkStateChangeSignature::FDelegate::CreateLambda(
-        [this] (const EChunkState::Type NewChunkState) -> void
-        {
-            this->UnsubscribePrivateStateDelegateHandle();
-
-            if (NewChunkState != EChunkState::Active)
-            {
-                LOG_FATAL(LogChunkGeneration, "Waited for Active state but got %s.", *EChunkState::LexToString(NewChunkState))
-                return;
-            }
-
-            this->RegenerateProceduralMesh();
-
-            this->SetPrivateStateDelegateHandle_Active();
-
-            return;
-        }
-    ));
-
-    return;
 }
 
-void ACommonChunk::SetPrivateStateDelegateHandle_Active()
+bool ACommonChunk::SetChunkState(const EChunkState::Type NewChunkState)
 {
-    // Why does this cause a crash?
-    this->ChunkStateChangeEvent.AddLambda(
-        [this] (const EChunkState::Type NewChunkState) -> void
-        {
-            LOG_WARNING(LogChunkGeneration, "Yea.")
-        }
-    );
+    if (this->IsStateChangeValid(NewChunkState) == false)
+    {
+        LOG_ERROR(
+            LogChunkValidation,
+            "Invalid state change from %s to %s in chunk %s.",
+            *EChunkState::LexToString(this->ChunkState), *EChunkState::LexToString(NewChunkState), *this->ChunkKey.ToString()
+        )
+        this->KillUncontrolled();
+        return false;
+    }
 
-    return;
+    this->ChunkState = NewChunkState;
+    this->ChunkStateChangeEvent.Broadcast(NewChunkState);
+
+    return true;
 }
 
 #pragma endregion Chunk State
