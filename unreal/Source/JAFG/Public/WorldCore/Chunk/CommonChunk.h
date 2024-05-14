@@ -47,7 +47,7 @@ protected:
      * Will delete without any pity this chunk from the UWorld.
      * No cleanup will be done.
      */
-    virtual auto KillUncontrolled(void) -> void;
+    virtual auto KillControlled(void) -> void;
     bool bUncontrolledKill = false;
 
 #pragma region Chunk State
@@ -73,7 +73,8 @@ public:
         return this->ChunkState;
     }
 
-    FORCEINLINE auto SetChunkPersistency(const EChunkPersistency::Type NewPersistency, const float TimeToLive = 0.0f) -> void;
+                auto SetChunkPersistency(const EChunkPersistency::Type NewPersistency, const float TimeToLive = 0.0f) -> void;
+    FORCEINLINE auto GetChunkPersistency(void) const -> EChunkPersistency::Type { return this->ChunkPersistency; }
 
 private:
 
@@ -85,6 +86,8 @@ private:
 
     EChunkPersistency::Type ChunkPersistency = EChunkPersistency::Persistent;
     TFuture<void>           PersistencyFuture;
+    /** Counts how many persistent futures are currently active. */
+    FThreadSafeCounter PersistentFutureCounter = 0;
 
 protected:
 

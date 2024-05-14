@@ -7,6 +7,7 @@
 
 #include "ChunkValidationSubsystemDedSv.generated.h"
 
+class UChunkGenerationSubsystem;
 JAFG_VOID
 
 /**
@@ -46,4 +47,12 @@ public:
     // UJAFGTickableWorldSubsystem implementation
     virtual auto MyTick(const float DeltaTime) -> void override;
     // ~UJAFGTickableWorldSubsystem implementation
+
+private:
+
+    /** Copied for faster access. */
+    UPROPERTY()
+    TObjectPtr<UChunkGenerationSubsystem> ChunkGenerationSubsystem;
+
+    auto LoadUnloadTheirChunks(void) const -> void;
 };

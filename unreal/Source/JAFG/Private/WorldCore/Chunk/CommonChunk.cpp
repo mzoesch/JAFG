@@ -6,6 +6,7 @@
 #include "System/MaterialSubsystem.h"
 #include "System/VoxelSubsystem.h"
 #include "WorldCore/ChunkWorldSettings.h"
+#include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
 
 ACommonChunk::ACommonChunk(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -87,9 +88,9 @@ void ACommonChunk::InitializeCommonStuff(void)
     return;
 }
 
-void ACommonChunk::KillUncontrolled(void)
+void ACommonChunk::KillControlled(void)
 {
-    this->bUncontrolledKill = true;
+    this->GetWorld()->GetSubsystem<UChunkGenerationSubsystem>()->OnChunkWasKilledExternally(this->ChunkKey);
     this->Destroy();
 
     return;
@@ -106,6 +107,7 @@ auto ACommonChunk::SetChunkPersistency(const EChunkPersistency::Type NewPersiste
         return;
     }
 
+    this->PersistentFutureCounter.Increment();
     this->PersistencyFuture = Async(
         EAsyncExecution::ThreadPool,
         [this, TimeToLive]
@@ -113,6 +115,12 @@ auto ACommonChunk::SetChunkPersistency(const EChunkPersistency::Type NewPersiste
             FPlatformProcess::Sleep(TimeToLive);
 
             if (this->IsValidLowLevel() == false)
+            {
+                return;
+            }
+
+            this->PersistentFutureCounter.Decrement();
+            if (this->PersistentFutureCounter.GetValue() > 0)
             {
                 return;
             }
@@ -125,7 +133,12 @@ auto ACommonChunk::SetChunkPersistency(const EChunkPersistency::Type NewPersiste
 
             AsyncTask(ENamedThreads::GameThread, [this]
             {
-                LOG_WARNING(LogChunkMisc, "Chunk %s was killed due to persistency.", *this->ChunkKey.ToString())
+                /* Request to kill was invoked in some manner. */
+                if (this->ChunkPersistency == EChunkPersistency::Persistent)
+                {
+                    return;
+                }
+                LOG_DISPLAY(LogChunkMisc, "Chunk %s will kill itself due to persistency.", *this->ChunkKey.ToString())
                 this->SetChunkState(EChunkState::Kill);
             });
 
@@ -275,7 +288,7 @@ void ACommonChunk::OnPendingKill(void)
 
 void ACommonChunk::OnKill(void)
 {
-    this->KillUncontrolled();
+    this->KillControlled();
 }
 
 void ACommonChunk::OnBlockedByHyperlane(void)
@@ -297,7 +310,7 @@ bool ACommonChunk::SetChunkState(const EChunkState::Type NewChunkState, const bo
             "Invalid state change from %s to %s in chunk %s.",
             *EChunkState::LexToString(this->ChunkState), *EChunkState::LexToString(NewChunkState), *this->ChunkKey.ToString()
         )
-        this->KillUncontrolled();
+        this->KillControlled();
         return false;
     }
 

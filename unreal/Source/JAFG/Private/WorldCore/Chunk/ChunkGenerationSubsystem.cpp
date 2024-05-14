@@ -187,12 +187,13 @@ void UChunkGenerationSubsystem::SafeLoadVerticalChunk(
         {
             ChunkPtr = this->SpawnChunk(Chunk);
             this->ChunkMap.Add(Chunk, ChunkPtr);
-            ChunkPtr->SetChunkPersistency(Persistency, TimeToLive);
         }
         else
         {
             ChunkPtr = *MapPtr;
         }
+
+        ChunkPtr->SetChunkPersistency(Persistency, TimeToLive);
 
         if (ChunkPtr->GetChunkState() < EChunkState::Spawned)         { ChunkPtr->SetChunkState(EChunkState::Spawned);         }
         if (ChunkPtr->GetChunkState() < EChunkState::Shaped)          { ChunkPtr->SetChunkState(EChunkState::Shaped);          }
@@ -257,7 +258,7 @@ void UChunkGenerationSubsystem::DequeueNextVerticalChunkToKill(void)
 
     for (int32 Z = 0; Z < this->CopiedChunksAboveZero; ++Z)
     {
-        this->ChunkMap.FindAndRemoveChecked(FChunkKey(NewKillKey.X, NewKillKey.Y, Z))->KillUncontrolled();
+        this->ChunkMap.FindAndRemoveChecked(FChunkKey(NewKillKey.X, NewKillKey.Y, Z))->KillControlled();
     }
 
     if (this->VerticalChunks.Remove(NewKillKey) != 1)

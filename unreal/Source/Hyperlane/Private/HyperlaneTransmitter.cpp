@@ -179,7 +179,6 @@ bool FHyperlaneTransmitter::IsHyperlaneWorkerValid(const FHyperlaneIdentifier& H
 
     FConstPlayerControllerIterator It = this->OwningSubsystem->GetWorld()->GetPlayerControllerIterator();
     check( It )
-
     for (; It; ++It)
     {
         const APlayerController* PlayerController = It->Get(); check( PlayerController )

@@ -54,12 +54,31 @@ public:
     FORCEINLINE auto GetPendingKillVerticalChunkQueue(void) -> const TQueue<FChunkKey2>& { return this->PendingKillVerticalChunkQueue; }
 
     FORCEINLINE auto GetVerticalChunks(void) const -> const TSet<FChunkKey2>& { return this->VerticalChunks; }
+    FORCEINLINE auto GetPersistentVerticalChunks(void) const -> TArray<FChunkKey2>
+    {
+        TArray<FChunkKey2> Out;
+        for (const FChunkKey2& ChunkKey : this->VerticalChunks)
+        {
+            if (this->ChunkMap[FChunkKey(ChunkKey.X, ChunkKey.Y, 0)]->GetChunkPersistency() == EChunkPersistency::Persistent)
+            {
+                Out.Add(ChunkKey);
+            }
+        }
+        return Out;
+    }
 
     FORCEINLINE auto AddClientChunk(const FClientChunk& ClientChunk) -> void { this->ClientQueue.Enqueue(ClientChunk); }
 
     FORCEINLINE auto SetInitializationDataFromAuthority(const FChunkKey& ChunkKey, voxel_t* Voxels) -> void
     {
         this->ChunkMap[ChunkKey]->SetInitializationDataFromAuthority(Voxels);
+    }
+
+    /** If the chunk itself decided to kill itself. */
+    FORCEINLINE void OnChunkWasKilledExternally(const FChunkKey ChunkKey)
+    {
+        this->ChunkMap.Remove(ChunkKey);
+        this->VerticalChunks.Remove(FChunkKey2(ChunkKey.X, ChunkKey.Y));
     }
 
 private:
