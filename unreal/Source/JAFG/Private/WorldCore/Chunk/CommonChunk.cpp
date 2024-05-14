@@ -2,6 +2,7 @@
 
 #include "WorldCore/Chunk/CommonChunk.h"
 
+#include "HyperlaneComponent.h"
 #include "System/MaterialSubsystem.h"
 #include "System/VoxelSubsystem.h"
 #include "WorldCore/ChunkWorldSettings.h"
@@ -11,6 +12,7 @@ ACommonChunk::ACommonChunk(const FObjectInitializer& ObjectInitializer) : Super(
     this->PrimaryActorTick.bCanEverTick = false;
 
     this->bReplicates = false;
+    this->bNetLoadOnClient = false;
 
     this->ProceduralMeshComponent = ObjectInitializer.CreateDefaultSubobject<UProceduralMeshComponent>(this, TEXT("ProceduralMeshComponent"));
     this->SetRootComponent(this->ProceduralMeshComponent);
@@ -95,6 +97,45 @@ void ACommonChunk::KillUncontrolled(void)
 
 #pragma region Chunk State
 
+auto ACommonChunk::SetChunkPersistency(const EChunkPersistency::Type NewPersistency, const float TimeToLive) -> void
+{
+    this->ChunkPersistency = NewPersistency;
+
+    if (this->ChunkPersistency == EChunkPersistency::Persistent)
+    {
+        return;
+    }
+
+    this->PersistencyFuture = Async(
+        EAsyncExecution::ThreadPool,
+        [this, TimeToLive]
+        {
+            FPlatformProcess::Sleep(TimeToLive);
+
+            if (this->IsValidLowLevel() == false)
+            {
+                return;
+            }
+
+            /* Request to kill was invoked in some manner. */
+            if (this->ChunkPersistency == EChunkPersistency::Persistent)
+            {
+                return;
+            }
+
+            AsyncTask(ENamedThreads::GameThread, [this]
+            {
+                LOG_WARNING(LogChunkMisc, "Chunk %s was killed due to persistency.", *this->ChunkKey.ToString())
+                this->SetChunkState(EChunkState::Kill);
+            });
+
+            return;
+        }
+    );
+
+    return;
+}
+
 void ACommonChunk::SubscribeWithPrivateStateDelegate(void)
 {
     this->PrivateStateHandle = this->SubscribeToChunkStateChange(FChunkStateChangeSignature::FDelegate::CreateLambda(
@@ -136,8 +177,14 @@ void ACommonChunk::SubscribeWithPrivateStateDelegate(void)
                 this->OnPendingKill();
                 break;
             }
+            case EChunkState::Kill:
+            {
+                this->OnKill();
+                break;
+            }
             case EChunkState::BlockedByHyperlane:
             {
+                this->OnBlockedByHyperlane();
                 break;
             }
             default:
@@ -168,7 +215,7 @@ bool ACommonChunk::IsStateChangeValid(const EChunkState::Type NewChunkState)
     }
     case EChunkState::Spawned:
     {
-        return this->ChunkState == EChunkState::PreSpawned;
+        return this->ChunkState == EChunkState::PreSpawned || this->ChunkState == EChunkState::BlockedByHyperlane;
     }
     case EChunkState::Shaped:
     {
@@ -183,6 +230,10 @@ bool ACommonChunk::IsStateChangeValid(const EChunkState::Type NewChunkState)
         return this->ChunkState == EChunkState::SurfaceReplaced;
     }
     case EChunkState::PendingKill:
+    {
+        return true;
+    }
+    case EChunkState::Kill:
     {
         return true;
     }
@@ -222,9 +273,24 @@ void ACommonChunk::OnPendingKill(void)
 {
 }
 
-bool ACommonChunk::SetChunkState(const EChunkState::Type NewChunkState)
+void ACommonChunk::OnKill(void)
 {
-    if (this->IsStateChangeValid(NewChunkState) == false)
+    this->KillUncontrolled();
+}
+
+void ACommonChunk::OnBlockedByHyperlane(void)
+{
+    Cast<UHyperlaneComponent>(
+        GEngine->GetFirstLocalPlayerController(this->GetWorld())
+            ->GetComponentByClass(UHyperlaneComponent::StaticClass())
+    )->AskServerForVoxelData_ServerRPC(this->GetChunkKeyOnTheFly());
+
+    return;
+}
+
+bool ACommonChunk::SetChunkState(const EChunkState::Type NewChunkState, const bool bForce /* = false */)
+{
+    if (bForce == false && this->IsStateChangeValid(NewChunkState) == false)
     {
         LOG_ERROR(
             LogChunkValidation,
@@ -242,6 +308,29 @@ bool ACommonChunk::SetChunkState(const EChunkState::Type NewChunkState)
 }
 
 #pragma endregion Chunk State
+
+#pragma region MISC
+
+FChunkKey ACommonChunk::GetChunkKeyOnTheFly(void) const
+{
+    /*
+     * Bad habit to use this method if the chunk is already in Spawned state.
+     */
+    check( this->ChunkKey == FChunkKey::ZeroValue )
+
+    return FChunkKey(
+        FJCoordinate(
+            /* We have to round here to make up on some IEEE 754 floating point precision errors. */
+            FMath::RoundToFloat( this->GetActorLocation().X * WorldStatics::UToJScale ),
+            FMath::RoundToFloat( this->GetActorLocation().Y * WorldStatics::UToJScale ),
+            FMath::RoundToFloat( this->GetActorLocation().Z * WorldStatics::UToJScale )
+        )
+        /
+        WorldStatics::ChunkSize
+    );
+}
+
+#pragma endregion MISC
 
 #pragma region Procedural Mesh
 
@@ -420,6 +509,29 @@ void ACommonChunk::ReplaceSurface(void)
 void ACommonChunk::GenerateSurface(void)
 {
     // checkNoEntry()
+}
+
+void ACommonChunk::SetInitializationDataFromAuthority(voxel_t* Voxels)
+{
+#if !UE_BUILD_SHIPPING
+    if (this->ChunkState != EChunkState::BlockedByHyperlane)
+    {
+        LOG_FATAL(LogChunkValidation, "Chunk %s is not in BlockedByHyperlane state.", *this->ChunkKey.ToString())
+        return;
+    }
+#endif /* !UE_BUILD_SHIPPING */
+
+    this->SetChunkState(EChunkState::Spawned);
+
+    if (this->RawVoxelData != nullptr)
+    {
+        delete[] this->RawVoxelData;
+    }
+    this->RawVoxelData = Voxels;
+
+    this->SetChunkState(EChunkState::Active, true);
+
+    return;
 }
 
 #pragma endregion Chunk World Generation

@@ -28,7 +28,7 @@
  * So change the order with caution.
  */
 
-#include "System/TypeMacros.h"
+#include "System/TypeDefs.h"
 #include "System/Types.h"
 #include "Jar/Accumulated.h"
 #include "WorldCore/Voxels/CommonVoxels.h"

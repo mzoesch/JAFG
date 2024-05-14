@@ -6,6 +6,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "Input/JAFGInputSubsystem.h"
 #include "Input/CustomInputNames.h"
+#include "Network/MyHyperlaneComponent.h"
 
 #define ENHANCED_INPUT_SUBSYSTEM                                    \
     ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>( \
@@ -15,6 +16,9 @@
 AWorldPlayerController::AWorldPlayerController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
     this->bEscapeMenuVisible = false;
+
+    this->HyperlaneComponent = CreateDefaultSubobject<UMyHyperlaneComponent>(TEXT("HyperlaneComponent"));
+
     return;
 }
 

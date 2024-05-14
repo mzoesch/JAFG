@@ -24,6 +24,7 @@ public class JAFG : ModuleRules
         PublicDependencyModuleNames.AddRange(
         new string[]
         {
+            "JAFGCore",
             "JAFGLogging",
             "JAFGSettings",
             "JAFGSlateCore",

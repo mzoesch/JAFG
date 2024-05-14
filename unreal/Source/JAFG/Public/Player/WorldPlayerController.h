@@ -10,6 +10,7 @@
 
 JAFG_VOID
 
+class UMyHyperlaneComponent;
 class UResumeEntryWidget;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FSlateVisibilityChangedSignature, const bool /* bVisible */ )
@@ -31,6 +32,9 @@ protected:
     // AActor implementation
     virtual void BeginPlay(void) override;
     // ~AActor implementation
+
+    UPROPERTY()
+    TObjectPtr<UMyHyperlaneComponent> HyperlaneComponent;
 
 #pragma region Enhanced Input
 

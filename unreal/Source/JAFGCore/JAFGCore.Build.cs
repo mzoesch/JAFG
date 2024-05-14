@@ -2,9 +2,9 @@
 
 using UnrealBuildTool;
 
-public class Hyperlane : ModuleRules
+public class JAFGCore : ModuleRules
 {
-    public Hyperlane(ReadOnlyTargetRules Target) : base(Target)
+    public JAFGCore(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
@@ -12,18 +12,6 @@ public class Hyperlane : ModuleRules
         new string[]
         {
             "Core",
-            "Sockets",
-            "NetCore",
-            "Networking",
-        }
-        );
-
-        PublicDependencyModuleNames.AddRange(
-        new string[]
-        {
-            "JAFGCore",
-            "JAFGLogging",
-            "JAFGNetCore",
         }
         );
 

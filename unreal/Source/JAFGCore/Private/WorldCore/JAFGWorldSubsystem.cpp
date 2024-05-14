@@ -79,7 +79,6 @@ void UJAFGTickableWorldSubsystem::Tick(const float DeltaTime)
     if (this->TimeSinceLastTick >= this->TickInterval)
     {
         this->MyTick(DeltaTime);
-        LOG_VERBOSE(LogTemp, "%f %f", this->TimeSinceLastTick, this->TickInterval)
         this->TimeSinceLastTick -= this->TickInterval;
 
         /* May happen during lag spikes. We do not want to tick than every frame */

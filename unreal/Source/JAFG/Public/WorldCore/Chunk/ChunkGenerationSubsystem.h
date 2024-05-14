@@ -3,15 +3,22 @@
 #pragma once
 
 #include "MyCore.h"
+#include "ChunkStates.h"
+#include "CommonChunk.h"
 #include "WorldCore/JAFGWorldSubsystems.h"
 
 #include "ChunkGenerationSubsystem.generated.h"
 
 JAFG_VOID
 
-class UServerChunkWorldSettings;
-class ACommonChunk;
 class ULocalChunkWorldSettings;
+class UServerChunkWorldSettings;
+
+struct FClientChunk
+{
+    FChunkKey                           ChunkKey;
+    TFunction<void(voxel_t* VoxelData)> Callback;
+};
 
 /** Loads and unloads chunk into / from the UWorld based on what a current validation subsystem has determined. */
 UCLASS(NotBlueprintable)
@@ -43,10 +50,17 @@ public:
     FORCEINLINE auto GetVerticalChunkQueue(void) -> const TQueue<FChunkKey2>& { return this->VerticalChunkQueue; }
     FORCEINLINE auto ClearVerticalChunkQueue(void) -> void { this->VerticalChunkQueue.Empty(); }
 
-                auto AddVerticalChunkToPendingKillQueue(const FChunkKey2& ChunkKey) -> void;
+    auto AddVerticalChunkToPendingKillQueue(const FChunkKey2& ChunkKey) -> void;
     FORCEINLINE auto GetPendingKillVerticalChunkQueue(void) -> const TQueue<FChunkKey2>& { return this->PendingKillVerticalChunkQueue; }
 
     FORCEINLINE auto GetVerticalChunks(void) const -> const TSet<FChunkKey2>& { return this->VerticalChunks; }
+
+    FORCEINLINE auto AddClientChunk(const FClientChunk& ClientChunk) -> void { this->ClientQueue.Enqueue(ClientChunk); }
+
+    FORCEINLINE auto SetInitializationDataFromAuthority(const FChunkKey& ChunkKey, voxel_t* Voxels) -> void
+    {
+        this->ChunkMap[ChunkKey]->SetInitializationDataFromAuthority(Voxels);
+    }
 
 private:
 
@@ -68,8 +82,18 @@ private:
 
     TQueue<FChunkKey2> VerticalChunkQueue;
     auto DequeueNextVerticalChunk(void) -> void;
+    /** Called on the client will handle everything (e.g.: network replication). */
     auto SafeLoadClientVerticalChunkAsync(const TArray<FChunkKey>& Chunks) -> void;
-    auto SafeLoadVerticalChunk(const TArray<FChunkKey>& Chunks) -> void;
+    auto SafeLoadVerticalChunk(
+        const TArray<FChunkKey>& Chunks,
+        const bool bGenerateMesh = true,
+        const EChunkPersistency::Type Persistency = EChunkPersistency::Persistent,
+        const float TimeToLive = 10.0f
+    ) -> void;
+
+    TQueue<FClientChunk> ClientQueue;
+    /** Called on the server to fulfill the requests of the clients. */
+    auto DequeueNextClientChunk(void) -> void;
 
     TQueue<FChunkKey2> PendingKillVerticalChunkQueue;
     auto DequeueNextVerticalChunkToKill(void) -> void;

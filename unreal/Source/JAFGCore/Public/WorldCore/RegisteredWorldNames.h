@@ -6,14 +6,12 @@
 
 #pragma once
 
-#include "MyCore.h"
-
-JAFG_VOID
+#include "CoreMinimal.h"
 
 namespace RegisteredWorlds
 {
 
-extern inline JAFG_API const FString FrontEnd = TEXT("L_FrontEnd");
-extern inline JAFG_API const FString World    = TEXT("L_World");
+extern inline JAFGCORE_API const FString FrontEnd = TEXT("L_FrontEnd");
+extern inline JAFGCORE_API const FString World    = TEXT("L_World");
 
 }

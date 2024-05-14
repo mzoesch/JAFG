@@ -2,7 +2,6 @@
 
 #pragma once
 
-/* Part of the MyCore package. */
 #include "CoreMinimal.h"
 
 /**

@@ -73,6 +73,8 @@ public:
         return this->ChunkState;
     }
 
+    FORCEINLINE auto SetChunkPersistency(const EChunkPersistency::Type NewPersistency, const float TimeToLive = 0.0f) -> void;
+
 private:
 
     EChunkState::Type          ChunkState = EChunkState::Invalid;
@@ -80,6 +82,9 @@ private:
 
     FDelegateHandle PrivateStateHandle = FDelegateHandle();
     auto SubscribeWithPrivateStateDelegate(void) -> void;
+
+    EChunkPersistency::Type ChunkPersistency = EChunkPersistency::Persistent;
+    TFuture<void>           PersistencyFuture;
 
 protected:
 
@@ -90,9 +95,11 @@ protected:
     virtual auto OnSurfaceReplaced(void) -> void;
     virtual auto OnActive(void) -> void;
     virtual auto OnPendingKill(void) -> void;
+    virtual auto OnKill(void) -> void;
+    virtual auto OnBlockedByHyperlane(void) -> void;
 
     /** @return True, if state change was accepted. */
-    virtual auto SetChunkState(const EChunkState::Type NewChunkState) -> bool;
+    virtual auto SetChunkState(const EChunkState::Type NewChunkState, const bool bForce = false) -> bool;
     friend UChunkGenerationSubsystem;
 
 #pragma endregion Chunk State
@@ -117,6 +124,11 @@ protected:
     FVector      JChunkPosition = FVector::ZeroVector;
     FJCoordinate ChunkPosition  = FJCoordinate::ZeroValue;
     FChunkKey    ChunkKey       = FChunkKey::ZeroValue;
+    /**
+     * Generate the Chunk Key on the fly.
+     * Usefully if this chunk is in the state of PreSpawned but the Chunk Key is needed.
+     */
+    auto GetChunkKeyOnTheFly(void) const -> FChunkKey;
 
     UPROPERTY()
     TObjectPtr<UVoxelSubsystem> VoxelSubsystem = nullptr;
@@ -181,27 +193,6 @@ protected:
     /** It is up to the client and the derived class on them on how to feed this array. */
     TArray<int32>          VertexCounts = TArray<int32>();
 
-#if !UE_BUILD_SHIPPING
-    /**
-     * Never actually use in production code. This is just a helper method for developing and testing. Often things
-     * may go wrong while developing the generation system, and this method helps to not crash the game completely
-     * if something goes wrong. It will show an instantly recognizable pattern in the wrong chunk to immediately see
-     * that something went wrong with the voxel generation due to a Hyperlane error or the generation algorithm itself.
-     *
-     * A nice side effect is that it will hold the auto shrinking system in the TArray when it is initialized with zero
-     * only values.
-     */
-    FORCEINLINE void HoldAutoShrinking(void)
-    {
-        for (int i = 0; i < FMath::Pow(WorldStatics::ChunkSize, 3.0f); ++i)
-        {
-            this->RawVoxelData[i] = i % 2 == 0 ? ECommonVoxels::GetBaseVoxel() : ECommonVoxels::Air;
-        }
-
-        return;
-    }
-#endif /* !UE_BUILD_SHIPPING */
-
     FORCEINLINE auto GetRawVoxelData(const FVoxelKey& LocalVoxelLocation) const -> voxel_t
     {
         return this->RawVoxelData[ACommonChunk::GetVoxelIndex(LocalVoxelLocation)];
@@ -243,6 +234,26 @@ private:
     void GenerateSurface(void);
 
 #pragma endregion Chunk World Generation
+
+#pragma region Replication
+
+    //////////////////////////////////////////////////////////////////////////
+    // Replication
+    //////////////////////////////////////////////////////////////////////////
+
+public:
+
+    FORCEINLINE auto SendDataToClient(const TFunction<void(FPlatformTypes::uint32* VoxelData)>& Callback) const -> void
+    {
+        check( this->RawVoxelData != nullptr )
+        Callback(this->RawVoxelData);
+    }
+
+    void SetInitializationDataFromAuthority(voxel_t* Voxels);
+
+private:
+
+#pragma endregion Replication
 
 #pragma region Getters
 

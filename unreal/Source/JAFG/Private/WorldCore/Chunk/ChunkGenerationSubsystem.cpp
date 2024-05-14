@@ -3,7 +3,6 @@
 #include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
 
 #include "WorldCore/ChunkWorldSettings.h"
-#include "WorldCore/Chunk/CommonChunk.h"
 #include "WorldCore/Chunk/GreedyChunk.h"
 #include "WorldCore/Chunk/ChunkStates.h"
 
@@ -53,9 +52,6 @@ void UChunkGenerationSubsystem::OnWorldBeginPlay(UWorld& InWorld)
             ? this->LocalChunkWorldSettings->ReplicatedChunksAboveZero
             : this->ServerChunkWorldSettings->ChunksAboveZero;
 
-    this->PendingKillVerticalChunkQueue.Enqueue(FChunkKey2(0, 0));
-    this->PendingKillVerticalChunkQueue.Empty();
-
     return;
 }
 
@@ -82,6 +78,23 @@ void UChunkGenerationSubsystem::MyTick(const float DeltaTime)
         ChunksGenerated++;
     }
 
+    if (this->bInClientMode)
+    {
+        return;
+    }
+
+    // Check for client needs
+    //////////////////////////////////////////////////////////////////////////
+    int ChunkAnswered = 0;
+    while (
+           ChunkAnswered < 10
+        && this->ClientQueue.IsEmpty() == false
+    )
+    {
+        this->DequeueNextClientChunk();
+        ChunkAnswered++;
+    }
+
     return;
 }
 
@@ -92,7 +105,6 @@ void UChunkGenerationSubsystem::AddVerticalChunkToPendingKillQueue(const FChunkK
     {
         this->ChunkMap[FChunkKey(ChunkKey.X, ChunkKey.Y, Z)]->SetChunkState(EChunkState::PendingKill);
     }
-
 
     return;
 }
@@ -130,6 +142,14 @@ void UChunkGenerationSubsystem::DequeueNextVerticalChunk(void)
 
 void UChunkGenerationSubsystem::SafeLoadClientVerticalChunkAsync(const TArray<FChunkKey>& Chunks)
 {
+#if WITH_EDITOR
+    if (UNetStatics::IsSafeClient(this) == false)
+    {
+        LOG_FATAL(LogChunkGeneration, "Called on a client instance. Dissallowed.")
+        return;
+    }
+#endif /* WITH_EDITOR */
+
     for (const FChunkKey& Chunk : Chunks)
     {
         const TObjectPtr<ACommonChunk>* MapPtr = this->ChunkMap.Find(Chunk);
@@ -152,7 +172,12 @@ void UChunkGenerationSubsystem::SafeLoadClientVerticalChunkAsync(const TArray<FC
     return;
 }
 
-void UChunkGenerationSubsystem::SafeLoadVerticalChunk(const TArray<FChunkKey>& Chunks)
+void UChunkGenerationSubsystem::SafeLoadVerticalChunk(
+    const TArray<FChunkKey>& Chunks,
+    const bool bGenerateMesh /* = true */,
+    const EChunkPersistency::Type Persistency /* = EChunkPersistency::Persistent */,
+    const float TimeToLive /* = 0.0f */
+)
 {
     for (const FChunkKey& Chunk : Chunks)
     {
@@ -162,19 +187,61 @@ void UChunkGenerationSubsystem::SafeLoadVerticalChunk(const TArray<FChunkKey>& C
         {
             ChunkPtr = this->SpawnChunk(Chunk);
             this->ChunkMap.Add(Chunk, ChunkPtr);
+            ChunkPtr->SetChunkPersistency(Persistency, TimeToLive);
         }
         else
         {
             ChunkPtr = *MapPtr;
         }
 
-        ChunkPtr->SetChunkState(EChunkState::Spawned);
-        ChunkPtr->SetChunkState(EChunkState::Shaped);
-        ChunkPtr->SetChunkState(EChunkState::SurfaceReplaced);
-        ChunkPtr->SetChunkState(EChunkState::Active);
+        if (ChunkPtr->GetChunkState() < EChunkState::Spawned)         { ChunkPtr->SetChunkState(EChunkState::Spawned);         }
+        if (ChunkPtr->GetChunkState() < EChunkState::Shaped)          { ChunkPtr->SetChunkState(EChunkState::Shaped);          }
+        if (ChunkPtr->GetChunkState() < EChunkState::SurfaceReplaced) { ChunkPtr->SetChunkState(EChunkState::SurfaceReplaced); }
+
+        if (bGenerateMesh && ChunkPtr->GetChunkState() < EChunkState::Active)
+        {
+            ChunkPtr->SetChunkState(EChunkState::Active);
+        }
 
         continue;
     }
+
+    return;
+}
+
+void UChunkGenerationSubsystem::DequeueNextClientChunk(void)
+{
+#if WITH_EDITOR
+    if (UNetStatics::IsSafeServer(this) == false)
+    {
+        LOG_FATAL(LogChunkGeneration, "Called on a client instance. Dissallowed.")
+        return;
+    }
+#endif /* WITH_EDITOR */
+
+    FClientChunk Entry;
+    if (this->ClientQueue.Dequeue(Entry) == false)
+    {
+        LOG_WARNING(LogChunkGeneration, "Called but the queue was empty.")
+        return;
+    }
+
+    TArray<FChunkKey> AllVerticalChunksOfRequest3DChunks = TArray<FChunkKey>();
+    AllVerticalChunksOfRequest3DChunks.Reserve(this->CopiedChunksAboveZero);
+
+    for (int32 Z = 0; Z < this->CopiedChunksAboveZero; ++Z)
+    {
+        AllVerticalChunksOfRequest3DChunks.Add(FChunkKey(Entry.ChunkKey.X, Entry.ChunkKey.Y, Z));
+    }
+
+    this->SafeLoadVerticalChunk(
+        AllVerticalChunksOfRequest3DChunks,
+        false,
+        EChunkPersistency::Temporary,
+        10.0f
+    );
+
+    this->ChunkMap[Entry.ChunkKey]->SendDataToClient(Entry.Callback);
 
     return;
 }
@@ -222,8 +289,13 @@ ACommonChunk* UChunkGenerationSubsystem::SpawnChunk(const FChunkKey& ChunkKey) c
     );
 
     ACommonChunk* Chunk = this->GetWorld()->SpawnActor<ACommonChunk>(
-        this->LocalChunkWorldSettings->LocalChunkType == EChunkType::Greedy
-        ? AGreedyChunk::StaticClass() : ACommonChunk::StaticClass(),
+        this->LocalChunkWorldSettings ?
+            this->LocalChunkWorldSettings->LocalChunkType == EChunkType::Greedy
+                ? AGreedyChunk::StaticClass()
+                : ACommonChunk::StaticClass()
+            : AGreedyChunk::StaticClass()
+        ,
+
         TargetedChunkTransform
     );
 

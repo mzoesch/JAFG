@@ -55,6 +55,12 @@ enum Type : uint8
     PendingKill,
 
     /**
+     * If the chunk itself decides that it wants to die and be separated from all its friends in the UWorld.
+     * The corresponding AActor will probably be killed at the end of the tick the state change was broadcasted.
+     */
+    Kill,
+
+    /**
      * This chunk cannot progress to the next or any other state until the hyperlane has answered this chunk's request
      * to be generated.
      * The only exception is the state EChunkState::PendingKill.
@@ -94,14 +100,48 @@ FORCEINLINE auto LexToString(const EChunkState::Type ChunkState) -> FString
     {
         return TEXT("PendingKill");
     }
+    case EChunkState::Kill:
+    {
+        return TEXT("Kill");
+    }
     case EChunkState::BlockedByHyperlane:
     {
         return TEXT("BlockedByHyperlane");
     }
     default:
     {
-        checkNoEntry()
         LOG_FATAL(LogChunkGeneration, "Unknown chunk state %d.", ChunkState)
+        return TEXT("Unknown");
+    }
+    }
+}
+
+}
+
+namespace EChunkPersistency
+{
+
+enum Type : uint8
+{
+    Persistent,
+    Temporary,
+};
+
+FORCEINLINE auto LexToString(const EChunkPersistency::Type ChunkPersistency) -> FString
+{
+    switch (ChunkPersistency)
+    {
+    case EChunkPersistency::Persistent:
+    {
+        return TEXT("Persistent");
+    }
+    case EChunkPersistency::Temporary:
+    {
+        return TEXT("Temporary");
+    }
+    default:
+    {
+        LOG_FATAL(LogChunkGeneration, "Unknown chunk persistency %d.", ChunkPersistency)
         return TEXT("Unknown");
     }
     }

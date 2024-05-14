@@ -4,7 +4,7 @@
 
 /* Part of the MyCore package. */
 #include "CoreMinimal.h"
-#include "System/TypeMacros.h"
+#include "System/TypeDefs.h"
 
 namespace ECommonVoxels
 {

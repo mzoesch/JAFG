@@ -7,8 +7,6 @@
 AGreedyChunk::AGreedyChunk(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
     this->PrimaryActorTick.bCanEverTick = false;
-
-    return;
 }
 
 void AGreedyChunk::GenerateProceduralMesh(void)

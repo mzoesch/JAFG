@@ -3,7 +3,7 @@
 #pragma once
 
 #include "MyCore.h"
-#include "JAFGWorldSubsystems.h"
+#include "WorldCore/JAFGWorldSubsystems.h"
 #include "Lib/LiteNoise.h"
 #include "Lib/NoiseSpline.h"
 

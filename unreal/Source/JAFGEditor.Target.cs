@@ -17,6 +17,7 @@ public class JAFGEditorTarget : TargetRules
         new string[]
         {
             "Hyperlane",
+            "JAFGCore",
             "JAFGLogging",
             "JAFGNetCore",
             "JAFGSettings",

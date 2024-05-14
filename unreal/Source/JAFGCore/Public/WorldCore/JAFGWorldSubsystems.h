@@ -2,12 +2,10 @@
 
 #pragma once
 
-#include "MyCore.h"
+#include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
 
 #include "JAFGWorldSubsystems.generated.h"
-
-JAFG_VOID
 
 /**
  * A subsystem that only exists in a real game world.
@@ -16,7 +14,7 @@ JAFG_VOID
  * Not in the menu, transition, or loading screen world, or other development worlds.
  */
 UCLASS(Abstract)
-class JAFG_API UJAFGWorldSubsystem : public UWorldSubsystem
+class JAFGCORE_API UJAFGWorldSubsystem : public UWorldSubsystem
 {
     GENERATED_BODY()
 
@@ -36,7 +34,7 @@ public:
  * Not in the menu, transition, or loading screen world, or other development worlds.
  */
 UCLASS(Abstract)
-class JAFG_API UJAFGTickableWorldSubsystem : public UTickableWorldSubsystem
+class JAFGCORE_API UJAFGTickableWorldSubsystem : public UTickableWorldSubsystem
 {
     GENERATED_BODY()
 
