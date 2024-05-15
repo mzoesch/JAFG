@@ -9,6 +9,7 @@
 
 #include "ChunkWorldSettings.generated.h"
 
+class AWorldCharacter;
 JAFG_VOID
 
 class AEditorChunkWorldSettings;
@@ -131,6 +132,13 @@ class JAFG_API AEditorChunkWorldSettings : public AWorldSettings
 public:
 
     explicit AEditorChunkWorldSettings(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+    //////////////////////////////////////////////////////////////////////////
+    // Settings - Player
+    //////////////////////////////////////////////////////////////////////////
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player")
+    TSubclassOf<AWorldCharacter> CharacterToUse = nullptr;
 
     //////////////////////////////////////////////////////////////////////////
     // Settings - Generation

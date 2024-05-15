@@ -100,6 +100,11 @@ void UChunkGenerationSubsystem::MyTick(const float DeltaTime)
 
 void UChunkGenerationSubsystem::AddVerticalChunkToPendingKillQueue(const FChunkKey2& ChunkKey)
 {
+    if (this->PendingKillVerticalChunkQueue.Contains(ChunkKey))
+    {
+        return;
+    }
+
     this->PendingKillVerticalChunkQueue.Enqueue(ChunkKey);
     for (int32 Z = 0; Z < this->CopiedChunksAboveZero; ++Z)
     {
@@ -126,7 +131,10 @@ void UChunkGenerationSubsystem::DequeueNextVerticalChunk(void)
         NewChunks.Add(FChunkKey(NewActiveKey.X, NewActiveKey.Y, Z));
     }
 
-    this->VerticalChunks.Add(NewActiveKey);
+    if (this->VerticalChunks.Contains(NewActiveKey) == false)
+    {
+        this->VerticalChunks.Add(NewActiveKey);
+    }
 
     if (this->bInClientMode)
     {
@@ -187,13 +195,19 @@ void UChunkGenerationSubsystem::SafeLoadVerticalChunk(
         {
             ChunkPtr = this->SpawnChunk(Chunk);
             this->ChunkMap.Add(Chunk, ChunkPtr);
+            ChunkPtr->SetChunkPersistency(Persistency, TimeToLive);
         }
         else
         {
             ChunkPtr = *MapPtr;
+            /*
+             * If the chunk is in a persistent state. We may never set it back to a temporary state.
+             */
+            if (ChunkPtr->GetChunkPersistency() == EChunkPersistency::Temporary)
+            {
+                ChunkPtr->SetChunkPersistency(Persistency, TimeToLive);
+            }
         }
-
-        ChunkPtr->SetChunkPersistency(Persistency, TimeToLive);
 
         if (ChunkPtr->GetChunkState() < EChunkState::Spawned)         { ChunkPtr->SetChunkState(EChunkState::Spawned);         }
         if (ChunkPtr->GetChunkState() < EChunkState::Shaped)          { ChunkPtr->SetChunkState(EChunkState::Shaped);          }
@@ -258,7 +272,7 @@ void UChunkGenerationSubsystem::DequeueNextVerticalChunkToKill(void)
 
     for (int32 Z = 0; Z < this->CopiedChunksAboveZero; ++Z)
     {
-        this->ChunkMap.FindAndRemoveChecked(FChunkKey(NewKillKey.X, NewKillKey.Y, Z))->KillControlled();
+        this->ChunkMap.FindAndRemoveChecked(FChunkKey(NewKillKey.X, NewKillKey.Y, Z))->KillUncontrolled();
     }
 
     if (this->VerticalChunks.Remove(NewKillKey) != 1)

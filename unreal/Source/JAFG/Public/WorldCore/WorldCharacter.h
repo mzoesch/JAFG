@@ -8,10 +8,10 @@
 
 #include "WorldCharacter.generated.h"
 
-struct FInputActionValue;
 class UInputComponent;
+struct FInputActionValue;
 
-UCLASS(NotBlueprintable)
+UCLASS(Abstract)
 class JAFG_API AWorldCharacter : public ACharacter
 {
     GENERATED_BODY()

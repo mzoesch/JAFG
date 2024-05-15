@@ -47,6 +47,7 @@ protected:
      * Will delete without any pity this chunk from the UWorld.
      * No cleanup will be done.
      */
+    virtual auto KillUncontrolled(void) -> void;
     virtual auto KillControlled(void) -> void;
     bool bUncontrolledKill = false;
 

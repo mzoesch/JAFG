@@ -63,6 +63,11 @@ void UChunkValidationSubsystemStandalone::MyTick(const float DeltaTime)
 {
     Super::MyTick(DeltaTime);
 
+    if (GEngine->GetFirstLocalPlayerController(this->GetWorld())->GetPawnOrSpectator() == nullptr)
+    {
+        return;
+    }
+
 #if WITH_EDITOR
     if (GEditor->bIsSimulatingInEditor)
     {
@@ -70,6 +75,10 @@ void UChunkValidationSubsystemStandalone::MyTick(const float DeltaTime)
     }
     else
     {
+        check( GEngine )
+        check( GEngine->GetFirstLocalPlayerController(this->GetWorld()) )
+        check( GEngine->GetFirstLocalPlayerController(this->GetWorld())->GetPawnOrSpectator() )
+        LOG_DISPLAY(LogChunkValidation, "Player location: %s", *GEngine->GetFirstLocalPlayerController(this->GetWorld())->GetPawnOrSpectator()->GetActorLocation().ToString())
         this->LoadUnloadChunks(GEngine->GetFirstLocalPlayerController(this->GetWorld())->GetPawnOrSpectator()->GetActorLocation());
     }
 #else /* WITH_EDITOR */

@@ -5,6 +5,7 @@
 #include "MyCore.h"
 #include "ChunkStates.h"
 #include "CommonChunk.h"
+#include "Containers/MyQueue.h"
 #include "WorldCore/JAFGWorldSubsystems.h"
 
 #include "ChunkGenerationSubsystem.generated.h"
@@ -50,8 +51,8 @@ public:
     FORCEINLINE auto GetVerticalChunkQueue(void) -> const TQueue<FChunkKey2>& { return this->VerticalChunkQueue; }
     FORCEINLINE auto ClearVerticalChunkQueue(void) -> void { this->VerticalChunkQueue.Empty(); }
 
-    auto AddVerticalChunkToPendingKillQueue(const FChunkKey2& ChunkKey) -> void;
-    FORCEINLINE auto GetPendingKillVerticalChunkQueue(void) -> const TQueue<FChunkKey2>& { return this->PendingKillVerticalChunkQueue; }
+                auto AddVerticalChunkToPendingKillQueue(const FChunkKey2& ChunkKey) -> void;
+    FORCEINLINE auto GetPendingKillVerticalChunkQueue(void) -> const TMyQueue<FChunkKey2>& { return this->PendingKillVerticalChunkQueue; }
 
     FORCEINLINE auto GetVerticalChunks(void) const -> const TSet<FChunkKey2>& { return this->VerticalChunks; }
     FORCEINLINE auto GetPersistentVerticalChunks(void) const -> TArray<FChunkKey2>
@@ -114,7 +115,7 @@ private:
     /** Called on the server to fulfill the requests of the clients. */
     auto DequeueNextClientChunk(void) -> void;
 
-    TQueue<FChunkKey2> PendingKillVerticalChunkQueue;
+    TMyQueue<FChunkKey2> PendingKillVerticalChunkQueue;
     auto DequeueNextVerticalChunkToKill(void) -> void;
 
     /** Chunks that have a counterpart in the UWorld. */

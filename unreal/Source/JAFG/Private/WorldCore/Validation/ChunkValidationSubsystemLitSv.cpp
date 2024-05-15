@@ -118,4 +118,63 @@ void UChunkValidationSubsystemLitSv::LoadUnLoadMyChunks(const FVector& LocalPlay
 
 void UChunkValidationSubsystemLitSv::LoadUnloadTheirChunks(void) const
 {
+    constexpr int RenderDistance { 10 };
+
+    TArray<FChunkKey2> PreferredChunks    = TArray<FChunkKey2>();
+    /* Can be zero if the server is running without any clients. */
+    if (FConstPlayerControllerIterator It = this->GetWorld()->GetPlayerControllerIterator(); It)
+    {
+        for (; It; ++It)
+        {
+            /* May be null if state of controller is still pending. */
+            const APawn* Pawn = It->Get()->GetPawnOrSpectator();
+            if (Pawn == nullptr)
+            {
+                continue;
+            }
+
+            for (
+                FChunkKey2 Key
+                :
+                Validation::GetAllChunksInDistance(ChunkConversion::WorldToVerticalChunkKey(Pawn->GetActorLocation()), RenderDistance)
+            )
+            {
+                PreferredChunks.AddUnique(Key);
+            }
+        }
+    }
+
+    // Loading
+    //////////////////////////////////////////////////////////////////////////
+    int32 NewChunksCounter = 0;
+    const TArray<FChunkKey2> PersistentChunks = this->ChunkGenerationSubsystem->GetPersistentVerticalChunks();
+    for (const FChunkKey2& Preferred : PreferredChunks)
+    {
+        if (PersistentChunks.Contains(Preferred) == false)
+        {
+            this->ChunkGenerationSubsystem->GenerateVerticalChunkAsync(Preferred);
+            NewChunksCounter++;
+        }
+    }
+
+    // Unloading
+    //////////////////////////////////////////////////////////////////////////
+    int32 UnloadedChunksCounter = 0;
+    for (const FChunkKey2& ActiveChunk : this->ChunkGenerationSubsystem->GetVerticalChunks())
+    {
+        if (PreferredChunks.Contains(ActiveChunk) == false)
+        {
+            this->ChunkGenerationSubsystem->AddVerticalChunkToPendingKillQueue(ActiveChunk);
+            UnloadedChunksCounter++;
+        }
+    }
+
+#if !UE_BUILD_SHIPPING
+    if ((NewChunksCounter == 0 && UnloadedChunksCounter == 0) == false)
+    {
+        LOG_VERY_VERBOSE(LogChunkValidation, "Decided to load %d and unload %d chunks.", NewChunksCounter, UnloadedChunksCounter)
+    }
+#endif
+
+    return;
 }

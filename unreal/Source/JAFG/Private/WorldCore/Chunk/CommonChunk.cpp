@@ -88,6 +88,14 @@ void ACommonChunk::InitializeCommonStuff(void)
     return;
 }
 
+void ACommonChunk::KillUncontrolled(void)
+{
+    this->bUncontrolledKill = true;
+    this->Destroy();
+
+    return;
+}
+
 void ACommonChunk::KillControlled(void)
 {
     this->GetWorld()->GetSubsystem<UChunkGenerationSubsystem>()->OnChunkWasKilledExternally(this->ChunkKey);
