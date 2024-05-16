@@ -41,6 +41,9 @@ public:
     TSubclassOf<UJAFGWidget> EscapeMenuWidgetClass;
 
     UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Slate")
+    TSubclassOf<UJAFGWidget> DebugScreenWidgetClass;
+
+    UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Slate")
     TSubclassOf<UWarningPopUp> WarningPopUpWidgetClass;
 
     UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Slate")

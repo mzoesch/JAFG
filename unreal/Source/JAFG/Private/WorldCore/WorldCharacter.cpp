@@ -5,6 +5,8 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
+#include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Input/CustomInputNames.h"
 #include "Input/JAFGInputSubsystem.h"
 #include "Player/WorldPlayerController.h"
@@ -14,6 +16,24 @@ class UEnhancedInputLocalPlayerSubsystem;
 AWorldCharacter::AWorldCharacter(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
     this->PrimaryActorTick.bCanEverTick = false;
+
+    this->bReplicates = true;
+
+    this->GetCapsuleComponent()->InitCapsuleSize(40.0f, 90.0f);
+
+    this->FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
+    this->FirstPersonCameraComponent->SetupAttachment(this->GetCapsuleComponent());
+    this->FirstPersonCameraComponent->SetRelativeLocation(FVector(-10.0f, 0.0f, 60.0f));
+    this->FirstPersonCameraComponent->bUsePawnControlRotation = true;
+    this->FirstPersonCameraComponent->SetFieldOfView( 120.0f );
+
+    this->GetCharacterMovement()->GravityScale               = 2.0f;
+    this->GetCharacterMovement()->JumpZVelocity              = 700.0f;
+    this->GetCharacterMovement()->AirControl                 = 2.0f;
+    this->GetCharacterMovement()->MaxStepHeight              = 60.0f;
+    this->GetCharacterMovement()->bUseFlatBaseForFloorChecks = true;
+
+    return;
 }
 
 void AWorldCharacter::BeginPlay(void)

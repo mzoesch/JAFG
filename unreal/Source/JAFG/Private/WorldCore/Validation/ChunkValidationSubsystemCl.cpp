@@ -79,7 +79,7 @@ void UChunkValidationSubsystemCl::LoadUnLoadChunks(const FVector& LocalPlayerLoc
 
     this->ChunkGenerationSubsystem->ClearVerticalChunkQueue();
 
-    TArray<FChunkKey2> PreferredChunks = Validation::GetAllChunksInDistance(ChunkConversion::WorldToVerticalChunkKey(LocalPlayerLocation), RenderDistance);
+    TArray<FChunkKey2> PreferredChunks = Validation::GetAllChunksInDistance(ChunkStatics::WorldToVerticalChunkKey(LocalPlayerLocation), RenderDistance);
 
     // Loading
     //////////////////////////////////////////////////////////////////////////

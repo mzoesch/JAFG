@@ -1,6 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
-#include "Editor/EditorWorldCommands.h"
+#include "Editor/EditorWorldCommandsDedSv.h"
 
 #include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
 
@@ -89,7 +89,7 @@ void UEditorWorldCommandsDedSv::ShowPersistentVerticalChunksOnDedicatedServer(vo
 
 void UEditorWorldCommandsDedSv::RegisterConsoleCommands(void)
 {
-    LOG_DISPLAY(LogEditorCommands, "Registering console commands");
+    LOG_DISPLAY(LogEditorCommands, "Registering console commands")
 
     this->ShowVerticalChunksOnDedicatedServerCommand = IConsoleManager::Get().RegisterConsoleCommand(
         TEXT("j.ShowVerticalChunksOnDedicatedServer"),
@@ -110,15 +110,14 @@ void UEditorWorldCommandsDedSv::RegisterConsoleCommands(void)
 
 void UEditorWorldCommandsDedSv::UnregisterConsoleCommands(void)
 {
-    LOG_DISPLAY(LogEditorCommands, "Unregistering console commands");
 
-    if (this->ShowVerticalChunksOnDedicatedServerCommand != nullptr)
+    if (this->ShowVerticalChunksOnDedicatedServerCommand)
     {
         IConsoleManager::Get().UnregisterConsoleObject(this->ShowVerticalChunksOnDedicatedServerCommand);
         this->ShowVerticalChunksOnDedicatedServerCommand = nullptr;
     }
 
-    if (this->ShowPersistentVerticalChunksOnDedicatedServerCommand != nullptr)
+    if (this->ShowPersistentVerticalChunksOnDedicatedServerCommand)
     {
         IConsoleManager::Get().UnregisterConsoleObject(this->ShowPersistentVerticalChunksOnDedicatedServerCommand);
         this->ShowPersistentVerticalChunksOnDedicatedServerCommand = nullptr;

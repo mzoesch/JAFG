@@ -69,7 +69,7 @@ void UChunkValidationSubsystemStandalone::MyTick(const float DeltaTime)
     }
 
 #if WITH_EDITOR
-    if (GEditor->bIsSimulatingInEditor)
+    if (GEditor->IsSimulateInEditorInProgress())
     {
         this->LoadUnloadChunks(GCurrentLevelEditingViewportClient->ViewTransformPerspective.GetLocation());
     }
@@ -99,7 +99,7 @@ void UChunkValidationSubsystemStandalone::LoadUnloadChunks(const FVector& LocalP
 
     this->ChunkGenerationSubsystem->ClearVerticalChunkQueue();
 
-    TArray<FChunkKey2> PreferredChunks = Validation::GetAllChunksInDistance(ChunkConversion::WorldToVerticalChunkKey(LocalPlayerLocation), RenderDistance);
+    TArray<FChunkKey2> PreferredChunks = Validation::GetAllChunksInDistance(ChunkStatics::WorldToVerticalChunkKey(LocalPlayerLocation), RenderDistance);
 
     // Loading
     //////////////////////////////////////////////////////////////////////////

@@ -83,7 +83,7 @@ void UChunkValidationSubsystemDedSv::LoadUnloadTheirChunks(void) const
         for (; It; ++It)
         {
             const FVector PlayerLocation = It->Get()->GetPawnOrSpectator()->GetActorLocation();
-            const FChunkKey2 PlayerChunkKey = ChunkConversion::WorldToVerticalChunkKey(PlayerLocation);
+            const FChunkKey2 PlayerChunkKey = ChunkStatics::WorldToVerticalChunkKey(PlayerLocation);
             for (FChunkKey2 Key : Validation::GetAllChunksInDistance(PlayerChunkKey, RenderDistance))
             {
                 PreferredChunks.AddUnique(Key);

@@ -19,13 +19,6 @@ typedef FIntVector FChunkKey;
  */
 typedef FIntVector FChunkBlockKey;
 
-namespace ChunkBlockKey
-{
-
-FORCEINLINE TArray<FChunkKey> GetChunkKeys(const FChunkBlockKey& ChunkBlockKey, const FChunkKey& ChunkKey) { checkNoEntry() return TArray<FChunkKey>(); };
-
-}
-
 /**
  * Uniquely defines a vertical chunk.
  */

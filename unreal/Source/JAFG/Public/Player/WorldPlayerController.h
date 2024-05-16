@@ -10,8 +10,8 @@
 
 JAFG_VOID
 
-class UMyHyperlaneComponent;
 class UResumeEntryWidget;
+class UMyHyperlaneComponent;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FSlateVisibilityChangedSignature, const bool /* bVisible */ )
 
@@ -47,10 +47,15 @@ public:
     auto SubscribeToEscapeMenuVisibilityChanged(const FSlateVisibilityChangedSignature::FDelegate& Delegate) -> FDelegateHandle;
     auto UnSubscribeToEscapeMenuVisibilityChanged(const FDelegateHandle& Handle) -> bool;
 
+    auto SubscribeToDebugScreenVisibilityChanged(const FSlateVisibilityChangedSignature::FDelegate& Delegate) -> FDelegateHandle;
+    auto UnSubscribeToDebugScreenVisibilityChanged(const FDelegateHandle& Handle) -> bool;
+
 private:
 
     /** Obviously client only. */
     FSlateVisibilityChangedSignature EscapeMenuVisibilityChangedDelegate;
+    /** Obviously client only. */
+    FSlateVisibilityChangedSignature DebugScreenVisibilityChangedDelegate;
 
 protected:
 
@@ -64,9 +69,8 @@ protected:
     /** Override this method to add custom key bindings in derived classes. */
     virtual auto BindAction(const FString& ActionName, UEnhancedInputComponent* EnhancedInputComponent) -> void;
 
-    void OnToggleEscapeMenu(const FInputActionValue& Value);
-    /* Needs to call this method. */
-    friend UResumeEntryWidget;
+    void OnToggleEscapeMenu(const FInputActionValue& Value); friend UResumeEntryWidget;
+    void OnToggleDebugScreen(const FInputActionValue& Value);
 
 private:
 
@@ -77,7 +81,8 @@ private:
         void (AWorldPlayerController::* Method) (const FInputActionValue& Value)
     ) -> void;
 
-    bool bEscapeMenuVisible;
+    bool bEscapeMenuVisible  = false;
+    bool bDebugScreenVisible = false;
 
 #pragma endregion Enhanced Input
 

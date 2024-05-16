@@ -15,11 +15,7 @@
 
 AWorldPlayerController::AWorldPlayerController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-    this->bEscapeMenuVisible = false;
-
     this->HyperlaneComponent = CreateDefaultSubobject<UMyHyperlaneComponent>(TEXT("HyperlaneComponent"));
-
-    return;
 }
 
 void AWorldPlayerController::BeginPlay(void)
@@ -52,6 +48,22 @@ FDelegateHandle AWorldPlayerController::SubscribeToEscapeMenuVisibilityChanged(c
 bool AWorldPlayerController::UnSubscribeToEscapeMenuVisibilityChanged(const FDelegateHandle& Handle)
 {
     return this->EscapeMenuVisibilityChangedDelegate.Remove(Handle);
+}
+
+FDelegateHandle AWorldPlayerController::SubscribeToDebugScreenVisibilityChanged(const FSlateVisibilityChangedSignature::FDelegate& Delegate)
+{
+    if (this->IsLocalController() == false)
+    {
+        LOG_FATAL(LogWorldChar, "Not a local controller.")
+        return FDelegateHandle();
+    }
+
+    return this->DebugScreenVisibilityChangedDelegate.Add(Delegate);
+}
+
+bool AWorldPlayerController::UnSubscribeToDebugScreenVisibilityChanged(const FDelegateHandle& Handle)
+{
+    return this->DebugScreenVisibilityChangedDelegate.Remove(Handle);
 }
 
 void AWorldPlayerController::SetupCommonPlayerInput(void)
@@ -122,6 +134,11 @@ void AWorldPlayerController::BindAction(const FString& ActionName, UEnhancedInpu
         this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldPlayerController::OnToggleEscapeMenu);
     }
 
+    if (ActionName == InputActions::ToggleDebugScreen)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldPlayerController::OnToggleDebugScreen);
+    }
+
     return;
 }
 
@@ -137,6 +154,20 @@ void AWorldPlayerController::OnToggleEscapeMenu(const FInputActionValue& Value)
     this->EscapeMenuVisibilityChangedDelegate.Broadcast(this->bEscapeMenuVisible);
 
     this->ShowMouseCursor(this->bEscapeMenuVisible);
+
+    return;
+}
+
+void AWorldPlayerController::OnToggleDebugScreen(const FInputActionValue& Value)
+{
+    if (this->DebugScreenVisibilityChangedDelegate.IsBound() == false)
+    {
+        LOG_FATAL(LogWorldChar, "No subscribers to Debug Screen Visibility Changed.")
+        return;
+    }
+
+    this->bDebugScreenVisible = !this->bDebugScreenVisible;
+    this->DebugScreenVisibilityChangedDelegate.Broadcast(this->bDebugScreenVisible);
 
     return;
 }

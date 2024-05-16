@@ -5,17 +5,19 @@
 #include "MyCore.h"
 #include "WorldCore/JAFGWorldSubsystems.h"
 
-#include "EditorWorldCommands.generated.h"
+#include "EditorWorldCommandsDedSv.generated.h"
 
 JAFG_VOID
 
 /**
  * Console commands that are being registered when a dedicated server is running.
  */
-UCLASS()
+UCLASS(NotBlueprintable)
 class JAFG_API UEditorWorldCommandsDedSv : public UJAFGWorldSubsystem
 {
     GENERATED_BODY()
+
+public:
 
     // UWorldSubsystem implementation
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;

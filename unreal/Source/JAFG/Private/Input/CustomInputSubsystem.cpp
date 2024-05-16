@@ -109,5 +109,16 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
         InputSubsystem->AddAction(Action);
     }
 
+    // Toggle Debug Screen Action
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGInputAction Action;
+        Action.Name        = InputActions::ToggleDebugScreen;
+        Action.DefaultKeyA = EKeys::Q;
+        Action.DefaultKeyB = EKeys::Invalid;
+        Action.Contexts.Add(InputContexts::Foot);
+        InputSubsystem->AddAction(Action);
+    }
+
     return;
 }

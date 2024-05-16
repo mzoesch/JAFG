@@ -80,7 +80,7 @@ void UChunkValidationSubsystemLitSv::LoadUnLoadMyChunks(const FVector& LocalPlay
 
     this->ChunkGenerationSubsystem->ClearVerticalChunkQueue();
 
-    TArray<FChunkKey2> PreferredChunks = Validation::GetAllChunksInDistance(ChunkConversion::WorldToVerticalChunkKey(LocalPlayerLocation), RenderDistance);
+    TArray<FChunkKey2> PreferredChunks = Validation::GetAllChunksInDistance(ChunkStatics::WorldToVerticalChunkKey(LocalPlayerLocation), RenderDistance);
 
     // Loading
     //////////////////////////////////////////////////////////////////////////
@@ -136,7 +136,7 @@ void UChunkValidationSubsystemLitSv::LoadUnloadTheirChunks(void) const
             for (
                 FChunkKey2 Key
                 :
-                Validation::GetAllChunksInDistance(ChunkConversion::WorldToVerticalChunkKey(Pawn->GetActorLocation()), RenderDistance)
+                Validation::GetAllChunksInDistance(ChunkStatics::WorldToVerticalChunkKey(Pawn->GetActorLocation()), RenderDistance)
             )
             {
                 PreferredChunks.AddUnique(Key);
