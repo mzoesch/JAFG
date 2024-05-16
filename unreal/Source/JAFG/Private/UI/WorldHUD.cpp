@@ -40,7 +40,7 @@ void AWorldHUD::BeginPlay(void)
     {
         if (SlateSettings->EscapeMenuWidgetClass == nullptr)
         {
-            LOG_FATAL(LogCommonSlate, "EscapeMenuWidgetClass is not set in project settings.")
+            LOG_FATAL(LogCommonSlate, "Escape Menu Widget Class is not set in project settings.")
             return;
         }
         this->EscapeMenu = CreateWidget<UEscapeMenu>(this->GetWorld(), SlateSettings->EscapeMenuWidgetClass);
@@ -53,12 +53,25 @@ void AWorldHUD::BeginPlay(void)
     {
         if (SlateSettings->DebugScreenWidgetClass == nullptr)
         {
-            LOG_FATAL(LogCommonSlate, "DebugScreenWidgetClass is not set in project settings.")
+            LOG_FATAL(LogCommonSlate, "Debug Screen Widget Class is not set in project settings.")
             return;
         }
-        this->DebugScreen = CreateWidget<UDebugScreen>(this->GetWorld(), SlateSettings->DebugScreenWidgetClass);
+        this->DebugScreen = CreateWidget<UJAFGWidget>(this->GetWorld(), SlateSettings->DebugScreenWidgetClass);
         this->DebugScreen->AddToViewport();
         this->DebugScreen->SetVisibility(ESlateVisibility::Collapsed);
+    }
+
+    // Chat Menu
+    //////////////////////////////////////////////////////////////////////////
+    {
+        if (SlateSettings->ChatMenuWidgetClass == nullptr)
+        {
+            LOG_FATAL(LogCommonSlate, "Chat Menu Widget Class is not set in project settings.")
+            return;
+        }
+        this->ChatMenu = CreateWidget<UJAFGWidget>(this->GetWorld(), SlateSettings->ChatMenuWidgetClass);
+        this->ChatMenu->AddToViewport();
+        this->ChatMenu->SetVisibility(ESlateVisibility::Collapsed);
     }
 
     return;
@@ -74,10 +87,10 @@ void AWorldHUD::CreateSimulationHUD(void)
     {
         if (SlateSettings->DebugScreenWidgetClass == nullptr)
         {
-            LOG_FATAL(LogCommonSlate, "DebugScreenWidgetClass is not set in project settings.")
+            LOG_FATAL(LogCommonSlate, "Debug Screen Widget Class is not set in project settings.")
             return;
         }
-        this->DebugScreen = CreateWidget<UDebugScreen>(this->GetWorld(), SlateSettings->DebugScreenWidgetClass);
+        this->DebugScreen = CreateWidget<UJAFGWidget>(this->GetWorld(), SlateSettings->DebugScreenWidgetClass);
         this->DebugScreen->AddToViewport();
         this->DebugScreen->SetVisibility(ESlateVisibility::Collapsed);
     }

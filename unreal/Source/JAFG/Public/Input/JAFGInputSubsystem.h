@@ -18,12 +18,25 @@ struct FJAFGInputContext
     FString Name;
 };
 
+struct FMappableKeyPair
+{
+    FKey KeyA;
+    FKey KeyB;
+};
+
 struct FJAFGInputAction
 {
     FString         Name;
     FKey            DefaultKeyA;
     FKey            DefaultKeyB;
     TArray<FString> Contexts;
+};
+
+struct FJAFGInputActionDual
+{
+    FString                  Name;
+    TArray<FMappableKeyPair> Keys;
+    TArray<TArray<FString>>  Contexts;
 };
 
 struct FJAFG2DInputAction
@@ -67,7 +80,7 @@ struct FJAFGPrivateInputAction
 {
     GENERATED_BODY()
 
-    /* Values copied from FJAFGInputAction and FJAFG2DInputAction. */
+    /* Values copied from the public intput action structs. */
     FString                  Name;
     FKey                     NorthDefaultKeyA;
     FKey                     NorthDefaultKeyB;
@@ -107,6 +120,7 @@ public:
 
     auto AddContext(const FJAFGInputContext& InContext) -> void;
     auto AddAction(FJAFGInputAction& InAction) -> void;
+    auto AddAction(FJAFGInputActionDual& InAction) -> void;
     auto AddAction(FJAFG2DInputAction& InAction) -> void;
     auto AddAction(FJAFG2DMouseInputAction& InAction) -> void;
 

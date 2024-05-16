@@ -27,7 +27,7 @@ void UJAFGInputSubsystem::AddContext(const FJAFGInputContext& InContext)
         LOG_ERROR(LogGameSettings, "Context already exists: %s. Discarding implementation.", *InContext.Name)
 #else /* WITH_EDITOR */
         LOG_FATAL(LogGameSettings, "Context already exists: %s.", *InContext.Name)
-#endif /* WITH_EDITOR */
+#endif /* !WITH_EDITOR */
         return;
     }
 
@@ -52,7 +52,7 @@ void UJAFGInputSubsystem::AddAction(FJAFGInputAction& InAction)
         LOG_ERROR(LogGameSettings, "Action already exists: %s. Discarding implementation.", *InAction.Name)
 #else /* WITH_EDITOR */
         LOG_FATAL(LogGameSettings, "Action already exists: %s.", *InAction.Name)
-#endif /* WITH_EDITOR */
+#endif /* !WITH_EDITOR */
         return;
     }
 
@@ -88,6 +88,111 @@ void UJAFGInputSubsystem::AddAction(FJAFGInputAction& InAction)
     return;
 }
 
+void UJAFGInputSubsystem::AddAction(FJAFGInputActionDual& InAction)
+{
+    if (this->DoesActionExist(InAction.Name))
+    {
+#if WITH_EDITOR
+        LOG_ERROR(LogGameSettings, "Action already exists: %s. Discarding implementation.", *InAction.Name)
+#else /* WITH_EDITOR */
+        LOG_FATAL(LogGameSettings, "Action already exists: %s.", *InAction.Name)
+#endif /* !WITH_EDITOR */
+        return;
+    }
+
+    if (InAction.Keys.Num() != InAction.Contexts.Num())
+    {
+#if WITH_EDITOR
+        LOG_ERROR(
+            LogGameSettings,
+            "Action is invalid: %s. Keys and Contexts do not match. Found (%d != %d).",
+            *InAction.Name, InAction.Keys.Num(), InAction.Contexts.Num()
+        )
+#else /* WITH_EDITOR */
+        LOG_FATAL(
+            LogGameSettings,
+            "Action is invalid: %s. Keys and Contexts do not match. Found (%d != %d).",
+            *InAction.Name, InAction.Keys.Num(), InAction.Contexts.Num()
+        )
+#endif /* !WITH_EDITOR */
+        return;
+    }
+
+    if (InAction.Keys.Num() == 0 || InAction.Contexts.Num() > 2)
+    {
+#if WITH_EDITOR
+        LOG_ERROR(
+            LogGameSettings,
+            "Action is invalid: %s. Keys and Contexts are empty or exceed maximum of 2.",
+            *InAction.Name
+        )
+#else /* WITH_EDITOR */
+        LOG_FATAL(
+            LogGameSettings,
+            "Action is invalid: %s. Keys and Contexts are empty or exceed maximum of 2.",
+            *InAction.Name
+        )
+#endif /* !WITH_EDITOR */
+        return;
+    }
+
+    UInputAction* Action = NewObject<UInputAction>();
+
+    FJAFGPrivateInputAction PrivateAction;
+    PrivateAction.Name             = InAction.Name;
+    PrivateAction.NorthDefaultKeyA = InAction.Keys[0].KeyA;
+    PrivateAction.NorthDefaultKeyB = InAction.Keys[0].KeyB;
+    if (InAction.Keys.Num() == 2)
+    {
+        PrivateAction.SouthDefaultKeyA = InAction.Keys[1].KeyA;
+        PrivateAction.SouthDefaultKeyB = InAction.Keys[1].KeyB;
+    }
+    else
+    {
+        PrivateAction.SouthDefaultKeyA = EKeys::Invalid;
+        PrivateAction.SouthDefaultKeyB = EKeys::Invalid;
+    }
+    PrivateAction.WestDefaultKeyA  = EKeys::Invalid;
+    PrivateAction.WestDefaultKeyB  = EKeys::Invalid;
+    PrivateAction.EastDefaultKeyA  = EKeys::Invalid;
+    PrivateAction.EastDefaultKeyB  = EKeys::Invalid;
+    PrivateAction.Contexts         = InAction.Contexts[0];
+    if (InAction.Contexts.Num() == 2)
+    {
+        PrivateAction.Contexts.Append(InAction.Contexts[1]);
+    }
+    PrivateAction.bIs2DAction      = false;
+    PrivateAction.Action           = Action;
+
+
+    for (const FString& ContextName : InAction.Contexts[0])
+    {
+        const FJAFGPrivateInputContext* Context = this->GetSafeContext(ContextName);
+
+        Context->Context->MapKey(Action, PrivateAction.NorthDefaultKeyA);
+        Context->Context->MapKey(Action, PrivateAction.NorthDefaultKeyB);
+        continue;
+    }
+
+    if (InAction.Contexts.Num() == 2)
+    {
+        for (const FString& ContextName : InAction.Contexts[1])
+        {
+            const FJAFGPrivateInputContext* Context = this->GetSafeContext(ContextName);
+
+            Context->Context->MapKey(Action, PrivateAction.SouthDefaultKeyA);
+            Context->Context->MapKey(Action, PrivateAction.SouthDefaultKeyB);
+            continue;
+        }
+    }
+
+    this->Actions.Add(PrivateAction);
+
+    LOG_VERBOSE(LogGameSettings, "Added action: %s.", *PrivateAction.Name)
+
+    return;
+}
+
 void UJAFGInputSubsystem::AddAction(FJAFG2DInputAction& InAction)
 {
     if (this->DoesActionExist(InAction.Name))
@@ -96,7 +201,7 @@ void UJAFGInputSubsystem::AddAction(FJAFG2DInputAction& InAction)
         LOG_ERROR(LogGameSettings, "Action already exists: %s. Discarding implementation.", *InAction.Name)
 #else /* WITH_EDITOR */
         LOG_FATAL(LogGameSettings, "Action already exists: %s.", *InAction.Name)
-#endif /* WITH_EDITOR */
+#endif /* !WITH_EDITOR */
         return;
     }
 
@@ -159,7 +264,7 @@ void UJAFGInputSubsystem::AddAction(FJAFG2DMouseInputAction& InAction)
         LOG_ERROR(LogGameSettings, "Action already exists: %s. Discarding implementation.", *InAction.Name)
 #else /* WITH_EDITOR */
         LOG_FATAL(LogGameSettings, "Action already exists: %s.", *InAction.Name)
-#endif /* WITH_EDITOR */
+#endif /* !WITH_EDITOR */
         return;
     }
 

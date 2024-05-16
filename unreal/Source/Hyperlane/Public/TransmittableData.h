@@ -16,6 +16,7 @@ struct FChunkInitializationData
     FChunkKey ChunkKey;
     voxel_t*  Voxels;
 
+    static constexpr int32 VoxelCount { WorldStatics::ChunkSize * WorldStatics::ChunkSize * WorldStatics::ChunkSize };
     static constexpr int32 VoxelSize { sizeof(voxel_t) * WorldStatics::ChunkSize * WorldStatics::ChunkSize * WorldStatics::ChunkSize };
 
     FORCEINLINE auto SerializeToBytes(TArray<uint8>& OutBytes) -> void
@@ -37,14 +38,20 @@ struct FChunkInitializationData
     FORCEINLINE friend FArchive& operator<<( FArchive& Ar, FChunkInitializationData* Data )
     {
         Ar << Data->ChunkKey;
-        for (int32 i = 0; i < FChunkInitializationData::VoxelSize; i++) { Ar << Data->Voxels[i]; }
+        for (int32 i = 0; i < FChunkInitializationData::VoxelCount; ++i)
+        {
+            Ar << Data->Voxels[i];
+        }
         return Ar;
     }
 
     FORCEINLINE friend FArchive& operator<<( FArchive& Ar, FChunkInitializationData& Data )
     {
         Ar << Data.ChunkKey;
-        for (int32 i = 0; i < FChunkInitializationData::VoxelSize; i++) { Ar << Data.Voxels[i]; }
+        for (int32 i = 0; i < FChunkInitializationData::VoxelCount; ++i)
+        {
+            Ar << Data.Voxels[i];
+        }
         return Ar;
     }
 };

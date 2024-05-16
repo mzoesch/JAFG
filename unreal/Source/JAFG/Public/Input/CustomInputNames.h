@@ -13,18 +13,20 @@ JAFG_VOID
 namespace InputContexts
 {
 
-extern inline JAFG_API const FString Foot   = TEXT("Foot");
-extern inline JAFG_API const FString Escape = TEXT("Escape");
+extern inline const FString Foot   = TEXT("Foot");
+extern inline const FString Escape = TEXT("Escape");
+extern inline const FString Chat   = TEXT("Chat");
 
 }
 
 namespace InputActions
 {
 
-extern inline JAFG_API const FString Move              = TEXT("Move");
-extern inline JAFG_API const FString Look              = TEXT("Look");
-extern inline JAFG_API const FString Jump              = TEXT("Jump");
-extern inline JAFG_API const FString ToggleEscapeMenu  = TEXT("ToggleEscapeMenu");
-extern inline JAFG_API const FString ToggleDebugScreen = TEXT("ToggleDebugScreen");
+extern inline const FString Move              = TEXT("Move");
+extern inline const FString Look              = TEXT("Look");
+extern inline const FString Jump              = TEXT("Jump");
+extern inline const FString ToggleEscapeMenu  = TEXT("ToggleEscapeMenu");
+extern inline const FString ToggleDebugScreen = TEXT("ToggleDebugScreen");
+extern inline const FString ToggleChat        = TEXT("ToggleChat");
 
 }

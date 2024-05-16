@@ -24,12 +24,13 @@ public class JAFG : ModuleRules
         PublicDependencyModuleNames.AddRange(
         new string[]
         {
+            "Chat",
+            "Hyperlane",
             "JAFGCore",
             "JAFGLogging",
             "JAFGSettings",
             "JAFGSlateCore",
             "JAFGNetCore",
-            "Hyperlane",
         }
         );
 

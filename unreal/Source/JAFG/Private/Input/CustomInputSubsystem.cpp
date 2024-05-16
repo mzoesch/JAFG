@@ -56,6 +56,14 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
         InputSubsystem->AddContext(Context);
     }
 
+    // Chat Context
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGInputContext Context;
+        Context.Name = InputContexts::Chat;
+        InputSubsystem->AddContext(Context);
+    }
+
     /*----------------------------------------------------------------------------
         Actions
     ----------------------------------------------------------------------------*/
@@ -117,6 +125,18 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
         Action.DefaultKeyA = EKeys::Q;
         Action.DefaultKeyB = EKeys::Invalid;
         Action.Contexts.Add(InputContexts::Foot);
+        InputSubsystem->AddAction(Action);
+    }
+
+    // Toggle Chat Action
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGInputActionDual Action;
+        Action.Name        = InputActions::ToggleChat;
+        Action.Keys.Add( { EKeys::T,      EKeys::Invalid } );
+        Action.Keys.Add( { EKeys::Escape, EKeys::Invalid } );
+        Action.Contexts.Add( { InputContexts::Foot } );
+        Action.Contexts.Add( { InputContexts::Chat } );
         InputSubsystem->AddAction(Action);
     }
 

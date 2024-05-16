@@ -10,9 +10,12 @@
 
 JAFG_VOID
 
+class UChatMenu;
+class UChatComponent;
 class UResumeEntryWidget;
 class UMyHyperlaneComponent;
 
+DECLARE_MULTICAST_DELEGATE(FSlateVisibilityChangedOwnerVisSignature)
 DECLARE_MULTICAST_DELEGATE_OneParam(FSlateVisibilityChangedSignature, const bool /* bVisible */ )
 
 #define ADD_SLATE_VIS_DELG(Method)                                            \
@@ -36,6 +39,9 @@ protected:
     UPROPERTY()
     TObjectPtr<UMyHyperlaneComponent> HyperlaneComponent;
 
+    UPROPERTY()
+    TObjectPtr<UChatComponent> ChatComponent;
+
 #pragma region Enhanced Input
 
 public:
@@ -50,12 +56,17 @@ public:
     auto SubscribeToDebugScreenVisibilityChanged(const FSlateVisibilityChangedSignature::FDelegate& Delegate) -> FDelegateHandle;
     auto UnSubscribeToDebugScreenVisibilityChanged(const FDelegateHandle& Handle) -> bool;
 
+    auto SubscribeToChatVisibilityChanged(const FSlateVisibilityChangedSignature::FDelegate& Delegate) -> FDelegateHandle;
+    auto UnSubscribeToChatVisibilityChanged(const FDelegateHandle& Handle) -> bool;
+
 private:
 
     /** Obviously client only. */
     FSlateVisibilityChangedSignature EscapeMenuVisibilityChangedDelegate;
     /** Obviously client only. */
     FSlateVisibilityChangedSignature DebugScreenVisibilityChangedDelegate;
+    /** Obviously client only. */
+    FSlateVisibilityChangedSignature ChatVisibilityChangedDelegate;
 
 protected:
 
@@ -69,8 +80,9 @@ protected:
     /** Override this method to add custom key bindings in derived classes. */
     virtual auto BindAction(const FString& ActionName, UEnhancedInputComponent* EnhancedInputComponent) -> void;
 
-    void OnToggleEscapeMenu(const FInputActionValue& Value); friend UResumeEntryWidget;
-    void OnToggleDebugScreen(const FInputActionValue& Value);
+    virtual void OnToggleEscapeMenu(const FInputActionValue& Value); friend UResumeEntryWidget;
+    virtual void OnToggleDebugScreen(const FInputActionValue& Value);
+    virtual void OnToggleChat(const FInputActionValue& Value); friend UChatMenu;
 
 private:
 
@@ -83,6 +95,7 @@ private:
 
     bool bEscapeMenuVisible  = false;
     bool bDebugScreenVisible = false;
+    bool bChatVisible        = false;
 
 #pragma endregion Enhanced Input
 

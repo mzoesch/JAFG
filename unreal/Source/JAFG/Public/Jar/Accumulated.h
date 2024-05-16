@@ -15,7 +15,7 @@ namespace Accumulated
  * Value copied from the voxel subsystem for faster access and to not have to deal with UWorld pointers.
  * Not available before the voxel subsystem is completely initialized.
  */
-extern inline JAFG_API voxel_t ItemIndexStart = 0;
+extern inline voxel_t ItemIndexStart = 0;
 
 FORCEINLINE static void Initialize(const voxel_t InItemIndexStart)
 {
@@ -133,7 +133,7 @@ struct JAFG_API FAccumulated
 namespace Accumulated
 {
 
-extern inline JAFG_API const FAccumulated Null { ACCUMULATED_PRIVATE_NULL_IDX, ACCUMULATED_PRIVATE_NULL_AMT };
+extern inline const FAccumulated Null { ACCUMULATED_PRIVATE_NULL_IDX, ACCUMULATED_PRIVATE_NULL_AMT };
 
 }
 

@@ -2,6 +2,7 @@
 
 #include "Player/WorldPlayerController.h"
 
+#include "ChatComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Input/JAFGInputSubsystem.h"
@@ -16,6 +17,9 @@
 AWorldPlayerController::AWorldPlayerController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
     this->HyperlaneComponent = CreateDefaultSubobject<UMyHyperlaneComponent>(TEXT("HyperlaneComponent"));
+    this->ChatComponent      = CreateDefaultSubobject<UChatComponent>(TEXT("ChatComponent"));
+
+    return;
 }
 
 void AWorldPlayerController::BeginPlay(void)
@@ -64,6 +68,22 @@ FDelegateHandle AWorldPlayerController::SubscribeToDebugScreenVisibilityChanged(
 bool AWorldPlayerController::UnSubscribeToDebugScreenVisibilityChanged(const FDelegateHandle& Handle)
 {
     return this->DebugScreenVisibilityChangedDelegate.Remove(Handle);
+}
+
+FDelegateHandle AWorldPlayerController::SubscribeToChatVisibilityChanged(const FSlateVisibilityChangedSignature::FDelegate& Delegate)
+{
+    if (this->IsLocalController() == false)
+    {
+        LOG_FATAL(LogWorldChar, "Not a local controller.")
+        return FDelegateHandle();
+    }
+
+    return this->ChatVisibilityChangedDelegate.Add(Delegate);
+}
+
+bool AWorldPlayerController::UnSubscribeToChatVisibilityChanged(const FDelegateHandle& Handle)
+{
+    return this->ChatVisibilityChangedDelegate.Remove(Handle);
 }
 
 void AWorldPlayerController::SetupCommonPlayerInput(void)
@@ -134,9 +154,14 @@ void AWorldPlayerController::BindAction(const FString& ActionName, UEnhancedInpu
         this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldPlayerController::OnToggleEscapeMenu);
     }
 
-    if (ActionName == InputActions::ToggleDebugScreen)
+    else if (ActionName == InputActions::ToggleDebugScreen)
     {
         this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldPlayerController::OnToggleDebugScreen);
+    }
+
+    else if (ActionName == InputActions::ToggleChat)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldPlayerController::OnToggleChat);
     }
 
     return;
@@ -151,9 +176,9 @@ void AWorldPlayerController::OnToggleEscapeMenu(const FInputActionValue& Value)
     }
 
     this->bEscapeMenuVisible = !this->bEscapeMenuVisible;
-    this->EscapeMenuVisibilityChangedDelegate.Broadcast(this->bEscapeMenuVisible);
-
     this->ShowMouseCursor(this->bEscapeMenuVisible);
+
+    this->EscapeMenuVisibilityChangedDelegate.Broadcast(this->bEscapeMenuVisible);
 
     return;
 }
@@ -168,6 +193,22 @@ void AWorldPlayerController::OnToggleDebugScreen(const FInputActionValue& Value)
 
     this->bDebugScreenVisible = !this->bDebugScreenVisible;
     this->DebugScreenVisibilityChangedDelegate.Broadcast(this->bDebugScreenVisible);
+
+    return;
+}
+
+void AWorldPlayerController::OnToggleChat(const FInputActionValue& Value)
+{
+    if (this->ChatVisibilityChangedDelegate.IsBound() == false)
+    {
+        LOG_FATAL(LogWorldChar, "No subscribers to Chat Visibility Changed.")
+        return;
+    }
+
+    this->bChatVisible = !this->bChatVisible;
+    this->ShowMouseCursor(this->bChatVisible);
+
+    this->ChatVisibilityChangedDelegate.Broadcast(this->bChatVisible);
 
     return;
 }

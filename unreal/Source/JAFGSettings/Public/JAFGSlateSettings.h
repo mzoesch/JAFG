@@ -44,6 +44,12 @@ public:
     TSubclassOf<UJAFGWidget> DebugScreenWidgetClass;
 
     UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Slate")
+    TSubclassOf<UJAFGWidget> ChatMenuWidgetClass;
+
+    UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Slate")
+    TSubclassOf<UJAFGWidget> ChatMenuEntryWidgetClass;
+
+    UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Slate")
     TSubclassOf<UWarningPopUp> WarningPopUpWidgetClass;
 
     UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Slate")
