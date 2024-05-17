@@ -93,7 +93,7 @@ void UChunkGenerationSubsystem::MyTick(const float DeltaTime)
     //////////////////////////////////////////////////////////////////////////
     int ChunkAnswered = 0;
     while (
-           ChunkAnswered < 10
+           ChunkAnswered < 40
         && this->ClientQueue.IsEmpty() == false
     )
     {

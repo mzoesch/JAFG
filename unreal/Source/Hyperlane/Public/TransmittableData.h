@@ -84,6 +84,7 @@ FORCEINLINE static EDataTransmissionType::Type DeserializeType(const TArray<uint
 
 FORCEINLINE static auto GetPingAsBytes(void) -> TArray<uint8>
 {
+#if 0 /* The actual correct way to cast a ping to the array. But this causes a lot of overhead. */
     TArray<uint8> Bytes;
     FMemoryWriter Ar = FMemoryWriter(Bytes, true);
     Ar.Seek(0b0);
@@ -97,6 +98,11 @@ FORCEINLINE static auto GetPingAsBytes(void) -> TArray<uint8>
     }
 
     return Bytes;
+#else /* The faster way to cast a ping to the array. */
+    TArray<uint8> Bytes = { };
+    Bytes.Add(EDataTransmissionType::Ping);
+    return Bytes;
+#endif /* !0 */
 }
 
 struct FChunkInitializationData

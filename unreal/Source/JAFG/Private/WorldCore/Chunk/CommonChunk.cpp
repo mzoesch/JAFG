@@ -13,7 +13,6 @@ ACommonChunk::ACommonChunk(const FObjectInitializer& ObjectInitializer) : Super(
     this->PrimaryActorTick.bCanEverTick = false;
 
     this->bReplicates = false;
-    this->bNetLoadOnClient = false;
 
     this->ProceduralMeshComponent = ObjectInitializer.CreateDefaultSubobject<UProceduralMeshComponent>(this, TEXT("ProceduralMeshComponent"));
     this->SetRootComponent(this->ProceduralMeshComponent);

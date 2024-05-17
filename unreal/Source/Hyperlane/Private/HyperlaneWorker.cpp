@@ -267,9 +267,8 @@ void FHyperlaneWorker::CreateConnectionEndFuture(void)
 
                 int32 Read = 0;
                 this->Socket->Recv(ReceiveBuffer.GetData(), ReceiveBuffer.Num(), Read);
-
-                LOG_VERY_VERBOSE(LogHyperlane, "Low level read: %d bytes with buffer %d but actual %d.", Read, BufferSize, ReceiveBuffer.Num())
-
+                check( Read == ReceiveBuffer.Num() )
+                LOG_VERY_VERBOSE(LogHyperlane, "Hyperlane Worker received %d bytes.", Read)
                 this->OnBytesReceivedDelegate.Execute(ReceiveBuffer);
             }
 
@@ -365,8 +364,6 @@ void FHyperlaneWorker::OnDisconnectedDelegateHandler(void)
 
 void FHyperlaneWorker::OnBytesReceivedDelegateHandler(TArray<uint8>& InBytes) const
 {
-    LOG_VERY_VERBOSE(LogHyperlane, "Hyperlane Worker received %d bytes.", InBytes.Num())
-
     /*
      * We call the deserialize methods in a loop. As a single Socket-Recv call can contain multiple messages if it
      * receives more messages than we can currently handle.
@@ -390,7 +387,7 @@ void FHyperlaneWorker::OnBytesReceivedDelegateHandler(TArray<uint8>& InBytes) co
         case TransmittableData::EDataTransmissionType::ChunkInitializationData:
         {
             TransmittableData::FChunkInitializationData Data = TransmittableData::DeserializeChunkInitializationData(InBytes);
-            LOG_VERBOSE(LogHyperlane, "Hyperlane Worker received chunk data for chunk [%s].", *Data.ChunkKey.ToString())
+            LOG_VERY_VERBOSE(LogHyperlane, "Hyperlane Worker received chunk data for chunk [%s].", *Data.ChunkKey.ToString())
             AsyncTask(ENamedThreads::GameThread, [this, Data] (void)
             {
                 this->OwningComponent->OnChunkInitializationDataReceived(Data);
