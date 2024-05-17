@@ -14,9 +14,10 @@ class UChunkGenerationSubsystem;
 /**
  * Handles the validation of chunks.
  * Based on the local player position and chunk world generation distance.
- * The subsystem will therefore only be created if the game is running in a standalone mode.
+ * The subsystem will therefore only be created if the game is running in a standalone mode. Note, that this includes
+ * the editor simulation mode as well.
  */
-UCLASS()
+UCLASS(NotBlueprintable)
 class JAFG_API UChunkValidationSubsystemStandalone final : public UJAFGTickableWorldSubsystem
 {
     GENERATED_BODY()

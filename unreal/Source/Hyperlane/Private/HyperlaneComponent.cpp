@@ -87,7 +87,7 @@ FClientAddress UHyperlaneComponent::GetHyperlaneWorkerAddress() const
 
 void UHyperlaneComponent::SendChunkInitializationDataToClient(const FIntVector& ChunkKey, voxel_t* RawVoxels) const
 {
-    UHyperlaneTransmitterSubsystem* Subsystem = this->GetWorld()->GetSubsystem<UHyperlaneTransmitterSubsystem>();
+    const UHyperlaneTransmitterSubsystem* Subsystem = this->GetWorld()->GetSubsystem<UHyperlaneTransmitterSubsystem>();
     check( Subsystem )
 
     TransmittableData::FChunkInitializationData Data = TransmittableData::FChunkInitializationData { ChunkKey, RawVoxels };

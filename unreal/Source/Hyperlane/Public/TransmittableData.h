@@ -11,13 +11,82 @@
 namespace TransmittableData
 {
 
+/** The type of message that is being transmitted. Marked as a byte-field and must always be prefixed to the message. */
+typedef uint8 DataTransmissionType;
+
+namespace EDataTransmissionType
+{
+
+enum Type : DataTransmissionType
+{
+    Invalid                 = 0b00,
+    Ping                    = 0b01,
+    ChunkInitializationData = 0b10,
+};
+
+}
+
+FORCEINLINE static int32 GetTypeSize(const EDataTransmissionType::Type InType)
+{
+    switch (InType)
+    {
+    case EDataTransmissionType::Invalid:
+    {
+        LOG_FATAL(LogHyperlane, "Queried for the invalid state.")
+        return 0;
+    }
+    case EDataTransmissionType::Ping:
+    {
+        return 0;
+    }
+    case EDataTransmissionType::ChunkInitializationData:
+    {
+        return sizeof(DataTransmissionType) + sizeof(FChunkKey) + sizeof(voxel_t) * WorldStatics::VoxelCount;
+    }
+    default:
+    {
+        checkNoEntry()
+        return 0;
+    }
+    }
+}
+
+FORCEINLINE static auto SerializeType(FArchive& Ar, const EDataTransmissionType::Type& TransmissionType) -> void
+{
+    DataTransmissionType AsByte = TransmissionType; Ar << AsByte;
+}
+
+FORCEINLINE static auto DeserializeType(FArchive& Ar, EDataTransmissionType::Type& TransmissionType) -> void
+{
+    DataTransmissionType FirstByte; Ar << FirstByte;
+    TransmissionType = static_cast<EDataTransmissionType::Type>(FirstByte);
+}
+
+/**
+ * @param Bytes Recv buffer of the socket connection.
+ * @return The type of the message that was transmitted.
+ */
+FORCEINLINE static EDataTransmissionType::Type DeserializeType(const TArray<uint8>& Bytes)
+{
+    FMemoryReader Ar = FMemoryReader(Bytes, true);
+    Ar.Seek(0b0);
+
+    EDataTransmissionType::Type Type; TransmittableData::DeserializeType(Ar, Type);
+
+    Ar.FlushCache();
+    if (Ar.Close() == false)
+    {
+        LOG_FATAL(LogHyperlane, "Failed to close memory reader.")
+    }
+
+    return Type;
+}
+
 struct FChunkInitializationData
 {
     FChunkKey ChunkKey;
+    /** A dynamic array with the size of WorldStatics::VoxelCount. */
     voxel_t*  Voxels;
-
-    static constexpr int32 VoxelCount { WorldStatics::ChunkSize * WorldStatics::ChunkSize * WorldStatics::ChunkSize };
-    static constexpr int32 VoxelSize { sizeof(voxel_t) * WorldStatics::ChunkSize * WorldStatics::ChunkSize * WorldStatics::ChunkSize };
 
     FORCEINLINE auto SerializeToBytes(TArray<uint8>& OutBytes) -> void
     {
@@ -29,26 +98,37 @@ struct FChunkInitializationData
         OutBytes.Reset(Ar.Num());
         OutBytes.Append(Ar.GetData(), Ar.Num());
 
+        check(
+            OutBytes.Num() <=
+            /* The predicted size. Hardcoded here, so we do not accidentally change struct sizes. */
+            16397
+        )
+
         Ar.FlushCache();
         Ar.Empty();
 
         return;
     }
 
-    FORCEINLINE friend FArchive& operator<<( FArchive& Ar, FChunkInitializationData* Data )
+    /** Only use for serialization. */
+    FORCEINLINE friend auto operator<<(FArchive& Ar, FChunkInitializationData* Data) -> FArchive&
     {
+        TransmittableData::SerializeType(Ar, EDataTransmissionType::ChunkInitializationData);
         Ar << Data->ChunkKey;
-        for (int32 i = 0; i < FChunkInitializationData::VoxelCount; ++i)
+        for (int32 i = 0; i < WorldStatics::VoxelCount; ++i)
         {
             Ar << Data->Voxels[i];
         }
         return Ar;
     }
 
-    FORCEINLINE friend FArchive& operator<<( FArchive& Ar, FChunkInitializationData& Data )
+    /** Only use for deserialization. */
+    FORCEINLINE friend auto operator<<(FArchive& Ar, FChunkInitializationData& Data) -> FArchive&
     {
+        /* We can ignore the type. It must have been already identified. */
+        uint8 Type; Ar << Type;
         Ar << Data.ChunkKey;
-        for (int32 i = 0; i < FChunkInitializationData::VoxelCount; ++i)
+        for (int32 i = 0; i < WorldStatics::VoxelCount; ++i)
         {
             Ar << Data.Voxels[i];
         }
@@ -59,7 +139,7 @@ struct FChunkInitializationData
 FORCEINLINE auto DeserializeChunkInitializationData(const TArray<uint8>& InBytes) -> TransmittableData::FChunkInitializationData
 {
     TransmittableData::FChunkInitializationData Data;
-    Data.Voxels = new voxel_t[FChunkInitializationData::VoxelSize];
+    Data.Voxels = new voxel_t[WorldStatics::VoxelCount];
 
     FMemoryReader Ar = FMemoryReader(InBytes, true);
     Ar.Seek(0b0);

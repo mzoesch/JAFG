@@ -63,65 +63,16 @@ void UChunkValidationSubsystemLitSv::MyTick(const float DeltaTime)
 {
     Super::MyTick(DeltaTime);
 
-    this->LoadUnLoadMyChunks(GEngine->GetFirstLocalPlayerController(this->GetWorld())->GetPawnOrSpectator()->GetActorLocation());
-    this->LoadUnloadTheirChunks();
+    this->LoadUnloadMyAndTheirChunks();
 
     return;
 }
 
-void UChunkValidationSubsystemLitSv::LoadUnLoadMyChunks(const FVector& LocalPlayerLocation) const
+void UChunkValidationSubsystemLitSv::LoadUnloadMyAndTheirChunks(void) const
 {
     constexpr int RenderDistance { 10 };
 
-    if (this->ChunkGenerationSubsystem->GetPendingKillVerticalChunkQueue().IsEmpty() == false)
-    {
-        LOG_ERROR(LogChunkValidation, "Pending kill vertical chunks is not empty.")
-    }
-
-    this->ChunkGenerationSubsystem->ClearVerticalChunkQueue();
-
-    TArray<FChunkKey2> PreferredChunks = Validation::GetAllChunksInDistance(ChunkStatics::WorldToVerticalChunkKey(LocalPlayerLocation), RenderDistance);
-
-    // Loading
-    //////////////////////////////////////////////////////////////////////////
-    int32 NewChunksCounter = 0;
-    for (const FChunkKey2& Preferred : PreferredChunks)
-    {
-        if (this->ChunkGenerationSubsystem->GetVerticalChunks().Contains(Preferred) == false)
-        {
-            this->ChunkGenerationSubsystem->GenerateVerticalChunkAsync(Preferred);
-            NewChunksCounter++;
-        }
-    }
-
-    // Unloading
-    //////////////////////////////////////////////////////////////////////////
-    int32 UnloadedChunksCounter = 0;
-    for (const FChunkKey2& ActiveChunk : this->ChunkGenerationSubsystem->GetVerticalChunks())
-    {
-        if (PreferredChunks.Contains(ActiveChunk) == false)
-        {
-            this->ChunkGenerationSubsystem->AddVerticalChunkToPendingKillQueue(ActiveChunk);
-            UnloadedChunksCounter++;
-        }
-    }
-
-#if !UE_BUILD_SHIPPING
-    if ((NewChunksCounter == 0 && UnloadedChunksCounter == 0) == false)
-    {
-        LOG_VERY_VERBOSE(LogChunkValidation, "Decided to load %d and unload %d chunks.", NewChunksCounter, UnloadedChunksCounter)
-    }
-#endif
-
-    return;
-}
-
-void UChunkValidationSubsystemLitSv::LoadUnloadTheirChunks(void) const
-{
-    constexpr int RenderDistance { 10 };
-
-    TArray<FChunkKey2> PreferredChunks    = TArray<FChunkKey2>();
-    /* Can be zero if the server is running without any clients. */
+    TArray<FChunkKey2> PreferredChunks = TArray<FChunkKey2>();
     if (FConstPlayerControllerIterator It = this->GetWorld()->GetPlayerControllerIterator(); It)
     {
         for (; It; ++It)
@@ -144,10 +95,12 @@ void UChunkValidationSubsystemLitSv::LoadUnloadTheirChunks(void) const
         }
     }
 
+    /* Copied for faster access. */
+    const TArray<FChunkKey2> PersistentChunks = this->ChunkGenerationSubsystem->GetPersistentVerticalChunks();
+
     // Loading
     //////////////////////////////////////////////////////////////////////////
     int32 NewChunksCounter = 0;
-    const TArray<FChunkKey2> PersistentChunks = this->ChunkGenerationSubsystem->GetPersistentVerticalChunks();
     for (const FChunkKey2& Preferred : PreferredChunks)
     {
         if (PersistentChunks.Contains(Preferred) == false)
@@ -160,7 +113,7 @@ void UChunkValidationSubsystemLitSv::LoadUnloadTheirChunks(void) const
     // Unloading
     //////////////////////////////////////////////////////////////////////////
     int32 UnloadedChunksCounter = 0;
-    for (const FChunkKey2& ActiveChunk : this->ChunkGenerationSubsystem->GetVerticalChunks())
+    for (const FChunkKey2& ActiveChunk : PersistentChunks)
     {
         if (PreferredChunks.Contains(ActiveChunk) == false)
         {

@@ -16,7 +16,7 @@ class UChunkGenerationSubsystem;
  * Based on the local player location, the connected clients locations and chunk world generation distance.
  * This subsystem is therefore only being created if the game is running in a listen server mode.
  */
-UCLASS()
+UCLASS(NotBlueprintable)
 class JAFG_API UChunkValidationSubsystemLitSv : public UJAFGTickableWorldSubsystem
 {
     GENERATED_BODY()
@@ -48,14 +48,5 @@ private:
     UPROPERTY()
     TObjectPtr<UChunkGenerationSubsystem> ChunkGenerationSubsystem;
 
-    /**
-     * Will load and unload the chunks from the local player's perspective, meaning the chunks from the host
-     * of this currently running listen server.
-     */
-    auto LoadUnLoadMyChunks(const FVector& LocalPlayerLocation) const -> void;
-    /**
-     * Will load and unload the chunks from the perspective of the other players, meaning the chunks from the
-     * clients connected to this currently running listen server.
-     */
-    auto LoadUnloadTheirChunks(void) const -> void;
+    auto LoadUnloadMyAndTheirChunks(void) const -> void;
 };

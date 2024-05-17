@@ -7,7 +7,7 @@
 class UHyperlaneComponent;
 
 DECLARE_DELEGATE(FTCPHyperlaneWorkerEventSignature)
-DECLARE_DELEGATE_OneParam(FTCPHyperlaneWorkerMessageSignature, const TArray<uint8>& /* Bytes */)
+DECLARE_DELEGATE_OneParam(FTCPHyperlaneWorkerMessageSignature, TArray<uint8>& /* Bytes */)
 
 class HYPERLANE_API FHyperlaneWorker final : public FRunnable
 {
@@ -67,5 +67,6 @@ private:
     FTCPHyperlaneWorkerMessageSignature OnBytesReceivedDelegate;
     auto OnConnectedDelegateHandler(void) const -> void;
     auto OnDisconnectedDelegateHandler(void) -> void;
-    auto OnBytesReceivedDelegateHandler(const TArray<uint8>& Bytes) const -> void;
+    /** @note This method will sequentially cut down the bytes. Copy the in-array if still needed after this method. */
+    auto OnBytesReceivedDelegateHandler(TArray<uint8>& InBytes) const -> void;
 };

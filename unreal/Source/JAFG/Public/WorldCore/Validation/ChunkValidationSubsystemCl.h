@@ -7,15 +7,16 @@
 
 #include "ChunkValidationSubsystemCl.generated.h"
 
-class UChunkGenerationSubsystem;
 JAFG_VOID
+
+class UChunkGenerationSubsystem;
 
 /**
  * Handles the validation of chunks.
  * Based on the local player location and chunk world generation distance.
  * This subsystem is therefore only being created if the game is running as a client conneted to some form of server.
  */
-UCLASS()
+UCLASS(NotBlueprintable)
 class JAFG_API UChunkValidationSubsystemCl : public UJAFGTickableWorldSubsystem
 {
     GENERATED_BODY()

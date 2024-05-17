@@ -89,7 +89,11 @@ namespace WorldStatics
  * Do not increase this value beyond 16 for now. As we would breach the bunch size limit of 2^16 = 65.536 bytes.
  * See CommonChunk.h for more information.
  */
-extern inline constexpr int32 ChunkSize = 16;
+extern inline constexpr int32 ChunkSize        { 16 };
+extern inline constexpr int32 ChunkSizeSquared { WorldStatics::ChunkSize * WorldStatics::ChunkSize };
+extern inline constexpr int32 ChunkSizeCubed   { WorldStatics::ChunkSize * WorldStatics::ChunkSize * WorldStatics::ChunkSize };
+/** Per chunk basis. */
+extern inline constexpr int32 VoxelCount       { WorldStatics::ChunkSizeCubed };
 
 extern inline constexpr float  JToUScale        { 100.0f                               };
 extern inline constexpr float  UToJScale        { 1.0f / WorldStatics::JToUScale       };

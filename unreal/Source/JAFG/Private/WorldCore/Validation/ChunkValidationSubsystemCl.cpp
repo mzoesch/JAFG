@@ -70,7 +70,7 @@ void UChunkValidationSubsystemCl::MyTick(const float DeltaTime)
 
 void UChunkValidationSubsystemCl::LoadUnLoadChunks(const FVector& LocalPlayerLocation) const
 {
-    constexpr int RenderDistance { 3 };
+    constexpr int RenderDistance { 5 };
 
     if (this->ChunkGenerationSubsystem->GetPendingKillVerticalChunkQueue().IsEmpty() == false)
     {

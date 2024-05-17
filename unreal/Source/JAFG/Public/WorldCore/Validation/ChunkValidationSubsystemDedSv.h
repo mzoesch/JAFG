@@ -7,8 +7,9 @@
 
 #include "ChunkValidationSubsystemDedSv.generated.h"
 
-class UChunkGenerationSubsystem;
 JAFG_VOID
+
+class UChunkGenerationSubsystem;
 
 /**
  * Only spawned on the dedicated server.
@@ -22,7 +23,7 @@ JAFG_VOID
  * chunks from the players. A server cannot possibly load all loaded chunks from all players (even harder if the
  * players are spread out and each player has completly different chunks loaded).
  */
-UCLASS()
+UCLASS(NotBlueprintable)
 class JAFG_API UChunkValidationSubsystemDedSv : public UJAFGTickableWorldSubsystem
 {
     GENERATED_BODY()

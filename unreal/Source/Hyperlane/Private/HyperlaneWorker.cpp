@@ -69,7 +69,7 @@ bool FHyperlaneWorker::Init(void)
 
     this->OnConnectedDelegate.BindLambda( [this] (void) { this->OnConnectedDelegateHandler();  });
     this->OnDisconnectedDelegate.BindLambda( [this] (void) { this->OnDisconnectedDelegateHandler(); });
-    this->OnBytesReceivedDelegate.BindLambda( [this] (const TArray<uint8>& Bytes) { this->OnBytesReceivedDelegateHandler(Bytes); });
+    this->OnBytesReceivedDelegate.BindLambda( [this] (TArray<uint8>& Bytes) { this->OnBytesReceivedDelegateHandler(Bytes); });
 
     if (this->IsConnected())
     {
@@ -268,21 +268,11 @@ void FHyperlaneWorker::CreateConnectionEndFuture(void)
                 int32 Read = 0;
                 this->Socket->Recv(ReceiveBuffer.GetData(), ReceiveBuffer.Num(), Read);
 
-                /*
-                 * Kinda sketchy, but we probably will never send a message that is so small that it will trigger this
-                 * if-statement - as then we should use unreal's replication system or remote procedure calls instead.
-                 */
-                if (Read == FHyperlaneTransmitter::PingMsg.Len())
-                {
-                    LOG_VERY_VERBOSE(LogHyperlane, "Received ping message.")
-                }
-                else
-                {
-                    this->OnBytesReceivedDelegate.Execute(ReceiveBuffer);
-                }
+                LOG_VERY_VERBOSE(LogHyperlane, "Low level read: %d bytes with buffer %d but actual %d.", Read, BufferSize, ReceiveBuffer.Num())
+
+                this->OnBytesReceivedDelegate.Execute(ReceiveBuffer);
             }
 
-            /* Wait for a bit to not consume all CPU time. */
             this->Socket->Wait(ESocketWaitConditions::WaitForReadOrWrite, FTimespan(10));
 
             continue;
@@ -373,17 +363,62 @@ void FHyperlaneWorker::OnDisconnectedDelegateHandler(void)
 {
 }
 
-void FHyperlaneWorker::OnBytesReceivedDelegateHandler(const TArray<uint8>& Bytes) const
+void FHyperlaneWorker::OnBytesReceivedDelegateHandler(TArray<uint8>& InBytes) const
 {
-    LOG_VERY_VERBOSE(LogHyperlane, "Hyperlane Worker received %d bytes.", Bytes.Num())
+    LOG_VERY_VERBOSE(LogHyperlane, "Hyperlane Worker received %d bytes.", InBytes.Num())
 
-    TransmittableData::FChunkInitializationData Data = TransmittableData::DeserializeChunkInitializationData(Bytes);
-    LOG_VERBOSE(LogHyperlane, "Hyperlane Worker received chunk data for chunk [%s].", *Data.ChunkKey.ToString())
-
-    AsyncTask(ENamedThreads::GameThread, [this, Data] (void)
+    /*
+     * We call the deserialize methods in a loop. As a single Socket-Recv call can contain multiple messages if it
+     * receives more messages than we can currently handle.
+     */
+    while (true)
     {
-        this->OwningComponent->OnChunkInitializationDataReceived(Data);
-    });
+        int32 BytesRead = 0;
+
+        switch (TransmittableData::DeserializeType(InBytes))
+        {
+        case TransmittableData::EDataTransmissionType::Invalid:
+        {
+            LOG_FATAL(LogHyperlane, "Hyperlane Worker received invalid data.")
+            break;
+        }
+        case TransmittableData::EDataTransmissionType::Ping:
+        {
+            LOG_VERY_VERBOSE(LogHyperlane, "Received ping message.")
+            break;
+        }
+        case TransmittableData::EDataTransmissionType::ChunkInitializationData:
+        {
+            TransmittableData::FChunkInitializationData Data = TransmittableData::DeserializeChunkInitializationData(InBytes);
+            LOG_VERBOSE(LogHyperlane, "Hyperlane Worker received chunk data for chunk [%s].", *Data.ChunkKey.ToString())
+            AsyncTask(ENamedThreads::GameThread, [this, Data] (void)
+            {
+                this->OwningComponent->OnChunkInitializationDataReceived(Data);
+            });
+            BytesRead = TransmittableData::GetTypeSize(TransmittableData::EDataTransmissionType::ChunkInitializationData);
+            break;
+        }
+        default:
+        {
+            checkNoEntry()
+        }
+        }
+
+        LOG_VERY_VERBOSE(LogHyperlane, "Hyperlane Worker read %d bytes from all %d bytes.", BytesRead, InBytes.Num())
+
+        if (BytesRead == 0)             { break; }
+        if (BytesRead == InBytes.Num()) { break; }
+        if (BytesRead > InBytes.Num())
+        {
+            LOG_FATAL(LogHyperlane, "Hyperlane Worker read more bytes than received.")
+            break;
+        }
+
+        InBytes.RemoveAt(0, BytesRead);
+
+        continue;
+    }
+
 
     return;
 }

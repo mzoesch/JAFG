@@ -76,6 +76,12 @@ void UChunkGenerationSubsystem::MyTick(const float DeltaTime)
     {
         this->DequeueNextVerticalChunk();
         ChunksGenerated++;
+
+        if (this->bInClientMode && ChunksGenerated >= 2)
+        {
+            break;
+        }
+
     }
 
     if (this->bInClientMode)
