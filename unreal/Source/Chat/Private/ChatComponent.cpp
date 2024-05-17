@@ -3,7 +3,10 @@
 #include "ChatComponent.h"
 
 #include "ChatMenu.h"
+#include "ClientCommandSubsystem.h"
+#include "CommonChatStatics.h"
 #include "Definitions.h"
+#include "ServerCommandSubsystem.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 
 UChatComponent::UChatComponent(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -24,8 +27,29 @@ void UChatComponent::TickComponent(const float DeltaTime, const ELevelTick TickT
 void UChatComponent::ParseMessage(const FText& Message)
 {
     LOG_VERY_VERBOSE(LogJAFGChat, "Parsing message: %s", *Message.ToString())
+
+    if (CommandStatics::IsCommand(Message))
+    {
+        if (
+            UClientCommandSubsystem* ClientCommandSubsystem = this->GetWorld()->GetSubsystem<UClientCommandSubsystem>();
+            ClientCommandSubsystem->IsRegisteredClientCommand(Message)
+        )
+        {
+            int32   ErrorCode = 0;
+            FString Response  = L"";
+            ClientCommandSubsystem->ExecuteCommand(Message, ErrorCode, Response);
+            return;
+        }
+    }
+
     this->QueueMessage_ServerRPC(Message);
+
     return;
+}
+
+FString UChatComponent::GetPlayerDisplayName(void) const
+{
+    return this->GetOwner()->GetHumanReadableName();
 }
 
 bool UChatComponent::QueueMessage_ServerRPC_Validate(const FText& Message)
@@ -35,9 +59,68 @@ bool UChatComponent::QueueMessage_ServerRPC_Validate(const FText& Message)
 
 void UChatComponent::QueueMessage_ServerRPC_Implementation(const FText& Message)
 {
+    if (CommandStatics::IsCommand(Message) == false)
+    {
+        this->BroadcastMessage(Message);
+        return;
+    }
+
+    const UServerCommandSubsystem* ServerCommandSubsystem = this->GetWorld()->GetSubsystem<UServerCommandSubsystem>();
+    check( ServerCommandSubsystem )
+
+    CommandReturnCode ReturnCode = 0;
+    FString           Response  = L"";
+
+    ServerCommandSubsystem->ExecuteCommand(Message, ReturnCode, Response);
+
+    if (ReturnCode == ECommandReturnCodes::Invalid)
+    {
+        LOG_FATAL(LogJAFGChat, "Server command subsystem returned invalid return code.")
+        return;
+    }
+
+    if (ReturnCode == ECommandReturnCodes::Success)
+    {
+        this->AddMessageToChatLog_ClientRPC(
+            FString::Printf(TEXT("%s"), *ChatStatics::AuthorityName),
+            FText::FromString(Response)
+        );
+        return;
+    }
+
+    if (ReturnCode == ECommandReturnCodes::SuccessNoResponse)
+    {
+        return;
+    }
+
+    if (ECommandReturnCodes::IsFailure(ReturnCode))
+    {
+        LOG_WARNING(
+            LogJAFGChat,
+            "Player [%s] attempted to execute command [%s] with return code [%s].",
+            *this->GetPlayerDisplayName(), *Message.ToString(), *ECommandReturnCodes::LexToString(ReturnCode)
+        )
+        /*
+         * We want to give the client as little information as possible about the failure.
+         * If they are an administrator, they may want to check the logs then.
+         */
+        this->AddMessageToChatLog_ClientRPC(
+            ChatStatics::AuthorityName,
+            FText::FromString(TEXT("Unknown command or command can not executated by you."))
+        );
+        return;
+    }
+
+    checkNoEntry()
+
+    return;
+}
+
+void UChatComponent::BroadcastMessage(const FText& Message) const
+{
     LOG_VERBOSE(LogJAFGChat, "Queueing message [%s]. Pending clients: %d.", *Message.ToString(), this->GetWorld()->GetNumPlayerControllers())
 
-    const FString Sender = this->GetOwner()->GetHumanReadableName();
+    const FString Sender = this->GetPlayerDisplayName();
 
     if (
         /*

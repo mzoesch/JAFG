@@ -7,22 +7,8 @@
 
 #include "ChatComponent.generated.h"
 
-namespace ChatStatics
-{
-
-extern inline constexpr int32 MaxChatInputLength = 0x3F;
-
-FORCEINLINE bool IsTextToLong(const FText& Text)
-{
-    return Text.ToString().Len() > MaxChatInputLength;
-}
-
-FORCEINLINE bool IsTextValid(const FText& Text)
-{
-    return Text.ToString().Len() > 0 && ChatStatics::IsTextToLong(Text) == false;
-}
-
-}
+class UClientCommandSubsystem;
+class UServerCommandSubsystem;
 
 struct FPrivateMessagePreConstruct final
 {
@@ -34,6 +20,9 @@ UCLASS(NotBlueprintable)
 class CHAT_API UChatComponent : public UActorComponent
 {
     GENERATED_BODY()
+
+    friend UClientCommandSubsystem;
+    friend UServerCommandSubsystem;
 
 public:
 
@@ -53,8 +42,6 @@ public:
      */
     virtual void ParseMessage(const FText& Message);
 
-
-
     /**
      * If the client receives a message from the server, but has just logged in. Their widgets might not yet have
      * been initialized by the time the message arrives.
@@ -63,9 +50,12 @@ public:
 
 private:
 
+    FString GetPlayerDisplayName(void) const;
+
     UFUNCTION(Server, Reliable, WithValidation)
     void QueueMessage_ServerRPC(const FText& Message);
 
+    void BroadcastMessage(const FText& Message) const;
     UFUNCTION(Client, Reliable)
     void AddMessageToChatLog_ClientRPC(const FString& Sender, const FText& Message);
 };

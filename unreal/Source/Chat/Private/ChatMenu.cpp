@@ -3,6 +3,7 @@
 #include "ChatMenu.h"
 
 #include "ChatComponent.h"
+#include "CommonChatStatics.h"
 #include "EnhancedInputSubsystems.h"
 #include "JAFGSlateSettings.h"
 #include "Components/EditableText.h"
