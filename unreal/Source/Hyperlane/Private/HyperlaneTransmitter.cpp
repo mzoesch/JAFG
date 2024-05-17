@@ -406,22 +406,22 @@ void FHyperlaneTransmitter::CreateServerEndFuture(void)
                         continue;
                     }
 
-                    // int32 BytesSent = 0;
-                    // if (const bool Sent = Client->Socket->Send(PingMsgBytes.GetData(), PingMsgBytes.Num(), BytesSent); Sent == false)
-                    // {
-                    //     LOG_ERROR(LogHyperlane, "Failed to send ping to %s.", *Client->Address)
-                    //
-                    //     if (Client->Socket->Close())
-                    //     {
-                    //         LOG_DISPLAY(LogHyperlane, "Closed socket for %s.", *Client->Address)
-                    //     }
-                    //     else
-                    //     {
-                    //         LOG_ERROR(LogHyperlane, "Closed socket for %s with unknown errors.", *Client->Address)
-                    //     }
-                    //
-                    //     ClientsDisconnected.Add(Client);
-                    // }
+                    int32 BytesSent = 0;
+                    if (const bool Sent = Client->Socket->Send(this->PingAsBytes.GetData(), this->PingAsBytes.Num(), BytesSent); Sent == false)
+                    {
+                        LOG_ERROR(LogHyperlane, "Failed to send ping to %s.", *Client->Address)
+
+                        if (Client->Socket->Close())
+                        {
+                            LOG_DISPLAY(LogHyperlane, "Closed socket for %s.", *Client->Address)
+                        }
+                        else
+                        {
+                            LOG_ERROR(LogHyperlane, "Closed socket for %s with unknown errors.", *Client->Address)
+                        }
+
+                        ClientsDisconnected.Add(Client);
+                    }
 
                     continue;
                 }

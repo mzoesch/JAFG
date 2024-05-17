@@ -37,7 +37,7 @@ FORCEINLINE static int32 GetTypeSize(const EDataTransmissionType::Type InType)
     }
     case EDataTransmissionType::Ping:
     {
-        return 0;
+        return sizeof(DataTransmissionType);
     }
     case EDataTransmissionType::ChunkInitializationData:
     {
@@ -80,6 +80,23 @@ FORCEINLINE static EDataTransmissionType::Type DeserializeType(const TArray<uint
     }
 
     return Type;
+}
+
+FORCEINLINE static auto GetPingAsBytes(void) -> TArray<uint8>
+{
+    TArray<uint8> Bytes;
+    FMemoryWriter Ar = FMemoryWriter(Bytes, true);
+    Ar.Seek(0b0);
+
+    TransmittableData::SerializeType(Ar, EDataTransmissionType::Ping);
+
+    Ar.FlushCache();
+    if (Ar.Close() == false)
+    {
+        LOG_FATAL(LogHyperlane, "Failed to close memory writer.")
+    }
+
+    return Bytes;
 }
 
 struct FChunkInitializationData

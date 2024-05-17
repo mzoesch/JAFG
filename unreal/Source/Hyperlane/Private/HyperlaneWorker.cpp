@@ -404,8 +404,6 @@ void FHyperlaneWorker::OnBytesReceivedDelegateHandler(TArray<uint8>& InBytes) co
         }
         }
 
-        LOG_VERY_VERBOSE(LogHyperlane, "Hyperlane Worker read %d bytes from all %d bytes.", BytesRead, InBytes.Num())
-
         if (BytesRead == 0)             { break; }
         if (BytesRead == InBytes.Num()) { break; }
         if (BytesRead > InBytes.Num())
@@ -414,6 +412,17 @@ void FHyperlaneWorker::OnBytesReceivedDelegateHandler(TArray<uint8>& InBytes) co
             break;
         }
 
+        LOG_VERY_VERBOSE(
+            LogHyperlane,
+            "Received multiple message in one recv call. Read %d bytes from all %d bytes in buffer.",
+            BytesRead, InBytes.Num()
+        )
+
+        /*
+         * Offsetting the array. But actually we do not?
+         * We may want to figure out a way on how to do properly offset the array without changing memory allocations.
+         * Currently, this method is not very efficient.
+         */
         InBytes.RemoveAt(0, BytesRead);
 
         continue;

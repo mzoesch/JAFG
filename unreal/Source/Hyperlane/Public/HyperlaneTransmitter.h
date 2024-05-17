@@ -58,14 +58,9 @@ private:
     /** If false, the main transmitter loop will stop. And safely disconnect all clients. */
     FThreadSafeBool bShouldListen = true;
 
-    FThreadSafeBool bShouldPingCheck    = true;
-    float PingCheckIntervalInSeconds    = 5.0f;
-    inline static const FString PingMsg = TEXT("PING");
-    TArray<uint8> PingMsgBytes          =
-        TArray<uint8>(
-            reinterpret_cast<uint8*>(TCHAR_TO_UTF8(*FHyperlaneTransmitter::PingMsg)),
-            FHyperlaneTransmitter::PingMsg.Len()
-        );
+    FThreadSafeBool bShouldPingCheck = true;
+    float PingCheckIntervalInSeconds = 5.0f;
+    TArray<uint8> PingAsBytes        = TransmittableData::GetPingAsBytes();
 
     auto DisconnectAllClients(void) -> void;
     auto DisconnectSingleClient(const FClientAddress& TargetAddr, const bool bRemoveFromMap = true) -> void;
