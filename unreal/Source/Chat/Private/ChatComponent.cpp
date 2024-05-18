@@ -71,7 +71,7 @@ void UChatComponent::QueueMessage_ServerRPC_Implementation(const FText& Message)
     CommandReturnCode ReturnCode = 0;
     FString           Response  = L"";
 
-    ServerCommandSubsystem->ExecuteCommand(Message, ReturnCode, Response);
+    ServerCommandSubsystem->ExecuteCommand(this, Message, ReturnCode, Response);
 
     if (ReturnCode == ECommandReturnCodes::Invalid)
     {

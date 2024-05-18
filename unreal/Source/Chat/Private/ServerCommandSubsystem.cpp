@@ -54,17 +54,17 @@ bool UServerCommandSubsystem::IsRegisteredCommand(const FServerCommand& Command)
     return this->ServerCommands.Contains(CommandStatics::SafePrefixServerCommand(Command));
 }
 
-void UServerCommandSubsystem::ExecuteCommand(const FText& StdIn, CommandReturnCode& OutReturnCode, FString& OutResponse) const
+void UServerCommandSubsystem::ExecuteCommand(const UChatComponent* Owner, const FText& StdIn, CommandReturnCode& OutReturnCode, FString& OutResponse) const
 {
     TArray<FString> Args;
     FServerCommand Command = CommandStatics::GetCommandWithArgs(StdIn, Args);
     Command = CommandStatics::SafePrefixServerCommand(Command);
-    this->ExecuteCommand(Command, Args, OutReturnCode, OutResponse);
+    this->ExecuteCommand(Owner,Command, Args, OutReturnCode, OutResponse);
 
     return;
 }
 
-void UServerCommandSubsystem::ExecuteCommand(const FServerCommand& Command, const TArray<FString>& Args, CommandReturnCode& OutReturnCode, FString& OutResponse) const
+void UServerCommandSubsystem::ExecuteCommand(const UChatComponent* Owner, const FServerCommand& Command, const TArray<FString>& Args, CommandReturnCode& OutReturnCode, FString& OutResponse) const
 {
     LOG_VERY_VERBOSE(LogJAFGChat, "Executing server command: [%s].", *Command)
 
@@ -76,7 +76,7 @@ void UServerCommandSubsystem::ExecuteCommand(const FServerCommand& Command, cons
         return;
     }
 
-    this->ServerCommands[Command](Args, OutReturnCode, OutResponse);
+    this->ServerCommands[Command](Owner, Args, OutReturnCode, OutResponse);
 
     return;
 }
@@ -87,14 +87,24 @@ void UServerCommandSubsystem::InitializeAllCommands(void)
     //////////////////////////////////////////////////////////////////////////
     {
         const FServerCommand Command = TEXT("sv_broadcast");
-        this->ServerCommands.Add(Command, [this] (const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse)
+        this->ServerCommands.Add(Command, [this] (const UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse)
         {
-            this->OnBroadcastCommand(InArgs, OutReturnCode, OutResponse);
+            this->OnBroadcastCommand(Owner, InArgs, OutReturnCode, OutResponse);
+        });
+    }
+
+    // Fly
+    //////////////////////////////////////////////////////////////////////////
+    {
+        const FServerCommand Command = TEXT("sv_fly");
+        this->ServerCommands.Add(Command, [this] (const UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse)
+        {
+            this->OnFlyCommand(Owner, InArgs, OutReturnCode, OutResponse);
         });
     }
 }
 
-void UServerCommandSubsystem::OnBroadcastCommand(const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const
+void UServerCommandSubsystem::OnBroadcastCommand(const UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const
 {
     if (InArgs.IsEmpty())
     {
@@ -128,4 +138,9 @@ void UServerCommandSubsystem::OnBroadcastCommand(const TArray<FString>& InArgs, 
     OutResponse  = L"";
 
     return;
+}
+
+void UServerCommandSubsystem::OnFlyCommand(const UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const
+{
+    OutReturnCode = ECommandReturnCodes::SuccessNoResponse;
 }

@@ -9,8 +9,11 @@
 
 #include "WorldCharacter.generated.h"
 
+class USpringArmComponent;
 class UInputComponent;
 struct FInputActionValue;
+
+DECLARE_MULTICAST_DELEGATE(FOnCamerChangedEventSignature);
 
 UCLASS(Abstract)
 class JAFG_API AWorldCharacter : public ACharacter
@@ -32,8 +35,33 @@ protected:
     // AActor Components
     //////////////////////////////////////////////////////////////////////////
 
+    /**
+     * A wrapper around primitive components that only should be visible for other players or the owing player
+     * if he is in any third-person camera mode.
+     */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    TObjectPtr<UPrimitiveComponent> NonFPMeshWrapper;
+    void ListenForCameraChangedEventWithNonFPMeshWrapper(void);
+
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UCameraComponent> FirstPersonCameraComponent;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    TObjectPtr<USpringArmComponent> ThirdPersonSpringArmComponent;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    TObjectPtr<UCameraComponent> ThirdPersonCameraComponent;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    TObjectPtr<USpringArmComponent> ThirdPersonFrontSpringArmComponent;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    TObjectPtr<UCameraComponent> ThirdPersonFrontCameraComponent;
+
+#pragma region Member Variables
+
+    float DefaultFieldOfView = 120.0f;
+    float ZoomedFieldOfView  = 60.0f;
+
+#pragma endregion Member Variables
 
 #pragma region Enhanced Input
 
@@ -43,11 +71,9 @@ public:
     // Enhanced Input Extern Events
     //////////////////////////////////////////////////////////////////////////
 
-    // Some subscribe methods
-
 private:
 
-    // The actual events
+    FOnCamerChangedEventSignature OnCameraChangedEvent;
 
 protected:
 
@@ -58,8 +84,18 @@ protected:
 
     virtual void OnMove(const FInputActionValue& Value);
     virtual void OnLook(const FInputActionValue& Value);
+    virtual void OnStartedJump(const FInputActionValue& Value);
     virtual void OnTriggerJump(const FInputActionValue& Value);
     virtual void OnCompleteJump(const FInputActionValue& Value);
+    virtual void OnTriggerCrouch(const FInputActionValue& Value);
+    virtual void OnCompleteCrouch(const FInputActionValue& Value);
+
+    virtual void OnToggleCameras(const FInputActionValue& Value);
+    virtual void OnTriggerZoomFirstPersonCamera(const FInputActionValue& Value);
+    virtual void OnCompleteZoomFirstPersonCamera(const FInputActionValue& Value);
+
+    float LastJumpTimeInFlyMode = 0.0f;
+    static constexpr float JumpFlyModeDeactivationTime = 0.5f;
 
 private:
 

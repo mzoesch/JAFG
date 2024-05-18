@@ -25,8 +25,11 @@ namespace InputActions
 extern inline const FString Move              = TEXT("Move");
 extern inline const FString Look              = TEXT("Look");
 extern inline const FString Jump              = TEXT("Jump");
+extern inline const FString Crouch            = TEXT("Crouch");
 extern inline const FString ToggleEscapeMenu  = TEXT("ToggleEscapeMenu");
 extern inline const FString ToggleDebugScreen = TEXT("ToggleDebugScreen");
 extern inline const FString ToggleChat        = TEXT("ToggleChat");
+extern inline const FString ToggleCameras     = TEXT("ToggleCameras");
+extern inline const FString ZoomFPCamera      = TEXT("ZoomFPCamera");
 
 }

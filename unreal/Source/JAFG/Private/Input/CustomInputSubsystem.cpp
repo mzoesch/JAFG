@@ -105,6 +105,17 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
         InputSubsystem->AddAction(Action);
     }
 
+    // Crouch Action
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGInputAction Action;
+        Action.Name        = InputActions::Crouch;
+        Action.DefaultKeyA = EKeys::LeftControl;
+        Action.DefaultKeyB = EKeys::Invalid;
+        Action.Contexts.Add(InputContexts::Foot);
+        InputSubsystem->AddAction(Action);
+    }
+
     // Toggle Escape Menu Action
     //////////////////////////////////////////////////////////////////////////
     {
@@ -137,6 +148,28 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
         Action.Keys.Add( { EKeys::Escape, EKeys::Invalid } );
         Action.Contexts.Add( { InputContexts::Foot } );
         Action.Contexts.Add( { InputContexts::Chat } );
+        InputSubsystem->AddAction(Action);
+    }
+
+    // Toggle Cameras Action
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGInputAction Action;
+        Action.Name        = InputActions::ToggleCameras;
+        Action.DefaultKeyA = EKeys::LeftShift;
+        Action.DefaultKeyB = EKeys::Invalid;
+        Action.Contexts.Add(InputContexts::Foot);
+        InputSubsystem->AddAction(Action);
+    }
+
+    // Toggle Zoom First Person Camera Action
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGInputAction Action;
+        Action.Name        = InputActions::ZoomFPCamera;
+        Action.DefaultKeyA = EKeys::C;
+        Action.DefaultKeyB = EKeys::Invalid;
+        Action.Contexts.Add(InputContexts::Foot);
         InputSubsystem->AddAction(Action);
     }
 

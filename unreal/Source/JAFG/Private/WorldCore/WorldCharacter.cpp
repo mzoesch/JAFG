@@ -6,32 +6,54 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/PrimitiveComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "Input/CustomInputNames.h"
 #include "Input/JAFGInputSubsystem.h"
 #include "Player/WorldPlayerController.h"
+#include "WorldCore/Character/MyCharacterMovementComponent.h"
 
-class UEnhancedInputLocalPlayerSubsystem;
-
-AWorldCharacter::AWorldCharacter(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+AWorldCharacter::AWorldCharacter(const FObjectInitializer& ObjectInitializer) :
+Super(ObjectInitializer.SetDefaultSubobjectClass<UMyCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
     this->PrimaryActorTick.bCanEverTick = false;
 
-    this->bReplicates = true;
-
     this->GetCapsuleComponent()->InitCapsuleSize(40.0f, 90.0f);
+
+    this->NonFPMeshWrapper = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("NonFPMeshWrapper"));
+    this->NonFPMeshWrapper->SetupAttachment(this->GetCapsuleComponent());
+    this->NonFPMeshWrapper->SetOwnerNoSee(true);
 
     this->FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
     this->FirstPersonCameraComponent->SetupAttachment(this->GetCapsuleComponent());
-    this->FirstPersonCameraComponent->SetRelativeLocation(FVector(-10.0f, 0.0f, 60.0f));
+    this->FirstPersonCameraComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 60.0f));//FVector(-10.0f, 0.0f, 60.0f));
     this->FirstPersonCameraComponent->bUsePawnControlRotation = true;
-    this->FirstPersonCameraComponent->SetFieldOfView( 120.0f );
+    this->FirstPersonCameraComponent->SetFieldOfView(this->DefaultFieldOfView);
 
-    this->GetCharacterMovement()->GravityScale               = 2.0f;
-    this->GetCharacterMovement()->JumpZVelocity              = 700.0f;
-    this->GetCharacterMovement()->AirControl                 = 2.0f;
-    this->GetCharacterMovement()->MaxStepHeight              = 60.0f;
-    this->GetCharacterMovement()->bUseFlatBaseForFloorChecks = true;
+    this->ThirdPersonSpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("ThirdPersonSpringArm"));
+    this->ThirdPersonSpringArmComponent->SetupAttachment(this->GetCapsuleComponent());
+    this->ThirdPersonSpringArmComponent->SocketOffset            = FVector(0.0f, 0.0f, 60.0f);
+    this->ThirdPersonSpringArmComponent->bUsePawnControlRotation = true;
+    this->ThirdPersonSpringArmComponent->TargetArmLength         = 256.0f;
+
+    this->ThirdPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("ThirdPersonCamera"));
+    this->ThirdPersonCameraComponent->SetupAttachment(this->ThirdPersonSpringArmComponent);
+    this->ThirdPersonCameraComponent->SetFieldOfView(this->DefaultFieldOfView);
+    this->ThirdPersonCameraComponent->Deactivate();
+
+    this->ThirdPersonFrontSpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("ThirdPersonFrontSpringArm"));
+    this->ThirdPersonFrontSpringArmComponent->SetupAttachment(this->GetCapsuleComponent());
+    this->ThirdPersonFrontSpringArmComponent->SocketOffset            = FVector(0.0f, 0.0f, 60.0f);
+    this->ThirdPersonFrontSpringArmComponent->bUsePawnControlRotation = true;
+    this->ThirdPersonFrontSpringArmComponent->TargetArmLength         = -256.0f;
+
+    this->ThirdPersonFrontCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("ThirdPersonFrontCamera"));
+    this->ThirdPersonFrontCameraComponent->SetupAttachment(this->ThirdPersonFrontSpringArmComponent);
+    this->ThirdPersonFrontCameraComponent->SetFieldOfView(this->DefaultFieldOfView);
+    this->ThirdPersonFrontCameraComponent->SetRelativeRotation(FRotator(0.0f, 180.0f, 0.0f));
+    this->ThirdPersonFrontCameraComponent->Deactivate();
 
     return;
 }
@@ -53,7 +75,15 @@ void AWorldCharacter::BeginPlay(void)
         return;
     }
 
-    this->EscapeMenuVisibilityChangedHandle = WorldPlayerController->SubscribeToEscapeMenuVisibilityChanged(ADD_SLATE_VIS_DELG(AWorldCharacter::OnEscapeMenuVisibilityChanged));
+    this->EscapeMenuVisibilityChangedHandle =
+        WorldPlayerController->SubscribeToEscapeMenuVisibilityChanged(
+            ADD_SLATE_VIS_DELG(AWorldCharacter::OnEscapeMenuVisibilityChanged)
+        );
+
+    this->ListenForCameraChangedEventWithNonFPMeshWrapper();
+
+    /* Let components set the current defaults for the active camera. */
+    this->OnCameraChangedEvent.Broadcast();
 
     return;
 }
@@ -78,6 +108,28 @@ void AWorldCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
     {
         LOG_ERROR(LogWorldChar, "Failed to unsubscribe from Escape Menu Visibility Changed event.")
     }
+
+    return;
+}
+
+void AWorldCharacter::ListenForCameraChangedEventWithNonFPMeshWrapper(void)
+{
+    this->OnCameraChangedEvent.AddLambda( [this] (void)
+    {
+        this->NonFPMeshWrapper->SetOwnerNoSee(this->FirstPersonCameraComponent->IsActive());
+
+        TArray<USceneComponent*> Children = TArray<USceneComponent*>();
+        this->NonFPMeshWrapper->GetChildrenComponents(true, Children);
+        for (USceneComponent* Child : Children)
+        {
+            if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Child); Primitive)
+            {
+                Primitive->SetOwnerNoSee(this->FirstPersonCameraComponent->IsActive());
+            }
+        }
+
+        return;
+    });
 
     return;
 }
@@ -122,15 +174,33 @@ void AWorldCharacter::BindAction(const FString& ActionName, UEnhancedInputCompon
         this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Triggered, &AWorldCharacter::OnMove);
     }
 
-    if (ActionName == InputActions::Look)
+    else if (ActionName == InputActions::Look)
     {
         this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Triggered, &AWorldCharacter::OnLook);
     }
 
-    if (ActionName == InputActions::Jump)
+    else if (ActionName == InputActions::Jump)
     {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldCharacter::OnStartedJump);
         this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Triggered, &AWorldCharacter::OnTriggerJump);
         this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Completed, &AWorldCharacter::OnCompleteJump);
+    }
+
+    else if (ActionName == InputActions::Crouch)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Triggered, &AWorldCharacter::OnTriggerCrouch);
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Completed, &AWorldCharacter::OnCompleteCrouch);
+    }
+
+    else if (ActionName == InputActions::ToggleCameras)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldCharacter::OnToggleCameras);
+    }
+
+    else if (ActionName == InputActions::ZoomFPCamera)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Triggered, &AWorldCharacter::OnTriggerZoomFirstPersonCamera);
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Completed, &AWorldCharacter::OnCompleteZoomFirstPersonCamera);
     }
 
     return;
@@ -152,14 +222,123 @@ void AWorldCharacter::OnLook(const FInputActionValue& Value)
     return;
 }
 
+void AWorldCharacter::OnStartedJump(const FInputActionValue& Value)
+{
+    if (this->GetCharacterMovement()->IsFalling())
+    {
+        this->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
+        return;
+    }
+
+    if (this->GetCharacterMovement()->MovementMode == EMovementMode::MOVE_Flying)
+    {
+        if (this->GetWorld()->GetTimeSeconds() - this->LastJumpTimeInFlyMode < this->JumpFlyModeDeactivationTime)
+        {
+            this->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+            return;
+        }
+
+        this->LastJumpTimeInFlyMode = this->GetWorld()->GetTimeSeconds();
+        return;
+    }
+
+    return;
+}
+
 void AWorldCharacter::OnTriggerJump(const FInputActionValue& Value)
 {
-    Super::Jump();
+    if (this->GetCharacterMovement()->MovementMode == EMovementMode::MOVE_Walking)
+    {
+        Super::Jump();
+        return;
+    }
+
+    if (this->GetCharacterMovement()->MovementMode == EMovementMode::MOVE_Flying)
+    {
+        this->AddMovementInput(this->GetActorUpVector(), 1.0f);
+        return;
+    }
+
+    return;
 }
 
 void AWorldCharacter::OnCompleteJump(const FInputActionValue& Value)
 {
     Super::StopJumping();
+}
+
+void AWorldCharacter::OnTriggerCrouch(const FInputActionValue& Value)
+{
+    if (this->GetCharacterMovement()->MovementMode == EMovementMode::MOVE_Walking)
+    {
+        Super::Crouch();
+        return;
+    }
+
+    if (this->GetCharacterMovement()->MovementMode == EMovementMode::MOVE_Flying)
+    {
+        this->AddMovementInput(this->GetActorUpVector(), -1.0f);
+        return;
+    }
+}
+
+void AWorldCharacter::OnCompleteCrouch(const FInputActionValue& Value)
+{
+    Super::UnCrouch();
+}
+
+void AWorldCharacter::OnToggleCameras(const FInputActionValue& Value)
+{
+    if (this->FirstPersonCameraComponent->IsActive())
+    {
+        this->FirstPersonCameraComponent->Deactivate();
+        this->ThirdPersonCameraComponent->Activate();
+    }
+
+    else if (this->ThirdPersonCameraComponent->IsActive())
+    {
+        this->ThirdPersonCameraComponent->Deactivate();
+        this->ThirdPersonFrontCameraComponent->Activate();
+    }
+
+    else if (this->ThirdPersonFrontCameraComponent->IsActive())
+    {
+        this->ThirdPersonFrontCameraComponent->Deactivate();
+        this->FirstPersonCameraComponent->Activate();
+        this->FirstPersonCameraComponent->SetFieldOfView(this->DefaultFieldOfView);
+    }
+
+    this->OnCameraChangedEvent.Broadcast();
+
+    return;
+}
+
+void AWorldCharacter::OnTriggerZoomFirstPersonCamera(const FInputActionValue& Value)
+{
+    if (this->FirstPersonCameraComponent->IsActive() == false)
+    {
+        return;
+    }
+
+    if (this->FirstPersonCameraComponent->FieldOfView == this->DefaultFieldOfView)
+    {
+        this->FirstPersonCameraComponent->SetFieldOfView(this->ZoomedFieldOfView);
+        return;
+    }
+
+    return;
+}
+
+void AWorldCharacter::OnCompleteZoomFirstPersonCamera(const FInputActionValue& Value)
+{
+    if (this->FirstPersonCameraComponent->IsActive() == false)
+    {
+        return;
+    }
+
+    this->FirstPersonCameraComponent->SetFieldOfView(this->DefaultFieldOfView);
+
+    return;
 }
 
 void AWorldCharacter::BindAction(
