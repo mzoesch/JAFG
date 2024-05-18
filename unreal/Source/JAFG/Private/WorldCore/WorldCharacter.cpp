@@ -13,7 +13,6 @@
 #include "Input/CustomInputNames.h"
 #include "Input/JAFGInputSubsystem.h"
 #include "Player/WorldPlayerController.h"
-#include "WorldCore/Character/MyCharacterMovementComponent.h"
 
 AWorldCharacter::AWorldCharacter(const FObjectInitializer& ObjectInitializer) :
 Super(ObjectInitializer.SetDefaultSubobjectClass<UMyCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -28,9 +27,10 @@ Super(ObjectInitializer.SetDefaultSubobjectClass<UMyCharacterMovementComponent>(
 
     this->FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
     this->FirstPersonCameraComponent->SetupAttachment(this->GetCapsuleComponent());
-    this->FirstPersonCameraComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 60.0f));//FVector(-10.0f, 0.0f, 60.0f));
+    this->FirstPersonCameraComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 60.0f));
     this->FirstPersonCameraComponent->bUsePawnControlRotation = true;
     this->FirstPersonCameraComponent->SetFieldOfView(this->DefaultFieldOfView);
+    this->FirstPersonCameraComponent->OrthoWidth = this->DefaultOrthoWidth;
 
     this->ThirdPersonSpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("ThirdPersonSpringArm"));
     this->ThirdPersonSpringArmComponent->SetupAttachment(this->GetCapsuleComponent());
@@ -41,6 +41,7 @@ Super(ObjectInitializer.SetDefaultSubobjectClass<UMyCharacterMovementComponent>(
     this->ThirdPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("ThirdPersonCamera"));
     this->ThirdPersonCameraComponent->SetupAttachment(this->ThirdPersonSpringArmComponent);
     this->ThirdPersonCameraComponent->SetFieldOfView(this->DefaultFieldOfView);
+    this->ThirdPersonCameraComponent->OrthoWidth = this->DefaultOrthoWidth;
     this->ThirdPersonCameraComponent->Deactivate();
 
     this->ThirdPersonFrontSpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("ThirdPersonFrontSpringArm"));
@@ -53,6 +54,7 @@ Super(ObjectInitializer.SetDefaultSubobjectClass<UMyCharacterMovementComponent>(
     this->ThirdPersonFrontCameraComponent->SetupAttachment(this->ThirdPersonFrontSpringArmComponent);
     this->ThirdPersonFrontCameraComponent->SetFieldOfView(this->DefaultFieldOfView);
     this->ThirdPersonFrontCameraComponent->SetRelativeRotation(FRotator(0.0f, 180.0f, 0.0f));
+    this->ThirdPersonFrontCameraComponent->OrthoWidth = this->DefaultOrthoWidth;
     this->ThirdPersonFrontCameraComponent->Deactivate();
 
     return;
@@ -171,12 +173,12 @@ void AWorldCharacter::BindAction(const FString& ActionName, UEnhancedInputCompon
 {
     if (ActionName == InputActions::Move)
     {
-        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Triggered, &AWorldCharacter::OnMove);
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Triggered, &AWorldCharacter::OnTriggeredMove);
     }
 
     else if (ActionName == InputActions::Look)
     {
-        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Triggered, &AWorldCharacter::OnLook);
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Triggered, &AWorldCharacter::OnTriggeredLook);
     }
 
     else if (ActionName == InputActions::Jump)
@@ -197,16 +199,31 @@ void AWorldCharacter::BindAction(const FString& ActionName, UEnhancedInputCompon
         this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldCharacter::OnToggleCameras);
     }
 
-    else if (ActionName == InputActions::ZoomFPCamera)
+    else if (ActionName == InputActions::ZoomCameras)
     {
-        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Triggered, &AWorldCharacter::OnTriggerZoomFirstPersonCamera);
-        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Completed, &AWorldCharacter::OnCompleteZoomFirstPersonCamera);
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Triggered, &AWorldCharacter::OnTriggerZoomCameras);
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Completed, &AWorldCharacter::OnCompleteZoomCameras);
+    }
+
+    else if (ActionName == InputActions::TogglePerspective)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldCharacter::OnTogglePerspective);
+    }
+
+    else if (ActionName == InputActions::UpMaxFlySpeed)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Triggered, &AWorldCharacter::OnTriggeredUpMaxFlySpeed);
+    }
+
+    else if (ActionName == InputActions::DownMaxFlySpeed)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Triggered, &AWorldCharacter::OnTriggeredDownMaxFlySpeed);
     }
 
     return;
 }
 
-void AWorldCharacter::OnMove(const FInputActionValue& Value)
+void AWorldCharacter::OnTriggeredMove(const FInputActionValue& Value)
 {
     this->AddMovementInput(this->GetActorForwardVector(), Value.Get<FVector2D>().Y);
     this->AddMovementInput(this->GetActorRightVector(), Value.Get<FVector2D>().X);
@@ -214,7 +231,7 @@ void AWorldCharacter::OnMove(const FInputActionValue& Value)
     return;
 }
 
-void AWorldCharacter::OnLook(const FInputActionValue& Value)
+void AWorldCharacter::OnTriggeredLook(const FInputActionValue& Value)
 {
     this->AddControllerYawInput(Value.Get<FVector2D>().X * 0.2f);
     this->AddControllerPitchInput(Value.Get<FVector2D>().Y * -0.2f);
@@ -226,21 +243,31 @@ void AWorldCharacter::OnStartedJump(const FInputActionValue& Value)
 {
     if (this->GetCharacterMovement()->IsFalling())
     {
-        this->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
+        if (this->GetMyCharacterMovement()->bAllowInputFly && this->GetWorld()->GetTimeSeconds() - this->LastJumpStarted < this->JumpFlyModeDeactivationTime)
+        {
+            this->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
+            this->LastJumpStarted = this->GetWorld()->GetTimeSeconds();
+            return;
+        }
+
+        this->LastJumpStarted = this->GetWorld()->GetTimeSeconds();
         return;
     }
 
     if (this->GetCharacterMovement()->MovementMode == EMovementMode::MOVE_Flying)
     {
-        if (this->GetWorld()->GetTimeSeconds() - this->LastJumpTimeInFlyMode < this->JumpFlyModeDeactivationTime)
+        if (this->GetMyCharacterMovement()->bAllowInputFly && this->GetWorld()->GetTimeSeconds() - this->LastJumpStarted < this->JumpFlyModeDeactivationTime)
         {
             this->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+            this->LastJumpStarted = this->GetWorld()->GetTimeSeconds();
             return;
         }
 
-        this->LastJumpTimeInFlyMode = this->GetWorld()->GetTimeSeconds();
+        this->LastJumpStarted = this->GetWorld()->GetTimeSeconds();
         return;
     }
+
+    this->LastJumpStarted = this->GetWorld()->GetTimeSeconds();
 
     return;
 }
@@ -287,6 +314,26 @@ void AWorldCharacter::OnCompleteCrouch(const FInputActionValue& Value)
     Super::UnCrouch();
 }
 
+void AWorldCharacter::OnTriggeredUpMaxFlySpeed(const FInputActionValue& Value)
+{
+    if (this->GetCharacterMovement()->MovementMode == EMovementMode::MOVE_Flying)
+    {
+        this->GetMyCharacterMovement()->IncrementFlySpeed();
+    }
+
+    return;
+}
+
+void AWorldCharacter::OnTriggeredDownMaxFlySpeed(const FInputActionValue& Value)
+{
+    if (this->GetCharacterMovement()->MovementMode == EMovementMode::MOVE_Flying)
+    {
+        this->GetMyCharacterMovement()->DecrementFlySpeed();
+    }
+
+    return;
+}
+
 void AWorldCharacter::OnToggleCameras(const FInputActionValue& Value)
 {
     if (this->FirstPersonCameraComponent->IsActive())
@@ -313,30 +360,40 @@ void AWorldCharacter::OnToggleCameras(const FInputActionValue& Value)
     return;
 }
 
-void AWorldCharacter::OnTriggerZoomFirstPersonCamera(const FInputActionValue& Value)
+void AWorldCharacter::OnTriggerZoomCameras(const FInputActionValue& Value)
 {
-    if (this->FirstPersonCameraComponent->IsActive() == false)
-    {
-        return;
-    }
-
     if (this->FirstPersonCameraComponent->FieldOfView == this->DefaultFieldOfView)
     {
         this->FirstPersonCameraComponent->SetFieldOfView(this->ZoomedFieldOfView);
-        return;
+        this->ThirdPersonCameraComponent->SetFieldOfView(this->ZoomedFieldOfView);
+        this->ThirdPersonFrontCameraComponent->SetFieldOfView(this->ZoomedFieldOfView);
     }
 
     return;
 }
 
-void AWorldCharacter::OnCompleteZoomFirstPersonCamera(const FInputActionValue& Value)
+void AWorldCharacter::OnCompleteZoomCameras(const FInputActionValue& Value)
 {
-    if (this->FirstPersonCameraComponent->IsActive() == false)
+    this->FirstPersonCameraComponent->SetFieldOfView(this->DefaultFieldOfView);
+    this->ThirdPersonCameraComponent->SetFieldOfView(this->DefaultFieldOfView);
+    this->ThirdPersonFrontCameraComponent->SetFieldOfView(this->DefaultFieldOfView);
+
+    return;
+}
+
+void AWorldCharacter::OnTogglePerspective(const FInputActionValue& Value)
+{
+    if (this->FirstPersonCameraComponent->ProjectionMode == ECameraProjectionMode::Perspective)
     {
+        this->FirstPersonCameraComponent->SetProjectionMode(ECameraProjectionMode::Orthographic);
+        this->ThirdPersonCameraComponent->SetProjectionMode(ECameraProjectionMode::Orthographic);
+        this->ThirdPersonFrontCameraComponent->SetProjectionMode(ECameraProjectionMode::Orthographic);
         return;
     }
 
-    this->FirstPersonCameraComponent->SetFieldOfView(this->DefaultFieldOfView);
+    this->FirstPersonCameraComponent->SetProjectionMode(ECameraProjectionMode::Perspective);
+    this->ThirdPersonCameraComponent->SetProjectionMode(ECameraProjectionMode::Perspective);
+    this->ThirdPersonFrontCameraComponent->SetProjectionMode(ECameraProjectionMode::Perspective);
 
     return;
 }
@@ -369,6 +426,24 @@ void AWorldCharacter::OnEscapeMenuVisibilityChanged(const bool bVisible)
     Subsystem->AddMappingContext(JAFGSubsystem->GetContextByName(bVisible ? InputContexts::Escape : InputContexts::Foot), 0);
 
     return;
+}
+
+void AWorldCharacter::ToggleFly(void) const
+{
+    if (this->GetCharacterMovement()->MovementMode == EMovementMode::MOVE_Flying)
+    {
+        this->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+        return;
+    }
+
+    this->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
+
+    return;
+}
+
+void AWorldCharacter::ToggleInputFly(void) const
+{
+    this->GetMyCharacterMovement()->bAllowInputFly = !this->GetMyCharacterMovement()->bAllowInputFly;
 }
 
 #pragma endregion Enhanced Input

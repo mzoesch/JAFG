@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "InputTriggers.h"
 #include "Camera/CameraComponent.h"
+#include "WorldCore/Character/MyCharacterMovementComponent.h"
 
 #include "WorldCharacter.generated.h"
 
@@ -56,10 +57,16 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UCameraComponent> ThirdPersonFrontCameraComponent;
 
+#pragma region Member Methods
+
+
+#pragma endregion Member Methods
+
 #pragma region Member Variables
 
     float DefaultFieldOfView = 120.0f;
     float ZoomedFieldOfView  = 60.0f;
+    float DefaultOrthoWidth  = 8192.0f;
 
 #pragma endregion Member Variables
 
@@ -71,31 +78,43 @@ public:
     // Enhanced Input Extern Events
     //////////////////////////////////////////////////////////////////////////
 
+    FORCEINLINE auto IsFlying(void) const -> bool { return this->GetMyCharacterMovement()->IsFlying(); }
+    FORCEINLINE auto IsInputFlyEnabled(void) const -> bool { return this->GetMyCharacterMovement()->bAllowInputFly; }
+
 private:
 
     FOnCamerChangedEventSignature OnCameraChangedEvent;
 
 protected:
 
+    /** Shortcut to the JAFG custom movement component. */
+    FORCEINLINE auto GetMyCharacterMovement(void) const -> UMyCharacterMovementComponent*
+    {
+        return this->GetCharacterMovement<UMyCharacterMovementComponent>();
+    }
+
     virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
     /** Override this method to add custom key bindings in derived classes. */
     virtual auto BindAction(const FString& ActionName, UEnhancedInputComponent* EnhancedInputComponent) -> void;
 
-    virtual void OnMove(const FInputActionValue& Value);
-    virtual void OnLook(const FInputActionValue& Value);
+    virtual void OnTriggeredMove(const FInputActionValue& Value);
+    virtual void OnTriggeredLook(const FInputActionValue& Value);
     virtual void OnStartedJump(const FInputActionValue& Value);
     virtual void OnTriggerJump(const FInputActionValue& Value);
     virtual void OnCompleteJump(const FInputActionValue& Value);
     virtual void OnTriggerCrouch(const FInputActionValue& Value);
     virtual void OnCompleteCrouch(const FInputActionValue& Value);
+    virtual void OnTriggeredUpMaxFlySpeed(const FInputActionValue& Value);
+    virtual void OnTriggeredDownMaxFlySpeed(const FInputActionValue& Value);
 
     virtual void OnToggleCameras(const FInputActionValue& Value);
-    virtual void OnTriggerZoomFirstPersonCamera(const FInputActionValue& Value);
-    virtual void OnCompleteZoomFirstPersonCamera(const FInputActionValue& Value);
+    virtual void OnTriggerZoomCameras(const FInputActionValue& Value);
+    virtual void OnCompleteZoomCameras(const FInputActionValue& Value);
+    virtual void OnTogglePerspective(const FInputActionValue& Value);
 
-    float LastJumpTimeInFlyMode = 0.0f;
-    static constexpr float JumpFlyModeDeactivationTime = 0.5f;
+    float LastJumpStarted = 0.0f;
+    static constexpr float JumpFlyModeDeactivationTime = 0.25f;
 
 private:
 
@@ -115,11 +134,22 @@ protected:
     FDelegateHandle EscapeMenuVisibilityChangedHandle;
     virtual auto OnEscapeMenuVisibilityChanged(const bool bVisible) -> void;
 
-    #pragma endregion Enhanced Input
+#pragma endregion Enhanced Input
 
-#pragma region World Interaction
+#pragma region Command Interface
 
 public:
+
+    //////////////////////////////////////////////////////////////////////////
+    // Command Interface
+    //////////////////////////////////////////////////////////////////////////
+
+    auto ToggleFly(void) const -> void;
+    auto ToggleInputFly(void) const -> void;
+
+#pragma endregion Command Interface
+
+#pragma region World Interaction
 
     FORCEINLINE auto GetFPSCamera(void) const -> UCameraComponent* { return this->FirstPersonCameraComponent; }
 

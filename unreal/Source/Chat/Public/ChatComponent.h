@@ -34,8 +34,6 @@ protected:
 
 public:
 
-    virtual void TickComponent(const float DeltaTime, const ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
     /**
      * Parses a given message. Executes the command if it is a command and locally executable. Else sends it
      * to the server for further processing.
@@ -47,6 +45,10 @@ public:
      * been initialized by the time the message arrives.
      */
     TQueue<FPrivateMessagePreConstruct> PreChatWidgetConstructionQueue = TQueue<FPrivateMessagePreConstruct>();
+
+    static constexpr int32 MaxChatStdInLogBuffered = 4;
+    /** Sorted chronology from most recent to least. */
+    TArray<FText> ChatStdInLog;
 
 private:
 

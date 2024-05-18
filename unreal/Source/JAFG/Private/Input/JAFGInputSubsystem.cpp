@@ -356,6 +356,60 @@ UInputAction* UJAFGInputSubsystem::GetActionByName(const FString& Name)
     return nullptr;
 }
 
+TArray<FKey> UJAFGInputSubsystem::GetAllKeysForAction(const FString& Name) const
+{
+    if (this->DoesActionExist(Name) == false)
+    {
+        LOG_WARNING(LogGameSettings, "Action with name [%s] was not found.", *Name)
+        return TArray<FKey>();
+    }
+
+    TArray<FKey> Keys;
+    const FJAFGPrivateInputAction* Action = this->GetSafeAction(Name);
+
+    if (Action->NorthDefaultKeyA != EKeys::Invalid)
+    {
+        Keys.Add(Action->NorthDefaultKeyA);
+    }
+
+    if (Action->NorthDefaultKeyB != EKeys::Invalid)
+    {
+        Keys.Add(Action->NorthDefaultKeyB);
+    }
+
+    if (Action->SouthDefaultKeyA != EKeys::Invalid)
+    {
+        Keys.Add(Action->SouthDefaultKeyA);
+    }
+
+    if (Action->SouthDefaultKeyB != EKeys::Invalid)
+    {
+        Keys.Add(Action->SouthDefaultKeyB);
+    }
+
+    if (Action->WestDefaultKeyA != EKeys::Invalid)
+    {
+        Keys.Add(Action->WestDefaultKeyA);
+    }
+
+    if (Action->WestDefaultKeyB != EKeys::Invalid)
+    {
+        Keys.Add(Action->WestDefaultKeyB);
+    }
+
+    if (Action->EastDefaultKeyA != EKeys::Invalid)
+    {
+        Keys.Add(Action->EastDefaultKeyA);
+    }
+
+    if (Action->EastDefaultKeyB != EKeys::Invalid)
+    {
+        Keys.Add(Action->EastDefaultKeyB);
+    }
+
+    return Keys;
+}
+
 bool UJAFGInputSubsystem::DoesContextExist(const FString& Name) const
 {
     for (const auto& [Config, Context] : this->Contexts)
@@ -412,4 +466,31 @@ bool UJAFGInputSubsystem::DoesActionExist(const FString& Name) const
     }
 
     return false;
+}
+
+const FJAFGPrivateInputAction* UJAFGInputSubsystem::GetAction(const FString& Name) const
+{
+    for (int i = 0; i < this->Actions.Num(); i++)
+    {
+        if (this->Actions[i].Name == Name)
+        {
+            return &this->Actions[i];
+        }
+
+        continue;
+    }
+
+    return nullptr;
+}
+
+const FJAFGPrivateInputAction* UJAFGInputSubsystem::GetSafeAction(const FString& Name) const
+{
+    if (const FJAFGPrivateInputAction* Action = this->GetAction(Name); Action)
+    {
+        return Action;
+    }
+
+    LOG_FATAL(LogGameSettings, "Action with name [%s] was not found.", *Name)
+
+    return nullptr;
 }

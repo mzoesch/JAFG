@@ -29,7 +29,12 @@ extern inline const FString Crouch            = TEXT("Crouch");
 extern inline const FString ToggleEscapeMenu  = TEXT("ToggleEscapeMenu");
 extern inline const FString ToggleDebugScreen = TEXT("ToggleDebugScreen");
 extern inline const FString ToggleChat        = TEXT("ToggleChat");
+extern inline const FString PreviousChatStdIn = TEXT("PreviousChatStdIn");
+extern inline const FString NextChatStdIn     = TEXT("NextChatStdIn");
 extern inline const FString ToggleCameras     = TEXT("ToggleCameras");
-extern inline const FString ZoomFPCamera      = TEXT("ZoomFPCamera");
+extern inline const FString ZoomCameras       = TEXT("ZoomCameras");
+extern inline const FString TogglePerspective = TEXT("TogglePerspective");
+extern inline const FString UpMaxFlySpeed     = TEXT("UpMaxFlySpeed");
+extern inline const FString DownMaxFlySpeed   = TEXT("DownMaxFlySpeed");
 
 }

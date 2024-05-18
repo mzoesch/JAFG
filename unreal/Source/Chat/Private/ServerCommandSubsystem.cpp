@@ -5,6 +5,10 @@
 #include "ChatComponent.h"
 #include "CommonNetworkStatics.h"
 #include "Definitions.h"
+#include "WorldCore/WorldCharacter.h"
+
+#define OWNER_CHARACTER Cast<AWorldCharacter>(Cast<AController>(Owner->GetOwner())->GetCharacter())
+#define DECLARE_OWNER_AS_TARGET AWorldCharacter* Target = OWNER_CHARACTER;
 
 void UServerCommandSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -54,7 +58,7 @@ bool UServerCommandSubsystem::IsRegisteredCommand(const FServerCommand& Command)
     return this->ServerCommands.Contains(CommandStatics::SafePrefixServerCommand(Command));
 }
 
-void UServerCommandSubsystem::ExecuteCommand(const UChatComponent* Owner, const FText& StdIn, CommandReturnCode& OutReturnCode, FString& OutResponse) const
+void UServerCommandSubsystem::ExecuteCommand(UChatComponent* Owner, const FText& StdIn, CommandReturnCode& OutReturnCode, FString& OutResponse) const
 {
     TArray<FString> Args;
     FServerCommand Command = CommandStatics::GetCommandWithArgs(StdIn, Args);
@@ -64,7 +68,7 @@ void UServerCommandSubsystem::ExecuteCommand(const UChatComponent* Owner, const 
     return;
 }
 
-void UServerCommandSubsystem::ExecuteCommand(const UChatComponent* Owner, const FServerCommand& Command, const TArray<FString>& Args, CommandReturnCode& OutReturnCode, FString& OutResponse) const
+void UServerCommandSubsystem::ExecuteCommand(UChatComponent* Owner, const FServerCommand& Command, const TArray<FString>& Args, CommandReturnCode& OutReturnCode, FString& OutResponse) const
 {
     LOG_VERY_VERBOSE(LogJAFGChat, "Executing server command: [%s].", *Command)
 
@@ -83,11 +87,21 @@ void UServerCommandSubsystem::ExecuteCommand(const UChatComponent* Owner, const 
 
 void UServerCommandSubsystem::InitializeAllCommands(void)
 {
+    // Help
+    //////////////////////////////////////////////////////////////////////////
+    {
+        const FServerCommand Command = TEXT("sv_help");
+        this->ServerCommands.Add(Command, [this] (UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse)
+        {
+            this->OnHelpCommand(Owner, InArgs, OutReturnCode, OutResponse);
+        });
+    }
+
     // Broadcast
     //////////////////////////////////////////////////////////////////////////
     {
         const FServerCommand Command = TEXT("sv_broadcast");
-        this->ServerCommands.Add(Command, [this] (const UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse)
+        this->ServerCommands.Add(Command, [this] (UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse)
         {
             this->OnBroadcastCommand(Owner, InArgs, OutReturnCode, OutResponse);
         });
@@ -97,14 +111,37 @@ void UServerCommandSubsystem::InitializeAllCommands(void)
     //////////////////////////////////////////////////////////////////////////
     {
         const FServerCommand Command = TEXT("sv_fly");
-        this->ServerCommands.Add(Command, [this] (const UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse)
+        this->ServerCommands.Add(Command, [this] (UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse)
         {
             this->OnFlyCommand(Owner, InArgs, OutReturnCode, OutResponse);
         });
     }
+
+    // Allow Input Fly
+    //////////////////////////////////////////////////////////////////////////
+    {
+        const FServerCommand Command = TEXT("sv_infly");
+        this->ServerCommands.Add(Command, [this] (UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse)
+        {
+            this->OnAllowInputFlyCommand(Owner, InArgs, OutReturnCode, OutResponse);
+        });
+    }
 }
 
-void UServerCommandSubsystem::OnBroadcastCommand(const UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const
+void UServerCommandSubsystem::OnHelpCommand(UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const
+{
+    for (const TPair<FServerCommand, FServerCommandCallback>& Pair : this->ServerCommands)
+    {
+        Owner->AddMessageToChatLog_ClientRPC(ChatStatics::AuthorityName, FText::FromString(Pair.Key));
+    }
+
+    OutReturnCode = ECommandReturnCodes::SuccessNoResponse;
+    OutResponse   = L"";
+
+    return;
+}
+
+void UServerCommandSubsystem::OnBroadcastCommand(UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const
 {
     if (InArgs.IsEmpty())
     {
@@ -140,7 +177,30 @@ void UServerCommandSubsystem::OnBroadcastCommand(const UChatComponent* Owner, co
     return;
 }
 
-void UServerCommandSubsystem::OnFlyCommand(const UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const
+void UServerCommandSubsystem::OnFlyCommand(UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const
 {
-    OutReturnCode = ECommandReturnCodes::SuccessNoResponse;
+    DECLARE_OWNER_AS_TARGET
+
+    Target->ToggleFly();
+
+    OutReturnCode = ECommandReturnCodes::Success;
+    OutResponse   = Target->IsFlying() ? TEXT("Flying enabled.") : TEXT("Flying disabled.");
+
+    return;
 }
+
+void UServerCommandSubsystem::OnAllowInputFlyCommand(UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const
+{
+    DECLARE_OWNER_AS_TARGET
+
+    Target->ToggleInputFly();
+
+    OutReturnCode = ECommandReturnCodes::Success;
+    OutResponse   = Target->IsInputFlyEnabled() ? TEXT("Input fly enabled.") : TEXT("Input fly disabled.");
+
+
+    return;
+}
+
+#undef OWNER_CHARACTER
+#undef DECLARE_OWNER_AS_TARGET

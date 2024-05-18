@@ -86,6 +86,22 @@ bool AWorldPlayerController::UnSubscribeToChatVisibilityChanged(const FDelegateH
     return this->ChatVisibilityChangedDelegate.Remove(Handle);
 }
 
+FDelegateHandle AWorldPlayerController::SubscribeToChatHistoryLookup(const FChatHistoryLookupSignature::FDelegate& Delegate)
+{
+    if (this->IsLocalController() == false)
+    {
+        LOG_FATAL(LogWorldChar, "Not a local controller.")
+        return FDelegateHandle();
+    }
+
+    return this->ChatHistoryLookupDelegate.Add(Delegate);
+}
+
+bool AWorldPlayerController::UnSubscribeToChatHistoryLookup(const FDelegateHandle& Handle)
+{
+    return this->ChatHistoryLookupDelegate.Remove(Handle);
+}
+
 void AWorldPlayerController::SetupCommonPlayerInput(void)
 {
     LOG_VERBOSE(LogWorldChar, "Called.")
@@ -164,6 +180,16 @@ void AWorldPlayerController::BindAction(const FString& ActionName, UEnhancedInpu
         this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldPlayerController::OnToggleChat);
     }
 
+    else if (ActionName == InputActions::PreviousChatStdIn)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldPlayerController::OnPreviousChatStdIn);
+    }
+
+    else if (ActionName == InputActions::NextChatStdIn)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldPlayerController::OnNextChatStdIn);
+    }
+
     return;
 }
 
@@ -211,6 +237,16 @@ void AWorldPlayerController::OnToggleChat(const FInputActionValue& Value)
     this->ChatVisibilityChangedDelegate.Broadcast(this->bChatVisible);
 
     return;
+}
+
+void AWorldPlayerController::OnPreviousChatStdIn(const FInputActionValue& Value)
+{
+    this->ChatHistoryLookupDelegate.Broadcast(true);
+}
+
+void AWorldPlayerController::OnNextChatStdIn(const FInputActionValue& Value)
+{
+    this->ChatHistoryLookupDelegate.Broadcast(false);
 }
 
 void AWorldPlayerController::BindAction(

@@ -18,6 +18,8 @@ class UMyHyperlaneComponent;
 DECLARE_MULTICAST_DELEGATE(FSlateVisibilityChangedOwnerVisSignature)
 DECLARE_MULTICAST_DELEGATE_OneParam(FSlateVisibilityChangedSignature, const bool /* bVisible */ )
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FChatHistoryLookupSignature, const bool /* bPrevious */ )
+
 #define ADD_SLATE_VIS_DELG(Method)                                            \
     FSlateVisibilityChangedSignature::FDelegate::CreateUObject(this, &Method)
 
@@ -59,6 +61,9 @@ public:
     auto SubscribeToChatVisibilityChanged(const FSlateVisibilityChangedSignature::FDelegate& Delegate) -> FDelegateHandle;
     auto UnSubscribeToChatVisibilityChanged(const FDelegateHandle& Handle) -> bool;
 
+    auto SubscribeToChatHistoryLookup(const FChatHistoryLookupSignature::FDelegate& Delegate) -> FDelegateHandle;
+    auto UnSubscribeToChatHistoryLookup(const FDelegateHandle& Handle) -> bool;
+
 private:
 
     /** Obviously client only. */
@@ -67,6 +72,8 @@ private:
     FSlateVisibilityChangedSignature DebugScreenVisibilityChangedDelegate;
     /** Obviously client only. */
     FSlateVisibilityChangedSignature ChatVisibilityChangedDelegate;
+    /** Obviously client only. */
+    FChatHistoryLookupSignature ChatHistoryLookupDelegate;
 
 protected:
 
@@ -83,6 +90,8 @@ protected:
     virtual void OnToggleEscapeMenu(const FInputActionValue& Value); friend UResumeEntryWidget;
     virtual void OnToggleDebugScreen(const FInputActionValue& Value);
     virtual void OnToggleChat(const FInputActionValue& Value); friend UChatMenu;
+    virtual void OnPreviousChatStdIn(const FInputActionValue& Value);
+    virtual void OnNextChatStdIn(const FInputActionValue& Value);
 
 private:
 

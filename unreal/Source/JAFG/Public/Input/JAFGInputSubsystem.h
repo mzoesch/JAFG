@@ -130,6 +130,8 @@ public:
     auto GetAllActionNames(void) const -> TArray<FString>;
     auto GetActionByName(const FString& Name) -> UInputAction*;
 
+    auto GetAllKeysForAction(const FString& Name) const -> TArray<FKey>;
+
 private:
 
     UPROPERTY() /* Do not remove UPROPERTY - Garbage Collection!!! */
@@ -142,4 +144,8 @@ private:
     auto GetSafeContext(const FString& Name) -> FJAFGPrivateInputContext*;
 
     auto DoesActionExist(const FString& Name) const -> bool;
+    /** @return Pointer only valid while owing TArray does not change. Never assume a long pointer lifetime. */
+    auto GetAction(const FString& Name) const -> const FJAFGPrivateInputAction*;
+    /** @return Pointer only valid while owing TArray does not change. Never assume a long pointer lifetime. */
+    auto GetSafeAction(const FString& Name) const -> const FJAFGPrivateInputAction*;
 };

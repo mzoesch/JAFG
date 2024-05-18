@@ -13,7 +13,7 @@ class UChatComponent;
 typedef FString FServerCommand;
 typedef TFunction<
     void(
-        const UChatComponent* Owner,
+        UChatComponent* Owner,
         TArray<FString> InArgs,
         CommandReturnCode& OutErrorCode,
         FString& OutResponse
@@ -35,8 +35,8 @@ public:
 
     auto IsRegisteredCommand(const FText& StdIn) const -> bool;
     auto IsRegisteredCommand(const FServerCommand& Command) const -> bool;
-    auto ExecuteCommand(const UChatComponent* Owner, const FText& StdIn, CommandReturnCode& OutReturnCode, FString& OutResponse) const -> void;
-    auto ExecuteCommand(const UChatComponent* Owner, const FServerCommand& Command, const TArray<FString>& Args, CommandReturnCode& OutReturnCode, FString& OutResponse) const -> void;
+    auto ExecuteCommand(UChatComponent* Owner, const FText& StdIn, CommandReturnCode& OutReturnCode, FString& OutResponse) const -> void;
+    auto ExecuteCommand(UChatComponent* Owner, const FServerCommand& Command, const TArray<FString>& Args, CommandReturnCode& OutReturnCode, FString& OutResponse) const -> void;
 
 private:
 
@@ -44,6 +44,9 @@ private:
 
     void InitializeAllCommands(void);
 
-    auto OnBroadcastCommand(const UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const -> void;
-    auto OnFlyCommand(const UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const -> void;
+    auto OnHelpCommand(UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const -> void;
+
+    auto OnBroadcastCommand(UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const -> void;
+    auto OnFlyCommand(UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const -> void;
+    void OnAllowInputFlyCommand(UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const;
 };

@@ -10,6 +10,7 @@
 #include "Components/ScrollBox.h"
 #include "Components/TextBlock.h"
 #include "Input/CustomInputNames.h"
+#include "Input/JAFGEditableTextBlock.h"
 #include "Input/JAFGInputSubsystem.h"
 #include "Player/WorldPlayerController.h"
 
@@ -95,20 +96,19 @@ void UChatMenu::NativeConstruct(void)
     }
 
     this->ChatMenuVisibilityChangedHandle = Owner->SubscribeToChatVisibilityChanged(ADD_SLATE_VIS_DELG(UChatMenu::OnChatMenuVisibilityChanged));
+    this->ChatHistoryLookupHandle         = Owner->SubscribeToChatHistoryLookup(FChatHistoryLookupSignature::FDelegate::CreateUObject(this, &UChatMenu::OnHistoryLookUp));
 
+    this->ET_StdIn->SetCustomEventToKeyDown(this->GetOnStdInKeyDownHandler());
     this->ET_StdIn->OnTextChanged.AddDynamic(this, &UChatMenu::OnChatTextChanged);
     this->ET_StdIn->OnTextCommitted.AddDynamic(this, &UChatMenu::OnChatTextCommitted);
 
-    if (OWNING_CHAT_COMPONENT)
+    /* For messages that have arrived while this widget has not yet been constructed. */
+    while (OWNING_CHAT_COMPONENT->PreChatWidgetConstructionQueue.IsEmpty() == false)
     {
-        /* For messages that have arrived while this widget has not yet been constructed. */
-        while (OWNING_CHAT_COMPONENT->PreChatWidgetConstructionQueue.IsEmpty() == false)
-        {
-            FPrivateMessagePreConstruct PreConstruct;
-            OWNING_CHAT_COMPONENT->PreChatWidgetConstructionQueue.Dequeue(PreConstruct);
+        FPrivateMessagePreConstruct PreConstruct;
+        OWNING_CHAT_COMPONENT->PreChatWidgetConstructionQueue.Dequeue(PreConstruct);
 
-            this->AddMessageToChatLog(PreConstruct.Sender, PreConstruct.Message);
-        }
+        this->AddMessageToChatLog(PreConstruct.Sender, PreConstruct.Message);
     }
 
     return;
@@ -118,16 +118,19 @@ void UChatMenu::NativeDestruct(void)
 {
     Super::NativeDestruct();
 
-    AWorldPlayerController* WorldPlayerController = Cast<AWorldPlayerController>(this->GetOwningPlayer());
-
-    if (WorldPlayerController == nullptr)
+    if (OWNING_PLAYER_CONTROLLER == nullptr)
     {
         return;
     }
 
-    if (WorldPlayerController->UnSubscribeToChatVisibilityChanged(this->ChatMenuVisibilityChangedHandle) == false)
+    if (OWNING_PLAYER_CONTROLLER->UnSubscribeToChatVisibilityChanged(this->ChatMenuVisibilityChangedHandle) == false)
     {
         LOG_ERROR(LogCommonSlate, "Failed to unsubscribe from Chat Visibility Changed event.")
+    }
+
+    if (OWNING_PLAYER_CONTROLLER->UnSubscribeToChatHistoryLookup(this->ChatHistoryLookupHandle) == false)
+    {
+        LOG_ERROR(LogCommonSlate, "Failed to unsubscribe from Chat History Lookup event.")
     }
 
     return;
@@ -191,12 +194,14 @@ void UChatMenu::OnChatMenuVisibilityChanged(const bool bVisible)
         this->PW_StdInWrapper->SetVisibility(ESlateVisibility::Visible);
         this->ClearStdIn();
         this->FocusStdIn();
+        this->CurrentCursorInHistory = UChatMenu::InvalidCursorInHistory;
     }
     else
     {
         LOG_VERY_VERBOSE(LogCommonSlate, "Chat is now hidden.")
         this->SetVisibility(ESlateVisibility::Collapsed);
         this->ClearStdIn();
+        this->CurrentCursorInHistory = UChatMenu::InvalidCursorInHistory;
     }
 
     return;
@@ -274,6 +279,58 @@ void UChatMenu::OnChatTextCommitted(const FText& Text, const ETextCommit::Type C
     this->HideChatMenu();
 
     OWNING_CHAT_COMPONENT->ParseMessage(Text);
+
+    return;
+}
+
+FOnKeyDown UChatMenu::GetOnStdInKeyDownHandler(void)
+{
+    return FOnKeyDown::CreateLambda(
+        [this] (const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent) -> FReply
+        {
+            const UJAFGInputSubsystem* InputSubsystem = this->GetOwningLocalPlayer()->GetSubsystem<UJAFGInputSubsystem>();
+
+            if (InputSubsystem->GetAllKeysForAction(InputActions::PreviousChatStdIn).Contains(InKeyEvent.GetKey()))
+            {
+                this->OnHistoryLookUp(true);
+                return FReply::Handled();
+            }
+
+            if (InputSubsystem->GetAllKeysForAction(InputActions::NextChatStdIn).Contains(InKeyEvent.GetKey()))
+            {
+                this->OnHistoryLookUp(false);
+                return FReply::Handled();
+            }
+
+            return FReply::Unhandled();
+        }
+    );
+}
+
+void UChatMenu::OnHistoryLookUp(const bool bPrevious)
+{
+    this->CurrentCursorInHistory = bPrevious ? this->CurrentCursorInHistory + 1 : this->CurrentCursorInHistory - 1;
+
+    if (this->CurrentCursorInHistory < 0)
+    {
+        this->CurrentCursorInHistory = UChatMenu::InvalidCursorInHistory;
+        this->ET_StdIn->SetText(FText::GetEmpty());
+        return;
+    }
+    if (OWNING_CHAT_COMPONENT->ChatStdInLog.Num() <= this->CurrentCursorInHistory)
+    {
+        this->CurrentCursorInHistory = OWNING_CHAT_COMPONENT->ChatStdInLog.Num() - 1;
+        return;
+    }
+
+#if WITH_EDITOR
+    if (OWNING_CHAT_COMPONENT->ChatStdInLog[this->CurrentCursorInHistory].IsEmpty())
+    {
+        LOG_WARNING(LogJAFGChat, "Chat stdin log at index %d is empty.", this->CurrentCursorInHistory)
+    }
+#endif /* WITH_EDITOR */
+
+    this->ET_StdIn->SetText(OWNING_CHAT_COMPONENT->ChatStdInLog[this->CurrentCursorInHistory]);
 
     return;
 }

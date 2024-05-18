@@ -17,4 +17,23 @@ class JAFG_API UMyCharacterMovementComponent : public UCharacterMovementComponen
 public:
 
     explicit UMyCharacterMovementComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+#pragma region Member Variables
+
+    float MaxAccelerationWalking         = 2048.0f;
+
+    float AbsoluteMaxFlySpeed            = 16384.0f;
+    float AbsoluteMinFlySpeed            = 100.0f;
+    float FlySpeedSteps                  = 100.0f;
+    float MaxAccelerationFly             = 16384.0f;
+    bool  bAllowInputFly                 = false;
+
+#pragma endregion Member Variables
+
+    void IncrementFlySpeed(void);
+    void DecrementFlySpeed(void);
+
+protected:
+
+    virtual void OnMovementModeChanged(const EMovementMode PreviousMovementMode, const uint8 PreviousCustomMode) override;
 };

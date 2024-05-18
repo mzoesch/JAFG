@@ -7,9 +7,11 @@ UMyCharacterMovementComponent::UMyCharacterMovementComponent(const FObjectInitia
     this->GravityScale               = 2.0f;
     this->JumpZVelocity              = 700.0f;
     this->AirControl                 = 2.0f;
+    this->MaxAcceleration            = this->MaxAccelerationWalking;
 
     /* Flying */
-    this->BrakingDecelerationFlying  = 2048.0f;
+    this->BrakingDecelerationFlying  = 8192.0f;
+    this->MaxFlySpeed                = 600.0f;
 
     /* Stepping */
     this->MaxStepHeight              = 60.0f;
@@ -21,6 +23,50 @@ UMyCharacterMovementComponent::UMyCharacterMovementComponent(const FObjectInitia
     this->bCanWalkOffLedgesWhenCrouching = false;
     this->SetCrouchedHalfHeight(75.0f);
     this->MaxWalkSpeedCrouched           = this->MaxWalkSpeed * 0.25f;
+
+    return;
+}
+
+void UMyCharacterMovementComponent::IncrementFlySpeed(void)
+{
+    this->MaxFlySpeed = FMath::Clamp(this->MaxFlySpeed + this->FlySpeedSteps, this->AbsoluteMinFlySpeed, this->AbsoluteMaxFlySpeed);
+
+#if WITH_EDITOR
+    if (this->MaxFlySpeed == this->AbsoluteMaxFlySpeed)
+    {
+        LOG_VERBOSE(LogWorldChar, "Reached max fly speed.")
+    }
+#endif /* WITH_EDITOR */
+
+    return;
+}
+
+void UMyCharacterMovementComponent::DecrementFlySpeed(void)
+{
+    this->MaxFlySpeed = FMath::Clamp(this->MaxFlySpeed - this->FlySpeedSteps, this->AbsoluteMinFlySpeed, this->AbsoluteMaxFlySpeed);
+
+#if WITH_EDITOR
+    if (this->MaxFlySpeed == this->AbsoluteMinFlySpeed)
+    {
+        LOG_VERBOSE(LogWorldChar, "Reached min fly speed.")
+    }
+#endif /* WITH_EDITOR */
+
+    return;
+}
+
+void UMyCharacterMovementComponent::OnMovementModeChanged(const EMovementMode PreviousMovementMode, const uint8 PreviousCustomMode)
+{
+    Super::OnMovementModeChanged(PreviousMovementMode, PreviousCustomMode);
+
+    if (this->MovementMode == EMovementMode::MOVE_Flying)
+    {
+        this->MaxAcceleration = this->MaxAccelerationFly;
+    }
+    else
+    {
+        this->MaxAcceleration = this->MaxAccelerationWalking;
+    }
 
     return;
 }

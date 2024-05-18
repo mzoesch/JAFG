@@ -10,6 +10,7 @@
 class UTextBlock;
 class UScrollBox;
 class UEditableText;
+class UJAFGEditableTextBlock;
 
 struct CHAT_API FChatMessageData final : public FMyPassedData
 {
@@ -88,7 +89,7 @@ protected:
     TObjectPtr<UPanelWidget> PW_StdOutWrapper;
 
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
-    TObjectPtr<UEditableText> ET_StdIn;
+    TObjectPtr<UJAFGEditableTextBlock> ET_StdIn;
 
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
     TObjectPtr<UPanelWidget> PW_StdInWrapper;
@@ -101,6 +102,12 @@ protected:
 
     UFUNCTION()
     void OnChatTextCommitted(const FText& Text, const ETextCommit::Type CommitMethod);
+
+    static constexpr int32 InvalidCursorInHistory { -1 };
+    int32 CurrentCursorInHistory = UChatMenu::InvalidCursorInHistory;
+    virtual FOnKeyDown GetOnStdInKeyDownHandler(void);
+    virtual void OnHistoryLookUp(const bool bPrevious);
+    FDelegateHandle ChatHistoryLookupHandle;
 
     auto FocusStdIn(void) const -> void;
     auto ClearStdIn(void) const -> void;

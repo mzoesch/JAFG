@@ -11,22 +11,36 @@
 
 UChatComponent::UChatComponent(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-    this->PrimaryComponentTick.bCanEverTick = true;
+    this->PrimaryComponentTick.bCanEverTick = false;
+    this->ChatStdInLog.Empty();
+    return;
 }
 
 void UChatComponent::BeginPlay(void)
 {
     Super::BeginPlay();
-}
 
-void UChatComponent::TickComponent(const float DeltaTime, const ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-    Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+    this->ChatStdInLog.Empty();
+
+    return;
 }
 
 void UChatComponent::ParseMessage(const FText& Message)
 {
     LOG_VERY_VERBOSE(LogJAFGChat, "Parsing message: %s", *Message.ToString())
+
+    if (this->ChatStdInLog.IsEmpty())
+    {
+        this->ChatStdInLog.EmplaceAt(0, Message);
+    }
+    if (this->ChatStdInLog[0].EqualTo(Message) == false)
+    {
+        this->ChatStdInLog.EmplaceAt(0, Message);
+    }
+    while (this->ChatStdInLog.Num() > UChatComponent::MaxChatStdInLogBuffered)
+    {
+        this->ChatStdInLog.Pop();
+    }
 
     if (CommandStatics::IsCommand(Message))
     {
