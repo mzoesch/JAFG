@@ -7,7 +7,7 @@
 
 #include "WorldGameMode.generated.h"
 
-UCLASS()
+UCLASS(NotBlueprintable)
 class JAFG_API AWorldGameMode : public AGameModeBase
 {
     GENERATED_BODY()
