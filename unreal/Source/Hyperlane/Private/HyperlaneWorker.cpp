@@ -398,6 +398,7 @@ void FHyperlaneWorker::OnBytesReceivedDelegateHandler(TArray<uint8>& InBytes) co
         default:
         {
             checkNoEntry()
+            break;
         }
         }
 

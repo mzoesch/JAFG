@@ -2,13 +2,15 @@
 
 #include "WorldCore/Validation/ChunkValidationSubsystemStandalone.h"
 
-#include "Editor.h"
-#include "LevelEditorViewport.h"
 #include "WorldCore/ChunkWorldSettings.h"
 #include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
 #include "WorldCore/Validation/ChunkValidationSubsystemCl.h"
 #include "WorldCore/Validation/ChunkValidationSubsystemDedSv.h"
 #include "WorldCore/Validation/ChunkValidationSubsystemLitSv.h"
+#if WITH_EDITOR
+    #include "Editor.h"
+    #include "LevelEditorViewport.h"
+#endif /* WITH_EDITOR */
 
 UChunkValidationSubsystemStandalone::UChunkValidationSubsystemStandalone() : Super()
 {

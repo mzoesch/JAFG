@@ -77,6 +77,7 @@ void AWorldHUD::BeginPlay(void)
     return;
 }
 
+#if WITH_EDITOR
 void AWorldHUD::CreateSimulationHUD(void)
 {
     // ReSharper disable once CppTooWideScope
@@ -97,3 +98,4 @@ void AWorldHUD::CreateSimulationHUD(void)
 
     return;
 }
+#endif /* WITH_EDITOR */

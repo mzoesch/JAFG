@@ -45,7 +45,7 @@ void UMaterialSubsystem::Deinitialize(void)
 
 void UMaterialSubsystem::InitializeMaterials(void)
 {
-    const UJAFGGameInstance*     MyGameInstance   = Cast<UJAFGGameInstance>(GetWorld()->GetGameInstance());
+    const UJAFGGameInstance*     MyGameInstance   = Cast<UJAFGGameInstance>(this->GetWorld()->GetGameInstance());
 
     if (MyGameInstance == nullptr)
     {
@@ -143,7 +143,7 @@ void UMaterialSubsystem::InitializeMaterials(void)
     void* TexArrMipDataPtr          = TexArr->GetPlatformData()->Mips[0].BulkData.Lock( LOCK_READ_WRITE );
     if (TexArrMipDataPtr == nullptr)
     {
-        LOG_FATAL(LogMaterialSubsystem, "Failed to aquire read write lock for texture array.")
+        LOG_FATAL(LogMaterialSubsystem, "Failed to acquire read write lock for texture array.")
         return;
     }
     int64 CurrentTexArrMemoryOffset = 0;
@@ -168,7 +168,7 @@ void UMaterialSubsystem::InitializeMaterials(void)
             return;
         }
 
-        /* If ture, we have something like: StoneVoxel. */
+        /* If true, we have something like: StoneVoxel. */
         if (CurrentTexSplits.Num() == 1)
         {
             VoxelSubsystem->VoxelMasks[CurrentVoxelIndex].AddTextureGroup(ENormalLookup::Default, ETextureGroup::Opaque);
@@ -229,7 +229,6 @@ void UMaterialSubsystem::InitializeMaterials(void)
 
         else
         {
-            checkNoEntry()
             LOG_FATAL(
                 LogMaterialSubsystem,
                 "Invalid texture name parts for voxel [%s::%s]. Faulty texture: %s.",
@@ -262,7 +261,7 @@ void UMaterialSubsystem::InitializeMaterials(void)
             return;
         }
 
-        FMemory::Memcpy( DestinationSliceMipDataPtr, CurrentSliceMipDataPtr, SliceSize );
+        FMemory::Memcpy(DestinationSliceMipDataPtr, CurrentSliceMipDataPtr, SliceSize);
 
 #if PERFORM_R_AND_B_CHANNEL_FLIP
 #define CHANNEL_COUNT 4 /* RGBA */
@@ -275,7 +274,7 @@ void UMaterialSubsystem::InitializeMaterials(void)
         // texture directly, because they are used elsewhere (mainly in the HUD and OSD) where the format is correct.
         //
 
-        for (int Channel = 0; Channel < CHANNEL_COUNT; Channel++)
+        for (int Channel = 0; Channel < CHANNEL_COUNT; ++Channel)
         {
             for (
                 int i = 0;
@@ -303,7 +302,7 @@ void UMaterialSubsystem::InitializeMaterials(void)
             ++i
         )
         {
-            LOG_VERBOSE(LogMaterialSubsystem, "Performed flip %d: S --- D ; BGRA --- RGBA ; %d %d %d %d --- %d %d %d %d.",
+            LOG_VERBOSE(LogMaterialSubsystem, "Performed flip %d: SRC --- DET ; BGRA --- RGBA ; %d %d %d %d --- %d %d %d %d.",
                 i,
                 ( (uint8*) CurrentSliceMipDataPtr )             [i * CHANNEL_COUNT + 0],
                 ( (uint8*) CurrentSliceMipDataPtr )             [i * CHANNEL_COUNT + 1],
@@ -345,7 +344,7 @@ void UMaterialSubsystem::InitializeMaterials(void)
     void* BlendTexArrMipDataPtr          = BlendTexArr->GetPlatformData()->Mips[0].BulkData.Lock( LOCK_READ_WRITE );
     if (BlendTexArrMipDataPtr == nullptr)
     {
-        LOG_FATAL(LogMaterialSubsystem, "Failed to aquire read write lock for blend texture array.")
+        LOG_FATAL(LogMaterialSubsystem, "Failed to acquire read write lock for blend texture array.")
         return;
     }
     int64 CurrentBlendTexArrMemoryOffset = 0;

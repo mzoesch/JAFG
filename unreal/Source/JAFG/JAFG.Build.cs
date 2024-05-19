@@ -52,11 +52,14 @@ public class JAFG : ModuleRules
         }
         );
 
-        PrivateDependencyModuleNames.AddRange(
-        new string[]
+        if (Target.Type == TargetType.Editor)
         {
-            "UnrealEd",
+            PrivateDependencyModuleNames.AddRange(
+            new string[]
+            {
+                "UnrealEd",
+            }
+            );
         }
-        );
     }
 }

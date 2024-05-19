@@ -34,9 +34,18 @@ public class Chat : ModuleRules
         {
             "CoreUObject",
             "Engine",
-            "UnrealEd",
         }
         );
+
+        if (Target.Type == TargetType.Editor)
+        {
+            PrivateDependencyModuleNames.AddRange(
+            new string[]
+            {
+                "UnrealEd",
+            }
+            );
+        }
 
         PrivateDependencyModuleNames.AddRange(
         new string[]

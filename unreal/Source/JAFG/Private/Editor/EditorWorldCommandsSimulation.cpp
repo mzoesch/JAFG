@@ -40,13 +40,13 @@ void UEditorWorldCommandsSimulation::Deinitialize(void)
 
 void UEditorWorldCommandsSimulation::ToggleDebugScreen(void) const
 {
-#if !WITH_EDITOR
-    LOG_FATAL(LogEditorCommands, "Disallowed call outside of editor.")
-#endif /* !WITH_EDITOR */
-
+#if WITH_EDITOR
     Cast<UDebugScreen>(Cast<AWorldHUD>(
         GEngine->GetGamePlayer(this->GetWorld(), 0)->GetPlayerController(this->GetWorld()
     )->GetHUD())->DebugScreen)->ToggleInSimulateMode();
+#else /* WITH_EDITOR */
+    LOG_FATAL(LogEditorCommands, "Disallowed call outside of editor.")
+#endif /* !WITH_EDITOR */
 
     return;
 }

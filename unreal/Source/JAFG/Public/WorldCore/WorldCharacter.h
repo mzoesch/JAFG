@@ -37,7 +37,7 @@ protected:
     //////////////////////////////////////////////////////////////////////////
 
     /**
-     * A wrapper around primitive components that only should be visible for other players or the owing player
+     * A wrapper around primitive components that only should be visible for other players or the owning player
      * if he is in any third-person camera mode.
      */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))

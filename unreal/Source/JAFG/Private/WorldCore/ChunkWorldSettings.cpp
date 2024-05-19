@@ -80,6 +80,7 @@ void UServerChunkWorldSettings::OnWorldBeginPlay(UWorld& InWorld)
     return;
 }
 
+#if WITH_EDITOR
 void UServerChunkWorldSettings::ReflectChangesFromEditorOnlySettings(const AEditorChunkWorldSettings& EditorChunkWorldSettings)
 {
     if (EditorChunkWorldSettings.HasWorldGenerationTypeOverride())
@@ -193,6 +194,7 @@ void UServerChunkWorldSettings::ReflectChangesFromEditorOnlySettings(const AEdit
 
     return;
 }
+#endif /* WITH_EDITOR */
 
 AEditorChunkWorldSettings::AEditorChunkWorldSettings(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {

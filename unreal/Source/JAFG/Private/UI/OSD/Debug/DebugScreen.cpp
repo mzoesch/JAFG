@@ -2,9 +2,11 @@
 
 #include "UI/OSD/Debug/DebugScreen.h"
 
-#include "LevelEditorViewport.h"
 #include "Player/WorldPlayerController.h"
 #include "WorldCore/WorldCharacter.h"
+#if WITH_EDITOR
+    #include "LevelEditorViewport.h"
+#endif /* WITH_EDITOR */
 
 #define SANITIZED_FLT(Float, Precision)                                                     \
     FString::SanitizeFloat(Float, Precision)                                                ;
@@ -69,6 +71,7 @@ void UDebugScreen::NativeDestruct(void)
     return;
 }
 
+#if WITH_EDITOR
 void UDebugScreen::ToggleInSimulateMode(void)
 {
     if (this->GetVisibility() == ESlateVisibility::Visible)
@@ -82,6 +85,7 @@ void UDebugScreen::ToggleInSimulateMode(void)
 
     return;
 }
+#endif /* WITH_EDITOR */
 
 void UDebugScreen::OnDebugScreenVisibilityChanged(const bool bVisible)
 {

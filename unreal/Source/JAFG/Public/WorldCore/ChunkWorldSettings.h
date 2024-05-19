@@ -9,9 +9,9 @@
 
 #include "ChunkWorldSettings.generated.h"
 
-class AWorldCharacter;
 JAFG_VOID
 
+class AWorldCharacter;
 class AEditorChunkWorldSettings;
 
 /**
@@ -103,13 +103,12 @@ public:
 
     FORCEINLINE auto GetWorldGenerationType(void) const -> EWorldGenerationType::Type { return this->WorldGenerationType; }
 
-
 private:
 
 #if WITH_EDITOR
     /**
      * Should always be set manually in the code directly.
-     * Useful for testing setting loading, saving, etc.
+     * Useful setting for testing loading or saving.
      */
     bool bNeverReflectChangesFromEditorOnlySettings = false;
     /** Always call last, after all settings have already been set. */
@@ -122,7 +121,7 @@ private:
  * Editor only.
  * Change settings here in the editor to quickly test different settings without the need to recompile the application.
  *
- * Changes made here will never be reflected in the actual game.
+ * Changes made here will never be reflected in a standalone game or server.
  */
 UCLASS(NotBlueprintable)
 class JAFG_API AEditorChunkWorldSettings : public AWorldSettings

@@ -45,9 +45,7 @@ struct JAFG_API FVoxelMask
         this->TextureGroups.Empty();
         this->TextureGroups.Add(FTextureGroup(ENormalLookup::Default, TextureGroup));
 
-        /**
-         * Filled later on during the game boot-up by the Material Subsystem.
-         */
+        /* Filled later on during the game boot-up by the Material Subsystem. */
         this->TextureIndices.Empty();
 
         return;
@@ -114,7 +112,7 @@ struct JAFG_API FVoxelMask
     }
 
     /**
-     * Gets the texture index of the texture array at the given texture group based on the normal vector.
+     * Gets the texture index of the owning texture array at the given texture group based on the normal vector.
      */
     FORCEINLINE int32 GetTextureIndex(const FVector& Normal) const
     {
@@ -138,7 +136,7 @@ private:
 
     /**
      * Maps a normal vector to a texture group.
-     * A texture group can be opaque, full blend opaque, or flora blend opaque, transparent, etc.
+     * A texture group can be opaque, full blend opaque, flora blend opaque, transparent, etc.
      */
     struct JAFG_API FTextureGroup
     {
@@ -156,7 +154,7 @@ private:
     };
 
     /**
-     * Maps a normal vector to a texture index in the texture array.
+     * Maps a normal vector to a texture index in the owning texture array based on this normal.
      */
     struct JAFG_API FTextureIndex
     {
@@ -177,7 +175,7 @@ private:
      * We could use a TMap here for these two arrays. But as this is a variable that is heavily used in the chunk
      * generation and may be called multiple thousand times per frame during generation, we are currently using a
      * TArray. A Map might cause a huge unwanted overhead. There will never be more than six elements in this array
-     * anyway (because a voxel only has six sides in a three-dimensional space :D ). But we should to some performance
+     * anyway ( because a voxel only has six sides in a three-dimensional space :D ). But we should to some performance
      * tests to be sure later on when we run into problems to find the best solution.
      */
 
