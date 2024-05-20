@@ -3,12 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/GameModeBase.h"
+#include "GameModes/CommonGameMode.h"
 
 #include "WorldGameMode.generated.h"
 
 UCLASS(NotBlueprintable)
-class JAFG_API AWorldGameMode : public AGameModeBase
+class JAFG_API AWorldGameMode : public ACommonGameMode
 {
     GENERATED_BODY()
 

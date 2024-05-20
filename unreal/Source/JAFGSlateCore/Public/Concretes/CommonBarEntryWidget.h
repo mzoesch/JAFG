@@ -22,7 +22,7 @@ struct JAFGSLATECORE_API FPassedTabDescriptor final :FMyPassedData
 };
 
 /**
- * Should act as a button for the CommonBarWidget.
+ * Should act as a button for the Common Bar Widget.
  */
 UCLASS(Abstract, Blueprintable)
 class JAFGSLATECORE_API UCommonBarEntryWidget : public UJAFGWidget

@@ -3,6 +3,7 @@
 #include "UI/FrontEnd/JAFGFrontEnd.h"
 
 #include "Concretes/CommonBarEntryWidget.h"
+#include "Concretes/CommonBarPanelWidget.h"
 
 UJAFGFrontEnd::UJAFGFrontEnd(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -23,33 +24,39 @@ void UJAFGFrontEnd::NativeDestruct(void)
 
 void UJAFGFrontEnd::RegisterAllTabs(void)
 {
-    check(this->NewSessionWidgetClass && "New Session Widget Class is not set.");
-    FCommonBarTabDescriptor New;
-    New.Identifier       = "New";
-    New.DisplayName      = "New Session";
-    New.EntryWidgetClass = this->NewSessionWidgetClass;
+    check( this->HostSessionEntryWidgetClass && "Host Session Widget Class is not set. ")
+    check( this->HostSessionPanelWidgetClass && "Join Session Widget Class is not set." )
+    FCommonBarTabDescriptor Host;
+    Host.Identifier       = "Host";
+    Host.DisplayName      = "Host Session";
+    Host.PanelWidgetClass = this->HostSessionPanelWidgetClass;
+    Host.EntryWidgetClass = this->HostSessionEntryWidgetClass;
 
-    check(this->JoinSessionWidgetClass && "Join Session Widget Class is not set.");
+    check( this->JoinSessionEntryWidgetClass && "Join Session Widget Class is not set." )
+    check( this->JoinSessionPanelWidgetClass && "Join Session Panel Widget Class is not set." )
     FCommonBarTabDescriptor Join;
     Join.Identifier       = "Join";
     Join.DisplayName      = "Join Session";
-    Join.EntryWidgetClass = this->JoinSessionWidgetClass;
+    Join.PanelWidgetClass = this->JoinSessionPanelWidgetClass;
+    Join.EntryWidgetClass = this->JoinSessionEntryWidgetClass;
 
-    check(this->SettingsWidgetClass && "Settings Widget Class is not set.");
+    check( this->SettingsEntryWidgetClass && "Settings Widget Class is not set." )
+    check( this->SettingsPanelWidgetClass && "Settings Panel Widget Class is not set." )
     FCommonBarTabDescriptor Settings;
     Settings.Identifier       = "Settings";
     Settings.DisplayName      = "Settings";
-    Settings.EntryWidgetClass = this->SettingsWidgetClass;
+    Settings.EntryWidgetClass = this->SettingsEntryWidgetClass;
+    Settings.PanelWidgetClass = this->SettingsPanelWidgetClass;
     Settings.Padding          = FMargin(0.0f, 200.0f, 0.0f, 0.0f);
 
-    check(this->QuitGameWidgetClass && "Quit Game Widget Class is not set.");
+    check( this->QuitGameEntryWidgetClass && "Quit Game Widget Class is not set." )
     FCommonBarTabDescriptor Quit;
     Quit.Identifier       = "Quit";
     Quit.DisplayName      = "Quit Game";
-    Quit.EntryWidgetClass = this->QuitGameWidgetClass;
+    Quit.EntryWidgetClass = this->QuitGameEntryWidgetClass;
     Quit.Padding          = FMargin(0.0f, 25.0f, 0.0f, 0.0f);
 
-    this->RegisterTab(New);
+    this->RegisterTab(Host);
     this->RegisterTab(Join);
     this->RegisterTab(Settings);
     this->RegisterTab(Quit);

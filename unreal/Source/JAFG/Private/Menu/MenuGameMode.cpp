@@ -10,5 +10,7 @@ AFrontEndGameMode::AFrontEndGameMode(const FObjectInitializer& ObjectInitializer
     this->HUDClass              = AFrontEndHUD::StaticClass();
     this->PlayerControllerClass = ACommonPlayerController::StaticClass();
 
+    this->bStartWithCursorVisible = true;
+
     return;
 }

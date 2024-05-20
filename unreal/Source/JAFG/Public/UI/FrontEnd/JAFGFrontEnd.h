@@ -7,6 +7,8 @@
 
 #include "JAFGFrontEnd.generated.h"
 
+class ULocalSaveEntry;
+class UScrollBox;
 JAFG_VOID
 
 UCLASS(Abstract, Blueprintable)
@@ -28,14 +30,23 @@ protected:
     virtual void RegisterAllTabs(void);
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-    TSubclassOf<UCommonBarEntryWidget> NewSessionWidgetClass;
+    TSubclassOf<UCommonBarEntryWidget> HostSessionEntryWidgetClass;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-    TSubclassOf<UCommonBarEntryWidget> JoinSessionWidgetClass;
+    TSubclassOf<UCommonBarPanelWidget> HostSessionPanelWidgetClass;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-    TSubclassOf<UCommonBarEntryWidget> SettingsWidgetClass;
+    TSubclassOf<UCommonBarEntryWidget> JoinSessionEntryWidgetClass;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-    TSubclassOf<UCommonBarEntryWidget> QuitGameWidgetClass;
+    TSubclassOf<UCommonBarPanelWidget> JoinSessionPanelWidgetClass;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    TSubclassOf<UCommonBarEntryWidget> SettingsEntryWidgetClass;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    TSubclassOf<UCommonBarPanelWidget> SettingsPanelWidgetClass;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    TSubclassOf<UCommonBarEntryWidget> QuitGameEntryWidgetClass;
 };

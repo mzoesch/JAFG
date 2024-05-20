@@ -9,7 +9,7 @@
 
 class UButton;
 
-struct JAFGSLATECORE_API FWarningPopUpData : FMyPassedData
+struct JAFGSLATECORE_API FWarningPopUpData : public FMyPassedData
 {
     virtual ~FWarningPopUpData(void) = default;
 

@@ -22,7 +22,7 @@ enum Type : uint8
     PreSpawned,
 
     /**
-     * A chunk has run its ACommonChunk#PreInitialize method.
+     * A chunk has run its ACommonChunk#InitializeCommonStuff method.
      * It now knows its neighbors, and some essential variables have been set.
      * A spawned chunk requires that all six of its neighbors exist and have at least
      * the state EChunkState::PreSpawned.
@@ -56,7 +56,7 @@ enum Type : uint8
 
     /**
      * If the chunk itself decides that it wants to die and be separated from all its friends in the UWorld.
-     * The corresponding AActor will probably be killed at the end of the tick the state change was broadcasted.
+     * The corresponding AActor will probably be killed at the end of the tick, where the state change was broadcasted.
      */
     Kill,
 

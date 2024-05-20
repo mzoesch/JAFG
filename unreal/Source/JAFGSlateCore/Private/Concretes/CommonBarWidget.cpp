@@ -5,7 +5,6 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/Overlay.h"
-#include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
 #include "Components/WidgetSwitcher.h"
 #include "Concretes/CommonBarPanelWidget.h"
@@ -32,7 +31,7 @@ void UCommonBarWidget::NativeConstruct(void)
     this->WS_BarPanels->ClearChildren();
     this->P_BarEntries->ClearChildren();
 
-    /* The first entry must always be the fallback to an empty (no tab is selected screen). */
+    /* The first entry must always be the fallback to an empty (no tab is selected) screen. */
     this->WS_BarPanels->AddChild(this->WidgetTree->ConstructWidget<UOverlay>());
     this->RegisteredTabIdentifiersInOrder.Add(UCommonBarWidget::NoActiveTabIdentifier);
 
@@ -85,6 +84,7 @@ void UCommonBarWidget::RegisterTab(const FCommonBarTabDescriptor& Descriptor)
          * to deal with different indices in the WidgetSwitcher and the RegisteredTabIdentifiersInOrder.
          */
         this->WS_BarPanels->AddChild(this->WidgetTree->ConstructWidget<UOverlay>());
+        LOG_DISPLAY(LogCommonSlate, "No panel widget class was provided for %s. Adding an empty panel.", *Descriptor.Identifier)
     }
 
     this->RegisteredTabIdentifiersInOrder.Add(Descriptor.Identifier);
@@ -94,6 +94,12 @@ void UCommonBarWidget::RegisterTab(const FCommonBarTabDescriptor& Descriptor)
 
 void UCommonBarWidget::OnTabPressed(const FString& Identifier)
 {
+    if (UCommonBarPanelWidget* Child = Cast<UCommonBarPanelWidget>(this->WS_BarPanels->GetActiveWidget()))
+    {
+        Child->OnNativeMadeCollapsed();
+        Child->OnMadeCollapsed();
+    }
+
     if (this->ActiveTabIdentifier == Identifier)
     {
         this->ActiveTabIdentifier = UCommonBarWidget::NoActiveTabIdentifier;
@@ -105,6 +111,12 @@ void UCommonBarWidget::OnTabPressed(const FString& Identifier)
 
     this->OnTabPressedEvent.Broadcast(this->ActiveTabIdentifier);
     this->WS_BarPanels->SetActiveWidgetIndex(this->FindIndexOfIdentifier(this->ActiveTabIdentifier));
+
+    if (UCommonBarPanelWidget* Child = Cast<UCommonBarPanelWidget>(this->WS_BarPanels->GetActiveWidget()))
+    {
+        Child->OnNativeMadeVisible();
+        Child->OnMadeVisible();
+    }
 
     return;
 }

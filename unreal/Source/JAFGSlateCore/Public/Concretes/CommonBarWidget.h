@@ -11,7 +11,7 @@ class UWidgetSwitcher;
 class UCommonBarPanelWidget;
 class UCommonBarEntryWidget;
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnTabPressedSignature, const FString& /* Identifier */ )
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnTabPressedSignature, const FString& /* Identifier */)
 
 USTRUCT(BlueprintType)
 struct JAFGSLATECORE_API FCommonBarTabDescriptor

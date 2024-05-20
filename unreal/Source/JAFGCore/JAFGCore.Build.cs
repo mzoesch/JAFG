@@ -22,5 +22,12 @@ public class JAFGCore : ModuleRules
             "Engine",
         }
         );
+
+        PrivateDependencyModuleNames.AddRange(
+        new string[]
+        {
+            "JAFGLogging",
+        }
+        );
     }
 }

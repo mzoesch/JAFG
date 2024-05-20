@@ -187,8 +187,8 @@ protected:
     //////////////////////////////////////////////////////////////////////////
 
     /**
-     * If this chunk has been pre-initialized, this array will have a size of WorldStatics::ChunkSize to the power of 3.
-     * Not initialized at object construction to save memory.
+     * If this chunk has been pre-initialized, this array will have a size of WorldStatics::ChunkSize to the
+     * power of three. Not initialized at object construction to save memory.
      */
     voxel_t* RawVoxelData = nullptr;
 
@@ -210,7 +210,7 @@ protected:
     }
 
     /**
-     * Gets the index of a voxel in the RawVoxelData array.
+     * Gets the index of a voxel in the Raw Voxel Data array.
      */
     FORCEINLINE static auto GetVoxelIndex(const FVoxelKey LocalVoxelLocation) -> uint16
     {

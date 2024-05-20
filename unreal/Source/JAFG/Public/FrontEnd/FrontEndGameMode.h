@@ -3,13 +3,14 @@
 #pragma once
 
 #include "MyCore.h"
-#include "GameFramework/GameModeBase.h"
+#include "GameModes/CommonGameMode.h"
+
 #include "FrontEndGameMode.generated.h"
 
 JAFG_VOID
 
 UCLASS(NotBlueprintable)
-class JAFG_API AFrontEndGameMode : public AGameModeBase
+class JAFG_API AFrontEndGameMode : public ACommonGameMode
 {
     GENERATED_BODY()
 

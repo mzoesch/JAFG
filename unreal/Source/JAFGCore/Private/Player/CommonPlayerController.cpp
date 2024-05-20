@@ -1,6 +1,8 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
-#include "JAFG/Public/Player/CommonPlayerController.h"
+#include "Player/CommonPlayerController.h"
+
+#include "Definitions.h"
 
 ACommonPlayerController::ACommonPlayerController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -9,6 +11,12 @@ ACommonPlayerController::ACommonPlayerController(const FObjectInitializer& Objec
 
 void ACommonPlayerController::ShowMouseCursor(const bool bShow, const bool bCenter /* = true */ )
 {
+    if (this->IsLocalController() == false)
+    {
+        LOG_FATAL(LogCommonSlate, "Tried to change mouse cursor on a non-local controller.")
+        return;
+    }
+
     if (bShow == true)
     {
         this->bShowMouseCursor          = true;
@@ -40,4 +48,9 @@ void ACommonPlayerController::ShowMouseCursor(const bool bShow, const bool bCent
     this->SetInputMode(FInputModeGameOnly());
 
     return;
+}
+
+void ACommonPlayerController::ShowMouseCursor_ClientRPC_Implementation(const bool bShow, const bool bCenter)
+{
+    this->ShowMouseCursor(bShow, bCenter);
 }
