@@ -18,11 +18,29 @@ public class JAFGNetCore : ModuleRules
         }
         );
 
+        PublicDependencyModuleNames.AddRange(
+        new string[]
+        {
+            "OnlineSubsystem",
+            "OnlineSubsystemNull",
+            "OnlineSubsystemUtils",
+            "OnlineSubsystemSteam",
+        }
+        );
+
         PrivateDependencyModuleNames.AddRange(
         new string[]
         {
             "CoreUObject",
             "Engine",
+        }
+        );
+
+        PrivateDependencyModuleNames.AddRange(
+        new string[]
+        {
+            "JAFGCore",
+            "JAFGLogging",
         }
         );
     }

@@ -19,8 +19,12 @@ void UHostSessionPanelWidget::OnNativeMadeVisible(void)
     check( this->ET_SessionName )
     check( this->ET_NewSessionMaxPublicConnections )
 
-    this->ET_SessionName->OnTextChanged.AddDynamic(this, &UHostSessionPanelWidget::OnSessionNameChanged);
-    this->ET_NewSessionMaxPublicConnections->OnTextChanged.AddDynamic(this, &UHostSessionPanelWidget::OnNewSessionMaxPublicConnectionsChanged);
+    if (this->bBoundToDynamicWidgetEvents == false)
+    {
+        this->ET_SessionName->OnTextChanged.AddDynamic(this, &UHostSessionPanelWidget::OnSessionNameChanged);
+        this->ET_NewSessionMaxPublicConnections->OnTextChanged.AddDynamic(this, &UHostSessionPanelWidget::OnNewSessionMaxPublicConnectionsChanged);
+        this->bBoundToDynamicWidgetEvents = true;
+    }
 
     return;
 }
@@ -54,6 +58,21 @@ void UHostSessionPanelWidget::LoadLocalSessionsToScrollBox(void)
 FString UHostSessionPanelWidget::GetSavePathForSessionName(void) const
 {
     return FString::Printf(TEXT("~MyPath/%s"), *this->NewSessionName);
+}
+
+bool UHostSessionPanelWidget::IsHostFromNewSaveInputValid(void) const
+{
+    if (this->NewSessionName.IsEmpty() || this->NewSessionName.Len() > this->MaxSessionNameLength)
+    {
+        return false;
+    }
+
+    if (this->MaxPublicConnections < 0 || this->MaxPublicConnections > this->MaxPublicConnectionsLength)
+    {
+        return false;
+    }
+
+    return true;
 }
 
 void UHostSessionPanelWidget::OnNativeLocalSaveEntryClicked(const int32 WidgetIdentifier)
@@ -108,13 +127,45 @@ void UHostSessionPanelWidget::OnNewSessionMaxPublicConnectionsChanged(const FTex
         return;
     }
 
+    if (FCString::Atoi(*Text.ToString()) > this->MaxPublicConnectionsLength)
+    {
+        this->ET_NewSessionMaxPublicConnections->SetText(this->LastValidMaxPublicConnectionsText);
+        return;
+    }
+
     this->MaxPublicConnections              = FCString::Atoi(*Text.ToString());
     this->LastValidMaxPublicConnectionsText = Text;
 
     return;
 }
 
+void UHostSessionPanelWidget::ResetHostFromSessionSettingsToDefault(void)
+{
+    this->CurrentlyFocusedLocalSaveEntryIndex = this->InvalidFocusedLocalSaveEntryIndex;
+}
+
 void UHostSessionPanelWidget::ResetHostFromNewSessionSettingsToDefault(void)
 {
-    checkNoEntry()
+    this->NewSessionName = this->DefaultSessionName;
+    this->LastValidMaxPublicConnectionsText = FText::FromString(TEXT("0"));
+    this->MaxPublicConnections = 0;
+
+    this->ET_SessionName->SetText(FText::FromString(this->NewSessionName));
+    this->ET_NewSessionMaxPublicConnections->SetText(this->LastValidMaxPublicConnectionsText);
+
+    return;
+}
+
+void UHostSessionPanelWidget::HostSessionFromNewSave(void) const
+{
+    if (this->IsHostFromNewSaveInputValid() == false)
+    {
+        LOG_FATAL(LogCommonSlate, "Front end provided invalid input for hosting a new session.")
+        return;
+    }
+
+    ULocalSessionSupervisorSubsystem* LSSSS = this->GetGameInstance()->GetSubsystem<ULocalSessionSupervisorSubsystem>();
+    LSSSS->HostListenServer(this->NewSessionName, this->MaxPublicConnections, true);
+
+    return;
 }

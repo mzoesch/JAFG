@@ -30,6 +30,21 @@ void ACommonGameMode::PostLogin(APlayerController* NewPlayer)
 #endif /* !WITH_EDITOR */
         }
     }
+    else
+    {
+        if (ACommonPlayerController* CastedNewPlayer = Cast<ACommonPlayerController>(NewPlayer))
+        {
+            CastedNewPlayer->ShowMouseCursor_ClientRPC(false);
+        }
+        else
+        {
+#if WITH_EDITOR
+            LOG_ERROR(LogGameMode, "Player controller is not of type a Common Player Controller.");
+#else /* WITH_EDITOR */
+            LOG_FATAL(LogGameMode, "Player controller is not of type a Common Player Controller.");
+#endif /* !WITH_EDITOR */
+        }
+    }
 
     return;
 }

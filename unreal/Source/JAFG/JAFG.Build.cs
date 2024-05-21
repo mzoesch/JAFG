@@ -24,6 +24,17 @@ public class JAFG : ModuleRules
         PublicDependencyModuleNames.AddRange(
         new string[]
         {
+            "OnlineSubsystem",
+            "OnlineSubsystemNull",
+            "OnlineSubsystemUtils",
+            "OnlineSubsystemSteam",
+
+        }
+        );
+
+        PublicDependencyModuleNames.AddRange(
+        new string[]
+        {
             "Chat",
             "Hyperlane",
             "JAFGCore",

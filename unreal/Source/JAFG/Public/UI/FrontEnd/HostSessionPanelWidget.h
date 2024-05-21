@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "LocalSessionSupervisorSubsystem.h"
 #include "MyCore.h"
 #include "Concretes/CommonBarPanelWidget.h"
 
@@ -54,31 +55,39 @@ public:
 
 protected:
 
-    const int32   MaxSessionNameLength = 0x3F;
+    const int32   MaxSessionNameLength = ULocalSessionSupervisorSubsystem::MaxSessionNameLength;
     const FString DefaultSessionName   = L"Some Generic Session Name";
           FString NewSessionName       = this->DefaultSessionName;
     UFUNCTION(BlueprintPure, Category = "UI|FrontEnd")
     FString GetSavePathForSessionName( /* void */ ) const;
 
-    int32 MaxPublicConnections              = 0;
-    FText LastValidMaxPublicConnectionsText = FText::GetEmpty();
+    const int32 MaxPublicConnectionsLength        = ULocalSessionSupervisorSubsystem::MaxPublicConnections;
+          int32 MaxPublicConnections              = 0;
+          FText LastValidMaxPublicConnectionsText = FText::GetEmpty();
+
+    UFUNCTION(BlueprintPure)
+    bool IsHostFromNewSaveInputValid( /* void */ ) const;
 
     const int32 InvalidFocusedLocalSaveEntryIndex   = -1;
           int32 CurrentlyFocusedLocalSaveEntryIndex = this->InvalidFocusedLocalSaveEntryIndex;
 
     UFUNCTION(BlueprintPure, Category = "UI|FrontEnd")
     bool HasFocusedLocalSaveEntry( /* void */ ) const { return this->CurrentlyFocusedLocalSaveEntryIndex != this->InvalidFocusedLocalSaveEntryIndex; }
-
     UFUNCTION(BlueprintImplementableEvent, Category = "UI|FrontEnd")
             void OnLocalSaveEntryClicked(const int32 WidgetIdentifier);
     virtual void OnNativeLocalSaveEntryClicked(const int32 WidgetIdentifier);
 
+    bool bBoundToDynamicWidgetEvents = false;
     UFUNCTION()
     virtual void OnSessionNameChanged(const FText& Text);
-
     UFUNCTION()
     virtual void OnNewSessionMaxPublicConnectionsChanged(const FText& Text);
 
     UFUNCTION(BlueprintCallable)
+    void ResetHostFromSessionSettingsToDefault( /* void */ );
+    UFUNCTION(BlueprintCallable)
     void ResetHostFromNewSessionSettingsToDefault( /* void */ );
+
+    UFUNCTION(BlueprintCallable)
+    void HostSessionFromNewSave( /* void */ ) const;
 };

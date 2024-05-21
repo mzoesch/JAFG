@@ -11,7 +11,7 @@
 namespace RegisteredWorlds
 {
 
-extern inline JAFGCORE_API const FString FrontEnd = TEXT("L_FrontEnd");
-extern inline JAFGCORE_API const FString World    = TEXT("L_World");
+extern inline const FString FrontEnd = TEXT("L_FrontEnd");
+extern inline const FString World    = TEXT("L_World");
 
 }
