@@ -10,7 +10,7 @@ namespace ChunkStatics
 {
 
 /** Transforms an unreal vector to a chunk key. */
-FORCEINLINE FChunkKey WorldToChunkKey(const FVector& WorldLocation)
+FORCEINLINE auto WorldToChunkKey(const FVector& WorldLocation) -> FChunkKey
 {
     constexpr double Factor { WorldStatics::ChunkSize * WorldStatics::JToUScaleDouble };
 
@@ -47,7 +47,7 @@ FORCEINLINE FChunkKey WorldToChunkKey(const FVector& WorldLocation)
 }
 
 /** Transforms an unreal vector to a vertical chunk key. */
-FORCEINLINE FChunkKey2 WorldToVerticalChunkKey(const FVector& WorldLocation)
+FORCEINLINE auto WorldToVerticalChunkKey(const FVector& WorldLocation) -> FChunkKey2
 {
     constexpr double Factor { WorldStatics::ChunkSize * WorldStatics::JToUScaleDouble };
 
@@ -72,6 +72,64 @@ FORCEINLINE FChunkKey2 WorldToVerticalChunkKey(const FVector& WorldLocation)
     }
 
     return ChunkKey;
+}
+
+/** Transforms an unreal vector to a local voxel key. */
+FORCEINLINE auto WorldToLocalVoxelLocation(const FVector& WorldLocation) -> FVoxelKey
+{
+    constexpr double Factor { WorldStatics::ChunkSize * WorldStatics::JToUScaleDouble };
+
+    FIntVector ChunkLocation;
+
+    if (WorldLocation.X < 0)
+    {
+        ChunkLocation.X = static_cast<int>(WorldLocation.X / Factor) - 1;
+    }
+    else
+    {
+        ChunkLocation.X = static_cast<int>(WorldLocation.X / Factor);
+    }
+
+    if (WorldLocation.Y < 0)
+    {
+        ChunkLocation.Y = static_cast<int>(WorldLocation.Y / Factor) - 1;
+    }
+    else
+    {
+        ChunkLocation.Y = static_cast<int>(WorldLocation.Y / Factor);
+    }
+
+    if (WorldLocation.Z < 0)
+    {
+        ChunkLocation.Z = static_cast<int>(WorldLocation.Z / Factor) - 1;
+    }
+    else
+    {
+        ChunkLocation.Z = static_cast<int>(WorldLocation.Z / Factor);
+    }
+
+    FIntVector LocalVoxelLocation =
+          FIntVector(WorldLocation) / WorldStatics::JToUScaleInteger
+        - ChunkLocation * WorldStatics::ChunkSize;
+
+    /* Negative Normalization */
+
+    if (ChunkLocation.X < 0)
+    {
+        --LocalVoxelLocation.X;
+    }
+
+    if (ChunkLocation.Y < 0)
+    {
+        --LocalVoxelLocation.Y;
+    }
+
+    if (ChunkLocation.Z < 0)
+    {
+        --LocalVoxelLocation.Z;
+    }
+
+    return LocalVoxelLocation;
 }
 
 }

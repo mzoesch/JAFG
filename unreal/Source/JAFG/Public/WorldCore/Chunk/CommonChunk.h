@@ -11,6 +11,7 @@
 
 JAFG_VOID
 
+class AChunkMulticasterInfo;
 class UMaterialSubsystem;
 class UServerChunkWorldSettings;
 class UVoxelSubsystem;
@@ -138,6 +139,12 @@ protected:
     TObjectPtr<UVoxelSubsystem> VoxelSubsystem = nullptr;
 
     UPROPERTY()
+    TObjectPtr<UChunkGenerationSubsystem> ChunkGenerationSubsystem = nullptr;
+
+    UPROPERTY()
+    TObjectPtr<AChunkMulticasterInfo> ChunkMulticasterInfo = nullptr;
+
+    UPROPERTY()
     TObjectPtr<UMaterialSubsystem> MaterialSubsystem = nullptr;
 
     /** As the name suggests only valid on the server or in a standalone game. */
@@ -239,13 +246,40 @@ private:
 
 #pragma endregion Chunk World Generation
 
+#pragma region Interaction
+
+public:
+
+    //////////////////////////////////////////////////////////////////////////
+    // Interaction
+    //////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Server only.
+     *
+     * Fully replicated method to modify a single voxel with everything that is necessary as a side effect (e.g.: Mesh
+     * re-rendering). Must never be called on the client. This is the safest way to modify a voxel from outside.
+     * Must never be called in a large quantity or to modify the bulk data of this chunk as this method is expensive.
+     *
+     * @param LocalVoxelKey The local voxel key of within the chunk. Can be out of bounds of the chunk, but the method
+     *                      will assume that the initial called chunk object acts as the pivot of the local voxel key.
+     */
+    void ModifySingleVoxel(const FVoxelKey& LocalVoxelKey, const voxel_t NewVoxel);
+    /**
+     * Client only.
+     *
+     * @param LocalVoxelKey Different from ACommonChunk#ModifySingleVoxel. Must be inside the defined bounds of the
+     *                      chunk. And will crash if not.
+     */
+    void ModifySingleVoxelOnClient(const FVoxelKey& LocalVoxelKey, const voxel_t NewVoxel);
+
+#pragma endregion Interaction
+
 #pragma region Replication
 
     //////////////////////////////////////////////////////////////////////////
     // Replication
     //////////////////////////////////////////////////////////////////////////
-
-public:
 
     FORCEINLINE auto SendDataToClient(const TFunction<void(FPlatformTypes::uint32* VoxelData)>& Callback) const -> void
     {
@@ -291,6 +325,24 @@ public:
 
         return this->RawVoxelData[ACommonChunk::GetVoxelIndex(LocalVoxelPosition)];
     }
+
+    /**
+     * TODO DO NOT USE in critical system areas. As this method currently contains bugs.
+     *
+     * Server only.
+     *
+     * Gets itself if inbounds or an existing outbounding chunk from the relative local voxel
+     * position.
+     *
+     * Warning: This method is extremely slow.
+     *          Large amounts of calls in one frame will cause a significant performance hit.
+     *
+     * @param LocalVoxelKey               The local voxel position within the chunk. This chunk acts as the
+     *                                    pivot zero origin of the FIntVector.
+     * @param OutTransformedLocalVoxelKey The new local voxel position of the target chunk. Stays the same if the
+     *                                    target chunk is the called chunk.
+     */
+    auto GetChunkByNonZeroOrigin(const FVoxelKey& LocalVoxelKey, FVoxelKey& OutTransformedLocalVoxelKey) -> ACommonChunk*;
 
 #pragma endregion Getters
 

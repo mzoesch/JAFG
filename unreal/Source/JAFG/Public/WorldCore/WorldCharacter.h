@@ -10,6 +10,7 @@
 
 #include "WorldCharacter.generated.h"
 
+class ACommonChunk;
 class USpringArmComponent;
 class UInputComponent;
 struct FInputActionValue;
@@ -105,6 +106,10 @@ protected:
     virtual void OnCompleteJump(const FInputActionValue& Value);
     virtual void OnTriggerCrouch(const FInputActionValue& Value);
     virtual void OnCompleteCrouch(const FInputActionValue& Value);
+    virtual void OnStartedPrimary(const FInputActionValue& Value);
+    UFUNCTION(Server, Reliable, WithValidation)
+    virtual void OnStartedPrimary_ServerRPC(const FInputActionValue& Value);
+    virtual void OnStartedSecondary(const FInputActionValue& Value);
     virtual void OnTriggeredUpMaxFlySpeed(const FInputActionValue& Value);
     virtual void OnTriggeredDownMaxFlySpeed(const FInputActionValue& Value);
 
@@ -157,6 +162,38 @@ public:
     // World Locations And Rotations
     //////////////////////////////////////////////////////////////////////////
 
+    /**
+     * The maximum distance where we should ever trace for voxels and other hit objects.
+     * Equivalent to: four chunks => 4 x 16 Voxels => 64 Voxels.
+     */
+    inline static constexpr float MaxPOVLineTraceLength { ( WorldStatics::ChunkSize * 4.0f ) * WorldStatics::JToUScale };
+    /* Packed into a method for future easier change per-player basis.  */
+    // ReSharper disable once CppMemberFunctionMayBeStatic
+    FORCEINLINE auto GetCharacterReachInVoxels(void) const -> float { return 4.5f; }
+    /** In unreal scale. */
+    FORCEINLINE auto GetCharacterReach(void) const -> float { return this->GetCharacterReachInVoxels() * WorldStatics::JToUScale; }
+
+    /**
+     * APawn#RemoteViewPitch is an uint8 and represents the pitch of the remote view replicated back to the server.
+     * This method converts the pitch to degrees.
+     * It does not work on listens servers for local controlled characters.
+     */
+    FORCEINLINE auto GetRemoteViewPitchAsDeg(void) const -> float { return this->RemoteViewPitch * 360.0f / /* 2^8 - 1 = */ 255.0f; }
+    FORCEINLINE auto GetFirstPersonTraceStart(void) const -> FTransform { return this->FirstPersonCameraComponent->GetComponentTransform(); }
+    /** Will return falsely values on local controlled characters. */
+    FORCEINLINE auto GetNonLocalFirstPersonTraceStart(void) const -> FTransform
+    {
+        return FTransform(
+            FQuat(FRotator(
+                this->GetRemoteViewPitchAsDeg(),
+                this->GetFirstPersonTraceStart().Rotator().Yaw,
+                this->GetFirstPersonTraceStart().Rotator().Roll
+            )),
+            this->GetFirstPersonTraceStart().GetLocation(),
+            FVector::OneVector
+        );
+    }
+
     /** The added offset to the First-Person Camera Component. */
     inline static const FVector TorsoOffset { 0.0f, 0.0f, -50.0f };
 
@@ -165,6 +202,15 @@ public:
     FORCEINLINE auto GetTorsoTransform(void) const -> FTransform { return FTransform(this->FirstPersonCameraComponent->GetComponentRotation(), this->GetTorsoLocation()); }
 
     FORCEINLINE auto GetFeetLocation(void) const -> FVector { return this->GetActorLocation(); }
+
+    void GetPOVTargetedData(
+        ACommonChunk*& OutChunk,
+        FVector& OutWorldHitLocation,
+        FVector_NetQuantizeNormal& OutWorldNormalHitLocation,
+        FVoxelKey& OutLocalHitVoxelKey,
+        const bool bUseRemotePitch,
+        const float UnrealReach
+    ) const;
 
 #pragma endregion World Interaction
 

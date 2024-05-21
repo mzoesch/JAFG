@@ -68,6 +68,10 @@ public:
         return Out;
     }
 
+    [[nodiscard]]
+    FORCEINLINE auto FindChunkByKey(const FChunkKey& ChunkKey) const -> ACommonChunk*
+    { if (const TObjectPtr<ACommonChunk>* T = this->ChunkMap.Find(ChunkKey); T) { return *T; } return nullptr; }
+
     FORCEINLINE auto AddClientChunk(const FClientChunk& ClientChunk) -> void { this->ClientQueue.Enqueue(ClientChunk); }
 
     FORCEINLINE auto SetInitializationDataFromAuthority(const FChunkKey& ChunkKey, voxel_t* Voxels) -> void

@@ -13,6 +13,7 @@
 #include "Input/CustomInputNames.h"
 #include "Input/JAFGInputSubsystem.h"
 #include "Player/WorldPlayerController.h"
+#include "WorldCore/Chunk/CommonChunk.h"
 
 AWorldCharacter::AWorldCharacter(const FObjectInitializer& ObjectInitializer) :
 Super(ObjectInitializer.SetDefaultSubobjectClass<UMyCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -194,6 +195,16 @@ void AWorldCharacter::BindAction(const FString& ActionName, UEnhancedInputCompon
         this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Completed, &AWorldCharacter::OnCompleteCrouch);
     }
 
+    else if (ActionName == InputActions::Primary)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldCharacter::OnStartedPrimary);
+    }
+
+    else if (ActionName == InputActions::Secondary)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldCharacter::OnStartedSecondary);
+    }
+
     else if (ActionName == InputActions::ToggleCameras)
     {
         this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldCharacter::OnToggleCameras);
@@ -312,6 +323,87 @@ void AWorldCharacter::OnTriggerCrouch(const FInputActionValue& Value)
 void AWorldCharacter::OnCompleteCrouch(const FInputActionValue& Value)
 {
     Super::UnCrouch();
+}
+
+void AWorldCharacter::OnStartedPrimary(const FInputActionValue& Value)
+{
+    ACommonChunk* TargetedChunk;
+    FVector       WorldHitLocation;
+    FVector_NetQuantizeNormal WorldNormalHitLocation;
+    FVoxelKey     LocalHitVoxelKey;
+
+    this->GetPOVTargetedData(TargetedChunk, WorldHitLocation, WorldNormalHitLocation, LocalHitVoxelKey, false, this->GetCharacterReach());
+
+    if (TargetedChunk == nullptr)
+    {
+        return;
+    }
+
+    if (const voxel_t HitVoxel = TargetedChunk->GetLocalVoxelOnly(LocalHitVoxelKey); HitVoxel < ECommonVoxels::Num)
+    {
+        LOG_WARNING(LogWorldChar, "Cannot interact with common voxel type %d. Something fishy is going on.", HitVoxel)
+        return;
+    }
+
+    this->OnStartedPrimary_ServerRPC(Value);
+
+    return;
+}
+
+bool AWorldCharacter::OnStartedPrimary_ServerRPC_Validate(const FInputActionValue& Value)
+{
+    ACommonChunk* TargetedChunk;
+    FVector       WorldHitLocation;
+    FVector_NetQuantizeNormal WorldNormalHitLocation;
+    FVoxelKey     LocalHitVoxelKey;
+
+    this->GetPOVTargetedData(TargetedChunk, WorldHitLocation, WorldNormalHitLocation, LocalHitVoxelKey, this->IsLocallyControlled() == false, this->GetCharacterReach());
+
+    if (TargetedChunk == nullptr)
+    {
+        return false;
+    }
+
+    if (const voxel_t HitVoxel = TargetedChunk->GetLocalVoxelOnly(LocalHitVoxelKey); HitVoxel < ECommonVoxels::Num)
+    {
+        LOG_WARNING(LogWorldChar, "Cannot interact with common voxel type %d. Something fishy is going on.", HitVoxel)
+        return false;
+    }
+
+    return true;
+}
+
+void AWorldCharacter::OnStartedPrimary_ServerRPC_Implementation(const FInputActionValue& Value)
+{
+    ACommonChunk* TargetedChunk;
+    FVector       WorldHitLocation;
+    FVector_NetQuantizeNormal WorldNormalHitLocation;
+    FVoxelKey     LocalHitVoxelKey;
+
+    this->GetPOVTargetedData(TargetedChunk, WorldHitLocation, WorldNormalHitLocation, LocalHitVoxelKey, this->IsLocallyControlled() == false, this->GetCharacterReach());
+
+    if (TargetedChunk == nullptr)
+    {
+        LOG_FATAL(LogWorldChar, "Cannot interact with invalid chunk.")
+        return;
+    }
+
+    const voxel_t HitVoxel = TargetedChunk->GetLocalVoxelOnly(LocalHitVoxelKey);
+
+    if (HitVoxel < ECommonVoxels::Num)
+    {
+        LOG_FATAL(LogWorldChar, "Cannot interact with common voxel type %d. Something fishy is going on.", HitVoxel)
+        return;
+    }
+
+    TargetedChunk->ModifySingleVoxel(LocalHitVoxelKey, ECommonVoxels::Air);
+
+    return;
+}
+
+void AWorldCharacter::OnStartedSecondary(const FInputActionValue& Value)
+{
+    LOG_WARNING(LogWorldChar, "Secondary action not implemented.")
 }
 
 void AWorldCharacter::OnTriggeredUpMaxFlySpeed(const FInputActionValue& Value)
@@ -444,6 +536,47 @@ void AWorldCharacter::ToggleFly(void) const
 void AWorldCharacter::ToggleInputFly(void) const
 {
     this->GetMyCharacterMovement()->bAllowInputFly = !this->GetMyCharacterMovement()->bAllowInputFly;
+}
+
+void AWorldCharacter::GetPOVTargetedData(
+    ACommonChunk*& OutChunk,
+    FVector& OutWorldHitLocation,
+    FVector_NetQuantizeNormal& OutWorldNormalHitLocation,
+    FVoxelKey& OutLocalHitVoxelKey,
+    const bool bUseRemotePitch,
+    const float UnrealReach
+) const
+{
+    OutChunk            = nullptr;
+    OutWorldHitLocation = FVector::ZeroVector;
+
+    const FTransform TraceStart = bUseRemotePitch ? this->GetNonLocalFirstPersonTraceStart() : this->GetFirstPersonTraceStart();
+    const FVector    TraceEnd   = TraceStart.GetLocation() + (TraceStart.GetRotation().GetForwardVector() * UnrealReach);
+
+    FCollisionQueryParams QueryParams = FCollisionQueryParams(FName(TEXT("POVTrace")), false, this);
+
+    FHitResult HitResult = FHitResult(ForceInit);
+    this->GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart.GetLocation(), TraceEnd, ECollisionChannel::ECC_Visibility, QueryParams);
+
+    if (HitResult.GetActor() == nullptr)
+    {
+        return;
+    }
+
+    if (OutChunk = Cast<ACommonChunk>(HitResult.GetActor()); OutChunk != nullptr)
+    {
+        FVector FixedVector = HitResult.Location;
+        if (FMath::IsNearlyZero(FixedVector.X, UE_DOUBLE_KINDA_SMALL_NUMBER)) { FixedVector.X = 0.0; }
+        if (FMath::IsNearlyZero(FixedVector.Y, UE_DOUBLE_KINDA_SMALL_NUMBER)) { FixedVector.Y = 0.0; }
+        if (FMath::IsNearlyZero(FixedVector.Z, UE_DOUBLE_KINDA_SMALL_NUMBER)) { FixedVector.Z = 0.0; }
+        FixedVector -= HitResult.Normal;
+
+        OutWorldHitLocation       = FixedVector;
+        OutWorldNormalHitLocation = HitResult.Normal.GetSafeNormal();
+        OutLocalHitVoxelKey       = ChunkStatics::WorldToLocalVoxelLocation(OutWorldHitLocation);
+    }
+
+    return;
 }
 
 #pragma endregion Enhanced Input

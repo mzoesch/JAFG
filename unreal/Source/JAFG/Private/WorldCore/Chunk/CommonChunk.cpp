@@ -3,6 +3,8 @@
 #include "WorldCore/Chunk/CommonChunk.h"
 
 #include "HyperlaneComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Network/ChunkMulticasterInfo.h"
 #include "System/MaterialSubsystem.h"
 #include "System/VoxelSubsystem.h"
 #include "WorldCore/ChunkWorldSettings.h"
@@ -73,6 +75,12 @@ void ACommonChunk::InitializeCommonStuff(void)
 
     this->VoxelSubsystem = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>();
     check( this->VoxelSubsystem )
+
+    this->ChunkGenerationSubsystem = this->GetWorld()->GetSubsystem<UChunkGenerationSubsystem>();
+    check( this->ChunkGenerationSubsystem )
+
+    this->ChunkMulticasterInfo = Cast<AChunkMulticasterInfo>(UGameplayStatics::GetActorOfClass(this, AChunkMulticasterInfo::StaticClass()));
+    check( this->ChunkMulticasterInfo )
 
     this->MaterialSubsystem = this->GetGameInstance()->GetSubsystem<UMaterialSubsystem>();
     check( this->MaterialSubsystem )
@@ -531,6 +539,74 @@ void ACommonChunk::GenerateSurface(void)
     // checkNoEntry()
 }
 
+void ACommonChunk::ModifySingleVoxel(const FVoxelKey& LocalVoxelKey, const voxel_t NewVoxel)
+{
+    LOG_VERY_VERBOSE(
+        LogChunkManipulation,
+        "Requested to modify single voxel at %s to %d in %s.",
+        *LocalVoxelKey.ToString(), NewVoxel, *this->ChunkKey.ToString()
+    )
+
+    if (UNetStatics::IsSafeServer(this) == false)
+    {
+        LOG_FATAL(LogChunkManipulation, "Only server-like instances can modify voxels.")
+        return;
+    }
+
+    FVoxelKey TransformedLocalVoxelLocation = LocalVoxelKey;
+    ACommonChunk* TargetChunk = this->GetChunkByNonZeroOrigin(LocalVoxelKey, TransformedLocalVoxelLocation);
+
+    if (TargetChunk == nullptr)
+    {
+        LOG_ERROR(
+            LogChunkManipulation,
+            "Could not find chunk for local voxel key %s (pivot: %s). Modified to %s.",
+            *LocalVoxelKey.ToString(), *this->ChunkKey.ToString(), *TransformedLocalVoxelLocation.ToString()
+        )
+        return;
+    }
+
+    if (TargetChunk->GetRawVoxelData(TransformedLocalVoxelLocation) == NewVoxel)
+    {
+        LOG_WARNING(
+            LogChunkManipulation,
+            "Requested to modify single voxel at %s to %d in %s, but value is the same. Ignoring.",
+            *TransformedLocalVoxelLocation.ToString(), NewVoxel, *TargetChunk->ChunkKey.ToString()
+        )
+        return;
+    }
+
+    TargetChunk->ModifyRawVoxelData(TransformedLocalVoxelLocation, NewVoxel);
+    this->ChunkMulticasterInfo->BroadcastChunkModification_NetMulticastRPC(TargetChunk->ChunkKey, TransformedLocalVoxelLocation, NewVoxel);
+    TargetChunk->RegenerateProceduralMesh();
+
+    return;
+}
+
+void ACommonChunk::ModifySingleVoxelOnClient(const FVoxelKey& LocalVoxelKey, const voxel_t NewVoxel)
+{
+    if (UNetStatics::IsSafeClient(this) == false)
+    {
+        LOG_FATAL(LogChunkManipulation, "Disallowed call on non server-like instance.")
+        return;
+    }
+
+    if (this->GetRawVoxelData(LocalVoxelKey) == NewVoxel)
+    {
+        LOG_WARNING(
+            LogChunkManipulation,
+            "Requested to modify single voxel at %s to %d in %s, but value is the same. Ignoring.",
+            *LocalVoxelKey.ToString(), NewVoxel, *this->ChunkKey.ToString()
+        )
+        return;
+    }
+
+    this->ModifyRawVoxelData(LocalVoxelKey, NewVoxel);
+    this->RegenerateProceduralMesh();
+
+    return;
+}
+
 void ACommonChunk::SetInitializationDataFromAuthority(voxel_t* Voxels)
 {
 #if !UE_BUILD_SHIPPING
@@ -552,6 +628,75 @@ void ACommonChunk::SetInitializationDataFromAuthority(voxel_t* Voxels)
     this->SetChunkState(EChunkState::Active, true);
 
     return;
+}
+
+ACommonChunk* ACommonChunk::GetChunkByNonZeroOrigin(const FVoxelKey& LocalVoxelKey,  FVoxelKey& OutTransformedLocalVoxelKey)
+{
+    if (UNetStatics::IsSafeServer(this) == false)
+    {
+        LOG_FATAL(LogChunkManipulation, "Disallowed call on non server-like instance.")
+        return nullptr;
+    }
+
+    FChunkKey TransformedChunkKey = this->ChunkKey;
+    OutTransformedLocalVoxelKey   = LocalVoxelKey;
+
+    if (LocalVoxelKey.X >= WorldStatics::ChunkSize)
+    {
+        TransformedChunkKey.X++;
+        OutTransformedLocalVoxelKey.X -= WorldStatics::ChunkSize;
+    }
+
+    else if (LocalVoxelKey.X < 0)
+    {
+        TransformedChunkKey.X--;
+        OutTransformedLocalVoxelKey.X += WorldStatics::ChunkSize;
+    }
+
+    if (LocalVoxelKey.Y >= WorldStatics::ChunkSize)
+    {
+        TransformedChunkKey.Y++;
+        OutTransformedLocalVoxelKey.Y -= WorldStatics::ChunkSize;
+    }
+
+    else if (LocalVoxelKey.Y < 0)
+    {
+        TransformedChunkKey.Y--;
+        OutTransformedLocalVoxelKey.Y += WorldStatics::ChunkSize;
+    }
+
+    if (LocalVoxelKey.Z >= WorldStatics::ChunkSize)
+    {
+        TransformedChunkKey.Z++;
+        OutTransformedLocalVoxelKey.Z -= WorldStatics::ChunkSize;
+    }
+
+    else if (LocalVoxelKey.Z < 0)
+    {
+        TransformedChunkKey.Z--;
+        OutTransformedLocalVoxelKey.Z += WorldStatics::ChunkSize;
+    }
+
+    if (OutTransformedLocalVoxelKey == LocalVoxelKey)
+    {
+        return this;
+    }
+
+    LOG_VERBOSE(
+        LogChunkManipulation,
+        "Transformed local voxel position from %s to %s. Key change from %s to %s.",
+        *LocalVoxelKey.ToString(), *OutTransformedLocalVoxelKey.ToString(), *this->ChunkKey.ToString(), *TransformedChunkKey.ToString()
+    )
+
+    ACommonChunk* TargetChunk = this->ChunkGenerationSubsystem->FindChunkByKey(TransformedChunkKey);
+
+    if (TargetChunk == nullptr)
+    {
+        return nullptr;
+    }
+
+    const FIntVector Temp = OutTransformedLocalVoxelKey;
+    return TargetChunk->GetChunkByNonZeroOrigin(Temp, OutTransformedLocalVoxelKey);
 }
 
 #pragma endregion Chunk World Generation
