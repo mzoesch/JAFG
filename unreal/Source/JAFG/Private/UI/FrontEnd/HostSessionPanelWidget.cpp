@@ -26,6 +26,8 @@ void UHostSessionPanelWidget::OnNativeMadeVisible(void)
         this->bBoundToDynamicWidgetEvents = true;
     }
 
+    this->OnDeferredConstruct();
+
     return;
 }
 
@@ -165,7 +167,7 @@ void UHostSessionPanelWidget::HostSessionFromNewSave(void) const
     }
 
     ULocalSessionSupervisorSubsystem* LSSSS = this->GetGameInstance()->GetSubsystem<ULocalSessionSupervisorSubsystem>();
-    LSSSS->HostListenServer(this->NewSessionName, this->MaxPublicConnections, true);
+    LSSSS->HostListenServer(this->NewSessionName, this->MaxPublicConnections, false);
 
     return;
 }

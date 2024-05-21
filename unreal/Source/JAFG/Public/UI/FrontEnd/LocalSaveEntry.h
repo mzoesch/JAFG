@@ -2,10 +2,12 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "MyCore.h"
 #include "JAFGFocusableWidget.h"
 
 #include "LocalSaveEntry.generated.h"
+
+JAFG_VOID
 
 class UTextBlock;
 

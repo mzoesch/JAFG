@@ -27,7 +27,7 @@ void ULocalSaveEntry::PassDataToWidget(const FMyPassedData& MyPassedData)
         this->SaveName = Data->SaveName;
     }
 
-    if (TB_SaveName)
+    if (this->TB_SaveName)
     {
         this->TB_SaveName->SetText(FText::FromString(this->SaveName));
     }

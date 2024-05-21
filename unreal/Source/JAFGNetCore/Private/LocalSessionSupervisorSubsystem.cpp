@@ -5,6 +5,7 @@
 #include "Definitions.h"
 #include "Interfaces/OnlineSessionInterface.h"
 #include "OnlineSubsystemUtils.h"
+#include "Kismet/GameplayStatics.h"
 #include "WorldCore/RegisteredWorldNames.h"
 
 ULocalSessionSupervisorSubsystem::ULocalSessionSupervisorSubsystem(void) : Super()
@@ -68,7 +69,7 @@ void ULocalSessionSupervisorSubsystem::Deinitialize(void)
         return;
     }
 
-    if (this->ActiveSessionSettings.bIsActive)
+    if (this->bActiveSessionExists)
     {
         this->ForceActiveSessionDestroy();
     }
@@ -97,11 +98,11 @@ void ULocalSessionSupervisorSubsystem::HostListenServer(const FString& InSession
     }
 
     FOnlineSessionSettings OnlineSessionSettings = FOnlineSessionSettings();
-    OnlineSessionSettings.NumPublicConnections = InMaxPublicConnections;
-    OnlineSessionSettings.NumPrivateConnections = 0;
+    OnlineSessionSettings.NumPublicConnections = 20;
+    OnlineSessionSettings.NumPrivateConnections = 20;
     OnlineSessionSettings.bShouldAdvertise = true;
     OnlineSessionSettings.bAllowJoinInProgress = true;
-    OnlineSessionSettings.bIsLANMatch = bInLAN;
+    OnlineSessionSettings.bIsLANMatch = false;
     OnlineSessionSettings.bIsDedicated = false;
     OnlineSessionSettings.bUsesStats = false;
     OnlineSessionSettings.bAllowInvites = true;
@@ -112,7 +113,8 @@ void ULocalSessionSupervisorSubsystem::HostListenServer(const FString& InSession
     OnlineSessionSettings.bUseLobbiesIfAvailable = false;
     OnlineSessionSettings.bUseLobbiesVoiceChatIfAvailable = false;
 
-    this->ActiveSessionSettings = FMyOnlineSessionSettings{SanitizedSessionName, OnlineSessionSettings, true};
+    this->ActiveSessionSettings = FMyOnlineSessionSettings{SanitizedSessionName, OnlineSessionSettings};
+    this->bActiveSessionExists  = true;
 
     if (this->OnlineSessionInterface->CreateSession(
             /* No need to be fancy here, as we must always be in the front end menu when calling this method. */ 0,
@@ -122,6 +124,82 @@ void ULocalSessionSupervisorSubsystem::HostListenServer(const FString& InSession
     )
     {
         LOG_FATAL(LogLSSSS, "Failed to create session due to unknown error.")
+    }
+
+    LOG_DISPLAY(LogLSSSS, "Session [%s] creation initiated with %d public connections.", *SanitizedSessionName, InMaxPublicConnections)
+
+    return;
+}
+
+void ULocalSessionSupervisorSubsystem::FindSafeSessions(const uint32 InMaxSearchResults, const bool bInLANQuery, const FSearchCallback& InCallback)
+{
+    if (this->ActiveSessionSearch.bSearching)
+    {
+        return;
+    }
+
+    this->FindSessions(InMaxSearchResults, bInLANQuery, InCallback);
+
+    return;
+}
+
+void ULocalSessionSupervisorSubsystem::FindSessions(const uint32 InMaxSearchResults, const bool bInLANQuery, const FSearchCallback& InCallback)
+{
+    if (InCallback.GetObject() == nullptr || InCallback.GetInterface() == nullptr)
+    {
+        LOG_FATAL(LogLSSSS, "Callback is invalid.")
+        return;
+    }
+
+    if (this->ActiveSessionSearch.bSearching)
+    {
+        LOG_FATAL(LogLSSSS, "Disallowed call while searching.")
+        return;
+    }
+
+    this->ActiveSessionSearch  = FMyOnlineSessionSearch();
+    this->ActiveSearchCallback = InCallback;
+    this->ActiveSessionSearch.bSearching               = true;
+    this->ActiveSessionSearch.Search->MaxSearchResults = 100;
+    this->ActiveSessionSearch.Search->bIsLanQuery      = false;
+
+    if (this->OnlineSessionInterface->FindSessions(
+        /* No need to be fancy here, as we must always be in the front end menu when calling this method. */ 0,
+        this->ActiveSessionSearch.Search)
+    )
+    {
+        LOG_DISPLAY(LogLSSSS, "Successfully initiated session search.")
+        return;
+    }
+
+    LOG_FATAL(LogLSSSS, "Failed to initiate session search.")
+
+    return;
+}
+
+void ULocalSessionSupervisorSubsystem::JoinSessionWithIndex(const int32 InIndex) const
+{
+    if (this->ActiveSessionSearch.Search->SearchResults.IsValidIndex(InIndex) == false)
+    {
+        LOG_FATAL(LogLSSSS, "Invalid session index.")
+        return;
+    }
+
+    this->JoinSession(this->ActiveSessionSearch.Search->SearchResults[InIndex]);
+
+    return;
+}
+
+void ULocalSessionSupervisorSubsystem::JoinSession(const FOnlineSessionSearchResult& InSearchResult) const
+{
+    if (this->OnlineSessionInterface->JoinSession(
+        /* No need to be fancy here, as we must always be in the front end menu when calling this method. */ 0,
+        FName(InSearchResult.GetSessionIdStr()),
+        InSearchResult
+        ) == false
+    )
+    {
+        LOG_FATAL(LogLSSSS, "Failed to join session [%s].", *InSearchResult.Session.OwningUserName)
     }
 
     return;
@@ -144,9 +222,9 @@ void ULocalSessionSupervisorSubsystem::OnCreateSessionCompleteDelegate(const FNa
      * Maybe we can find a better way to handle this? Like only adding the delegate handler in the correct instance and
      * not at the start of this subsystem's lifetime.
      */
-    if (this->ActiveSessionSettings.bIsActive == false)
+    if (this->bActiveSessionExists == false)
     {
-        LOG_WARNING(LogLSSSS, "ctive Session Settings is nullptr. Cannot proceed. If this is not in the calling PIE instance, this is can be ignored.")
+        LOG_WARNING(LogLSSSS, "No active session found but delegate was called. Cannot proceed. If this is not in the calling PIE instance, this is can be ignored.")
         return;
     }
 #endif /* WITH_EDITOR */
@@ -186,16 +264,70 @@ void ULocalSessionSupervisorSubsystem::OnCreateSessionCompleteDelegate(const FNa
 
 void ULocalSessionSupervisorSubsystem::OnFindSessionsCompleteDelegate(const bool bSuccess)
 {
+    LOG_DISPLAY(LogLSSSS, "Session search %s. With %d results.", bSuccess ? TEXT("succeeded") : TEXT("failed"), this->ActiveSessionSearch.Search->SearchResults.Num())
+
+    this->ActiveSessionSearch.bSearching = false;
+
+    if (this->ActiveSearchCallback.GetObject() == nullptr || this->ActiveSearchCallback.GetInterface() == nullptr)
+    {
+#if WITH_EDITOR
+        /* Same as in OnCreateSessionCompleteDelegate. This is a safety net for multiple PIE instances. */
+        LOG_WARNING(LogLSSSS, "Callback is invalid. Cannot proceed. If this is not in the calling PIE instance, this is can be ignored.")
+#else
+        LOG_FATAL(LogLSSSS, "Callback is invalid. Cannot proceed.")
+#endif /* WITH_EDITOR */
+        return;
+    }
+
+    LOG_WARNING(LogLSSSS, "Callback is valid. Proceeding.")
+    this->ActiveSearchCallback->OnOnlineSessionFoundCompleteDelegate(bSuccess, this);
+
     return;
 }
 
 void ULocalSessionSupervisorSubsystem::OnJoinSessionCompleteDelegate(const FName SessionName, const EOnJoinSessionCompleteResult::Type Result)
 {
+    if (Result != EOnJoinSessionCompleteResult::Success)
+    {
+        LOG_FATAL(LogLSSSS, "Failed to join session [%s] with result [%d].", *SessionName.ToString(), *LexToString(Result))
+        return;
+    }
+
+    /* There is no need to do some crazy PIE crap here, as we have to be in a standalone game to exec this method. */
+
+    FString Address = L"";
+    if (this->OnlineSessionInterface->GetResolvedConnectString(SessionName, Address) == false)
+    {
+        LOG_FATAL(LogLSSSS, "Failed to get resolved connect string for session [%s].", *SessionName.ToString())
+        return;
+    }
+    if (Address.IsEmpty())
+    {
+        LOG_FATAL(LogLSSSS, "Resolved connect string for session [%s] is empty.", *SessionName.ToString())
+        return;
+    }
+
+    APlayerController* PlayerController = UGameplayStatics::GetPlayerController(
+        this->GetWorld(),
+        /* No need to be fancy here, as we must always be in the front end menu when calling this method. */ 0
+    );
+    if (PlayerController == nullptr)
+    {
+        LOG_FATAL(LogLSSSS, "Player Controller is invalid.")
+        return;
+    }
+
+    LOG_DISPLAY(LogLSSSS, "Successfully joined session [%s]. Everything ready. Traveling to server's level at [%s].", *SessionName.ToString(), *Address)
+
+    PlayerController->ClientTravel(Address, ETravelType::TRAVEL_Absolute);
+
     return;
 }
 
 bool ULocalSessionSupervisorSubsystem::ForceActiveSessionDestroy(void)
 {
+    this->bActiveSessionExists = false;
+
     if (this->OnlineSessionInterface->DestroySession(FName(this->ActiveSessionSettings.Name)))
     {
         LOG_DISPLAY(LogLSSSS, "Active Session [%s] destroyed.", *this->ActiveSessionSettings.Name)

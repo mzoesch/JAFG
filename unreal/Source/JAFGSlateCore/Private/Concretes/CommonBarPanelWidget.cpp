@@ -9,7 +9,6 @@ UCommonBarPanelWidget::UCommonBarPanelWidget(const FObjectInitializer& ObjectIni
 
 void UCommonBarPanelWidget::OnNativeMadeVisible(void)
 {
-    this->OnDeferredConstruct();
 }
 
 void UCommonBarPanelWidget::OnNativeMadeCollapsed(void)
