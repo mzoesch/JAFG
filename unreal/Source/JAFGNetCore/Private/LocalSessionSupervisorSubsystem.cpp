@@ -177,7 +177,7 @@ void ULocalSessionSupervisorSubsystem::FindSessions(const uint32 InMaxSearchResu
     return;
 }
 
-void ULocalSessionSupervisorSubsystem::JoinSessionWithIndex(const int32 InIndex) const
+void ULocalSessionSupervisorSubsystem::JoinSession(const int32 InIndex) const
 {
     if (this->ActiveSessionSearch.Search->SearchResults.IsValidIndex(InIndex) == false)
     {

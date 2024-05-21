@@ -35,7 +35,7 @@ bool UChunkValidationSubsystemStandalone::ShouldCreateSubsystem(UObject* Outer) 
         return false;
     }
 
-    return UNetStatics::IsSafeStandalone(Outer);
+    return UNetStatics::IsSafeStandaloneNoServer(Outer);
 }
 
 void UChunkValidationSubsystemStandalone::OnWorldBeginPlay(UWorld& InWorld)

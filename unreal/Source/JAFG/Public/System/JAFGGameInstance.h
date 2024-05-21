@@ -20,6 +20,8 @@ public:
 
     explicit UJAFGGameInstance(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
+    virtual void Init() override;
+
     auto SubscribeToShutdownRequest(const FOnShutdownRequestSignature::FDelegate& Delegate) -> FDelegateHandle;
     auto SubscribeToShutdownRequest(
         const FOnShutdownRequestSignature::FDelegate& Delegate,

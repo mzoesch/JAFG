@@ -2,10 +2,22 @@
 
 #include "System/JAFGGameInstance.h"
 
+#include "GameFramework/GameUserSettings.h"
+
 UJAFGGameInstance::UJAFGGameInstance(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
     this->bShutdownRequested        = false;
     this->bAlreadyForwardedShutdown = false;
+    return;
+}
+
+void UJAFGGameInstance::Init()
+{
+    Super::Init();
+
+    GEngine->GetGameUserSettings()->SetFullscreenMode(EWindowMode::Windowed);
+    GEngine->GetGameUserSettings()->SetScreenResolution(FIntPoint(1024, 768));
+
     return;
 }
 

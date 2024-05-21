@@ -75,7 +75,7 @@ protected:
     void RefreshRemoteSessions( /* void */ );
 
     UFUNCTION(BlueprintCallable)
-    void JoinSession( /* void */ ) const;
+    void JoinSession( /* void */ );
 
     UFUNCTION(BlueprintCallable)
     void SetPlaceholderToNoRemoteSessionsFound( /* void */ );

@@ -19,6 +19,11 @@ void UJoinSessionPanelWidget::NativeConstruct(void)
         this->B_Search->OnClicked.AddDynamic(this, &UJoinSessionPanelWidget::RefreshRemoteSessions);
     }
 
+    if (this->B_Join)
+    {
+        this->B_Join->OnClicked.AddDynamic(this, &UJoinSessionPanelWidget::JoinSession);
+    }
+
     this->SetPlaceholderToNoRemoteSessionsFound();
 
     return;
@@ -120,7 +125,9 @@ void UJoinSessionPanelWidget::RefreshRemoteSessions(void)
     return;
 }
 
-void UJoinSessionPanelWidget::JoinSession(void) const
+/* Do NOT convert to const method, as this is a Rider IDEA false positive error. */
+// ReSharper disable once CppUE4BlueprintCallableFunctionMayBeConst
+void UJoinSessionPanelWidget::JoinSession(void)
 {
     if (this->CurrentlyFocusedRemoteSessionEntryIndex == this->InvalidFocusedRemoteSessionEntryIndex)
     {
@@ -128,14 +135,14 @@ void UJoinSessionPanelWidget::JoinSession(void) const
         return;
     }
 
-    if (
-        const ULocalSessionSupervisorSubsystem* LSSSS = this->GetGameInstance()->GetSubsystem<ULocalSessionSupervisorSubsystem>();
-        LSSSS->GetSearch().Search.Get().SearchResults.IsValidIndex(this->CurrentlyFocusedRemoteSessionEntryIndex) == false
-    )
+    const ULocalSessionSupervisorSubsystem* LSSSS = this->GetGameInstance()->GetSubsystem<ULocalSessionSupervisorSubsystem>();
+    if (LSSSS->GetSearch().Search.Get().SearchResults.IsValidIndex(this->CurrentlyFocusedRemoteSessionEntryIndex) == false)
     {
         LOG_FATAL(LogCommonSlate, "Invalid remote session index.")
         return;
     }
+
+    LSSSS->JoinSession(this->CurrentlyFocusedRemoteSessionEntryIndex);
 
     return;
 }

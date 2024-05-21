@@ -62,7 +62,7 @@ public:
     void HostListenServer(const FString& InSessionName, const int32 InMaxPublicConnections, const bool bInLAN);
     void FindSafeSessions(const uint32 InMaxSearchResults, const bool bInLANQuery, const FSearchCallback& InCallback);
     void FindSessions(const uint32 InMaxSearchResults, const bool bInLANQuery, const FSearchCallback& InCallback);
-    void JoinSessionWithIndex(const int32 InIndex) const;
+    void JoinSession(const int32 InIndex) const;
     void JoinSession(const FOnlineSessionSearchResult& InSearchResult) const;
 
     const FMyOnlineSessionSearch& GetSearch(void) const { return this->ActiveSessionSearch; }
