@@ -7,6 +7,7 @@
 
 #include "ChatComponent.generated.h"
 
+class AWorldPlayerController;
 class UClientCommandSubsystem;
 class UServerCommandSubsystem;
 
@@ -34,6 +35,9 @@ protected:
 
 public:
 
+    /** Because this component should always be attached to a subclass of this controller. */
+    auto GetPredictedOwner(void) const -> AWorldPlayerController*;
+
     /**
      * Parses a given message. Executes the command if it is a command and locally executable. Else sends it
      * to the server for further processing.
@@ -60,4 +64,5 @@ private:
     void BroadcastMessage(const FText& Message) const;
     UFUNCTION(Client, Reliable)
     void AddMessageToChatLog_ClientRPC(const FString& Sender, const FText& Message);
+    void AddMessageToChatLog(const FString& Sender, const FText& Message);
 };

@@ -9,6 +9,13 @@
 #include "ClientCommandSubsystem.generated.h"
 
 typedef FString FClientCommand;
+typedef TFunction<
+    void(
+        TArray<FString> InArgs,
+        CommandReturnCode& OutErrorCode,
+        FString& OutResponse
+    )
+> FClientCommandCallback;
 
 UCLASS(NotBlueprintable)
 class CHAT_API UClientCommandSubsystem : public UJAFGWorldSubsystem
@@ -23,9 +30,17 @@ public:
     virtual void Deinitialize(void) override;
     // ~UWorldSubsystem implementation
 
-    bool IsRegisteredClientCommand(const FText& StdIn);
-    bool IsRegisteredClientCommand(const FClientCommand& Command) const;
+    auto IsRegisteredClientCommand(const FText& StdIn) const -> bool;
+    auto IsRegisteredClientCommand(const FClientCommand& Command) const -> bool;
+    void ExecuteCommand(const FText& StdIn, CommandReturnCode& OutReturnCode, FString& OutResponse) const;
+    void ExecuteCommand(const FClientCommand& Command, const TArray<FString>& Args, CommandReturnCode& OutReturnCode, FString& OutResponse) const;
 
-    void ExecuteCommand(const FText& StdIn, int32& OutErrorCode, FString& OutResponse) const;
-    void ExecuteCommand(const FClientCommand& Command, const TArray<FString>& Args, int32& OutErrorCode, FString& OutResponse) const;
+private:
+
+    TMap<FClientCommand, FClientCommandCallback> ClientCommands;
+
+    void InitializeAllCommands(void);
+
+    auto OnHelpCommand(const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const -> void;
+
 };

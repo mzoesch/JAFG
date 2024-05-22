@@ -8,17 +8,13 @@
 
 #include "ServerCommandSubsystem.generated.h"
 
+#define SERVER_COMMAND_SIG                                                                                       \
+    UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse
+
 class UChatComponent;
 
-typedef FString FServerCommand;
-typedef TFunction<
-    void(
-        UChatComponent* Owner,
-        TArray<FString> InArgs,
-        CommandReturnCode& OutErrorCode,
-        FString& OutResponse
-    )
-> FServerCommandCallback;
+typedef FString                             FServerCommand;
+typedef TFunction<void(SERVER_COMMAND_SIG)> FServerCommandCallback;
 
 UCLASS(NotBlueprintable)
 class CHAT_API UServerCommandSubsystem : public UJAFGWorldSubsystem
@@ -38,15 +34,21 @@ public:
     auto ExecuteCommand(UChatComponent* Owner, const FText& StdIn, CommandReturnCode& OutReturnCode, FString& OutResponse) const -> void;
     auto ExecuteCommand(UChatComponent* Owner, const FServerCommand& Command, const TArray<FString>& Args, CommandReturnCode& OutReturnCode, FString& OutResponse) const -> void;
 
+protected:
+
+    virtual void InitializeAllCommands(void);
+
+    UChatComponent* GetTargetBasedOnArgs(const TArray<FString>& Args, CommandReturnCode& OutReturnCode, const int32 Index = 0) const;
+
 private:
 
     TMap<FServerCommand, FServerCommandCallback> ServerCommands;
 
-    void InitializeAllCommands(void);
+    auto OnHelpCommand(SERVER_COMMAND_SIG) const -> void;
 
-    auto OnHelpCommand(UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const -> void;
-
-    auto OnBroadcastCommand(UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const -> void;
-    auto OnFlyCommand(UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const -> void;
-    void OnAllowInputFlyCommand(UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const;
+    auto OnBroadcastCommand(SERVER_COMMAND_SIG) const -> void;
+    auto OnFlyCommand(SERVER_COMMAND_SIG) const -> void;
+    auto OnAllowInputFlyCommand(SERVER_COMMAND_SIG) const -> void;
+    auto OnShowOnlinePlayersCommand(SERVER_COMMAND_SIG) const -> void;
+    auto OnKickCommand(SERVER_COMMAND_SIG) const -> void;
 };

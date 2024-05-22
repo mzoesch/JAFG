@@ -19,3 +19,22 @@ bool AWorldGameSession::KickPlayer(AWorldPlayerController* KickedPlayer, const F
     LOG_WARNING(LogWorldGameMode, "Kicking player [%s] with reason: %s", *KickedPlayer->GetDisplayName(), *KickReason.ToString())
     return Super::KickPlayer(KickedPlayer, KickReason);
 }
+
+AWorldPlayerController* AWorldGameSession::GetPlayerControllerFromDisplayName(const FString& DisplayName) const
+{
+    if (FConstPlayerControllerIterator It = this->GetWorld()->GetPlayerControllerIterator(); It)
+    {
+        for (; It; ++It)
+        {
+            if (AWorldPlayerController* PlayerController = Cast<AWorldPlayerController>(*It))
+            {
+                if (PlayerController->GetDisplayName().Equals(DisplayName))
+                {
+                    return PlayerController;
+                }
+            }
+        }
+    }
+
+    return nullptr;
+}

@@ -7,8 +7,9 @@
 
 #include "WorldGameSession.generated.h"
 
-class AWorldPlayerController;
 JAFG_VOID
+
+class AWorldPlayerController;
 
 UCLASS(NotBlueprintable)
 class JAFG_API AWorldGameSession : public AGameSession
@@ -21,4 +22,6 @@ public:
 
     virtual bool KickPlayer(APlayerController* KickedPlayer, const FText& KickReason) override;
     virtual bool KickPlayer(AWorldPlayerController* KickedPlayer, const FText& KickReason);
+
+    AWorldPlayerController* GetPlayerControllerFromDisplayName(const FString& DisplayName) const;
 };

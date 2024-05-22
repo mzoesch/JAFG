@@ -157,6 +157,7 @@ namespace ChatStatics
 {
 
 extern inline const FString AuthorityName       = TEXT("AUTHORITY");
+extern inline const FString InternalName        = TEXT("INTERNAL");
 
 extern inline constexpr int32 MaxChatInputLength = 0x3F;
 

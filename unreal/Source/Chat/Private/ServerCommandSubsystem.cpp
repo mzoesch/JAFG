@@ -7,8 +7,34 @@
 #include "Definitions.h"
 #include "WorldCore/WorldCharacter.h"
 
-#define OWNER_CHARACTER Cast<AWorldCharacter>(Cast<AController>(Owner->GetOwner())->GetCharacter())
-#define DECLARE_OWNER_AS_TARGET AWorldCharacter* Target = OWNER_CHARACTER;
+#define OWNING_SESSION                                                          \
+    Cast<AWorldGameSession>(this->GetWorld()->GetAuthGameMode()->GameSession)
+#define OWNER_CHARACTER                                                         \
+    Cast<AWorldCharacter>(Cast<AController>(Owner->GetOwner())->GetCharacter())
+#define DECLARE_OWNER_AS_TARGET                                                 \
+    AWorldCharacter* Target =                                                   \
+        Cast<AWorldCharacter>(                                                  \
+            Cast<AController>(Owner->GetOwner()                                 \
+        )->GetCharacter());
+#define DECLARE_SERVER_COMMAND(Name, Callback)                                  \
+    {                                                                           \
+        const FServerCommand Command =                                          \
+            FString::Printf(                                                    \
+            TEXT("%s%s"),                                                       \
+                *CommandStatics::ServerCommandPrefix, TEXT(Name)                \
+            );                                                                  \
+        this->ServerCommands.Add(Command,                                       \
+            [this]                                                              \
+            (                                                                   \
+                UChatComponent* Owner,                                          \
+                const TArray<FString>& InArgs,                                  \
+                CommandReturnCode& OutReturnCode,                               \
+                FString& OutResponse                                            \
+            )                                                                   \
+        {                                                                       \
+            this->Callback(Owner, InArgs, OutReturnCode, OutResponse);          \
+        });                                                                     \
+    }
 
 void UServerCommandSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -87,48 +113,33 @@ void UServerCommandSubsystem::ExecuteCommand(UChatComponent* Owner, const FServe
 
 void UServerCommandSubsystem::InitializeAllCommands(void)
 {
-    // Help
-    //////////////////////////////////////////////////////////////////////////
-    {
-        const FServerCommand Command = TEXT("sv_help");
-        this->ServerCommands.Add(Command, [this] (UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse)
-        {
-            this->OnHelpCommand(Owner, InArgs, OutReturnCode, OutResponse);
-        });
-    }
+    DECLARE_SERVER_COMMAND( "help",      OnHelpCommand              )
+    DECLARE_SERVER_COMMAND( "broadcast", OnBroadcastCommand         )
+    DECLARE_SERVER_COMMAND( "fly",       OnFlyCommand               )
+    DECLARE_SERVER_COMMAND( "infly",     OnAllowInputFlyCommand     )
+    DECLARE_SERVER_COMMAND( "players",   OnShowOnlinePlayersCommand )
+    DECLARE_SERVER_COMMAND( "kick" ,     OnKickCommand              )
 
-    // Broadcast
-    //////////////////////////////////////////////////////////////////////////
-    {
-        const FServerCommand Command = TEXT("sv_broadcast");
-        this->ServerCommands.Add(Command, [this] (UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse)
-        {
-            this->OnBroadcastCommand(Owner, InArgs, OutReturnCode, OutResponse);
-        });
-    }
-
-    // Fly
-    //////////////////////////////////////////////////////////////////////////
-    {
-        const FServerCommand Command = TEXT("sv_fly");
-        this->ServerCommands.Add(Command, [this] (UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse)
-        {
-            this->OnFlyCommand(Owner, InArgs, OutReturnCode, OutResponse);
-        });
-    }
-
-    // Allow Input Fly
-    //////////////////////////////////////////////////////////////////////////
-    {
-        const FServerCommand Command = TEXT("sv_infly");
-        this->ServerCommands.Add(Command, [this] (UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse)
-        {
-            this->OnAllowInputFlyCommand(Owner, InArgs, OutReturnCode, OutResponse);
-        });
-    }
+    return;
 }
 
-void UServerCommandSubsystem::OnHelpCommand(UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const
+UChatComponent* UServerCommandSubsystem::GetTargetBasedOnArgs(const TArray<FString>& Args, CommandReturnCode& OutReturnCode, const int32 Index /* = 0 */) const
+{
+    if (Args.IsValidIndex(Index) == false)
+    {
+        OutReturnCode = ECommandReturnCodes::MissingArgs;
+        return nullptr;
+    }
+
+    OutReturnCode = ECommandReturnCodes::Success;
+
+    const FString TargetName = Args[Index];
+    const AWorldPlayerController* Target = OWNING_SESSION->GetPlayerControllerFromDisplayName(TargetName);
+
+    return Target ? Target->GetComponentByClass<UChatComponent>() : nullptr;
+}
+
+void UServerCommandSubsystem::OnHelpCommand(SERVER_COMMAND_SIG) const
 {
     for (const TPair<FServerCommand, FServerCommandCallback>& Pair : this->ServerCommands)
     {
@@ -141,7 +152,7 @@ void UServerCommandSubsystem::OnHelpCommand(UChatComponent* Owner, const TArray<
     return;
 }
 
-void UServerCommandSubsystem::OnBroadcastCommand(UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const
+void UServerCommandSubsystem::OnBroadcastCommand(SERVER_COMMAND_SIG) const
 {
     if (InArgs.IsEmpty())
     {
@@ -177,7 +188,8 @@ void UServerCommandSubsystem::OnBroadcastCommand(UChatComponent* Owner, const TA
     return;
 }
 
-void UServerCommandSubsystem::OnFlyCommand(UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const
+// ReSharper disable once CppMemberFunctionMayBeStatic
+void UServerCommandSubsystem::OnFlyCommand(SERVER_COMMAND_SIG) const
 {
     DECLARE_OWNER_AS_TARGET
 
@@ -189,7 +201,8 @@ void UServerCommandSubsystem::OnFlyCommand(UChatComponent* Owner, const TArray<F
     return;
 }
 
-void UServerCommandSubsystem::OnAllowInputFlyCommand(UChatComponent* Owner, const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const
+// ReSharper disable once CppMemberFunctionMayBeStatic
+void UServerCommandSubsystem::OnAllowInputFlyCommand(SERVER_COMMAND_SIG) const
 {
     DECLARE_OWNER_AS_TARGET
 
@@ -198,9 +211,66 @@ void UServerCommandSubsystem::OnAllowInputFlyCommand(UChatComponent* Owner, cons
     OutReturnCode = ECommandReturnCodes::Success;
     OutResponse   = Target->IsInputFlyEnabled() ? TEXT("Input fly enabled.") : TEXT("Input fly disabled.");
 
+    return;
+}
+
+void UServerCommandSubsystem::OnShowOnlinePlayersCommand(SERVER_COMMAND_SIG) const
+{
+    if (FConstPlayerControllerIterator It = this->GetWorld()->GetPlayerControllerIterator(); It)
+    {
+        for (; It; ++It)
+        {
+            const APlayerController* PlayerController = It->Get();
+            check( PlayerController )
+
+            OutResponse += FString::Printf(TEXT("%s, "), *PlayerController->GetComponentByClass<UChatComponent>()->GetPlayerDisplayName());
+
+            continue;
+        }
+
+        Owner->AddMessageToChatLog_ClientRPC(ChatStatics::AuthorityName, FText::FromString(OutResponse));
+
+        OutReturnCode = ECommandReturnCodes::SuccessNoResponse;
+        OutResponse   = L"";
+
+        return;
+    }
+
+    OutReturnCode = ECommandReturnCodes::Failure;
+    OutResponse   = TEXT("No players online.");
+
+    return;
+}
+
+void UServerCommandSubsystem::OnKickCommand(SERVER_COMMAND_SIG) const
+{
+    const UChatComponent* Target = this->GetTargetBasedOnArgs(InArgs, OutReturnCode);
+
+    if (OutReturnCode == ECommandReturnCodes::MissingArgs)
+    {
+        OutResponse   = TEXT("At least one argument is required.");
+        return;
+    }
+
+    if (Target == nullptr)
+    {
+        OutReturnCode = ECommandReturnCodes::Failure;
+        OutResponse   = FString::Printf(TEXT("Target [%s] not found."), *InArgs[0]);
+        return;
+    }
+
+    /* Kick next tick. */
+    AsyncTask(ENamedThreads::GameThread, [this, Target] (void)
+    {
+        OWNING_SESSION->KickPlayer(Target->GetPredictedOwner(), FText::FromString(TEXT("Kicked by operator.")));
+    });
+
+    OutReturnCode = ECommandReturnCodes::Success;
+    OutResponse   = FString::Printf(TEXT("Kicked [%s]."), *Target->GetPlayerDisplayName());
 
     return;
 }
 
 #undef OWNER_CHARACTER
 #undef DECLARE_OWNER_AS_TARGET
+#undef DECLARE_SERVER_COMMAND
