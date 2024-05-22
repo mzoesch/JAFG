@@ -5,6 +5,7 @@
 #include "ChatComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "GameFramework/GameModeBase.h"
 #include "Input/JAFGInputSubsystem.h"
 #include "Input/CustomInputNames.h"
 #include "Network/MyHyperlaneComponent.h"
@@ -268,6 +269,65 @@ void AWorldPlayerController::BindAction(
     );
 
     return;
+}
+
+bool AWorldPlayerController::SafelyIncreaseStrikeCount(void)
+{
+    if (UNetStatics::IsSafeClient(this))
+    {
+        LOG_FATAL(LogStrikeSystem, "Disallowed call on client.")
+        return false;
+    }
+
+    if (this->IsLocalController())
+    {
+        LOG_WARNING(LogStrikeSystem, "Local controller is disallowed from having strikes.")
+        return false;
+    }
+
+    this->RemoveOutDatedStrikes();
+
+    this->Strikes.Add(this->GetCurrentStrikeTime());
+    LOG_WARNING(LogStrikeSystem, "Added strike for client [%s]. Timestamp: %d.", *this->GetDisplayName(), this->GetCurrentStrikeTime())
+
+    if (this->Strikes.Num() >= this->MaxStrikeCount)
+    {
+        LOG_WARNING(LogStrikeSystem, "Client [%s] reached strike maximum.", *this->GetDisplayName())
+        if (this->GetWorldGameSession()->KickPlayer(this, FText::FromString(TEXT("Reached strike maximum."))) == false)
+        {
+            LOG_FATAL(LogStrikeSystem, "Failed to kick player [%s].", *this->GetDisplayName())
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+void AWorldPlayerController::RemoveOutDatedStrikes(void)
+{
+    this->Strikes.RemoveAll( [this] (const FStrike Strike)
+    {
+        if (this->IsStrikeOutDated(Strike))
+        {
+            LOG_WARNING(LogStrikeSystem, "Removed outdated strike for client [%s]. Timestamp: %d.", *this->GetDisplayName(), Strike)
+            return true;
+        }
+
+        return false;
+    });
+
+    return;
+}
+
+bool AWorldPlayerController::IsStrikeOutDated(const FStrike& Strike) const
+{
+    return  this->GetCurrentStrikeTime() - Strike > this->StrikeDurationInSeconds;
+}
+
+int32 AWorldPlayerController::GetCurrentStrikeTime(void) const
+{
+    return this->GetGameTimeSinceCreation();
 }
 
 #pragma endregion Enhanced Input

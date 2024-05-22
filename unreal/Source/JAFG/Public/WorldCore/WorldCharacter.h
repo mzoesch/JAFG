@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "InputTriggers.h"
 #include "Camera/CameraComponent.h"
+#include "Player/WorldPlayerController.h"
 #include "WorldCore/Character/MyCharacterMovementComponent.h"
 
 #include "WorldCharacter.generated.h"
@@ -60,6 +61,7 @@ protected:
 
 #pragma region Member Methods
 
+    FORCEINLINE AWorldPlayerController* GetWorldPlayerController(void) const { return this->GetController<AWorldPlayerController>(); }
 
 #pragma endregion Member Methods
 
@@ -107,9 +109,11 @@ protected:
     virtual void OnTriggerCrouch(const FInputActionValue& Value);
     virtual void OnCompleteCrouch(const FInputActionValue& Value);
     virtual void OnStartedPrimary(const FInputActionValue& Value);
-    UFUNCTION(Server, Reliable, WithValidation)
+    UFUNCTION(Server, Reliable)
     virtual void OnStartedPrimary_ServerRPC(const FInputActionValue& Value);
     virtual void OnStartedSecondary(const FInputActionValue& Value);
+    UFUNCTION(Server, Reliable)
+    virtual void OnStartedSecondary_ServerRPC(const FInputActionValue& Value);
     virtual void OnTriggeredUpMaxFlySpeed(const FInputActionValue& Value);
     virtual void OnTriggeredDownMaxFlySpeed(const FInputActionValue& Value);
 
@@ -157,6 +161,7 @@ public:
 #pragma region World Interaction
 
     FORCEINLINE auto GetFPSCamera(void) const -> UCameraComponent* { return this->FirstPersonCameraComponent; }
+    FORCEINLINE auto GetDisplayName(void) const -> FString { return this->GetWorldPlayerController()->GetDisplayName(); }
 
     //////////////////////////////////////////////////////////////////////////
     // World Locations And Rotations

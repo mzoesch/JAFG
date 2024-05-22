@@ -5,8 +5,13 @@
 #include "MyCore.h"
 #include "Player/CommonPlayerController.h"
 #include "InputTriggers.h"
+#include "GameFramework/GameModeBase.h"
+#include "WorldCore/WorldGameSession.h"
 
 #include "WorldPlayerController.generated.h"
+
+/** The time in seconds after this AActor creation, when this strike was marked. */
+typedef int32 FStrike;
 
 JAFG_VOID
 
@@ -108,4 +113,47 @@ private:
 
 #pragma endregion Enhanced Input
 
+#pragma region Strike
+
+public:
+
+    //////////////////////////////////////////////////////////////////////////
+    // Strike
+    //////////////////////////////////////////////////////////////////////////
+
+    /**
+     * @return True if the player has reached their maximum strike count.
+     *         They are going to be disconnected short after. Safely
+     */
+    bool SafelyIncreaseStrikeCount(void);
+
+protected:
+
+    void RemoveOutDatedStrikes(void);
+    bool IsStrikeOutDated(const FStrike& Strike) const;
+    int32 GetCurrentStrikeTime(void) const;
+
+    /** How long a strike is valid for. */
+    const int32 StrikeDurationInSeconds = 60;
+    TArray<FStrike> Strikes = TArray<FStrike>();
+    const uint8 MaxStrikeCount = 3;
+
+#pragma endregion Strike
+
+    //////////////////////////////////////////////////////////////////////////
+    // Useful Internal Getters
+    //////////////////////////////////////////////////////////////////////////
+
+    FORCEINLINE auto GetWorldGameSession(void) const -> AWorldGameSession*
+    {
+        return Cast<AWorldGameSession>(this->GetWorld()->GetAuthGameMode()->GameSession);
+    }
+
+public:
+
+    //////////////////////////////////////////////////////////////////////////
+    // Public Getters
+    //////////////////////////////////////////////////////////////////////////
+
+    FORCEINLINE auto GetDisplayName(void) const -> FString { return this->GetName(); }
 };

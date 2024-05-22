@@ -6,12 +6,14 @@
 #include "JAFG/Public/WorldCore/WorldCharacter.h"
 #include "UI/WorldHUD.h"
 #include "WorldCore/ChunkWorldSettings.h"
+#include "WorldCore/WorldGameSession.h"
 
 AWorldGameMode::AWorldGameMode(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
     this->HUDClass              = AWorldHUD::StaticClass();
     this->PlayerControllerClass = AWorldPlayerController::StaticClass();
     this->DefaultPawnClass      = nullptr;
+    this->GameSessionClass      = AWorldGameSession::StaticClass();
 
     return;
 }
