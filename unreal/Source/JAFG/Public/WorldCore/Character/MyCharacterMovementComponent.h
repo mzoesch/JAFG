@@ -35,5 +35,10 @@ public:
 
 protected:
 
+    UFUNCTION(Server, Reliable)
+    void IncrementFlySpeed_ServerRPC();
+    UFUNCTION(Server, Reliable)
+    void DecrementFlySpeed_ServerRPC();
+
     virtual void OnMovementModeChanged(const EMovementMode PreviousMovementMode, const uint8 PreviousCustomMode) override;
 };

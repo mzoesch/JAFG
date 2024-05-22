@@ -29,7 +29,13 @@ UMyCharacterMovementComponent::UMyCharacterMovementComponent(const FObjectInitia
 
 void UMyCharacterMovementComponent::IncrementFlySpeed(void)
 {
+    const float OldSpeed = this->MaxFlySpeed;
     this->MaxFlySpeed = FMath::Clamp(this->MaxFlySpeed + this->FlySpeedSteps, this->AbsoluteMinFlySpeed, this->AbsoluteMaxFlySpeed);
+
+    if (OldSpeed != this->MaxFlySpeed && UNetStatics::IsSafeClient(this))
+    {
+        this->IncrementFlySpeed_ServerRPC();
+    }
 
 #if WITH_EDITOR
     if (this->MaxFlySpeed == this->AbsoluteMaxFlySpeed)
@@ -43,7 +49,13 @@ void UMyCharacterMovementComponent::IncrementFlySpeed(void)
 
 void UMyCharacterMovementComponent::DecrementFlySpeed(void)
 {
+    const float OldSpeed = this->MaxFlySpeed;
     this->MaxFlySpeed = FMath::Clamp(this->MaxFlySpeed - this->FlySpeedSteps, this->AbsoluteMinFlySpeed, this->AbsoluteMaxFlySpeed);
+
+    if (OldSpeed != this->MaxFlySpeed && UNetStatics::IsSafeClient(this))
+    {
+        this->DecrementFlySpeed_ServerRPC();
+    }
 
 #if WITH_EDITOR
     if (this->MaxFlySpeed == this->AbsoluteMinFlySpeed)
@@ -53,6 +65,16 @@ void UMyCharacterMovementComponent::DecrementFlySpeed(void)
 #endif /* WITH_EDITOR */
 
     return;
+}
+
+void UMyCharacterMovementComponent::IncrementFlySpeed_ServerRPC_Implementation()
+{
+    this->MaxFlySpeed = FMath::Clamp(this->MaxFlySpeed + this->FlySpeedSteps, this->AbsoluteMinFlySpeed, this->AbsoluteMaxFlySpeed);
+}
+
+void UMyCharacterMovementComponent::DecrementFlySpeed_ServerRPC_Implementation()
+{
+    this->MaxFlySpeed = FMath::Clamp(this->MaxFlySpeed - this->FlySpeedSteps, this->AbsoluteMinFlySpeed, this->AbsoluteMaxFlySpeed);
 }
 
 void UMyCharacterMovementComponent::OnMovementModeChanged(const EMovementMode PreviousMovementMode, const uint8 PreviousCustomMode)
