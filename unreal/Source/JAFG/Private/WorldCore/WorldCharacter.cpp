@@ -327,12 +327,15 @@ void AWorldCharacter::OnCompleteCrouch(const FInputActionValue& Value)
 
 void AWorldCharacter::OnStartedPrimary(const FInputActionValue& Value)
 {
-    ACommonChunk* TargetedChunk;
-    FVector       WorldHitLocation;
+    ACommonChunk*             TargetedChunk;
+    FVector                   WorldHitLocation;
     FVector_NetQuantizeNormal WorldNormalHitLocation;
-    FVoxelKey     LocalHitVoxelKey;
+    FVoxelKey                 LocalHitVoxelKey;
 
-    this->GetPOVTargetedData(TargetedChunk, WorldHitLocation, WorldNormalHitLocation, LocalHitVoxelKey, false, this->GetCharacterReach());
+    this->GetPOVTargetedData(
+        TargetedChunk, WorldHitLocation, WorldNormalHitLocation, LocalHitVoxelKey,
+        false, this->GetCharacterReach()
+    );
 
     if (TargetedChunk == nullptr)
     {
@@ -341,7 +344,7 @@ void AWorldCharacter::OnStartedPrimary(const FInputActionValue& Value)
 
     if (const voxel_t HitVoxel = TargetedChunk->GetLocalVoxelOnly(LocalHitVoxelKey); HitVoxel < ECommonVoxels::Num)
     {
-        LOG_WARNING(LogWorldChar, "Cannot interact with common voxel type %d. Something fishy is going on.", HitVoxel)
+        LOG_WARNING(LogWorldChar, "Cannot interact with common voxel type %d.", HitVoxel)
         return;
     }
 
@@ -352,12 +355,15 @@ void AWorldCharacter::OnStartedPrimary(const FInputActionValue& Value)
 
 void AWorldCharacter::OnStartedPrimary_ServerRPC_Implementation(const FInputActionValue& Value)
 {
-    ACommonChunk* TargetedChunk;
-    FVector       WorldHitLocation;
+    ACommonChunk*             TargetedChunk;
+    FVector                   WorldHitLocation;
     FVector_NetQuantizeNormal WorldNormalHitLocation;
-    FVoxelKey     LocalHitVoxelKey;
+    FVoxelKey                 LocalHitVoxelKey;
 
-    this->GetPOVTargetedData(TargetedChunk, WorldHitLocation, WorldNormalHitLocation, LocalHitVoxelKey, this->IsLocallyControlled() == false, this->GetCharacterReach());
+    this->GetPOVTargetedData(
+        TargetedChunk, WorldHitLocation, WorldNormalHitLocation, LocalHitVoxelKey,
+        this->IsLocallyControlled() == false, this->GetCharacterReach()
+    );
 
     if (TargetedChunk == nullptr)
     {
@@ -366,11 +372,12 @@ void AWorldCharacter::OnStartedPrimary_ServerRPC_Implementation(const FInputActi
         return;
     }
 
+    // ReSharper disable once CppTooWideScopeInitStatement
     const voxel_t HitVoxel = TargetedChunk->GetLocalVoxelOnly(LocalHitVoxelKey);
 
     if (HitVoxel < ECommonVoxels::Num)
     {
-        LOG_WARNING(LogWorldChar, "Increased strike for %s. Reason: Cannot interact with common voxel type %d. Something fishy is going on.", *this->GetDisplayName(), HitVoxel)
+        LOG_WARNING(LogWorldChar, "Increased strike for %s. Reason: Cannot interact with common voxel type %d.", *this->GetDisplayName(), HitVoxel)
         this->GetWorldPlayerController()->SafelyIncreaseStrikeCount();
         return;
     }
@@ -382,23 +389,33 @@ void AWorldCharacter::OnStartedPrimary_ServerRPC_Implementation(const FInputActi
 
 void AWorldCharacter::OnStartedSecondary(const FInputActionValue& Value)
 {
-    ACommonChunk* TargetedChunk;
-    FVector       WorldHitLocation;
+    ACommonChunk*             TargetedChunk;
+    FVector                   WorldHitLocation;
     FVector_NetQuantizeNormal WorldNormalHitLocation;
-    FVoxelKey     LocalHitVoxelKey;
+    FVoxelKey                 LocalHitVoxelKey;
 
-    this->GetPOVTargetedData(TargetedChunk, WorldHitLocation, WorldNormalHitLocation, LocalHitVoxelKey, false, this->GetCharacterReach());
+    this->GetPOVTargetedData(
+        TargetedChunk, WorldHitLocation, WorldNormalHitLocation, LocalHitVoxelKey,
+        false, this->GetCharacterReach()
+    );
 
     if (TargetedChunk == nullptr)
     {
         return;
     }
 
-    FVector WorldTargetVoxelLocation = WorldHitLocation + WorldNormalHitLocation * 50.0f;
-    const FVoxelKey LocalTargetVoxelKey = FIntVector(WorldNormalHitLocation + FVector(LocalHitVoxelKey));
-    WorldTargetVoxelLocation    = FVector(WorldTargetVoxelLocation.X - FMath::Fmod(WorldTargetVoxelLocation.X, 100.0f), WorldTargetVoxelLocation.Y - FMath::Fmod(WorldTargetVoxelLocation.Y, 100.0f), WorldTargetVoxelLocation.Z - FMath::Fmod(WorldTargetVoxelLocation.Z, 100.0f));
-    /* This is kinda sketchy as it does not work around the x|y|z == 0 borders. */
-    WorldTargetVoxelLocation    = FVector(WorldTargetVoxelLocation.X + 50.0f * FMath::Sign(WorldTargetVoxelLocation.X), WorldTargetVoxelLocation.Y + 50.0f * FMath::Sign(WorldTargetVoxelLocation.Y), WorldTargetVoxelLocation.Z + 50.0f * FMath::Sign(WorldTargetVoxelLocation.Z));
+    FVector WorldTargetVoxelLocation = WorldHitLocation + WorldNormalHitLocation * WorldStatics::SingleVoxelSizeHalf;
+            WorldTargetVoxelLocation = FVector(
+                WorldTargetVoxelLocation.X - FMath::Fmod(WorldTargetVoxelLocation.X, WorldStatics::SingleVoxelSize),
+                WorldTargetVoxelLocation.Y - FMath::Fmod(WorldTargetVoxelLocation.Y, WorldStatics::SingleVoxelSize),
+                WorldTargetVoxelLocation.Z - FMath::Fmod(WorldTargetVoxelLocation.Z, WorldStatics::SingleVoxelSize)
+            );
+            /* This is kinda sketchy as it does not work around the x|y|z == 0 borders. */
+            WorldTargetVoxelLocation = FVector(
+                WorldTargetVoxelLocation.X + WorldStatics::SingleVoxelSizeHalf * FMath::Sign(WorldTargetVoxelLocation.X),
+                WorldTargetVoxelLocation.Y + WorldStatics::SingleVoxelSizeHalf * FMath::Sign(WorldTargetVoxelLocation.Y),
+                WorldTargetVoxelLocation.Z + WorldStatics::SingleVoxelSizeHalf * FMath::Sign(WorldTargetVoxelLocation.Z)
+            );
 
     /* Only checking ourselves currently maybe we want to do some more checks before sending the RPC. */
     if (FVector::Dist(this->GetTorsoLocation(), WorldTargetVoxelLocation) < 100.0f)
@@ -413,12 +430,15 @@ void AWorldCharacter::OnStartedSecondary(const FInputActionValue& Value)
 
 void AWorldCharacter::OnStartedSecondary_ServerRPC_Implementation(const FInputActionValue& Value)
 {
-    ACommonChunk* TargetedChunk;
-    FVector       WorldHitLocation;
+    ACommonChunk*             TargetedChunk;
+    FVector                   WorldHitLocation;
     FVector_NetQuantizeNormal WorldNormalHitLocation;
-    FVoxelKey     LocalHitVoxelKey;
+    FVoxelKey                 LocalHitVoxelKey;
 
-    this->GetPOVTargetedData(TargetedChunk, WorldHitLocation, WorldNormalHitLocation, LocalHitVoxelKey, this->IsLocallyControlled() == false, this->GetCharacterReach());
+    this->GetPOVTargetedData(
+        TargetedChunk, WorldHitLocation, WorldNormalHitLocation, LocalHitVoxelKey,
+        this->IsLocallyControlled() == false, this->GetCharacterReach()
+    );
 
     if (TargetedChunk == nullptr)
     {
@@ -427,11 +447,20 @@ void AWorldCharacter::OnStartedSecondary_ServerRPC_Implementation(const FInputAc
         return;
     }
 
-    FVector WorldTargetVoxelLocation = WorldHitLocation + WorldNormalHitLocation * 50.0f;
     const FVoxelKey LocalTargetVoxelKey = FIntVector(WorldNormalHitLocation + FVector(LocalHitVoxelKey));
-    WorldTargetVoxelLocation    = FVector(WorldTargetVoxelLocation.X - FMath::Fmod(WorldTargetVoxelLocation.X, 100.0f), WorldTargetVoxelLocation.Y - FMath::Fmod(WorldTargetVoxelLocation.Y, 100.0f), WorldTargetVoxelLocation.Z - FMath::Fmod(WorldTargetVoxelLocation.Z, 100.0f));
-    /* This is kinda sketchy as it does not work around the x|y|z == 0 borders. */
-    WorldTargetVoxelLocation    = FVector(WorldTargetVoxelLocation.X + 50.0f * FMath::Sign(WorldTargetVoxelLocation.X), WorldTargetVoxelLocation.Y + 50.0f * FMath::Sign(WorldTargetVoxelLocation.Y), WorldTargetVoxelLocation.Z + 50.0f * FMath::Sign(WorldTargetVoxelLocation.Z));
+
+    FVector WorldTargetVoxelLocation = WorldHitLocation + WorldNormalHitLocation * WorldStatics::SingleVoxelSizeHalf;
+            WorldTargetVoxelLocation = FVector(
+                WorldTargetVoxelLocation.X - FMath::Fmod(WorldTargetVoxelLocation.X, WorldStatics::SingleVoxelSize),
+                WorldTargetVoxelLocation.Y - FMath::Fmod(WorldTargetVoxelLocation.Y, WorldStatics::SingleVoxelSize),
+                WorldTargetVoxelLocation.Z - FMath::Fmod(WorldTargetVoxelLocation.Z, WorldStatics::SingleVoxelSize)
+            );
+            /* This is kinda sketchy as it does not work around the x|y|z == 0 borders. */
+            WorldTargetVoxelLocation = FVector(
+                WorldTargetVoxelLocation.X + WorldStatics::SingleVoxelSizeHalf * FMath::Sign(WorldTargetVoxelLocation.X),
+                WorldTargetVoxelLocation.Y + WorldStatics::SingleVoxelSizeHalf * FMath::Sign(WorldTargetVoxelLocation.Y),
+                WorldTargetVoxelLocation.Z + WorldStatics::SingleVoxelSizeHalf * FMath::Sign(WorldTargetVoxelLocation.Z)
+            );
 
     /* Only checking ourselves currently maybe we want to do some more checks before sending the RPC. */
     if (FVector::Dist(this->GetTorsoLocation(), WorldTargetVoxelLocation) < 100.0f)
