@@ -156,15 +156,12 @@ void UChatMenu::NativeTick(const FGeometry& MyGeometry, const float InDeltaTime)
 
 void UChatMenu::AddMessageToChatLog(const FString& Sender, const FText& Message)
 {
-    const float Temp = this->SB_StdOut->GetScrollOffsetOfEnd();
-
     this->SB_StdOut->AddChild(this->ConstructChatMenuEntry(Sender, Message));
     this->SafeAddToPreviewOut(Sender, Message);
 
     if (this->GetChatMenuVisibility() == EChatMenuVisibility::Full)
     {
-        LOG_WARNING(LogTemp, "%f %f %f", Temp, this->SB_StdOut->GetScrollOffsetOfEnd(), this->SB_StdOut->GetScrollOffsetOfEnd() - this->SB_StdOut->GetScrollOffset())
-        if ((this->SB_StdOut->GetScrollOffsetOfEnd() - this->SB_StdOut->GetScrollOffset()) < this->StdOutScrollOffsetOfEndIgnoreDelta)
+        if (this->SB_StdOut->GetScrollOffsetOfEnd() - this->SB_StdOut->GetScrollOffset() < this->StdOutScrollOffsetOfEndIgnoreDelta)
         {
             AsyncTask(ENamedThreads::GameThread, [this] (void) -> void
             {

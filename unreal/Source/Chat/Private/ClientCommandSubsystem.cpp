@@ -123,6 +123,11 @@ void UClientCommandSubsystem::OnHelpCommand(const TArray<FString>& InArgs, Comma
 void UClientCommandSubsystem::OnChatClearCommand(const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const
 {
     OWNING_CHAT_COMPONENT->GetSafeChatMenu()->ClearAllChatEntries();
+
+    OutReturnCode = ECommandReturnCodes::SuccessNoResponse;
+    OutResponse   = L"";
+
+    return;
 }
 
 #undef OWNING_CHAT_COMPONENT
