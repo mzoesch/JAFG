@@ -3,6 +3,7 @@
 #include "System/JAFGGameInstance.h"
 
 #include "GameFramework/GameUserSettings.h"
+#include "Net/Core/PushModel/PushModel.h"
 
 UJAFGGameInstance::UJAFGGameInstance(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -14,6 +15,12 @@ UJAFGGameInstance::UJAFGGameInstance(const FObjectInitializer& ObjectInitializer
 void UJAFGGameInstance::Init()
 {
     Super::Init();
+
+    if (IS_PUSH_MODEL_ENABLED() == false)
+    {
+        LOG_FATAL(LogSystem, "Push model is not enabled. This is a requirement for the game instance.")
+        return;
+    }
 
     GEngine->GetGameUserSettings()->SetFullscreenMode(EWindowMode::Windowed);
     GEngine->GetGameUserSettings()->SetScreenResolution(FIntPoint(1024, 768));

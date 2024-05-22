@@ -29,6 +29,12 @@ enum Type : CommandReturnCode
     /** Command executed successfully. The parser is advised to not give method feedback to the user. */
     SuccessNoResponse,
 
+    /** Command executed successfully. The parser is advised to broadcast the command's response. */
+    SuccessBroadcast,
+
+    /** Command executed successfully. The parser is advised to broadcast the command's response with the authority as sender. */
+    SuccessBroadcastWithAuthority,
+
     //////////////////////////////////////////////////////////////////////////
     // Failure Entries - In rising order of severity
     //////////////////////////////////////////////////////////////////////////
@@ -50,6 +56,9 @@ enum Type : CommandReturnCode
     /** Command executed with missing arguments. */
     MissingArgs,
 
+    /** Command executed with too many arguments. */
+    TooManyArgs,
+
     /** Command executed with a syntax error. */
     SyntaxError,
 
@@ -59,7 +68,11 @@ enum Type : CommandReturnCode
 
 FORCEINLINE bool IsSuccess(const ECommandReturnCodes::Type& InType)
 {
-    return InType == ECommandReturnCodes::Success || InType == ECommandReturnCodes::SuccessNoResponse;
+    return
+           InType == ECommandReturnCodes::Success
+        || InType == ECommandReturnCodes::SuccessNoResponse
+        || InType == ECommandReturnCodes::SuccessBroadcast
+        || InType == ECommandReturnCodes::SuccessBroadcastWithAuthority;
 }
 
 FORCEINLINE bool IsSuccess(const CommandReturnCode& InType)
@@ -93,6 +106,14 @@ FORCEINLINE FString LexToString(const ECommandReturnCodes::Type& InType)
     {
         return TEXT("SuccessNoResponse");
     }
+    case ECommandReturnCodes::SuccessBroadcast:
+    {
+        return TEXT("SuccessBroadcast");
+    }
+    case ECommandReturnCodes::SuccessBroadcastWithAuthority:
+    {
+        return TEXT("SuccessBroadcastWithAuthority");
+    }
     case ECommandReturnCodes::Failure:
     {
         return TEXT("Failure");
@@ -108,6 +129,10 @@ FORCEINLINE FString LexToString(const ECommandReturnCodes::Type& InType)
     case ECommandReturnCodes::MissingArgs:
     {
         return TEXT("MissingArgs");
+    }
+    case ECommandReturnCodes::TooManyArgs:
+    {
+        return TEXT("TooManyArgs");
     }
     case ECommandReturnCodes::SyntaxError:
     {
@@ -159,16 +184,33 @@ namespace ChatStatics
 extern inline const FString AuthorityName       = TEXT("AUTHORITY");
 extern inline const FString InternalName        = TEXT("INTERNAL");
 
-extern inline constexpr int32 MaxChatInputLength = 0x3F;
+extern inline constexpr int32 MaxChatInputLength = 0x7F;
 
 FORCEINLINE bool IsTextToLong(const FText& Text)
 {
     return Text.ToString().Len() > MaxChatInputLength;
 }
 
+FORCEINLINE bool IsTextBlank(const FText& Text)
+{
+    for (const TCHAR& Char : Text.ToString())
+    {
+        if (Char != TEXT(' '))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 FORCEINLINE bool IsTextValid(const FText& Text)
 {
-    return Text.ToString().Len() > 0 && ChatStatics::IsTextToLong(Text) == false;
+    return
+           Text.ToString().Len()           >= 1
+        && Text.ToString().IsEmpty()       == false
+        && ChatStatics::IsTextBlank(Text)  == false
+        && ChatStatics::IsTextToLong(Text) == false;
 }
 
 }

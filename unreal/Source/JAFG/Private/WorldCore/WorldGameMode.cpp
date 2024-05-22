@@ -7,13 +7,16 @@
 #include "UI/WorldHUD.h"
 #include "WorldCore/ChunkWorldSettings.h"
 #include "WorldCore/WorldGameSession.h"
+#include "WorldCore/WorldPlayerState.h"
 
 AWorldGameMode::AWorldGameMode(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-    this->HUDClass              = AWorldHUD::StaticClass();
-    this->PlayerControllerClass = AWorldPlayerController::StaticClass();
-    this->DefaultPawnClass      = nullptr;
     this->GameSessionClass      = AWorldGameSession::StaticClass();
+
+    this->PlayerControllerClass = AWorldPlayerController::StaticClass();
+    this->PlayerStateClass      = AWorldPlayerState::StaticClass();
+    this->HUDClass              = AWorldHUD::StaticClass();
+    this->DefaultPawnClass      = nullptr;
 
     return;
 }
@@ -55,4 +58,8 @@ void AWorldGameMode::StartPlay(void)
 void AWorldGameMode::PostLogin(APlayerController* NewPlayer)
 {
     Super::PostLogin(NewPlayer);
+
+    NewPlayer->GetPlayerState<AWorldPlayerState>()->SetPlayerDisplayName(NewPlayer->GetName());
+
+    return;
 }

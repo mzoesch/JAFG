@@ -9,6 +9,7 @@
 #include "Components/EditableText.h"
 #include "Components/ScrollBox.h"
 #include "Components/TextBlock.h"
+#include "Components/VerticalBox.h"
 #include "Input/CustomInputNames.h"
 #include "Input/JAFGEditableTextBlock.h"
 #include "Input/JAFGInputSubsystem.h"
@@ -95,12 +96,16 @@ void UChatMenu::NativeConstruct(void)
 #endif /* !WITH_EDITOR */
     }
 
+    this->PreviewEntries.Empty();
+
     this->ChatMenuVisibilityChangedHandle = Owner->SubscribeToChatVisibilityChanged(ADD_SLATE_VIS_DELG(UChatMenu::OnChatMenuVisibilityChanged));
     this->ChatHistoryLookupHandle         = Owner->SubscribeToChatHistoryLookup(FChatHistoryLookupSignature::FDelegate::CreateUObject(this, &UChatMenu::OnHistoryLookUp));
 
     this->ET_StdIn->SetCustomEventToKeyDown(this->GetOnStdInKeyDownHandler());
     this->ET_StdIn->OnTextChanged.AddDynamic(this, &UChatMenu::OnChatTextChanged);
     this->ET_StdIn->OnTextCommitted.AddDynamic(this, &UChatMenu::OnChatTextCommitted);
+
+    this->ChangeChatMenuVisibility(EChatMenuVisibility::Collapsed);
 
     /* For messages that have arrived while this widget has not yet been constructed. */
     while (OWNING_CHAT_COMPONENT->PreChatWidgetConstructionQueue.IsEmpty() == false)
@@ -140,18 +145,10 @@ void UChatMenu::NativeTick(const FGeometry& MyGeometry, const float InDeltaTime)
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
 
-    if (this->PW_StdInWrapper->GetVisibility() == ESlateVisibility::Visible)
+    if (const EChatMenuVisibility::Type CurrentVisibility = this->GetChatMenuVisibility(); CurrentVisibility == EChatMenuVisibility::Preview)
     {
-        this->HideChatStdOutTimer = 0.0f;
-        return;
-    }
-
-    this->HideChatStdOutTimer += InDeltaTime;
-
-    if (this->HideChatStdOutTimer >= this->HideChatStdOutDelayInSeconds)
-    {
-        this->HideChatStdOutTimer = 0.0f;
-        this->HideStdOut();
+        this->RemoveOutdatedPreviewEntries();
+        this->ChangeChatMenuVisibilityStateBasedOnPreviewEntries();
     }
 
     return;
@@ -159,18 +156,34 @@ void UChatMenu::NativeTick(const FGeometry& MyGeometry, const float InDeltaTime)
 
 void UChatMenu::AddMessageToChatLog(const FString& Sender, const FText& Message)
 {
-    FChatMessageData ChatMessageData = FChatMessageData();
-    ChatMessageData.Sender  = Sender;
-    ChatMessageData.Message = Message;
+    const float Temp = this->SB_StdOut->GetScrollOffsetOfEnd();
 
-    const UJAFGSlateSettings* SlateSettings = GetDefault<UJAFGSlateSettings>();
-    check( SlateSettings )
+    this->SB_StdOut->AddChild(this->ConstructChatMenuEntry(Sender, Message));
+    this->SafeAddToPreviewOut(Sender, Message);
 
-    UChatMenuEntry* ChatMenuEntry = CreateWidget<UChatMenuEntry>(this->GetWorld(), SlateSettings->ChatMenuEntryWidgetClass);
-    ChatMenuEntry->PassDataToWidget(ChatMessageData);
-    this->SB_StdOut->AddChild(ChatMenuEntry);
+    if (this->GetChatMenuVisibility() == EChatMenuVisibility::Full)
+    {
+        LOG_WARNING(LogTemp, "%f %f %f", Temp, this->SB_StdOut->GetScrollOffsetOfEnd(), this->SB_StdOut->GetScrollOffsetOfEnd() - this->SB_StdOut->GetScrollOffset())
+        if ((this->SB_StdOut->GetScrollOffsetOfEnd() - this->SB_StdOut->GetScrollOffset()) < this->StdOutScrollOffsetOfEndIgnoreDelta)
+        {
+            AsyncTask(ENamedThreads::GameThread, [this] (void) -> void
+            {
+                this->SB_StdOut->ScrollToEnd();
+            });
+        }
+        return;
+    }
 
-    this->ShowStdOut();
+    this->ChangeChatMenuVisibility(EChatMenuVisibility::Preview);
+
+    return;
+}
+
+void UChatMenu::ClearAllChatEntries(void)
+{
+    this->SB_StdOut->ClearChildren();
+    this->VB_PreviewOut->ClearChildren();
+    this->PreviewEntries.Empty();
 
     return;
 }
@@ -189,19 +202,12 @@ void UChatMenu::OnChatMenuVisibilityChanged(const bool bVisible)
     if (bVisible)
     {
         LOG_VERY_VERBOSE(LogCommonSlate, "Chat is now visible.")
-        this->SetVisibility(ESlateVisibility::Visible);
-        this->PW_StdOutWrapper->SetVisibility(ESlateVisibility::Visible);
-        this->PW_StdInWrapper->SetVisibility(ESlateVisibility::Visible);
-        this->ClearStdIn();
-        this->FocusStdIn();
-        this->CurrentCursorInHistory = UChatMenu::InvalidCursorInHistory;
+        this->ChangeChatMenuVisibility(EChatMenuVisibility::Full);
     }
     else
     {
         LOG_VERY_VERBOSE(LogCommonSlate, "Chat is now hidden.")
-        this->SetVisibility(ESlateVisibility::Collapsed);
-        this->ClearStdIn();
-        this->CurrentCursorInHistory = UChatMenu::InvalidCursorInHistory;
+        this->ChangeChatMenuVisibility(EChatMenuVisibility::Collapsed);
     }
 
     return;
@@ -212,23 +218,158 @@ void UChatMenu::HideChatMenu(void)
     OWNING_PLAYER_CONTROLLER->OnToggleChat(FInputActionValue());
 }
 
-void UChatMenu::ShowStdOut(void)
+void UChatMenu::ChangeChatMenuVisibility(const EChatMenuVisibility::Type InVisibility)
 {
-    if (this->GetVisibility() == ESlateVisibility::Visible)
+    if (this->GetChatMenuVisibility() == InVisibility)
     {
         return;
     }
 
-    this->SetVisibility(ESlateVisibility::Visible);
-    this->PW_StdOutWrapper->SetVisibility(ESlateVisibility::Visible);
-    this->PW_StdInWrapper->SetVisibility(ESlateVisibility::Hidden);
+    switch (InVisibility)
+    {
+    case EChatMenuVisibility::Collapsed:
+    {
+        if (this->PreviewEntries.IsEmpty() == false)
+        {
+            this->ChangeChatMenuVisibility(EChatMenuVisibility::Preview);
+            return;
+        }
+
+        this->SetVisibility(ESlateVisibility::Collapsed);
+        this->VB_PreviewOut->ClearChildren();
+        this->PreviewEntries.Empty();
+        this->ClearStdIn();
+        this->CurrentCursorInHistory = UChatMenu::InvalidCursorInHistory;
+        break;
+    }
+    case EChatMenuVisibility::Preview:
+    {
+        this->SetVisibility(ESlateVisibility::Visible);
+        this->PW_StdOutWrapper->SetVisibility(ESlateVisibility::Collapsed);
+        this->PW_PreviewOutWrapper->SetVisibility(ESlateVisibility::Visible);
+        this->PW_StdInWrapper->SetVisibility(ESlateVisibility::Hidden);
+
+        this->ClearStdIn();
+        this->CurrentCursorInHistory = UChatMenu::InvalidCursorInHistory;
+
+        break;
+    }
+    case EChatMenuVisibility::Full:
+    {
+        this->SetVisibility(ESlateVisibility::Visible);
+        this->PW_StdOutWrapper->SetVisibility(ESlateVisibility::Visible);
+        this->PW_PreviewOutWrapper->SetVisibility(ESlateVisibility::Collapsed);
+        this->PW_StdInWrapper->SetVisibility(ESlateVisibility::Visible);
+
+        this->SB_StdOut->ScrollToEnd();
+        this->ClearStdIn();
+        this->FocusStdIn();
+        this->CurrentCursorInHistory = UChatMenu::InvalidCursorInHistory;
+
+        break;
+    }
+    default:
+    {
+        LOG_FATAL(LogJAFGChat, "Unknown chat menu visibility type: %d.", static_cast<int32>(InVisibility))
+        break;
+    }
+    }
 
     return;
 }
 
-void UChatMenu::HideStdOut(void)
+EChatMenuVisibility::Type UChatMenu::GetChatMenuVisibility(void) const
 {
-    this->SetVisibility(ESlateVisibility::Collapsed);
+    if (this->GetVisibility() == ESlateVisibility::Collapsed)
+    {
+        return EChatMenuVisibility::Collapsed;
+    }
+
+    if (this->PW_PreviewOutWrapper->GetVisibility() == ESlateVisibility::Visible)
+    {
+        return EChatMenuVisibility::Preview;
+    }
+
+    return EChatMenuVisibility::Full;
+}
+
+void UChatMenu::SafeAddToPreviewOut(const FString& Sender, const FText& Message)
+{
+    UUserWidget* Entry = this->ConstructChatMenuEntry(Sender, Message);
+    this->VB_PreviewOut->AddChild(Entry);
+
+    FPrivatePreviewEntryData Data;
+    Data.CreationTimeInSeconds = this->GetWorld()->GetTimeSeconds();
+    Data.Entry                 = Entry;
+
+    this->PreviewEntries.Emplace(Data);
+
+    while (this->VB_PreviewOut->GetChildrenCount() > this->MaxEntriesInPreviewOut)
+    {
+        UUserWidget* EntryToRemove = Cast<UUserWidget>(this->VB_PreviewOut->GetChildAt(0));
+        this->PreviewEntries.RemoveAll(
+            [EntryToRemove] (const FPrivatePreviewEntryData& ExistingData) -> bool
+            {
+                return ExistingData.Entry == EntryToRemove;
+            }
+        );
+        this->VB_PreviewOut->RemoveChildAt(0);
+    }
+
+    return;
+}
+
+void UChatMenu::RemoveOutdatedPreviewEntries(void)
+{
+    this->PreviewEntries.RemoveAll(
+        [this] (const FPrivatePreviewEntryData& Data) -> bool
+        {
+            if (this->GetWorld()->GetTimeSeconds() - Data.CreationTimeInSeconds >= this->PreviewOutEntryLifetimeInSeconds)
+            {
+                if (Data.Entry == nullptr || Data.Entry->IsValidLowLevel() == false)
+                {
+                    return true;
+                }
+
+                this->VB_PreviewOut->RemoveChild(Data.Entry);
+                return true;
+            }
+
+            return false;
+        }
+    );
+
+    return;
+}
+
+void UChatMenu::ChangeChatMenuVisibilityStateBasedOnPreviewEntries(void)
+{
+    if (this->GetChatMenuVisibility() != EChatMenuVisibility::Preview)
+    {
+        return;
+    }
+
+    if (this->PreviewEntries.IsEmpty())
+    {
+        this->ChangeChatMenuVisibility(EChatMenuVisibility::Collapsed);
+    }
+
+    return;
+}
+
+UChatMenuEntry* UChatMenu::ConstructChatMenuEntry(const FString& Sender, const FText& Message) const
+{
+    FChatMessageData ChatMessageData = FChatMessageData();
+    ChatMessageData.Sender  = Sender;
+    ChatMessageData.Message = Message;
+
+    const UJAFGSlateSettings* SlateSettings = GetDefault<UJAFGSlateSettings>();
+    check( SlateSettings )
+
+    UChatMenuEntry* ChatMenuEntry = CreateWidget<UChatMenuEntry>(this->GetWorld(), SlateSettings->ChatMenuEntryWidgetClass);
+    ChatMenuEntry->PassDataToWidget(ChatMessageData);
+
+    return ChatMenuEntry;
 }
 
 /* Do NOT convert to const method, as this is a Rider IDEA false positive error. */
@@ -345,21 +486,9 @@ void UChatMenu::ClearStdIn(void) const
     this->ET_StdIn->SetText(FText::GetEmpty());
 }
 
-bool UChatMenu::IsStdToLong(void) const
-{
-    return ChatStatics::IsTextToLong(this->ET_StdIn->GetText());
-}
-
 bool UChatMenu::IsStdInValid(void) const
 {
-    if (this->IsStdToLong())
-    {
-        return false;
-    }
-
-    /* Some more validations have to be added here in the future. */
-
-    return true;
+   return ChatStatics::IsTextValid(this->ET_StdIn->GetText());
 }
 
 #undef OWNING_PLAYER_CONTROLLER

@@ -8,6 +8,7 @@
 #include "Definitions.h"
 #include "ServerCommandSubsystem.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Kismet/GameplayStatics.h"
 #include "Player/WorldPlayerController.h"
 
 UChatComponent::UChatComponent(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -29,6 +30,25 @@ void UChatComponent::BeginPlay(void)
 AWorldPlayerController* UChatComponent::GetPredictedOwner(void) const
 {
     return Cast<AWorldPlayerController>(this->GetOwner());
+}
+
+UChatMenu* UChatComponent::GetChatMenu(void) const
+{
+    TArray<UUserWidget*> Widgets;
+    UWidgetBlueprintLibrary::GetAllWidgetsOfClass(this->GetWorld(), Widgets, UChatMenu::StaticClass());
+    return Widgets.Num() > 0 ? Cast<UChatMenu>(Widgets[0]) : nullptr;
+}
+
+auto UChatComponent::GetSafeChatMenu(void) const -> UChatMenu*
+{
+    if (UChatMenu* ChatMenu = this->GetChatMenu(); ChatMenu != nullptr)
+    {
+        return ChatMenu;
+    }
+
+    LOG_FATAL(LogJAFGChat, "Chat menu widget is not initialized.")
+
+    return nullptr;
 }
 
 void UChatComponent::ParseMessage(const FText& Message)
@@ -54,7 +74,7 @@ void UChatComponent::ParseMessage(const FText& Message)
         return;
     }
 
-    UClientCommandSubsystem* ClientCommandSubsystem = this->GetWorld()->GetSubsystem<UClientCommandSubsystem>();
+    const UClientCommandSubsystem* ClientCommandSubsystem = this->GetWorld()->GetSubsystem<UClientCommandSubsystem>();
     check( ClientCommandSubsystem )
 
     if (ClientCommandSubsystem->IsRegisteredClientCommand(Message) == false)
@@ -117,7 +137,13 @@ FString UChatComponent::GetPlayerDisplayName(void) const
 
 bool UChatComponent::QueueMessage_ServerRPC_Validate(const FText& Message)
 {
-    return ChatStatics::IsTextValid(Message);
+    if (ChatStatics::IsTextValid(Message) == false)
+    {
+        LOG_WARNING(LogJAFGChat, "Player [%s] attempted to send an invalid message. Message: [].", *this->GetPlayerDisplayName(), *Message.ToString())
+        return false;
+    }
+
+    return true;
 }
 
 void UChatComponent::QueueMessage_ServerRPC_Implementation(const FText& Message)
@@ -156,6 +182,18 @@ void UChatComponent::QueueMessage_ServerRPC_Implementation(const FText& Message)
         return;
     }
 
+    if (ReturnCode == ECommandReturnCodes::SuccessBroadcast || ReturnCode == ECommandReturnCodes::SuccessBroadcastWithAuthority)
+    {
+        if (Response.IsEmpty())
+        {
+            LOG_FATAL(LogJAFGChat, "Server command subsystem returned success broadcast without a response.")
+            return;
+        }
+
+        this->BroadcastMessage(FText::FromString(Response), ReturnCode == ECommandReturnCodes::SuccessBroadcastWithAuthority);
+        return;
+    }
+
     if (ECommandReturnCodes::IsFailure(ReturnCode))
     {
         LOG_WARNING(
@@ -163,6 +201,17 @@ void UChatComponent::QueueMessage_ServerRPC_Implementation(const FText& Message)
             "Player [%s] attempted to execute command [%s] with return code [%s]. Response [%s].",
             *this->GetPlayerDisplayName(), *Message.ToString(), *ECommandReturnCodes::LexToString(ReturnCode), *Response
         )
+        if (this->GetPredictedOwner()->IsLocalController())
+        {
+            this->AddMessageToChatLog_ClientRPC(
+                ChatStatics::AuthorityName,
+                FText::FromString(FString::Printf(
+                    TEXT("Command [%s] failed with return code [%s]. Response [%s]."),
+                    *Message.ToString(), *ECommandReturnCodes::LexToString(ReturnCode), *Response
+                ))
+            );
+            return;
+        }
         /*
          * We want to give the client as little information as possible about the failure.
          * If they are an administrator, they may want to check the logs then.
@@ -179,11 +228,11 @@ void UChatComponent::QueueMessage_ServerRPC_Implementation(const FText& Message)
     return;
 }
 
-void UChatComponent::BroadcastMessage(const FText& Message) const
+void UChatComponent::BroadcastMessage(const FText& Message, const bool bAsAuthority /* = false */) const
 {
     LOG_VERBOSE(LogJAFGChat, "Queueing message [%s]. Pending clients: %d.", *Message.ToString(), this->GetWorld()->GetNumPlayerControllers())
 
-    const FString Sender = this->GetPlayerDisplayName();
+    const FString Sender = bAsAuthority ? ChatStatics::AuthorityName : this->GetPlayerDisplayName();
 
     if (
         /*
@@ -211,10 +260,7 @@ void UChatComponent::BroadcastMessage(const FText& Message) const
 
 void UChatComponent::AddMessageToChatLog(const FString& Sender, const FText& Message)
 {
-    TArray<UUserWidget*> Widgets;
-    UWidgetBlueprintLibrary::GetAllWidgetsOfClass(this->GetWorld(), Widgets, UChatMenu::StaticClass());
-
-    UChatMenu* ChatMenu = Widgets.Num() > 0 ? Cast<UChatMenu>(Widgets[0]) : nullptr;
+    UChatMenu* ChatMenu = this->GetChatMenu();
 
     if (ChatMenu == nullptr)
     {

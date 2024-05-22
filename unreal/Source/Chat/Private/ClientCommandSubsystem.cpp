@@ -3,6 +3,7 @@
 #include "ClientCommandSubsystem.h"
 
 #include "ChatComponent.h"
+#include "ChatMenu.h"
 #include "CommonNetworkStatics.h"
 #include "Definitions.h"
 
@@ -101,6 +102,7 @@ void UClientCommandSubsystem::ExecuteCommand(const FClientCommand& Command, cons
 void UClientCommandSubsystem::InitializeAllCommands(void)
 {
     DECLARE_CLIENT_COMMAND("help", OnHelpCommand)
+    DECLARE_CLIENT_COMMAND("clear", OnChatClearCommand)
 
     return;
 }
@@ -116,6 +118,11 @@ void UClientCommandSubsystem::OnHelpCommand(const TArray<FString>& InArgs, Comma
     OutResponse   = L"";
 
     return;
+}
+
+void UClientCommandSubsystem::OnChatClearCommand(const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const
+{
+    OWNING_CHAT_COMPONENT->GetSafeChatMenu()->ClearAllChatEntries();
 }
 
 #undef OWNING_CHAT_COMPONENT

@@ -7,6 +7,7 @@
 #include "InputTriggers.h"
 #include "GameFramework/GameModeBase.h"
 #include "WorldCore/WorldGameSession.h"
+#include "WorldCore/WorldPlayerState.h"
 
 #include "WorldPlayerController.generated.h"
 
@@ -144,10 +145,8 @@ protected:
     // Useful Internal Getters
     //////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE auto GetWorldGameSession(void) const -> AWorldGameSession*
-    {
-        return Cast<AWorldGameSession>(this->GetWorld()->GetAuthGameMode()->GameSession);
-    }
+    /** Server only. */
+    FORCEINLINE auto GetWorldGameSession(void) const -> AWorldGameSession* { return Cast<AWorldGameSession>(this->GetWorld()->GetAuthGameMode()->GameSession); }
 
 public:
 
@@ -155,5 +154,6 @@ public:
     // Public Getters
     //////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE auto GetDisplayName(void) const -> FString { return this->GetName(); }
+    FORCEINLINE auto GetWorldPlayerState(void) const -> AWorldPlayerState* { return this->GetPlayerState<AWorldPlayerState>(); }
+    FORCEINLINE auto GetDisplayName(void) const -> FString { return this->GetWorldPlayerState()->GetPlayerDisplayName(); }
 };

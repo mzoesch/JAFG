@@ -51,4 +51,5 @@ private:
     auto OnAllowInputFlyCommand(SERVER_COMMAND_SIG) const -> void;
     auto OnShowOnlinePlayersCommand(SERVER_COMMAND_SIG) const -> void;
     auto OnKickCommand(SERVER_COMMAND_SIG) const -> void;
+    auto OnChangeDisplayNameCommand(SERVER_COMMAND_SIG) const -> void;
 };

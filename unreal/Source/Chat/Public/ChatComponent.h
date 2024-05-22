@@ -7,6 +7,7 @@
 
 #include "ChatComponent.generated.h"
 
+class UChatMenu;
 class AWorldPlayerController;
 class UClientCommandSubsystem;
 class UServerCommandSubsystem;
@@ -37,6 +38,12 @@ public:
 
     /** Because this component should always be attached to a subclass of this controller. */
     auto GetPredictedOwner(void) const -> AWorldPlayerController*;
+    /**
+     * Only on the owing instance of the game as it is a widget.
+     * @retun The owning chat menu if valid else nullptr.
+     */
+    auto GetChatMenu(void) const -> UChatMenu*;
+    auto GetSafeChatMenu(void) const -> UChatMenu*;
 
     /**
      * Parses a given message. Executes the command if it is a command and locally executable. Else sends it
@@ -50,7 +57,7 @@ public:
      */
     TQueue<FPrivateMessagePreConstruct> PreChatWidgetConstructionQueue = TQueue<FPrivateMessagePreConstruct>();
 
-    static constexpr int32 MaxChatStdInLogBuffered = 4;
+    static constexpr int32 MaxChatStdInLogBuffered = 0xFF;
     /** Sorted chronology from most recent to least. */
     TArray<FText> ChatStdInLog;
 
@@ -61,7 +68,7 @@ private:
     UFUNCTION(Server, Reliable, WithValidation)
     void QueueMessage_ServerRPC(const FText& Message);
 
-    void BroadcastMessage(const FText& Message) const;
+    void BroadcastMessage(const FText& Message, const bool bAsAuthority = false) const;
     UFUNCTION(Client, Reliable)
     void AddMessageToChatLog_ClientRPC(const FString& Sender, const FText& Message);
     void AddMessageToChatLog(const FString& Sender, const FText& Message);

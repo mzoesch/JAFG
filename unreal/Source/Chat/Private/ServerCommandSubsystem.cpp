@@ -11,11 +11,14 @@
     Cast<AWorldGameSession>(this->GetWorld()->GetAuthGameMode()->GameSession)
 #define OWNER_CHARACTER                                                         \
     Cast<AWorldCharacter>(Cast<AController>(Owner->GetOwner())->GetCharacter())
-#define DECLARE_OWNER_AS_TARGET                                                 \
+#define DECLARE_OWNER_AS_CHAR_TARGET                                            \
     AWorldCharacter* Target =                                                   \
         Cast<AWorldCharacter>(                                                  \
             Cast<AController>(Owner->GetOwner()                                 \
         )->GetCharacter());
+#define DECLARE_OWNER_AS_CTRL_TARGET                                            \
+    AWorldPlayerController* Target =                                            \
+        Cast<AWorldPlayerController>(Owner->GetOwner());
 #define DECLARE_SERVER_COMMAND(Name, Callback)                                  \
     {                                                                           \
         const FServerCommand Command =                                          \
@@ -119,6 +122,7 @@ void UServerCommandSubsystem::InitializeAllCommands(void)
     DECLARE_SERVER_COMMAND( "infly",     OnAllowInputFlyCommand     )
     DECLARE_SERVER_COMMAND( "players",   OnShowOnlinePlayersCommand )
     DECLARE_SERVER_COMMAND( "kick" ,     OnKickCommand              )
+    DECLARE_SERVER_COMMAND( "name",      OnChangeDisplayNameCommand )
 
     return;
 }
@@ -191,7 +195,7 @@ void UServerCommandSubsystem::OnBroadcastCommand(SERVER_COMMAND_SIG) const
 // ReSharper disable once CppMemberFunctionMayBeStatic
 void UServerCommandSubsystem::OnFlyCommand(SERVER_COMMAND_SIG) const
 {
-    DECLARE_OWNER_AS_TARGET
+    DECLARE_OWNER_AS_CHAR_TARGET
 
     Target->ToggleFly();
 
@@ -204,7 +208,7 @@ void UServerCommandSubsystem::OnFlyCommand(SERVER_COMMAND_SIG) const
 // ReSharper disable once CppMemberFunctionMayBeStatic
 void UServerCommandSubsystem::OnAllowInputFlyCommand(SERVER_COMMAND_SIG) const
 {
-    DECLARE_OWNER_AS_TARGET
+    DECLARE_OWNER_AS_CHAR_TARGET
 
     Target->ToggleInputFly();
 
@@ -259,6 +263,13 @@ void UServerCommandSubsystem::OnKickCommand(SERVER_COMMAND_SIG) const
         return;
     }
 
+    if (Target->GetPredictedOwner()->IsLocalController())
+    {
+        OutReturnCode = ECommandReturnCodes::Forbidden;
+        OutResponse   = TEXT("Server operator cannot be kicked.");
+        return;
+    }
+
     /* Kick next tick. */
     AsyncTask(ENamedThreads::GameThread, [this, Target] (void)
     {
@@ -271,6 +282,28 @@ void UServerCommandSubsystem::OnKickCommand(SERVER_COMMAND_SIG) const
     return;
 }
 
+// ReSharper disable once CppMemberFunctionMayBeStatic
+void UServerCommandSubsystem::OnChangeDisplayNameCommand(SERVER_COMMAND_SIG) const
+{
+    if (InArgs.Num() != 1)
+    {
+        OutReturnCode = InArgs.Num() < 1 ? ECommandReturnCodes::MissingArgs : ECommandReturnCodes::TooManyArgs;
+        OutResponse   = TEXT("One argument is required.");
+        return;
+    }
+
+    DECLARE_OWNER_AS_CTRL_TARGET
+
+    const FString OldName = Target->GetDisplayName();
+    Target->GetWorldPlayerState()->SetPlayerDisplayName(InArgs[0]);
+
+    OutReturnCode = ECommandReturnCodes::SuccessBroadcastWithAuthority;
+    OutResponse   = FString::Printf(TEXT("[%s] is now known as [%s]."), *OldName, *InArgs[0]);
+
+    return;
+}
+
+#undef OWNING_SESSION
 #undef OWNER_CHARACTER
-#undef DECLARE_OWNER_AS_TARGET
+#undef DECLARE_OWNER_AS_CHAR_TARGET
 #undef DECLARE_SERVER_COMMAND

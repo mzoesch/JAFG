@@ -35,6 +35,19 @@ void AWorldHUD::BeginPlay(void)
 
     const UJAFGSlateSettings* SlateSettings = GetDefault<UJAFGSlateSettings>();
 
+    // Chat Menu
+    //////////////////////////////////////////////////////////////////////////
+    {
+        if (SlateSettings->ChatMenuWidgetClass == nullptr)
+        {
+            LOG_FATAL(LogCommonSlate, "Chat Menu Widget Class is not set in project settings.")
+            return;
+        }
+        this->ChatMenu = CreateWidget<UJAFGWidget>(this->GetWorld(), SlateSettings->ChatMenuWidgetClass);
+        this->ChatMenu->AddToViewport();
+        this->ChatMenu->SetVisibility(ESlateVisibility::Collapsed);
+    }
+
     // Escape menu
     //////////////////////////////////////////////////////////////////////////
     {
@@ -59,19 +72,6 @@ void AWorldHUD::BeginPlay(void)
         this->DebugScreen = CreateWidget<UJAFGWidget>(this->GetWorld(), SlateSettings->DebugScreenWidgetClass);
         this->DebugScreen->AddToViewport();
         this->DebugScreen->SetVisibility(ESlateVisibility::Collapsed);
-    }
-
-    // Chat Menu
-    //////////////////////////////////////////////////////////////////////////
-    {
-        if (SlateSettings->ChatMenuWidgetClass == nullptr)
-        {
-            LOG_FATAL(LogCommonSlate, "Chat Menu Widget Class is not set in project settings.")
-            return;
-        }
-        this->ChatMenu = CreateWidget<UJAFGWidget>(this->GetWorld(), SlateSettings->ChatMenuWidgetClass);
-        this->ChatMenu->AddToViewport();
-        this->ChatMenu->SetVisibility(ESlateVisibility::Collapsed);
     }
 
     return;
