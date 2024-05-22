@@ -20,11 +20,6 @@ public:
 
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-                auto SetPlayerDisplayName(const FString& InPlayerDisplayName) -> void;
-    FORCEINLINE auto GetPlayerDisplayName(void) const -> FString { return this->PlayerDisplayName; }
-
-private:
-
-    UPROPERTY(Replicated)
-    FString PlayerDisplayName = L"";
+    virtual auto SetPlayerName(const FString& S) -> void override;
+    virtual auto GetPlayerNameCustom(void) const -> FString override;
 };

@@ -35,6 +35,19 @@ void AWorldHUD::BeginPlay(void)
 
     const UJAFGSlateSettings* SlateSettings = GetDefault<UJAFGSlateSettings>();
 
+    // Quick Session Preview
+    //////////////////////////////////////////////////////////////////////////
+    {
+        if (SlateSettings->QuickSessionPreviewWidgetClass == nullptr)
+        {
+            LOG_FATAL(LogCommonSlate, "Quick Session Preview Widget Class is not set in project settings.")
+            return;
+        }
+        this->QuickSessionPreview = CreateWidget<UJAFGWidget>(this->GetWorld(), SlateSettings->QuickSessionPreviewWidgetClass);
+        this->QuickSessionPreview->AddToViewport();
+        this->QuickSessionPreview->SetVisibility(ESlateVisibility::Collapsed);
+    }
+
     // Chat Menu
     //////////////////////////////////////////////////////////////////////////
     {

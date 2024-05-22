@@ -177,6 +177,17 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
         InputSubsystem->AddAction(Action);
     }
 
+    // Toggle Quick Session Preview Action
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGInputAction Action;
+        Action.Name        = InputActions::ToggleQuickSessionPreview;
+        Action.DefaultKeyA = EKeys::Tab;
+        Action.DefaultKeyB = EKeys::Invalid;
+        Action.Contexts.Add(InputContexts::Foot);
+        InputSubsystem->AddAction(Action);
+    }
+
     // Previous Chat StdIn Action
     //////////////////////////////////////////////////////////////////////////
     {

@@ -163,6 +163,7 @@ void UChatMenu::AddMessageToChatLog(const FString& Sender, const FText& Message)
     {
         if (this->SB_StdOut->GetScrollOffsetOfEnd() - this->SB_StdOut->GetScrollOffset() < this->StdOutScrollOffsetOfEndIgnoreDelta)
         {
+            /** Give the scroll bar time to render. And exectue on the next tick. */
             AsyncTask(ENamedThreads::GameThread, [this] (void) -> void
             {
                 this->SB_StdOut->ScrollToEnd();
@@ -478,7 +479,7 @@ void UChatMenu::FocusStdIn(void) const
     this->ET_StdIn->SetUserFocus(OWNING_PLAYER_CONTROLLER);
 }
 
-void UChatMenu::ClearStdIn(void) const
+auto UChatMenu::ClearStdIn(void) const -> void
 {
     this->ET_StdIn->SetText(FText::GetEmpty());
 }

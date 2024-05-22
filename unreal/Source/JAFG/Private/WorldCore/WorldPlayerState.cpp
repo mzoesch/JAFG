@@ -14,15 +14,13 @@ void AWorldPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    FDoRepLifetimeParams SharedParams;
-    SharedParams.bIsPushBased = true;
-
-    DOREPLIFETIME_WITH_PARAMS_FAST(AWorldPlayerState, PlayerDisplayName, SharedParams);
+    // FDoRepLifetimeParams SharedParams;
+    // SharedParams.bIsPushBased = true;
 
     return;
 }
 
-void AWorldPlayerState::SetPlayerDisplayName(const FString& InPlayerDisplayName)
+void AWorldPlayerState::SetPlayerName(const FString& S)
 {
     if (UNetStatics::IsSafeClient(this))
     {
@@ -30,8 +28,10 @@ void AWorldPlayerState::SetPlayerDisplayName(const FString& InPlayerDisplayName)
         return;
     }
 
-    this->PlayerDisplayName = InPlayerDisplayName;
-    MARK_PROPERTY_DIRTY_FROM_NAME(AWorldPlayerState, PlayerDisplayName, this);
+    Super::SetPlayerName(S);
+}
 
-    return;
+FString AWorldPlayerState::GetPlayerNameCustom(void) const
+{
+    return Super::GetPlayerNameCustom();
 }

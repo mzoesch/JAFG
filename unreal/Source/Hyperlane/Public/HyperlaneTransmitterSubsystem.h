@@ -4,10 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "WorldCore/JAFGWorldSubsystems.h"
-#include "HyperlaneTransmitter.h"
+#include "TransmittableData.h"
 
 #include "HyperlaneTransmitterSubsystem.generated.h"
 
+class UHyperlaneComponent;
 class FHyperlaneTransmitter;
 
 UCLASS()

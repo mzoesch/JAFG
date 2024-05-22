@@ -55,6 +55,9 @@ public:
     UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Slate")
     TSubclassOf<UWarningPopUpYesNo> WarningPopUpYesNoWidgetClass;
 
+    UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Slate")
+    TSubclassOf<UJAFGWidget> QuickSessionPreviewWidgetClass;
+
     UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "FrontEnd")
     TSubclassOf<UJAFGWidget> FrontEndWidgetClass;
 };

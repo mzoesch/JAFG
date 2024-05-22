@@ -67,18 +67,23 @@ public:
     auto SubscribeToChatVisibilityChanged(const FSlateVisibilityChangedSignature::FDelegate& Delegate) -> FDelegateHandle;
     auto UnSubscribeToChatVisibilityChanged(const FDelegateHandle& Handle) -> bool;
 
+    auto SubscribeToQuickSessionPreviewVisibilityChanged(const FSlateVisibilityChangedSignature::FDelegate& Delegate) -> FDelegateHandle;
+    auto UnSubscribeToQuickSessionPreviewVisibilityChanged(const FDelegateHandle& Handle) -> bool;
+
     auto SubscribeToChatHistoryLookup(const FChatHistoryLookupSignature::FDelegate& Delegate) -> FDelegateHandle;
     auto UnSubscribeToChatHistoryLookup(const FDelegateHandle& Handle) -> bool;
 
 private:
 
-    /** Obviously client only. */
+    /** Obviously local controller only. */
     FSlateVisibilityChangedSignature EscapeMenuVisibilityChangedDelegate;
-    /** Obviously client only. */
+    /** Obviously local controller only. */
     FSlateVisibilityChangedSignature DebugScreenVisibilityChangedDelegate;
-    /** Obviously client only. */
+    /** Obviously local controller only. */
     FSlateVisibilityChangedSignature ChatVisibilityChangedDelegate;
-    /** Obviously client only. */
+    /** Obviously local controller only. */
+    FSlateVisibilityChangedSignature OnQuickSessionPreviewVisibilityChangedDelegate;
+    /** Obviously local controller only. */
     FChatHistoryLookupSignature ChatHistoryLookupDelegate;
 
 protected:
@@ -96,6 +101,8 @@ protected:
     virtual void OnToggleEscapeMenu(const FInputActionValue& Value); friend UResumeEntryWidget;
     virtual void OnToggleDebugScreen(const FInputActionValue& Value);
     virtual void OnToggleChat(const FInputActionValue& Value); friend UChatMenu;
+    virtual void OnStartedQuickSessionPreview(const FInputActionValue& Value);
+    virtual void OnCompletedQuickSessionPreview(const FInputActionValue& Value);
     virtual void OnPreviousChatStdIn(const FInputActionValue& Value);
     virtual void OnNextChatStdIn(const FInputActionValue& Value);
 
@@ -108,9 +115,10 @@ private:
         void (AWorldPlayerController::* Method) (const FInputActionValue& Value)
     ) -> void;
 
-    bool bEscapeMenuVisible  = false;
-    bool bDebugScreenVisible = false;
-    bool bChatVisible        = false;
+    bool bEscapeMenuVisible          = false;
+    bool bDebugScreenVisible         = false;
+    bool bChatVisible                = false;
+    bool bQuickSessionPreviewVisible = false;
 
 #pragma endregion Enhanced Input
 
@@ -155,5 +163,5 @@ public:
     //////////////////////////////////////////////////////////////////////////
 
     FORCEINLINE auto GetWorldPlayerState(void) const -> AWorldPlayerState* { return this->GetPlayerState<AWorldPlayerState>(); }
-    FORCEINLINE auto GetDisplayName(void) const -> FString { return this->GetWorldPlayerState()->GetPlayerDisplayName(); }
+    FORCEINLINE auto GetDisplayName(void) const -> FString { return this->GetWorldPlayerState()->GetPlayerName(); }
 };

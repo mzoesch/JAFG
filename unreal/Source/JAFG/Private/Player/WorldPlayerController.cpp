@@ -87,6 +87,22 @@ bool AWorldPlayerController::UnSubscribeToChatVisibilityChanged(const FDelegateH
     return this->ChatVisibilityChangedDelegate.Remove(Handle);
 }
 
+FDelegateHandle AWorldPlayerController::SubscribeToQuickSessionPreviewVisibilityChanged(const FSlateVisibilityChangedSignature::FDelegate& Delegate)
+{
+    if (this->IsLocalController() == false)
+    {
+        LOG_FATAL(LogWorldChar, "Not a local controller.")
+        return FDelegateHandle();
+    }
+
+    return this->OnQuickSessionPreviewVisibilityChangedDelegate.Add(Delegate);
+}
+
+bool AWorldPlayerController::UnSubscribeToQuickSessionPreviewVisibilityChanged(const FDelegateHandle& Handle)
+{
+    return this->OnQuickSessionPreviewVisibilityChangedDelegate.Remove(Handle);
+}
+
 FDelegateHandle AWorldPlayerController::SubscribeToChatHistoryLookup(const FChatHistoryLookupSignature::FDelegate& Delegate)
 {
     if (this->IsLocalController() == false)
@@ -181,6 +197,12 @@ void AWorldPlayerController::BindAction(const FString& ActionName, UEnhancedInpu
         this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldPlayerController::OnToggleChat);
     }
 
+    else if (ActionName == InputActions::ToggleQuickSessionPreview)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldPlayerController::OnStartedQuickSessionPreview);
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Completed, &AWorldPlayerController::OnCompletedQuickSessionPreview);
+    }
+
     else if (ActionName == InputActions::PreviousChatStdIn)
     {
         this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldPlayerController::OnPreviousChatStdIn);
@@ -236,6 +258,36 @@ void AWorldPlayerController::OnToggleChat(const FInputActionValue& Value)
     this->ShowMouseCursor(this->bChatVisible);
 
     this->ChatVisibilityChangedDelegate.Broadcast(this->bChatVisible);
+
+    return;
+}
+
+void AWorldPlayerController::OnStartedQuickSessionPreview(const FInputActionValue& Value)
+{
+    if (this->OnQuickSessionPreviewVisibilityChangedDelegate.IsBound() == false)
+    {
+        LOG_FATAL(LogWorldChar, "No subscribers to Quick Session Preview Visibility Changed.")
+        return;
+    }
+
+    this->bQuickSessionPreviewVisible = true;
+
+    this->OnQuickSessionPreviewVisibilityChangedDelegate.Broadcast(this->bQuickSessionPreviewVisible);
+
+    return;
+}
+
+void AWorldPlayerController::OnCompletedQuickSessionPreview(const FInputActionValue& Value)
+{
+    if (this->OnQuickSessionPreviewVisibilityChangedDelegate.IsBound() == false)
+    {
+        LOG_FATAL(LogWorldChar, "No subscribers to Quick Session Preview Visibility Changed.")
+        return;
+    }
+
+    this->bQuickSessionPreviewVisible = false;
+
+    this->OnQuickSessionPreviewVisibilityChangedDelegate.Broadcast(this->bQuickSessionPreviewVisible);
 
     return;
 }

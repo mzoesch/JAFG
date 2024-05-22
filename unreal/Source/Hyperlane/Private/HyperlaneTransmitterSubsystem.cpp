@@ -3,6 +3,7 @@
 #include "HyperlaneTransmitterSubsystem.h"
 
 #include "CommonNetworkStatics.h"
+#include "HyperlaneTransmitter.h"
 
 UHyperlaneTransmitterSubsystem::UHyperlaneTransmitterSubsystem(void) : Super()
 {
@@ -14,10 +15,6 @@ UHyperlaneTransmitterSubsystem::~UHyperlaneTransmitterSubsystem(void)
     if (this->HyperlaneTransmitter)
     {
         delete this->HyperlaneTransmitter;
-    }
-    else
-    {
-        LOG_WARNING(LogHyperlane, "Hyperlane Transmitter was invalid. Could not destory in a controlled and safe manner.")
     }
 
     return;

@@ -38,7 +38,8 @@ protected:
 
 private:
 
+    TObjectPtr<UJAFGWidget> QuickSessionPreview;
+    TObjectPtr<UJAFGWidget> ChatMenu;
     TObjectPtr<UEscapeMenu> EscapeMenu;
     TObjectPtr<UJAFGWidget> DebugScreen;
-    TObjectPtr<UJAFGWidget> ChatMenu;
 };

@@ -295,7 +295,7 @@ void UServerCommandSubsystem::OnChangeDisplayNameCommand(SERVER_COMMAND_SIG) con
     DECLARE_OWNER_AS_CTRL_TARGET
 
     const FString OldName = Target->GetDisplayName();
-    Target->GetWorldPlayerState()->SetPlayerDisplayName(InArgs[0]);
+    this->GetWorld()->GetAuthGameMode()->ChangeName(Target, InArgs[0], true);
 
     OutReturnCode = ECommandReturnCodes::SuccessBroadcastWithAuthority;
     OutResponse   = FString::Printf(TEXT("[%s] is now known as [%s]."), *OldName, *InArgs[0]);
