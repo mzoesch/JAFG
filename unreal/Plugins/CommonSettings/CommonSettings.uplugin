@@ -2,22 +2,28 @@
 	"FileVersion": 3,
 	"Version": 1,
 	"VersionName": "1.0",
-	"FriendlyName": "JAFGGlobalLogging",
-	"Description": "Contains global logging logic for JAFG.",
+	"FriendlyName": "CommonSettings",
+	"Description": "Contains a common setting interface with a connection to widgets.",
 	"Category": "Other",
 	"CreatedBy": "mzoesch",
 	"CreatedByURL": "https://www.zoeschinger.com/",
 	"DocsURL": "",
 	"MarketplaceURL": "",
-	"CanContainContent": false,
+	"CanContainContent": true,
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
 	"Installed": false,
 	"Modules": [
 		{
-			"Name": "JAFGGlobalLogging",
+			"Name": "CommonSettings",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{
+			"Name" : "JAFGGlobalLogging",
+			"Enabled": true
 		}
 	]
 }

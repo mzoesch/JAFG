@@ -6,13 +6,13 @@
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
 
-class FJAFGGlobalLoggingModule final : public IModuleInterface
+class FCommonSettingsModule final : public IModuleInterface
 {
 
 public:
 
-    // IModuleInterface interface
+    // IModuleInterface implementation
     virtual void StartupModule(void) override;
     virtual void ShutdownModule(void) override;
-    // ~IModuleInterface interface
+    // ~IModuleInterface implementation
 };

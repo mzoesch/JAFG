@@ -1,26 +1,30 @@
-﻿// Copyright 2024 mzoesch. All rights reserved.
+﻿// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright 2024 mzoesch. All rights reserved.
 
 using UnrealBuildTool;
 
-public class JAFGSettings : ModuleRules
+public class CommonSettings : ModuleRules
 {
-    public JAFGSettings(ReadOnlyTargetRules Target) : base(Target)
+    public CommonSettings(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        PublicDependencyModuleNames.AddRange(
+        PublicIncludePaths.AddRange(
         new string[]
         {
-            "Core",
-            "DeveloperSettings",
-            "JAFGSlateCore",
+        }
+        );
+
+        PrivateIncludePaths.AddRange(
+        new string[]
+        {
         }
         );
 
         PublicDependencyModuleNames.AddRange(
         new string[]
         {
-            "CommonSettings",
+            "Core",
         }
         );
 
@@ -29,6 +33,8 @@ public class JAFGSettings : ModuleRules
         {
             "CoreUObject",
             "Engine",
+            "Slate",
+            "SlateCore",
         }
         );
 
@@ -36,6 +42,12 @@ public class JAFGSettings : ModuleRules
         new string[]
         {
             "JAFGGlobalLogging",
+        }
+        );
+
+        DynamicallyLoadedModuleNames.AddRange(
+        new string[]
+        {
         }
         );
     }

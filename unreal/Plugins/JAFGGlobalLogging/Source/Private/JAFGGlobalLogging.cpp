@@ -1,20 +1,18 @@
 ﻿// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright 2024 mzoesch. All rights reserved.
 
 #include "JAFGGlobalLogging.h"
 
 #define LOCTEXT_NAMESPACE "FJAFGGlobalLoggingModule"
 
-void FJAFGGlobalLoggingModule::StartupModule()
+void FJAFGGlobalLoggingModule::StartupModule(void)
 {
-	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
 }
 
-void FJAFGGlobalLoggingModule::ShutdownModule()
+void FJAFGGlobalLoggingModule::ShutdownModule(void)
 {
-	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
-	// we call this function before unloading the module.
 }
 
 #undef LOCTEXT_NAMESPACE
-	
+
 IMPLEMENT_MODULE(FJAFGGlobalLoggingModule, JAFGGlobalLogging)

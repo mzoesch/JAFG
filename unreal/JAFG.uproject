@@ -49,6 +49,10 @@
 			]
 		},
 		{
+			"Name": "CommonSettings",
+			"Enabled": true
+		},
+		{
 			"Name": "JAFGGlobalLogging",
 			"Enabled": true
 		}
