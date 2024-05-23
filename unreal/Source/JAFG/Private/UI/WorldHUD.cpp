@@ -35,6 +35,18 @@ void AWorldHUD::BeginPlay(void)
 
     const UJAFGSlateSettings* SlateSettings = GetDefault<UJAFGSlateSettings>();
 
+    // Crosshair
+    //////////////////////////////////////////////////////////////////////////
+    {
+        if (SlateSettings->CrosshairWidgetClass == nullptr)
+        {
+            LOG_FATAL(LogCommonSlate, "Crosshair Widget Class is not set in project settings.")
+            return;
+        }
+        this->Crosshair = CreateWidget<UJAFGWidget>(this->GetWorld(), SlateSettings->CrosshairWidgetClass);
+        this->Crosshair->AddToViewport();
+    }
+
     // Quick Session Preview
     //////////////////////////////////////////////////////////////////////////
     {

@@ -20,16 +20,10 @@ public:
     FORCEINLINE auto GetWorldPlayerArray(void) const -> TArray<TObjectPtr<AWorldPlayerState>>
     {
         TArray<TObjectPtr<AWorldPlayerState>> OutPlayerArray;
-        int Index = 0;
-        while (Index++ < 12)
+        for (APlayerState* UncastedState : this->PlayerArray)
         {
-            for (APlayerState* UncastedState : this->PlayerArray)
-            {
-                OutPlayerArray.Add(Cast<AWorldPlayerState>(UncastedState));
-            }
+            OutPlayerArray.Add(Cast<AWorldPlayerState>(UncastedState));
         }
-
-
 
         return OutPlayerArray;
     }

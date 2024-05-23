@@ -46,9 +46,6 @@ void UQuickSessionPreviewWidget::UpdateWidget(void)
 {
     this->HB_SessionPreviewContainer->ClearChildren();
 
-    constexpr uint8 MaxHorizontal = 3;
-    constexpr uint8 MaxVertical   = 10;
-
     /*
      * First adding vertically and then horizontally.
      */
@@ -56,14 +53,17 @@ void UQuickSessionPreviewWidget::UpdateWidget(void)
     int32 Index = 0;
     for (const AWorldPlayerState* State : this->GetWorld()->GetGameState<AWorldGameState>()->GetWorldPlayerArray())
     {
-        if (Index >= MaxHorizontal * MaxVertical)
+        constexpr uint8 MaxVertical = 10;
+
+        /* Other players will just not be seen in the menu then. */
+        if (constexpr uint8 MaxHorizontal = 3; Index >= MaxHorizontal * MaxVertical)
         {
             break;
         }
 
         if (Index % MaxVertical == 0)
         {
-            // Spacer between horizontal boxes.
+            /* Spacer between horizontal boxes. */
             if (this->HB_SessionPreviewContainer->GetAllChildren().IsEmpty() == false)
             {
                 USpacer* Spacer = WidgetTree->ConstructWidget<USpacer>(USpacer::StaticClass());
@@ -73,25 +73,30 @@ void UQuickSessionPreviewWidget::UpdateWidget(void)
 
             UBorder* Border = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
             FSlateBrush Brush = FSlateBrush();
-            Brush.DrawAs = ESlateBrushDrawType::Type::RoundedBox;
-            Brush.OutlineSettings.Width = 2.0f;
-            Brush.OutlineSettings.Color = FLinearColor(0.0f, 0.0f, 0.0f, 1.0f);
-            Brush.OutlineSettings.CornerRadii = FVector4(0.0f, 0.0f, 0.0f, 0.0f);
+            Brush.DrawAs                       = ESlateBrushDrawType::Type::RoundedBox;
+            Brush.TintColor                    = FLinearColor(0.02f, 0.02f, 0.02f, 0.5f);
+            Brush.OutlineSettings.Width        = 2.0f;
+            Brush.OutlineSettings.Color        = FLinearColor(0.0f, 0.0f, 0.0f, 1.0f);
+            Brush.OutlineSettings.CornerRadii  = FVector4(0.0f, 0.0f, 0.0f, 0.0f);
             Brush.OutlineSettings.RoundingType = ESlateBrushRoundingType::Type::FixedRadius;
-            Brush.TintColor = FLinearColor(0.02f, 0.02f, 0.02f, 0.5f);
             Border->SetBrush(Brush);
             Border->SetPadding(FMargin(5.0f));
             this->HB_SessionPreviewContainer->AddChild(Border);
 
-            Cast<UBorder>(this->HB_SessionPreviewContainer->GetChildAt(this->HB_SessionPreviewContainer->GetChildrenCount() - 1))->AddChild(WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass()));
+            /* The vertical box that actually contains all the players. */
+            Cast<UBorder>(
+                this->HB_SessionPreviewContainer->GetChildAt(this->HB_SessionPreviewContainer->GetChildrenCount() - 1)
+            )->AddChild(WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass()));
 
-            /* min width */
+            /* We add a min width. If all player names are very short, it would look a little bit silly without this. */
             USpacer* Spacer = WidgetTree->ConstructWidget<USpacer>(USpacer::StaticClass());
             Spacer->SetSize(FVector2D(250.0f, 0.0f));
-            Cast<UPanelWidget>(Cast<UPanelWidget>(this->HB_SessionPreviewContainer->GetChildAt(this->HB_SessionPreviewContainer->GetChildrenCount() - 1))->GetChildAt(
-                               Cast<UPanelWidget>(this->HB_SessionPreviewContainer->GetChildAt(this->HB_SessionPreviewContainer->GetChildrenCount() - 1)
-            )->GetChildrenCount() - 1)
-                )->AddChild(Spacer);
+            Cast<UPanelWidget>(
+                    Cast<UPanelWidget>(this->HB_SessionPreviewContainer->GetChildAt(this->HB_SessionPreviewContainer->GetChildrenCount() - 1)
+                )->GetChildAt(
+                    Cast<UPanelWidget>(this->HB_SessionPreviewContainer->GetChildAt(this->HB_SessionPreviewContainer->GetChildrenCount() - 1)
+                )->GetChildrenCount() - 1)
+                    )->AddChild(Spacer);
         }
 
         UHorizontalBox* PlayerBox = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
@@ -112,10 +117,11 @@ void UQuickSessionPreviewWidget::UpdateWidget(void)
         PlayerPing->SetFont(SharedFont);
         PlayerBox->AddChild(PlayerPing);
 
-        // Cast<UPanelWidget>(this->HB_SessionPreviewContainer->GetChildAt(this->HB_SessionPreviewContainer->GetChildrenCount() - 1))->AddChild(PlayerBox);
 
-        Cast<UPanelWidget>(Cast<UPanelWidget>(this->HB_SessionPreviewContainer->GetChildAt(this->HB_SessionPreviewContainer->GetChildrenCount() - 1))->GetChildAt(
-                    Cast<UPanelWidget>(this->HB_SessionPreviewContainer->GetChildAt(this->HB_SessionPreviewContainer->GetChildrenCount() - 1)
+        Cast<UPanelWidget>(
+                Cast<UPanelWidget>(this->HB_SessionPreviewContainer->GetChildAt(this->HB_SessionPreviewContainer->GetChildrenCount() - 1)
+            )->GetChildAt(
+                Cast<UPanelWidget>(this->HB_SessionPreviewContainer->GetChildAt(this->HB_SessionPreviewContainer->GetChildrenCount() - 1)
         )->GetChildrenCount() - 1)
              )->AddChild(PlayerBox);
 
