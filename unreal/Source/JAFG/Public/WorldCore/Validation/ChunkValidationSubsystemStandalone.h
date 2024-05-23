@@ -18,7 +18,7 @@ class UChunkGenerationSubsystem;
  * the editor simulation mode as well.
  */
 UCLASS(NotBlueprintable)
-class JAFG_API UChunkValidationSubsystemStandalone final : public UJAFGTickableWorldSubsystem
+class JAFG_API UChunkValidationSubsystemStandalone final : public UJAFGTickableWorldSubsystemNoDev
 {
     GENERATED_BODY()
 

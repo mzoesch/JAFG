@@ -11,8 +11,8 @@
 class UHyperlaneComponent;
 class FHyperlaneTransmitter;
 
-UCLASS()
-class HYPERLANE_API UHyperlaneTransmitterSubsystem : public UJAFGWorldSubsystem
+UCLASS(NotBlueprintable)
+class HYPERLANE_API UHyperlaneTransmitterSubsystem : public UJAFGWorldSubsystemNoDev
 {
     GENERATED_BODY()
 

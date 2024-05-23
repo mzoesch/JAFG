@@ -17,7 +17,7 @@ class UChunkGenerationSubsystem;
  * This subsystem is therefore only being created if the game is running in a listen server mode.
  */
 UCLASS(NotBlueprintable)
-class JAFG_API UChunkValidationSubsystemLitSv : public UJAFGTickableWorldSubsystem
+class JAFG_API UChunkValidationSubsystemLitSv : public UJAFGTickableWorldSubsystemNoDev
 {
     GENERATED_BODY()
 

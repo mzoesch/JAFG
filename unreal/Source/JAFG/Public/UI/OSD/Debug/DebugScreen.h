@@ -60,6 +60,9 @@ protected:
     FString GetSectionFPS( /* void */ ) const;
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "JAFG|DebugScreen")
+    FString GetSectionNet( /* void */ ) const;
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "JAFG|DebugScreen")
     FString GetSectionClientCharacterLocation( /* void */ ) const;
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "JAFG|DebugScreen")

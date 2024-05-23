@@ -24,7 +24,7 @@ class UChunkGenerationSubsystem;
  * players are spread out and each player has completly different chunks loaded).
  */
 UCLASS(NotBlueprintable)
-class JAFG_API UChunkValidationSubsystemDedSv : public UJAFGTickableWorldSubsystem
+class JAFG_API UChunkValidationSubsystemDedSv : public UJAFGTickableWorldSubsystemNoDev
 {
     GENERATED_BODY()
 

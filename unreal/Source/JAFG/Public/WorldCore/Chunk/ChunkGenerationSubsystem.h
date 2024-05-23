@@ -23,7 +23,7 @@ struct FClientChunk
 
 /** Loads and unloads chunk into / from the UWorld based on what a current validation subsystem has determined. */
 UCLASS(NotBlueprintable)
-class JAFG_API UChunkGenerationSubsystem final : public UJAFGTickableWorldSubsystem
+class JAFG_API UChunkGenerationSubsystem final : public UJAFGTickableWorldSubsystemNoDev
 {
     GENERATED_BODY()
 

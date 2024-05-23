@@ -4,6 +4,7 @@
 
 #include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
 #include "TransmittableData.h"
+#include "WorldCore/JAFGWorldSubsystems.h"
 
 UMyHyperlaneComponent::UMyHyperlaneComponent(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -14,8 +15,17 @@ void UMyHyperlaneComponent::BeginPlay(void)
 {
     Super::BeginPlay();
 
+    if (WorldStatics::IsInDevWorld(this))
+    {
+        /* We are in the development world. The chunk generation subsystems are not active here. */
+        return;
+    }
+
     this->ChunkGenerationSubsystem = this->GetWorld()->GetSubsystem<UChunkGenerationSubsystem>();
-    check( this->ChunkGenerationSubsystem )
+    if (this->ChunkGenerationSubsystem == nullptr)
+    {
+        LOG_FATAL(LogHyperlane, "Failed to get Chunk Generation Subsystem.")
+    }
 
     return;
 }

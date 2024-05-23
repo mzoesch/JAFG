@@ -1,8 +1,26 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
+#include "ToolContextInterfaces.h"
 #include "WorldCore/JAFGWorldSubsystems.h"
 
 #include "WorldCore/RegisteredWorldNames.h"
+
+bool WorldStatics::IsInGameWorld(const UObject* Outer)
+{
+    return
+        Outer->GetWorld()->GetName() == RegisteredWorlds::World
+     || Outer->GetWorld()->GetName() == RegisteredWorlds::Dev;
+}
+
+bool WorldStatics::IsInGameWorldExcludingDev(const UObject* Outer)
+{
+    return WorldStatics::IsInGameWorld(Outer) && Outer->GetWorld()->GetName() != RegisteredWorlds::Dev;
+}
+
+bool WorldStatics::IsInDevWorld(const UObject* Outer)
+{
+    return Outer->GetWorld()->GetName() == RegisteredWorlds::Dev;
+}
 
 UJAFGWorldSubsystem::UJAFGWorldSubsystem(void) : Super()
 {
@@ -16,12 +34,22 @@ bool UJAFGWorldSubsystem::ShouldCreateSubsystem(UObject* Outer) const
         return false;
     }
 
-    if (Outer->GetWorld()->GetName() == RegisteredWorlds::World)
+    return WorldStatics::IsInGameWorld(Outer);
+}
+
+UJAFGWorldSubsystemNoDev::UJAFGWorldSubsystemNoDev(void) : Super()
+{
+    return;
+}
+
+bool UJAFGWorldSubsystemNoDev::ShouldCreateSubsystem(UObject* Outer) const
+{
+    if (Super::ShouldCreateSubsystem(Outer) == false)
     {
-        return true;
+        return false;
     }
 
-    return false;
+    return WorldStatics::IsInDevWorld(Outer) == false;
 }
 
 // --------------------------------------------------------------------------
@@ -56,12 +84,7 @@ bool UJAFGTickableWorldSubsystem::ShouldCreateSubsystem(UObject* Outer) const
         return false;
     }
 
-    if (Outer->GetWorld()->GetName() == RegisteredWorlds::World)
-    {
-        return true;
-    }
-
-    return false;
+    return WorldStatics::IsInGameWorld(Outer);
 }
 
 void UJAFGTickableWorldSubsystem::Tick(const float DeltaTime)
@@ -89,4 +112,19 @@ void UJAFGTickableWorldSubsystem::Tick(const float DeltaTime)
     }
 
     return;
+}
+
+UJAFGTickableWorldSubsystemNoDev::UJAFGTickableWorldSubsystemNoDev(void) : Super()
+{
+    return;
+}
+
+bool UJAFGTickableWorldSubsystemNoDev::ShouldCreateSubsystem(UObject* Outer) const
+{
+    if (Super::ShouldCreateSubsystem(Outer) == false)
+    {
+        return false;
+    }
+
+    return WorldStatics::IsInDevWorld(Outer) == false;
 }

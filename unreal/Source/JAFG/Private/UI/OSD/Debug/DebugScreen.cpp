@@ -131,6 +131,21 @@ FString UDebugScreen::GetSectionFPS(void) const
     );
 }
 
+FString UDebugScreen::GetSectionNet(void) const
+{
+#if WITH_EDITOR
+    if (GEditor->IsSimulateInEditorInProgress())
+    {
+        return FString::Printf(TEXT("Net: N/A ms [REASON: Editor Simulation]"));
+    }
+#endif /* WITH_EDITOR */
+
+    return FString::Printf(
+        TEXT("Net: %d ms"),
+        static_cast<int32>(this->GetOwningPlayerState<AWorldPlayerState>()->GetPingInMilliseconds())
+    );
+}
+
 FString UDebugScreen::GetSectionClientCharacterLocation(void) const
 {
     FVector Location = FVector::ZeroVector;

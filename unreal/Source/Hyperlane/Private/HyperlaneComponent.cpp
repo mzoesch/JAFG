@@ -6,6 +6,7 @@
 #include "Definitions.h"
 #include "HyperlaneTransmitterSubsystem.h"
 #include "HyperlaneWorker.h"
+#include "WorldCore/JAFGWorldSubsystems.h"
 
 UHyperlaneComponent::UHyperlaneComponent(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -15,6 +16,13 @@ UHyperlaneComponent::UHyperlaneComponent(const FObjectInitializer& ObjectInitial
 void UHyperlaneComponent::BeginPlay(void)
 {
     Super::BeginPlay();
+
+    if (WorldStatics::IsInDevWorld(this))
+    {
+        /* We are in the development world. The chunk generation subsystems are not active here. */
+        this->Deactivate();
+        return;
+    }
 
     if (UNetStatics::IsSafeServer(this))
     {

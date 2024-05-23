@@ -17,7 +17,7 @@ class UChunkGenerationSubsystem;
  * This subsystem is therefore only being created if the game is running as a client conneted to some form of server.
  */
 UCLASS(NotBlueprintable)
-class JAFG_API UChunkValidationSubsystemCl : public UJAFGTickableWorldSubsystem
+class JAFG_API UChunkValidationSubsystemCl : public UJAFGTickableWorldSubsystemNoDev
 {
     GENERATED_BODY()
 

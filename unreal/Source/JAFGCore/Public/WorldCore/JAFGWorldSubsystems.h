@@ -7,11 +7,22 @@
 
 #include "JAFGWorldSubsystems.generated.h"
 
+namespace WorldStatics
+{
+
+JAFGCORE_API auto IsInGameWorld(const UObject* Outer) -> bool;
+JAFGCORE_API auto IsInGameWorldExcludingDev(const UObject* Outer) -> bool;
+JAFGCORE_API auto IsInDevWorld(const UObject* Outer) -> bool;
+
+}
+
 /**
  * A subsystem that only exists in a real game world.
  * Meaning a world where we generate chunks, the user can interact with the world, etc.
  *
- * Not in the menu, transition, or loading screen world, or other development worlds.
+ * Not in the menu, transition, or loading screen world.
+ * Note that this maps *includes* the development world. Use UJAFGWorldSubsystemNoDev if this subsystem should
+ * not exist in the development world.
  */
 UCLASS(Abstract)
 class JAFGCORE_API UJAFGWorldSubsystem : public UWorldSubsystem
@@ -27,11 +38,27 @@ public:
     // ~UWorldSubsystem implementation
 };
 
+UCLASS(Abstract)
+class JAFGCORE_API UJAFGWorldSubsystemNoDev : public UJAFGWorldSubsystem
+{
+    GENERATED_BODY()
+
+public:
+
+    UJAFGWorldSubsystemNoDev();
+
+    // UWorldSubsystem implementation
+    virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
+    // ~UWorldSubsystem implementation
+};
+
 /**
  * A subsystem that only exists in a real game world.
  * Meaning a world where we generate chunks, the user can interact with the world, etc.
  *
- * Not in the menu, transition, or loading screen world, or other development worlds.
+ * Not in the menu, transition, or loading screen world.
+ * Note that this maps *includes* the development world. Use UJAFGTickableWorldSubsystemNoDev if this subsystem should
+ * not exist in the development world.
  */
 UCLASS(Abstract)
 class JAFGCORE_API UJAFGTickableWorldSubsystem : public UTickableWorldSubsystem
@@ -71,4 +98,18 @@ private:
     /** After how many seconds, the Tick function should be called. A value of zero means every tick. */
     float TickInterval;
     float TimeSinceLastTick;
+};
+
+UCLASS(Abstract)
+class JAFGCORE_API UJAFGTickableWorldSubsystemNoDev : public UJAFGTickableWorldSubsystem
+{
+    GENERATED_BODY()
+
+public:
+
+    UJAFGTickableWorldSubsystemNoDev();
+
+    // UWorldSubsystem implementation
+    virtual auto ShouldCreateSubsystem(UObject* Outer) const -> bool override;
+    // ~UWorldSubsystem implementation
 };

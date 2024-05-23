@@ -13,5 +13,6 @@ namespace RegisteredWorlds
 
 extern inline const FString FrontEnd = TEXT("L_FrontEnd");
 extern inline const FString World    = TEXT("L_World");
+extern inline const FString Dev      = TEXT("L_Dev");
 
 }
