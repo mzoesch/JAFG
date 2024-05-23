@@ -5,7 +5,7 @@
 #include "ChatComponent.h"
 #include "ChatMenu.h"
 #include "CommonNetworkStatics.h"
-#include "Definitions.h"
+#include "JAFGLogDefs.h"
 #include "LocalSessionSupervisorSubsystem.h"
 
 #define OWNING_CHAT_COMPONENT                                                                       \

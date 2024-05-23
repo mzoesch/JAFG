@@ -1,28 +1,30 @@
-﻿// Copyright 2024 mzoesch. All rights reserved.
+﻿// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright 2024 mzoesch. All rights reserved.
 
 using UnrealBuildTool;
 
-public class Hyperlane : ModuleRules
+public class JAFGGlobalLogging : ModuleRules
 {
-    public Hyperlane(ReadOnlyTargetRules Target) : base(Target)
+    public JAFGGlobalLogging(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        PublicDependencyModuleNames.AddRange(
+        PublicIncludePaths.AddRange(
         new string[]
         {
-            "Core",
-            "Sockets",
-            "NetCore",
-            "Networking",
+        }
+        );
+
+        PrivateIncludePaths.AddRange(
+        new string[]
+        {
         }
         );
 
         PublicDependencyModuleNames.AddRange(
         new string[]
         {
-            "JAFGCore",
-            "JAFGNetCore",
+            "Core",
         }
         );
 
@@ -34,10 +36,9 @@ public class Hyperlane : ModuleRules
         }
         );
 
-        PrivateDependencyModuleNames.AddRange(
+        DynamicallyLoadedModuleNames.AddRange(
         new string[]
         {
-            "JAFGGlobalLogging",
         }
         );
     }

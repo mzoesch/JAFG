@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Definitions.h"
+#include "JAFGLogDefs.h"
 #include "System/TypeDefs.h"
 #include "Serialization/BufferArchive.h"
 #include "WorldCore/WorldTypes.h"

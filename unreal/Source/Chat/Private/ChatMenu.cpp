@@ -14,6 +14,7 @@
 #include "Input/JAFGEditableTextBlock.h"
 #include "Input/JAFGInputSubsystem.h"
 #include "Player/WorldPlayerController.h"
+#include "JAFGLogDefs.h"
 
 #define OWNING_PLAYER_CONTROLLER                             \
     Cast<AWorldPlayerController>(this->GetOwningPlayer())

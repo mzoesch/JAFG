@@ -2,7 +2,7 @@
 
 #include "HyperlaneTransmitter.h"
 
-#include "Definitions.h"
+#include "JAFGLogDefs.h"
 #include "HyperlaneTransmitterSubsystem.h"
 #include "Common/TcpSocketBuilder.h"
 #include "Interfaces/IPv4/IPv4Address.h"

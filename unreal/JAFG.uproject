@@ -10,11 +10,6 @@
 			"LoadingPhase": "Default"
 		},
 		{
-			"Name": "JAFGLogging",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		},
-		{
 			"Name": "JAFGSettings",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
@@ -52,6 +47,10 @@
 			"TargetAllowList": [
 				"Editor"
 			]
+		},
+		{
+			"Name": "JAFGGlobalLogging",
+			"Enabled": true
 		}
 	]
 }

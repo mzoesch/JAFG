@@ -15,7 +15,6 @@ public class JAFGSlateCore : ModuleRules
             "Slate",
             "SlateCore",
             "UMG",
-            "JAFGLogging",
         }
         );
 
@@ -26,6 +25,13 @@ public class JAFGSlateCore : ModuleRules
             "Engine",
             "JAFGSettings",
             "InputCore",
+        }
+        );
+
+        PrivateDependencyModuleNames.AddRange(
+        new string[]
+        {
+            "JAFGGlobalLogging",
         }
         );
     }

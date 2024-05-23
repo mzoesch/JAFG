@@ -38,7 +38,6 @@ public class JAFG : ModuleRules
             "Chat",
             "Hyperlane",
             "JAFGCore",
-            "JAFGLogging",
             "JAFGSettings",
             "JAFGSlateCore",
             "JAFGNetCore",
@@ -60,6 +59,13 @@ public class JAFG : ModuleRules
             "Sockets",
             "NetCore",
             "Networking",
+        }
+        );
+
+        PrivateDependencyModuleNames.AddRange(
+        new string[]
+        {
+            "JAFGGlobalLogging",
         }
         );
 

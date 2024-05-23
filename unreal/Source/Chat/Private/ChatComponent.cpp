@@ -5,10 +5,9 @@
 #include "ChatMenu.h"
 #include "ClientCommandSubsystem.h"
 #include "CommonChatStatics.h"
-#include "Definitions.h"
+#include "JAFGLogDefs.h"
 #include "ServerCommandSubsystem.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
-#include "Kismet/GameplayStatics.h"
 #include "Player/WorldPlayerController.h"
 
 UChatComponent::UChatComponent(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)

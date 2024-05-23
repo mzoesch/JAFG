@@ -41,5 +41,11 @@
     Commonly used extern modules headers.
 ----------------------------------------------------------------------------*/
 
-#include "JAFGLogging/Public/Definitions.h"
 #include "JAFGNetCore/Public/CommonNetworkStatics.h"
+
+
+/*----------------------------------------------------------------------------
+    Commonly used extern plugins headers.
+----------------------------------------------------------------------------*/
+
+#include "JAFGLogDefs.h"

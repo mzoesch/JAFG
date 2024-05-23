@@ -21,7 +21,6 @@ public class JAFGTarget : TargetRules
             "Chat",
             "Hyperlane",
             "JAFGCore",
-            "JAFGLogging",
             "JAFGNetCore",
             "JAFGSettings",
             "JAFGSlateCore",

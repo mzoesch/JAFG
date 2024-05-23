@@ -2,7 +2,7 @@
 
 #include "HyperlaneWorker.h"
 
-#include "Definitions.h"
+#include "JAFGLogDefs.h"
 #include "HyperlaneComponent.h"
 #include "HyperlaneTransmitter.h"
 #include "IPAddressAsyncResolve.h"

@@ -24,7 +24,6 @@ public class Chat : ModuleRules
         new string[]
         {
             "JAFGCore",
-            "JAFGLogging",
             "JAFGSlateCore",
         }
         );
@@ -53,6 +52,13 @@ public class Chat : ModuleRules
             "JAFG",
             "JAFGSettings",
             "JAFGNetCore",
+        }
+        );
+
+        PrivateDependencyModuleNames.AddRange(
+        new string[]
+        {
+            "JAFGGlobalLogging",
         }
         );
     }

@@ -3,7 +3,7 @@
 #include "HyperlaneComponent.h"
 
 #include "CommonNetworkStatics.h"
-#include "Definitions.h"
+#include "JAFGLogDefs.h"
 #include "HyperlaneTransmitterSubsystem.h"
 #include "HyperlaneWorker.h"
 #include "WorldCore/JAFGWorldSubsystems.h"

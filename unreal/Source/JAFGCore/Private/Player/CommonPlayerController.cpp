@@ -2,7 +2,7 @@
 
 #include "Player/CommonPlayerController.h"
 
-#include "Definitions.h"
+#include "JAFGLogDefs.h"
 
 ACommonPlayerController::ACommonPlayerController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {

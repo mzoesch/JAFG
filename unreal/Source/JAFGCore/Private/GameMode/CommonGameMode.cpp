@@ -2,10 +2,8 @@
 
 #include "GameModes/CommonGameMode.h"
 
-#include "Definitions.h"
-#include "GameFramework/GameUserSettings.h"
+#include "JAFGLogDefs.h"
 #include "Player/CommonPlayerController.h"
-#include "Widgets/SViewport.h"
 
 ACommonGameMode::ACommonGameMode(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {

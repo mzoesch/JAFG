@@ -2,7 +2,7 @@
 
 #include "LocalSessionSupervisorSubsystem.h"
 
-#include "Definitions.h"
+#include "JAFGLogDefs.h"
 #include "Interfaces/OnlineSessionInterface.h"
 #include "OnlineSubsystemUtils.h"
 #include "Kismet/GameplayStatics.h"

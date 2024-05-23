@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "Definitions.h"
+#include "JAFGLogDefs.h"
 
 #include "JAFGWidget.generated.h"
 

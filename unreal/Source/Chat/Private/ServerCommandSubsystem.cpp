@@ -4,7 +4,7 @@
 
 #include "ChatComponent.h"
 #include "CommonNetworkStatics.h"
-#include "Definitions.h"
+#include "JAFGLogDefs.h"
 #include "WorldCore/WorldCharacter.h"
 
 #define OWNING_SESSION                                                          \
