@@ -6,6 +6,7 @@
 #include "ChatMenu.h"
 #include "CommonNetworkStatics.h"
 #include "Definitions.h"
+#include "LocalSessionSupervisorSubsystem.h"
 
 #define OWNING_CHAT_COMPONENT                                                                       \
     GEngine->GetFirstLocalPlayerController(this->GetWorld())->GetComponentByClass<UChatComponent>()
@@ -101,13 +102,14 @@ void UClientCommandSubsystem::ExecuteCommand(const FClientCommand& Command, cons
 
 void UClientCommandSubsystem::InitializeAllCommands(void)
 {
-    DECLARE_CLIENT_COMMAND("help", OnHelpCommand)
+    DECLARE_CLIENT_COMMAND("help",  OnHelpCommand)
     DECLARE_CLIENT_COMMAND("clear", OnChatClearCommand)
+    DECLARE_CLIENT_COMMAND("quit",  OnQuitCommand)
 
     return;
 }
 
-void UClientCommandSubsystem::OnHelpCommand(const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const
+void UClientCommandSubsystem::OnHelpCommand(CLIENT_COMMAND_SIG) const
 {
     for (const TPair<FClientCommand, FClientCommandCallback>& Pair : this->ClientCommands)
     {
@@ -120,9 +122,20 @@ void UClientCommandSubsystem::OnHelpCommand(const TArray<FString>& InArgs, Comma
     return;
 }
 
-void UClientCommandSubsystem::OnChatClearCommand(const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const
+void UClientCommandSubsystem::OnChatClearCommand(CLIENT_COMMAND_SIG) const
 {
     OWNING_CHAT_COMPONENT->GetSafeChatMenu()->ClearAllChatEntries();
+
+    OutReturnCode = ECommandReturnCodes::SuccessNoResponse;
+    OutResponse   = L"";
+
+    return;
+}
+
+void UClientCommandSubsystem::OnQuitCommand(CLIENT_COMMAND_SIG) const
+{
+    ULocalSessionSupervisorSubsystem* LSSSS = this->GetWorld()->GetGameInstance()->GetSubsystem<ULocalSessionSupervisorSubsystem>();
+    LSSSS->LeaveSession();
 
     OutReturnCode = ECommandReturnCodes::SuccessNoResponse;
     OutResponse   = L"";

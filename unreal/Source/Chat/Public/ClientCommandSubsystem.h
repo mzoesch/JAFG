@@ -8,14 +8,11 @@
 
 #include "ClientCommandSubsystem.generated.h"
 
-typedef FString FClientCommand;
-typedef TFunction<
-    void(
-        TArray<FString> InArgs,
-        CommandReturnCode& OutErrorCode,
-        FString& OutResponse
-    )
-> FClientCommandCallback;
+#define CLIENT_COMMAND_SIG                                                                                       \
+    const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse
+
+typedef FString                             FClientCommand;
+typedef TFunction<void(CLIENT_COMMAND_SIG)> FClientCommandCallback;
 
 UCLASS(NotBlueprintable)
 class CHAT_API UClientCommandSubsystem : public UJAFGWorldSubsystem
@@ -41,7 +38,8 @@ private:
 
     void InitializeAllCommands(void);
 
-    auto OnHelpCommand(const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const -> void;
+    auto OnHelpCommand(CLIENT_COMMAND_SIG) const -> void;
 
-    auto OnChatClearCommand(const TArray<FString>& InArgs, CommandReturnCode& OutReturnCode, FString& OutResponse) const -> void;
+    auto OnChatClearCommand(CLIENT_COMMAND_SIG) const -> void;
+    auto OnQuitCommand(CLIENT_COMMAND_SIG) const -> void;
 };

@@ -7,8 +7,9 @@
 
 #include "FrontEndHUD.generated.h"
 
-class UJAFGWidget;
 JAFG_VOID
+
+class UJAFGWidget;
 
 UCLASS(NotBlueprintable)
 class JAFG_API AFrontEndHUD : public ACommonHUD

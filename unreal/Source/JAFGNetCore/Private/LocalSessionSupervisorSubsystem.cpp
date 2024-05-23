@@ -54,6 +54,8 @@ void ULocalSessionSupervisorSubsystem::Initialize(FSubsystemCollectionBase& Coll
         }
     );
 
+    this->CurrentState = ECurrentLSSSSState::None;
+
     return;
 }
 
@@ -205,6 +207,48 @@ void ULocalSessionSupervisorSubsystem::JoinSession(const FOnlineSessionSearchRes
     return;
 }
 
+void ULocalSessionSupervisorSubsystem::LeaveSession(const ERegisteredWorlds::Type InNewWorld /* ERegisteredWorlds::FrontEnd */)
+{
+    if (this->CurrentState == ECurrentLSSSSState::None)
+    {
+#if WITH_EDITOR
+        LOG_WARNING(LogLSSSS, "Current state is None. If PIE started in level [%s] this can be ignored.", *RegisteredWorlds::World)
+#else /* WITH_EDITOR */
+        LOG_FATAL(LogLSSSS, "Current state is None. Cannot proceed.")
+#endif /* !WITH_EDITOR */
+    }
+
+    else if (this->CurrentState == ECurrentLSSSSState::Hosted)
+    {
+        if (this->ForceActiveSessionDestroy() == false)
+        {
+            LOG_FATAL(LogLSSSS, "Failed to destroy active session.")
+            return;
+        }
+    }
+
+    else if (this->CurrentState == ECurrentLSSSSState::Joined)
+    {
+        if (this->ForceActiveSessionDestroy() == false)
+        {
+            LOG_FATAL(LogLSSSS, "Failed to destroy active session.")
+            return;
+        }
+    }
+
+    else
+    {
+        LOG_FATAL(LogLSSSS, "Current state is invalid. Cannot proceed.")
+        return;
+    }
+
+    this->CurrentState = ECurrentLSSSSState::None;
+
+    this->SafeClientTravel(InNewWorld);
+
+    return;
+}
+
 void ULocalSessionSupervisorSubsystem::OnCreateSessionCompleteDelegate(const FName SessionName, const bool bSuccess)
 {
     LOG_DISPLAY(LogLSSSS, "Session [%s] creation %s.", *SessionName.ToString(), bSuccess ? TEXT("succeeded") : TEXT("failed"))
@@ -212,6 +256,12 @@ void ULocalSessionSupervisorSubsystem::OnCreateSessionCompleteDelegate(const FNa
     if (bSuccess == false)
     {
         LOG_FATAL(LogLSSSS, "Session [%s] creation failed, but no further action is implemented.", *SessionName.ToString())
+        return;
+    }
+
+    if (this->CurrentState != ECurrentLSSSSState::None)
+    {
+        LOG_FATAL(LogLSSSS, "Current state is not None. Cannot proceed.")
         return;
     }
 
@@ -257,6 +307,7 @@ void ULocalSessionSupervisorSubsystem::OnCreateSessionCompleteDelegate(const FNa
 
     LOG_VERBOSE(LogLSSSS, "Server traveling to %s.", *MyURL.ToString())
 
+    this->CurrentState = ECurrentLSSSSState::Hosted;
     this->GetWorld()->ServerTravel(MyURL.ToString());
 
     return;
@@ -293,6 +344,12 @@ void ULocalSessionSupervisorSubsystem::OnJoinSessionCompleteDelegate(const FName
         return;
     }
 
+    if (this->CurrentState != ECurrentLSSSSState::None)
+    {
+        LOG_FATAL(LogLSSSS, "Current state is not None. Cannot proceed.")
+        return;
+    }
+
     /* There is no need to do some crazy PIE crap here, as we have to be in a standalone game to exec this method. */
 
     FString Address = L"";
@@ -319,6 +376,7 @@ void ULocalSessionSupervisorSubsystem::OnJoinSessionCompleteDelegate(const FName
 
     LOG_DISPLAY(LogLSSSS, "Successfully joined session [%s]. Everything ready. Traveling to server's level at [%s].", *SessionName.ToString(), *Address)
 
+    this->CurrentState = ECurrentLSSSSState::Joined;
     PlayerController->ClientTravel(Address, ETravelType::TRAVEL_Absolute);
 
     return;
@@ -327,6 +385,8 @@ void ULocalSessionSupervisorSubsystem::OnJoinSessionCompleteDelegate(const FName
 bool ULocalSessionSupervisorSubsystem::ForceActiveSessionDestroy(void)
 {
     this->bActiveSessionExists = false;
+
+    this->CurrentState = ECurrentLSSSSState::None;
 
     if (this->OnlineSessionInterface->DestroySession(FName(this->ActiveSessionSettings.Name)))
     {
@@ -337,4 +397,51 @@ bool ULocalSessionSupervisorSubsystem::ForceActiveSessionDestroy(void)
 
     LOG_ERROR(LogLSSSS, "Failed to destroy session [%s].", *this->ActiveSessionSettings.Name)
     return false;
+}
+
+void ULocalSessionSupervisorSubsystem::SafeClientTravel(const ERegisteredWorlds::Type InNewWorld)
+{
+    if (this->CurrentState != ECurrentLSSSSState::None)
+    {
+        LOG_FATAL(LogLSSSS, "Current state is not None. Disallowed call. Found state: %d.", this->CurrentState)
+        return;
+    }
+
+    /* Shamelessly copied from GameplayStatics.h. There may be safer ways to implement this? */
+    const     FString     LevelName  = FString::Printf(TEXT("%s"), *ERegisteredWorlds::LexToString(InNewWorld));
+    constexpr ETravelType TravelType = ETravelType::TRAVEL_Absolute;
+
+    FWorldContext* WorldContextObject = GEngine->GetWorldContextFromWorld(this->GetWorld());
+    if (WorldContextObject == nullptr)
+    {
+        LOG_FATAL(LogLSSSS, "World Context Object is invalid.")
+        return;
+    }
+
+    FURL MyURL = FURL(&WorldContextObject->LastURL, *LevelName, TravelType);
+
+    if (MyURL.IsLocalInternal() == false)
+    {
+        LOG_FATAL(LogLSSSS, "URL is not local internal. Must be as we are the client. No networking here. Falty URL: %s.", *MyURL.ToString())
+        return;
+    }
+
+    if (GEngine->MakeSureMapNameIsValid(MyURL.Map) == false)
+    {
+        LOG_FATAL(LogLSSSS, "Map name is invalid. Falty URL: %s.", *MyURL.ToString())
+        return;
+    }
+
+    APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this->GetWorld(), 0);
+    if (PlayerController == nullptr)
+    {
+        LOG_FATAL(LogLSSSS, "Player Controller is invalid.")
+        return;
+    }
+
+    LOG_DISPLAY(LogLSSSS, "Client traveling to [%s].", *ERegisteredWorlds::LexToString(InNewWorld))
+
+    PlayerController->ClientTravel(MyURL.ToString(), ETravelType::TRAVEL_Absolute);
+
+    return;
 }

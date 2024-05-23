@@ -73,19 +73,6 @@ void AWorldHUD::BeginPlay(void)
         this->ChatMenu->SetVisibility(ESlateVisibility::Collapsed);
     }
 
-    // Escape menu
-    //////////////////////////////////////////////////////////////////////////
-    {
-        if (SlateSettings->EscapeMenuWidgetClass == nullptr)
-        {
-            LOG_FATAL(LogCommonSlate, "Escape Menu Widget Class is not set in project settings.")
-            return;
-        }
-        this->EscapeMenu = CreateWidget<UEscapeMenu>(this->GetWorld(), SlateSettings->EscapeMenuWidgetClass);
-        this->EscapeMenu->AddToViewport();
-        this->EscapeMenu->SetVisibility(ESlateVisibility::Collapsed);
-    }
-
     // Debug Screen
     //////////////////////////////////////////////////////////////////////////
     {
@@ -97,6 +84,19 @@ void AWorldHUD::BeginPlay(void)
         this->DebugScreen = CreateWidget<UJAFGWidget>(this->GetWorld(), SlateSettings->DebugScreenWidgetClass);
         this->DebugScreen->AddToViewport();
         this->DebugScreen->SetVisibility(ESlateVisibility::Collapsed);
+    }
+
+    // Escape menu
+    //////////////////////////////////////////////////////////////////////////
+    {
+        if (SlateSettings->EscapeMenuWidgetClass == nullptr)
+        {
+            LOG_FATAL(LogCommonSlate, "Escape Menu Widget Class is not set in project settings.")
+            return;
+        }
+        this->EscapeMenu = CreateWidget<UEscapeMenu>(this->GetWorld(), SlateSettings->EscapeMenuWidgetClass);
+        this->EscapeMenu->AddToViewport();
+        this->EscapeMenu->SetVisibility(ESlateVisibility::Collapsed);
     }
 
     return;

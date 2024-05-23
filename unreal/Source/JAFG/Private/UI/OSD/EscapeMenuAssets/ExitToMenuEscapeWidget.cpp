@@ -3,6 +3,7 @@
 #include "UI/OSD/EscapeMenuAssets/ExitToMenuEscapeWidget.h"
 
 #include "CommonHUD.h"
+#include "LocalSessionSupervisorSubsystem.h"
 #include "System/JAFGGameInstance.h"
 
 UExitToMenuEscapeWidget::UExitToMenuEscapeWidget(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -31,14 +32,8 @@ void UExitToMenuEscapeWidget::OnPopUpClosed(const bool bAccepted) const
         return;
     }
 
-    /*
-     * This is just temporary. We than should add the logic to destroy a session and exit to the menu later.
-     */
-
-    UJAFGGameInstance* Instance = Cast<UJAFGGameInstance>(this->GetGameInstance());
-    check( Instance )
-
-    Instance->RequestControlledShutdown();
+    ULocalSessionSupervisorSubsystem* LSSSS = this->GetGameInstance()->GetSubsystem<ULocalSessionSupervisorSubsystem>();
+    LSSSS->LeaveSession();
 
     return;
 }

@@ -7,9 +7,10 @@
 
 #include "JAFGFrontEnd.generated.h"
 
+JAFG_VOID
+
 class ULocalSaveEntry;
 class UScrollBox;
-JAFG_VOID
 
 UCLASS(Abstract, Blueprintable)
 class JAFG_API UJAFGFrontEnd : public UCommonBarWidget

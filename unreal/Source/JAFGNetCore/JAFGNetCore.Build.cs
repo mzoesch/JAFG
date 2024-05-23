@@ -28,6 +28,13 @@ public class JAFGNetCore : ModuleRules
         }
         );
 
+        PublicDependencyModuleNames.AddRange(
+        new string[]
+        {
+            "JAFGCore",
+        }
+        );
+
         PrivateDependencyModuleNames.AddRange(
         new string[]
         {
@@ -39,7 +46,6 @@ public class JAFGNetCore : ModuleRules
         PrivateDependencyModuleNames.AddRange(
         new string[]
         {
-            "JAFGCore",
             "JAFGLogging",
         }
         );

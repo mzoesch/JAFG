@@ -6,6 +6,7 @@
 #include "OnlineSessionSettings.h"
 #include "Interfaces/OnlineSessionInterface.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "WorldCore/RegisteredWorldNames.h"
 
 #include "LocalSessionSupervisorSubsystem.generated.h"
 
@@ -42,6 +43,19 @@ struct FMyOnlineSessionSearch
     TSharedRef<FOnlineSessionSearch> Search = MakeShared<FOnlineSessionSearch>();
 };
 
+namespace ECurrentLSSSSState
+{
+
+enum Type : uint8
+{
+    Invalid,
+    None,
+    Hosted,
+    Joined,
+};
+
+}
+
 UCLASS(NotBlueprintable)
 class JAFGNETCORE_API ULocalSessionSupervisorSubsystem : public UGameInstanceSubsystem
 {
@@ -64,6 +78,7 @@ public:
     void FindSessions(const uint32 InMaxSearchResults, const bool bInLANQuery, const FSearchCallback& InCallback);
     void JoinSession(const int32 InIndex) const;
     void JoinSession(const FOnlineSessionSearchResult& InSearchResult) const;
+    void LeaveSession(const ERegisteredWorlds::Type InNewWorld = ERegisteredWorlds::FrontEnd);
 
     const FMyOnlineSessionSearch& GetSearch(void) const { return this->ActiveSessionSearch; }
 
@@ -75,9 +90,13 @@ protected:
 
     virtual bool ForceActiveSessionDestroy(void);
 
+    virtual void SafeClientTravel(const ERegisteredWorlds::Type InNewWorld);
+
 private:
 
     bool bActiveSessionExists = false;
+
+    ECurrentLSSSSState::Type CurrentState = ECurrentLSSSSState::Invalid;
 
     IOnlineSessionPtr OnlineSessionInterface       = nullptr;
     FSearchCallback   ActiveSearchCallback         = nullptr;

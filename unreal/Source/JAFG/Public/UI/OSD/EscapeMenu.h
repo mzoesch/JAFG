@@ -9,6 +9,9 @@
 
 JAFG_VOID
 
+class UCommonBarEntryWidget;
+class UCommonBarPanelWidget;
+
 UCLASS(Abstract, Blueprintable)
 class JAFG_API UEscapeMenu : public UCommonBarWidget
 {
@@ -48,6 +51,9 @@ protected:
      */
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
     TSubclassOf<UCommonBarEntryWidget> SettingsWidgetClass;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    TSubclassOf<UCommonBarPanelWidget> SettingsPanelWidgetClass;
 
     /**
      * Optional. Will override the default entry widget.

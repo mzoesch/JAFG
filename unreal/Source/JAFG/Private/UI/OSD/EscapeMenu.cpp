@@ -3,6 +3,7 @@
 #include "UI/OSD/EscapeMenu.h"
 
 #include "Concretes/CommonBarEntryWidget.h"
+#include "Concretes/CommonBarPanelWidget.h"
 #include "Player/WorldPlayerController.h"
 
 UEscapeMenu::UEscapeMenu(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -80,10 +81,12 @@ void UEscapeMenu::RegisterAllTabs(void)
     Achievements.EntryWidgetClass = this->AchievementsWidgetClass ? this->AchievementsWidgetClass : this->DefaultEntryWidget;
     Achievements.Padding          = FMargin(0.0f, 200.0f, 0.0f, 0.0f);
 
+    check( this->SettingsPanelWidgetClass && "Settings Panel Widget Class is not set." )
     FCommonBarTabDescriptor Settings;
     Settings.Identifier       = TEXT("Settings");
     Settings.DisplayName      = TEXT("Settings");
     Settings.EntryWidgetClass = this->SettingsWidgetClass ? this->SettingsWidgetClass : this->DefaultEntryWidget;
+    Settings.PanelWidgetClass = this->SettingsPanelWidgetClass;
 
     FCommonBarTabDescriptor SessionOptions;
     SessionOptions.Identifier       = TEXT("SessionOptions");
