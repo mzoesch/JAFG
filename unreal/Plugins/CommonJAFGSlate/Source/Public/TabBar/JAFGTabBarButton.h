@@ -12,6 +12,7 @@ class UTextBlock;
 class UButton;
 class UJAFGTabBarBase;
 
+/** @see JAFGTabBar.h */
 UCLASS(Abstract, Blueprintable)
 class COMMONJAFGSLATE_API UJAFGTabBarButton : public UJAFGUserWidget
 {

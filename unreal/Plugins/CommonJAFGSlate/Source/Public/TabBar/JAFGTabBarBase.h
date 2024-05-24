@@ -20,7 +20,10 @@ struct COMMONJAFGSLATE_API FButtonEntryDescriptor : public FWidgetPassData
     TObjectPtr<UJAFGTabBarBase> Owner;
 };
 
-/** Base class to allow nesting of tab bars. */
+/**
+ * Base class to allow nesting of tab bars.
+ * @see JAFGTabBar.h
+ */
 UCLASS(Abstract, NotBlueprintable)
 class COMMONJAFGSLATE_API UJAFGTabBarBase : public UJAFGUserWidget
 {

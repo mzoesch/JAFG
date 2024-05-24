@@ -26,5 +26,14 @@ protected:
     FDelegateHandle VisibilityShouldChangeDelegateHandle;
     void OnVisibilityShouldChange(const bool bVisible);
 
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    TSubclassOf<UJAFGTabBarButton> ResumeEntryButtonWidgetClass;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    TSubclassOf<UJAFGTabBarButton> ExitToMenuEntryButtonWidgetClass;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    TSubclassOf<UJAFGTabBarButton> ExitToDesktopEntryButtonWidgetClass;
+
     virtual void RegisterAllTabs(void) override;
 };

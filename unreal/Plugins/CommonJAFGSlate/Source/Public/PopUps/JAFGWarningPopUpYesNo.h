@@ -3,27 +3,23 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "WarningPopUp.h"
+#include "JAFGWarningPopUp.h"
 
-#include "WarningPopUpYesNo.generated.h"
+#include "JAFGWarningPopUpYesNo.generated.h"
 
-class UButton;
-
-struct JAFGSLATECORE_API FWarningPopUpYesNoData final : FWarningPopUpData
+struct COMMONJAFGSLATE_API FJAFGWarningPopUpDataYesNo : public FJAFGWarningPopUpData
 {
-    virtual ~FWarningPopUpYesNoData(void) override = default;
-
-    TFunction<void(bool bAccepted)> OnPopupClosedDelegate;
+    TFunction<void(bool BAccepted)> OnPopUpClosedDelegate;
 };
 
 UCLASS(Abstract, Blueprintable)
-class JAFGSLATECORE_API UWarningPopUpYesNo : public UWarningPopUp
+class COMMONJAFGSLATE_API UJAFGWarningPopUpYesNo : public UJAFGWarningPopUp
 {
     GENERATED_BODY()
 
 public:
 
-    explicit UWarningPopUpYesNo(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+    explicit UJAFGWarningPopUpYesNo(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 protected:
 
@@ -33,7 +29,7 @@ protected:
 
 public:
 
-    virtual auto PassDataToWidget(const FMyPassedData& MyPassedData) -> void override;
+    virtual auto PassDataToWidget(const FWidgetPassData& UncastedData) -> void override;
 
 protected:
 

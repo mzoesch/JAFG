@@ -4,8 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DeveloperSettings.h"
+
 #include "CommonJAFGSlateDeveloperSettings.generated.h"
 
+class UJAFGWarningPopUpYesNo;
+class UJAFGWarningPopUp;
 class UJAFGTabBarBase;
 class UJAFGTabBarButton;
 
@@ -23,4 +26,10 @@ public:
 
     UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Slate")
     const TSubclassOf<UJAFGTabBarBase> DefaultTabBarPanelWidgetClass;
+
+    UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "PopUp")
+    TSubclassOf<UJAFGWarningPopUp> WarningPopUpWidgetClass;
+
+    UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "PopUp")
+    TSubclassOf<UJAFGWarningPopUpYesNo> WarningPopUpYesNoWidgetClass;
 };

@@ -3,7 +3,7 @@
 #include "UI/OSD/EscapeMenuTabBar.h"
 
 #include "Player/WorldPlayerController.h"
-#include "TabBar/JAFGTabBarPanel.h"
+#include "TabBar/JAFGTabBarButton.h"
 
 UEscapeMenuTabBar::UEscapeMenuTabBar(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -56,9 +56,11 @@ void UEscapeMenuTabBar::RegisterAllTabs(void)
 {
     Super::RegisterAllTabs();
 
+    check( this->ResumeEntryButtonWidgetClass && "Resume Entry Button Widget Class is not set." )
     FTabBarTabDescriptor Resume = UJAFGTabBar::GetDefaultTabDescriptor();
     Resume.Identifier        = "Resume";
     Resume.DisplayName       = "Resume";
+    Resume.ButtonWidgetClass = this->ResumeEntryButtonWidgetClass;
 
     FTabBarTabDescriptor Achievements = UJAFGTabBar::GetDefaultTabDescriptor();
     Achievements.Identifier        = "Achievements";
@@ -73,13 +75,18 @@ void UEscapeMenuTabBar::RegisterAllTabs(void)
     SessionOptions.Identifier        = "SessionOptions";
     SessionOptions.DisplayName       = "Session Options";
 
+    check( this->ExitToMenuEntryButtonWidgetClass && "Exit To Menu Entry Button Widget Class is not set." )
     FTabBarTabDescriptor ExitToMenu = UJAFGTabBar::GetDefaultTabDescriptor();
     ExitToMenu.Identifier        = "ExitToMenu";
     ExitToMenu.DisplayName       = "Exit To Menu";
+    ExitToMenu.Padding           = FMargin(0.0f, 50.0f, 0.0f, 0.0f);
+    ExitToMenu.ButtonWidgetClass = this->ExitToMenuEntryButtonWidgetClass;
 
+    check( this->ExitToDesktopEntryButtonWidgetClass && "Exit To Desktop Entry Button Widget Class is not set." )
     FTabBarTabDescriptor ExitToDesktop = UJAFGTabBar::GetDefaultTabDescriptor();
     ExitToDesktop.Identifier        = "ExitToDesktop";
     ExitToDesktop.DisplayName       = "Exit To Desktop";
+    ExitToDesktop.ButtonWidgetClass = this->ExitToDesktopEntryButtonWidgetClass;
 
     this->RegisterConcreteTab(Resume);
     this->RegisterConcreteTab(Achievements);

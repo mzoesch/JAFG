@@ -21,9 +21,18 @@ struct COMMONJAFGSLATE_API FTabBarTabDescriptor final
     TSubclassOf<UJAFGTabBarButton> ButtonWidgetClass = nullptr;
     TSubclassOf<UJAFGTabBarBase>   PanelWidgetClass  = nullptr;
 
-    FMargin Padding = FMargin(0.0f);
+    FMargin Padding  = FMargin(0.0f);
 };
 
+/**
+ * A tab bar with the selection and focusable logic that is commonly used in JAFG.
+ * The tab bar consists of three main parts:
+ *   - The Tab Bar Button: The button that represents the tab in a given collection.
+ *   - The Tab Bar Panel:  The panel that represents the content of the tab.
+ *   - The Tab Bar:        The collection of the buttons and panels.
+ *
+ * Tab bars can be nested within each other with the superclass UJAFGTabBarBase.
+ */
 UCLASS(Abstract, NotBlueprintable)
 class COMMONJAFGSLATE_API UJAFGTabBar : public UJAFGTabBarBase
 {

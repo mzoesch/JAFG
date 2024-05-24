@@ -11,14 +11,14 @@
 
 #include "WorldPlayerController.generated.h"
 
+JAFG_VOID
+
 /** The time in seconds after this AActor creation, when this strike was marked. */
 typedef int32 FStrike;
 
-JAFG_VOID
-
 class UChatMenu;
 class UChatComponent;
-class UResumeEntryWidget;
+class UEscapeMenuResumeButton;
 class UMyHyperlaneComponent;
 
 DECLARE_MULTICAST_DELEGATE(FSlateVisibilityChangedOwnerVisSignature)
@@ -98,7 +98,7 @@ protected:
     /** Override this method to add custom key bindings in derived classes. */
     virtual auto BindAction(const FString& ActionName, UEnhancedInputComponent* EnhancedInputComponent) -> void;
 
-    virtual void OnToggleEscapeMenu(const FInputActionValue& Value); friend UResumeEntryWidget;
+    virtual void OnToggleEscapeMenu(const FInputActionValue& Value); friend UEscapeMenuResumeButton;
     virtual void OnToggleDebugScreen(const FInputActionValue& Value);
     virtual void OnToggleChat(const FInputActionValue& Value); friend UChatMenu;
     virtual void OnStartedQuickSessionPreview(const FInputActionValue& Value);
