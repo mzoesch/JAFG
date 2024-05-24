@@ -9,8 +9,8 @@
 
 JAFG_VOID
 
+class UJAFGUserWidget;
 class UJAFGWidget;
-class UEscapeMenu;
 class UEditorWorldCommandsSimulation;
 
 UCLASS(NotBlueprintable)
@@ -42,5 +42,6 @@ private:
     TObjectPtr<UJAFGWidget> QuickSessionPreview;
     TObjectPtr<UJAFGWidget> ChatMenu;
     TObjectPtr<UJAFGWidget> DebugScreen;
-    TObjectPtr<UEscapeMenu> EscapeMenu;
+
+    TObjectPtr<UJAFGUserWidget> EscapeMenu;
 };

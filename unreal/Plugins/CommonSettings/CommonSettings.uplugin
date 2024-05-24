@@ -22,6 +22,10 @@
 	],
 	"Plugins": [
 		{
+			"Name" : "CommonJAFGSlate",
+			"Enabled": true
+		},
+		{
 			"Name" : "JAFGGlobalLogging",
 			"Enabled": true
 		}

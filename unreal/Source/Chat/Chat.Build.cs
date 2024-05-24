@@ -28,6 +28,14 @@ public class Chat : ModuleRules
         }
         );
 
+        /* Plugins */
+        PublicDependencyModuleNames.AddRange(
+            new string[]
+            {
+                "CommonJAFGSlate",
+            }
+        );
+
         PrivateDependencyModuleNames.AddRange(
         new string[]
         {

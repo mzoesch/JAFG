@@ -49,15 +49,15 @@
 			]
 		},
 		{
+			"Name": "CommonJAFGSlate",
+			"Enabled": true
+		},
+		{
 			"Name": "CommonSettings",
 			"Enabled": true
 		},
 		{
 			"Name": "JAFGGlobalLogging",
-			"Enabled": true
-		},
-		{
-			"Name": "CommonJAFGSlate",
 			"Enabled": true
 		}
 	]

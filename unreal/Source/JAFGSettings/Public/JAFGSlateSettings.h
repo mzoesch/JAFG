@@ -7,6 +7,7 @@
 
 #include "JAFGSlateSettings.generated.h"
 
+class UJAFGUserWidget;
 class UJAFGWidget;
 class UWarningPopUp;
 class UWarningPopUpYesNo;
@@ -34,11 +35,12 @@ public:
 #endif WITH_EDITOR
     // ~UDeveloperSettings implementation
 
-    /**
-     * Must inherit from UEscapeMenu.
-     */
     UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Slate")
-    TSubclassOf<UJAFGWidget> EscapeMenuWidgetClass;
+    TSubclassOf<UJAFGUserWidget> EscapeMenuWidgetClass;
+
+
+
+
 
     UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Slate")
     TSubclassOf<UJAFGWidget> DebugScreenWidgetClass;

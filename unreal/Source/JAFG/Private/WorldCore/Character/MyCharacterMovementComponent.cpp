@@ -5,7 +5,7 @@
 UMyCharacterMovementComponent::UMyCharacterMovementComponent(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
     this->GravityScale               = 3.0f;
-    this->JumpZVelocity              = 1200.0f;
+    this->JumpZVelocity              = 900.0f;
     this->AirControl                 = 2.0f;
     this->MaxAcceleration            = this->MaxAccelerationWalking;
 

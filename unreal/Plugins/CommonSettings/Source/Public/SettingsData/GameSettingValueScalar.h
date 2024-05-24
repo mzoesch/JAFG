@@ -45,8 +45,8 @@ protected:
 
     TOptional<double> DefaultValue;
 
-    TSharedRef<FGameSettingDataSource> ValueGetter;
-    TSharedRef<FGameSettingDataSource> ValueSetter;
+    TSharedPtr<FGameSettingDataSource> ValueGetter;
+    TSharedPtr<FGameSettingDataSource> ValueSetter;
 
     double InitialValue = 0;
 

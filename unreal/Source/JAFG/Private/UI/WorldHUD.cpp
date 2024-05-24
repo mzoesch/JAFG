@@ -5,7 +5,7 @@
 
 #include "Player/WorldPlayerController.h"
 #include "JAFGSlateSettings.h"
-#include "UI/OSD/EscapeMenu.h"
+#include "UI/OSD/EscapeMenuTabBar.h"
 #include "UI/OSD/Debug/DebugScreen.h"
 
 AWorldHUD::AWorldHUD(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -94,7 +94,7 @@ void AWorldHUD::BeginPlay(void)
             LOG_FATAL(LogCommonSlate, "Escape Menu Widget Class is not set in project settings.")
             return;
         }
-        this->EscapeMenu = CreateWidget<UEscapeMenu>(this->GetWorld(), SlateSettings->EscapeMenuWidgetClass);
+        this->EscapeMenu = CreateWidget<UJAFGUserWidget>(this->GetWorld(), SlateSettings->EscapeMenuWidgetClass);
         this->EscapeMenu->AddToViewport();
         this->EscapeMenu->SetVisibility(ESlateVisibility::Collapsed);
     }

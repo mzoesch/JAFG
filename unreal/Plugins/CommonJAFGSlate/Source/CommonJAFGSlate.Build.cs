@@ -22,9 +22,13 @@ public class CommonJAFGSlate : ModuleRules
         );
 
         PublicDependencyModuleNames.AddRange(
-            new string[]
+        new string[]
         {
             "Core",
+            "DeveloperSettings",
+            "Slate",
+            "SlateCore",
+            "UMG",
         }
         );
 
@@ -33,8 +37,14 @@ public class CommonJAFGSlate : ModuleRules
         {
             "CoreUObject",
             "Engine",
-            "Slate",
-            "SlateCore",
+        }
+        );
+
+        /* Plugins */
+        PrivateDependencyModuleNames.AddRange(
+        new string[]
+        {
+            "JAFGGlobalLogging",
         }
         );
 

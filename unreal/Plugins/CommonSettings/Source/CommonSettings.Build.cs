@@ -26,6 +26,17 @@ public class CommonSettings : ModuleRules
         {
             "Core",
             "PropertyPath",
+            "Slate",
+            "SlateCore",
+            "UMG",
+        }
+        );
+
+        /* Plugins */
+        PublicDependencyModuleNames.AddRange(
+        new string[]
+        {
+            "CommonJAFGSlate",
         }
         );
 
@@ -34,11 +45,10 @@ public class CommonSettings : ModuleRules
         {
             "CoreUObject",
             "Engine",
-            "Slate",
-            "SlateCore",
         }
         );
 
+        /* Plugins */
         PrivateDependencyModuleNames.AddRange(
         new string[]
         {

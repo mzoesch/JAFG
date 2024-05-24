@@ -17,9 +17,11 @@ public class JAFGSettings : ModuleRules
         }
         );
 
+        /* Plugins */
         PublicDependencyModuleNames.AddRange(
         new string[]
         {
+            "CommonJAFGSlate",
             "CommonSettings",
         }
         );

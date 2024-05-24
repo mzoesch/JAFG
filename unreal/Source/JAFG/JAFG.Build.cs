@@ -44,6 +44,14 @@ public class JAFG : ModuleRules
         }
         );
 
+        /* Plugins */
+        PublicDependencyModuleNames.AddRange(
+        new string[]
+        {
+            "CommonJAFGSlate",
+        }
+        );
+
         PrivateDependencyModuleNames.AddRange(
         new string[]
         {
