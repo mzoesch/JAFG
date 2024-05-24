@@ -55,6 +55,10 @@
 		{
 			"Name": "JAFGGlobalLogging",
 			"Enabled": true
+		},
+		{
+			"Name": "CommonJAFGSlate",
+			"Enabled": true
 		}
 	]
 }

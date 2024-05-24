@@ -3,6 +3,8 @@
 #include "JAFGGameSettingRegistry.h"
 
 #include "JAFGLogDefs.h"
+#include "SettingsData/GameSetting.h"
+#include "SettingsData/GameSettingCollection.h"
 
 UJAFGGameSettingRegistrySubsystem::UJAFGGameSettingRegistrySubsystem(void) : Super()
 {
@@ -26,7 +28,25 @@ UJAFGGameSettingRegistry::UJAFGGameSettingRegistry(const FObjectInitializer& Obj
     return;
 }
 
-void UJAFGGameSettingRegistry::Initialize(ULocalPlayer* InLocalPlayer)
+void UJAFGGameSettingRegistry::OnInitialize(void)
 {
-    Super::Initialize(InLocalPlayer);
+    Super::OnInitialize();
+
+    this->GameplaySettings      = this->InitializeGameplaySettings();
+    this->AudioSettings         = this->InitializeAudioSettings();
+    this->VideoSettings         = this->InitializeVideoSettings();
+    this->ControlSettings       = this->InitializeControlSettings();
+    this->KeybindingSettings    = this->InitializeKeybindingSettings();
+    this->UserInterfaceSettings = this->InitializeUserInterfaceSettings();
+    this->DebugSettings         = this->InitializeDebugSettings();
+
+    this->RegisterTopLevelSetting(this->GameplaySettings);
+    this->RegisterTopLevelSetting(this->AudioSettings);
+    this->RegisterTopLevelSetting(this->VideoSettings);
+    this->RegisterTopLevelSetting(this->ControlSettings);
+    this->RegisterTopLevelSetting(this->KeybindingSettings);
+    this->RegisterTopLevelSetting(this->UserInterfaceSettings);
+    this->RegisterTopLevelSetting(this->DebugSettings);
+
+    return;
 }

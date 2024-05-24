@@ -15,4 +15,13 @@ class COMMONSETTINGS_API UGameSettingCollection : public UGameSetting
 public:
 
     explicit UGameSettingCollection(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+    void AddSetting(UGameSetting* InSetting);
+
+    auto GetSettingByIdentifier(const FString& InIdentifier) const -> UGameSetting*;
+
+protected:
+
+    UPROPERTY(Transient)
+    TArray<TObjectPtr<UGameSetting>> OwnedSettings;
 };

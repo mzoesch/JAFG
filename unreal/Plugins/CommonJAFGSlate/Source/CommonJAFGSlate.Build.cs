@@ -3,9 +3,9 @@
 
 using UnrealBuildTool;
 
-public class CommonSettings : ModuleRules
+public class CommonJAFGSlate : ModuleRules
 {
-    public CommonSettings(ReadOnlyTargetRules Target) : base(Target)
+    public CommonJAFGSlate(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
@@ -22,10 +22,9 @@ public class CommonSettings : ModuleRules
         );
 
         PublicDependencyModuleNames.AddRange(
-        new string[]
+            new string[]
         {
             "Core",
-            "PropertyPath",
         }
         );
 
@@ -36,13 +35,6 @@ public class CommonSettings : ModuleRules
             "Engine",
             "Slate",
             "SlateCore",
-        }
-        );
-
-        PrivateDependencyModuleNames.AddRange(
-        new string[]
-        {
-            "JAFGGlobalLogging",
         }
         );
 

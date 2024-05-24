@@ -36,6 +36,7 @@ public class JAFGSettings : ModuleRules
         new string[]
         {
             "JAFGGlobalLogging",
+            "JAFGCore",
         }
         );
     }

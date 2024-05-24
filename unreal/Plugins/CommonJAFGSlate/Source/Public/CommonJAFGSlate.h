@@ -6,7 +6,7 @@
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
 
-class FCommonSettingsModule final : public IModuleInterface
+class FCommonJAFGSlateModule final : public IModuleInterface
 {
 
 public:
@@ -14,5 +14,5 @@ public:
     // IModuleInterface interface
     virtual void StartupModule(void) override;
     virtual void ShutdownModule(void) override;
-    // ~IModuleInterface interface
+    // +IModuleInterface interface
 };
