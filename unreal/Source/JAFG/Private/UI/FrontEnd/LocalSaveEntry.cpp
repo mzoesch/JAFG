@@ -9,20 +9,11 @@ ULocalSaveEntry::ULocalSaveEntry(const FObjectInitializer& ObjectInitializer) : 
     return;
 }
 
-void ULocalSaveEntry::PassDataToWidget(const FMyPassedData& MyPassedData)
+void ULocalSaveEntry::PassDataToWidget(const FWidgetPassData& UncastedData)
 {
-    Super::PassDataToWidget(MyPassedData);
+    Super::PassDataToWidget(UncastedData);
 
-    if (const FPassedLocalSaveEntryData* Data = static_cast<const FPassedLocalSaveEntryData*>(&MyPassedData); Data == nullptr)
-    {
-#if WITH_EDITOR
-        LOG_ERROR(LogCommonSlate, "MyPassedData is not of type FPassedLocalSaveEntryData.")
-#else /* WITH_EDITOR */
-        LOG_FATAL(LogCommonSlate, "MyPassedData is not of type FPassedLocalSaveEntryData.")
-#endif /* !WITH_EDITOR */
-        return;
-    }
-    else
+    CAST_PASSED_DATA(FPassedLocalSaveEntryData)
     {
         this->SaveName = Data->SaveName;
     }
@@ -31,8 +22,6 @@ void ULocalSaveEntry::PassDataToWidget(const FMyPassedData& MyPassedData)
     {
         this->TB_SaveName->SetText(FText::FromString(this->SaveName));
     }
-
-    this->OnDeferredConstruct();
 
     return;
 }

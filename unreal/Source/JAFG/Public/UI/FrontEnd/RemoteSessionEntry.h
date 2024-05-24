@@ -3,7 +3,7 @@
 #pragma once
 
 #include "MyCore.h"
-#include "JAFGFocusableWidget.h"
+#include "JAFGFocusableUserWidget.h"
 
 #include "RemoteSessionEntry.generated.h"
 
@@ -43,7 +43,7 @@ struct FPassedRemoteSessionEntryData final : public FPassedFocusableWidgetData
     FORCEINLINE auto GetCurrentPrivateConnections(void) const -> int32 { return this->NumPrivateConnections - this->NumOpenPrivateConnections; }
     FORCEINLINE auto GetCurrentPublicConnections(void) const -> int32 { return this->NumPublicConnections - this->NumOpenPublicConnections; }
 
-    FORCEINLINE virtual auto ToString(void) const -> FString override
+    FORCEINLINE auto ToString(void) const -> FString
     {
         return FString::Printf(
             TEXT("FPassedRemoteSessionEntryData{IDStr: %s, PingInMs: %d, OwningUserID: %s, OwningUserName: %s, NumOpenPrivateConnections: %d, NumPrivateConnections: %d, NumOpenPublicConnections: %d, NumPublicConnections: %d, bLANSession: %d, bDedicatedSession: %d}"),
@@ -60,7 +60,7 @@ private:
 };
 
 UCLASS(Abstract, Blueprintable)
-class JAFG_API URemoteSessionEntry : public UJAFGFocusableWidget
+class JAFG_API URemoteSessionEntry : public UJAFGFocusableUserWidget
 {
     GENERATED_BODY()
 
@@ -68,7 +68,7 @@ public:
 
     explicit URemoteSessionEntry(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
-    virtual void PassDataToWidget(const FMyPassedData& MyPassedData) override;
+    virtual void PassDataToWidget(const FWidgetPassData& UncastedData) override;
 
 protected:
 

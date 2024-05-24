@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "JAFGSlateCore/Public/JAFGWidget.h"
+#include "JAFGUserWidget.h"
 
 #include "ChatMenu.generated.h"
 
@@ -12,37 +12,31 @@ class UOverlay;
 class UTextBlock;
 class UScrollBox;
 class UEditableText;
-class UJAFGEditableTextBlock;
+class UJAFGEditableText;
 
-struct CHAT_API FChatMessageData final : public FMyPassedData
+struct CHAT_API FChatMessageData final : public FWidgetPassData
 {
-    FChatMessageData(void) = default;
+    FChatMessageData() = default;
     FChatMessageData(const FString& Sender, const FText& Message) : Sender(Sender), Message(Message)
     {
     }
-    ~FChatMessageData(void) = default;
 
     FString Sender;
     FText   Message;
-
-    FORCEINLINE virtual auto ToString(void) const -> FString override
-    {
-        return FString::Printf(TEXT("FChatMessageData{Sender:%s, Message:%s}"), *this->Sender, *this->Message.ToString());
-    }
 };
 
 UCLASS(Abstract, Blueprintable)
-class CHAT_API UChatMenuEntry : public UJAFGWidget
+class CHAT_API UChatMenuEntry : public UJAFGUserWidget
 {
     GENERATED_BODY()
 
 public:
 
-    virtual void PassDataToWidget(const FMyPassedData& MyPassedData) override;
+    virtual void PassDataToWidget(const FWidgetPassData& UncastedData) override;
 
 protected:
 
-    FChatMessageData Data;
+    FChatMessageData MessageData;
 
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
     UTextBlock* TB_Message;
@@ -63,7 +57,7 @@ enum Type
 }
 
 UCLASS(Abstract, Blueprintable)
-class CHAT_API UChatMenu : public UJAFGWidget
+class CHAT_API UChatMenu : public UJAFGUserWidget
 {
     GENERATED_BODY()
 
@@ -132,7 +126,7 @@ protected:
     TObjectPtr<UVerticalBox> VB_PreviewOut;
 
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
-    TObjectPtr<UJAFGEditableTextBlock> ET_StdIn;
+    TObjectPtr<UJAFGEditableText> ET_StdIn;
 
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
     TObjectPtr<UPanelWidget> PW_StdInWrapper;

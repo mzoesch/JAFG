@@ -13,7 +13,6 @@ public class JAFGSettings : ModuleRules
         {
             "Core",
             "DeveloperSettings",
-            "JAFGSlateCore",
         }
         );
 

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "MyCore.h"
-#include "JAFGWidget.h"
+#include "JAFGUserWidget.h"
 
 #include "DebugScreen.generated.h"
 
@@ -20,7 +20,7 @@ FORCEINLINE auto GetMaxFPS(void) -> float;
 }
 
 UCLASS(Abstract, Blueprintable)
-class JAFG_API UDebugScreen : public UJAFGWidget
+class JAFG_API UDebugScreen : public UJAFGUserWidget
 {
     GENERATED_BODY()
 

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "MyCore.h"
-#include "JAFGWidget.h"
+#include "JAFGUserWidget.h"
 
 #include "QuickSessionPreviewWidget.generated.h"
 
@@ -12,7 +12,7 @@ JAFG_VOID
 class UHorizontalBox;
 
 UCLASS(Abstract, Blueprintable)
-class JAFG_API UQuickSessionPreviewWidget : public UJAFGWidget
+class JAFG_API UQuickSessionPreviewWidget : public UJAFGUserWidget
 {
     GENERATED_BODY()
 

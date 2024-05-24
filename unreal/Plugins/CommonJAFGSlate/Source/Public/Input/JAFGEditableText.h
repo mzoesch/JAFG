@@ -5,10 +5,10 @@
 #include "CoreMinimal.h"
 #include "Components/EditableText.h"
 
-#include "JAFGEditableTextBlock.generated.h"
+#include "JAFGEditableText.generated.h"
 
 UCLASS(Blueprintable)
-class JAFGSLATECORE_API UJAFGEditableTextBlock : public UEditableText
+class COMMONJAFGSLATE_API UJAFGEditableText : public UEditableText
 {
     GENERATED_BODY()
 

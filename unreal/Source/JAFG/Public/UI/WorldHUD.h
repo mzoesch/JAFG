@@ -38,10 +38,9 @@ protected:
 
 private:
 
-    TObjectPtr<UJAFGWidget> Crosshair;
-    TObjectPtr<UJAFGWidget> QuickSessionPreview;
-    TObjectPtr<UJAFGWidget> ChatMenu;
-    TObjectPtr<UJAFGWidget> DebugScreen;
-
+    TObjectPtr<UJAFGUserWidget> Crosshair;
+    TObjectPtr<UJAFGUserWidget> QuickSessionPreview;
+    TObjectPtr<UJAFGUserWidget> ChatMenu;
+    TObjectPtr<UJAFGUserWidget> DebugScreen;
     TObjectPtr<UJAFGUserWidget> EscapeMenu;
 };

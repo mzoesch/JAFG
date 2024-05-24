@@ -38,23 +38,21 @@ public:
     UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Slate")
     TSubclassOf<UJAFGUserWidget> EscapeMenuWidgetClass;
 
-
+    UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Slate")
+    TSubclassOf<UJAFGUserWidget> CrosshairWidgetClass;
 
     UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Slate")
-    TSubclassOf<UJAFGWidget> DebugScreenWidgetClass;
+    TSubclassOf<UJAFGUserWidget> DebugScreenWidgetClass;
 
     UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Slate")
-    TSubclassOf<UJAFGWidget> ChatMenuWidgetClass;
+    TSubclassOf<UJAFGUserWidget> ChatMenuEntryWidgetClass;
 
     UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Slate")
-    TSubclassOf<UJAFGWidget> ChatMenuEntryWidgetClass;
+    TSubclassOf<UJAFGUserWidget> ChatMenuWidgetClass;
 
     UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Slate")
-    TSubclassOf<UJAFGWidget> QuickSessionPreviewWidgetClass;
-
-    UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Slate")
-    TSubclassOf<UJAFGWidget> CrosshairWidgetClass;
+    TSubclassOf<UJAFGUserWidget> QuickSessionPreviewWidgetClass;
 
     UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "FrontEnd")
-    TSubclassOf<UJAFGWidget> FrontEndWidgetClass;
+    TSubclassOf<UJAFGUserWidget> FrontEndWidgetClass;
 };

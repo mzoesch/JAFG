@@ -3,18 +3,17 @@
 #pragma once
 
 #include "MyCore.h"
-#include "JAFGDirtyWidget.h"
+#include "JAFGDirtyUserWidget.h"
 
 #include "Crosshair.generated.h"
 
 JAFG_VOID
 
 class UOverlay;
-
 class UBorder;
 
 UCLASS(Abstract, Blueprintable)
-class JAFG_API UCrosshair : public UJAFGDirtyWidget
+class JAFG_API UCrosshair : public UJAFGDirtyUserWidget
 {
     GENERATED_BODY()
 

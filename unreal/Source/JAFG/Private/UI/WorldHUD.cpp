@@ -1,11 +1,9 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
-
 #include "UI/WorldHUD.h"
 
 #include "Player/WorldPlayerController.h"
 #include "JAFGSlateSettings.h"
-#include "UI/OSD/EscapeMenuTabBar.h"
 #include "UI/OSD/Debug/DebugScreen.h"
 
 AWorldHUD::AWorldHUD(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -43,7 +41,7 @@ void AWorldHUD::BeginPlay(void)
             LOG_FATAL(LogCommonSlate, "Crosshair Widget Class is not set in project settings.")
             return;
         }
-        this->Crosshair = CreateWidget<UJAFGWidget>(this->GetWorld(), SlateSettings->CrosshairWidgetClass);
+        this->Crosshair = CreateWidget<UJAFGUserWidget>(this->GetWorld(), SlateSettings->CrosshairWidgetClass);
         this->Crosshair->AddToViewport();
     }
 
@@ -55,7 +53,7 @@ void AWorldHUD::BeginPlay(void)
             LOG_FATAL(LogCommonSlate, "Quick Session Preview Widget Class is not set in project settings.")
             return;
         }
-        this->QuickSessionPreview = CreateWidget<UJAFGWidget>(this->GetWorld(), SlateSettings->QuickSessionPreviewWidgetClass);
+        this->QuickSessionPreview = CreateWidget<UJAFGUserWidget>(this->GetWorld(), SlateSettings->QuickSessionPreviewWidgetClass);
         this->QuickSessionPreview->AddToViewport();
         this->QuickSessionPreview->SetVisibility(ESlateVisibility::Collapsed);
     }
@@ -68,7 +66,7 @@ void AWorldHUD::BeginPlay(void)
             LOG_FATAL(LogCommonSlate, "Chat Menu Widget Class is not set in project settings.")
             return;
         }
-        this->ChatMenu = CreateWidget<UJAFGWidget>(this->GetWorld(), SlateSettings->ChatMenuWidgetClass);
+        this->ChatMenu = CreateWidget<UJAFGUserWidget>(this->GetWorld(), SlateSettings->ChatMenuWidgetClass);
         this->ChatMenu->AddToViewport();
         this->ChatMenu->SetVisibility(ESlateVisibility::Collapsed);
     }
@@ -81,7 +79,7 @@ void AWorldHUD::BeginPlay(void)
             LOG_FATAL(LogCommonSlate, "Debug Screen Widget Class is not set in project settings.")
             return;
         }
-        this->DebugScreen = CreateWidget<UJAFGWidget>(this->GetWorld(), SlateSettings->DebugScreenWidgetClass);
+        this->DebugScreen = CreateWidget<UJAFGUserWidget>(this->GetWorld(), SlateSettings->DebugScreenWidgetClass);
         this->DebugScreen->AddToViewport();
         this->DebugScreen->SetVisibility(ESlateVisibility::Collapsed);
     }
@@ -116,7 +114,7 @@ void AWorldHUD::CreateSimulationHUD(void)
             LOG_FATAL(LogCommonSlate, "Debug Screen Widget Class is not set in project settings.")
             return;
         }
-        this->DebugScreen = CreateWidget<UJAFGWidget>(this->GetWorld(), SlateSettings->DebugScreenWidgetClass);
+        this->DebugScreen = CreateWidget<UJAFGUserWidget>(this->GetWorld(), SlateSettings->DebugScreenWidgetClass);
         this->DebugScreen->AddToViewport();
         this->DebugScreen->SetVisibility(ESlateVisibility::Collapsed);
     }

@@ -3,7 +3,7 @@
 #include "UI/FrontEndHUD.h"
 
 #include "JAFGSlateSettings.h"
-#include "JAFGWidget.h"
+#include "JAFGUserWidget.h"
 #include "Player/CommonPlayerController.h"
 
 AFrontEndHUD::AFrontEndHUD(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -32,7 +32,7 @@ void AFrontEndHUD::BeginPlay(void)
         LOG_FATAL(LogCommonSlate, "Front End Widget Class is not set in project settings.")
         return;
     }
-    this->FrontEnd = CreateWidget<UJAFGWidget>(this->GetWorld(), SlateSettings->FrontEndWidgetClass);
+    this->FrontEnd = CreateWidget<UJAFGUserWidget>(this->GetWorld(), SlateSettings->FrontEndWidgetClass);
     this->FrontEnd->AddToViewport();
 
     return;

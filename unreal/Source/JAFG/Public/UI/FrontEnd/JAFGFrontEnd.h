@@ -3,17 +3,17 @@
 #pragma once
 
 #include "MyCore.h"
-#include "Concretes/CommonBarWidget.h"
+#include "TabBar/JAFGTabBar.h"
 
 #include "JAFGFrontEnd.generated.h"
 
 JAFG_VOID
 
-class ULocalSaveEntry;
 class UScrollBox;
+class ULocalSaveEntry;
 
 UCLASS(Abstract, Blueprintable)
-class JAFG_API UJAFGFrontEnd : public UCommonBarWidget
+class JAFG_API UJAFGFrontEnd : public UJAFGTabBar
 {
     GENERATED_BODY()
 
@@ -23,31 +23,17 @@ public:
 
 protected:
 
-    // UUserWidget implementation
-    virtual void NativeConstruct(void) override;
-    virtual void NativeDestruct(void) override;
-    // ~UUserWidget implementation
-
-    virtual void RegisterAllTabs(void);
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    TSubclassOf<UJAFGTabBarBase> HostSessionPanelWidgetClass;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-    TSubclassOf<UCommonBarEntryWidget> HostSessionEntryWidgetClass;
+    TSubclassOf<UJAFGTabBarBase> JoinSessionPanelWidgetClass;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-    TSubclassOf<UCommonBarPanelWidget> HostSessionPanelWidgetClass;
+    TSubclassOf<UJAFGTabBarBase> SettingsPanelWidgetClass;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-    TSubclassOf<UCommonBarEntryWidget> JoinSessionEntryWidgetClass;
+    TSubclassOf<UJAFGTabBarButton> QuitGameButtonWidgetClass;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-    TSubclassOf<UCommonBarPanelWidget> JoinSessionPanelWidgetClass;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-    TSubclassOf<UCommonBarEntryWidget> SettingsEntryWidgetClass;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-    TSubclassOf<UCommonBarPanelWidget> SettingsPanelWidgetClass;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-    TSubclassOf<UCommonBarEntryWidget> QuitGameEntryWidgetClass;
+    virtual void RegisterAllTabs(void) override;
 };

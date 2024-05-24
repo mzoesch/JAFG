@@ -2,9 +2,9 @@
 
 #pragma once
 
-#include "LocalSessionSupervisorSubsystem.h"
 #include "MyCore.h"
-#include "Concretes/CommonBarPanelWidget.h"
+#include "LocalSessionSupervisorSubsystem.h"
+#include "TabBar/JAFGTabBarPanel.h"
 
 #include "HostSessionPanelWidget.generated.h"
 
@@ -15,7 +15,7 @@ class UScrollBox;
 class ULocalSaveEntry;
 
 UCLASS(Abstract, Blueprintable)
-class JAFG_API UHostSessionPanelWidget : public UCommonBarPanelWidget
+class JAFG_API UHostSessionPanelWidget : public UJAFGTabBarPanel
 {
     GENERATED_BODY()
 

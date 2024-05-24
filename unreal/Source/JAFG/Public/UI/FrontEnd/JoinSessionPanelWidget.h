@@ -4,18 +4,18 @@
 
 #include "MyCore.h"
 #include "LocalSessionSupervisorSubsystem.h"
-#include "Concretes/CommonBarPanelWidget.h"
+#include "TabBar/JAFGTabBarPanel.h"
 
 #include "JoinSessionPanelWidget.generated.h"
 
-class UButton;
 JAFG_VOID
 
+class UButton;
 class URemoteSessionEntry;
 class UScrollBox;
 
 UCLASS(Abstract, Blueprintable)
-class JAFG_API UJoinSessionPanelWidget : public UCommonBarPanelWidget, public IOnlineSessionSearchCallback
+class JAFG_API UJoinSessionPanelWidget : public UJAFGTabBarPanel, public IOnlineSessionSearchCallback
 {
     GENERATED_BODY()
 

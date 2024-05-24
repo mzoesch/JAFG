@@ -9,20 +9,11 @@ URemoteSessionEntry::URemoteSessionEntry(const FObjectInitializer& ObjectInitial
     return;
 }
 
-void URemoteSessionEntry::PassDataToWidget(const FMyPassedData& MyPassedData)
+void URemoteSessionEntry::PassDataToWidget(const FWidgetPassData& UncastedData)
 {
-    Super::PassDataToWidget(MyPassedData);
+    Super::PassDataToWidget(UncastedData);
 
-    if (const FPassedRemoteSessionEntryData* Data = static_cast<const FPassedRemoteSessionEntryData*>(&MyPassedData); Data == nullptr)
-    {
-#if WITH_EDITOR
-        LOG_ERROR(LogCommonSlate, "MyPassedData is not of type FPassedRemoteSessionEntryData.")
-#else /* WITH_EDITOR */
-        LOG_FATAL(LogCommonSlate, "MyPassedData is not of type FPassedRemoteSessionEntryData.")
-#endif /* !WITH_EDITOR */
-        return;
-    }
-    else
+    CAST_PASSED_DATA(FPassedRemoteSessionEntryData)
     {
         this->EntryData = *Data;
     }
@@ -41,8 +32,6 @@ void URemoteSessionEntry::PassDataToWidget(const FMyPassedData& MyPassedData)
     {
         this->TB_SessionPlayers->SetText(FText::FromString(FString::Printf(TEXT("%d/%d"), this->EntryData.GetCurrentPublicConnections(), this->EntryData.NumPublicConnections)));
     }
-
-    this->OnDeferredConstruct();
 
     return;
 }

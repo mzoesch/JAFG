@@ -23,7 +23,6 @@ public class JAFGTarget : TargetRules
             "JAFGCore",
             "JAFGNetCore",
             "JAFGSettings",
-            "JAFGSlateCore",
         }
         );
     }

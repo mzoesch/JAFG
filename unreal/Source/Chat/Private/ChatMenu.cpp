@@ -11,7 +11,7 @@
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
 #include "Input/CustomInputNames.h"
-#include "Input/JAFGEditableTextBlock.h"
+#include "Input/JAFGEditableText.h"
 #include "Input/JAFGInputSubsystem.h"
 #include "Player/WorldPlayerController.h"
 #include "JAFGLogDefs.h"
@@ -23,24 +23,14 @@
         Cast<AWorldPlayerController>(this->GetOwningPlayer() \
     )->GetComponentByClass(UChatComponent::StaticClass()))
 
-void UChatMenuEntry::PassDataToWidget(const FMyPassedData& MyPassedData)
+void UChatMenuEntry::PassDataToWidget(const FWidgetPassData& UncastedData)
 {
-    if (const FChatMessageData* ChatMessageData = static_cast<const FChatMessageData*>(&MyPassedData); ChatMessageData == nullptr)
+    CAST_PASSED_DATA(FChatMessageData)
     {
-#if WITH_EDITOR
-        LOG_ERROR(LogJAFGChat, "MyPassedData is not of type FChatMessageData.")
-#else
-        LOG_FATAL(LogJAFGChat, "MyPassedData is not of type FChatMessageData.")
-#endif /* WITH_EDITOR */
-    }
-    else
-    {
-        this->Data = *ChatMessageData;
+        this->MessageData = *Data;
     }
 
     this->ConstructMessage();
-
-    this->OnDeferredConstruct();
 
     return;
 }
@@ -51,7 +41,7 @@ void UChatMenuEntry::ConstructMessage(void)
         FText::FromString(
             FString::Printf(
                 TEXT("<%s> %s"),
-                *this->Data.Sender, *this->Data.Message.ToString()
+                *this->MessageData.Sender, *this->MessageData.Message.ToString()
             )
         )
     );
@@ -358,15 +348,11 @@ void UChatMenu::ChangeChatMenuVisibilityStateBasedOnPreviewEntries(void)
 
 UChatMenuEntry* UChatMenu::ConstructChatMenuEntry(const FString& Sender, const FText& Message) const
 {
-    FChatMessageData ChatMessageData = FChatMessageData();
-    ChatMessageData.Sender  = Sender;
-    ChatMessageData.Message = Message;
-
     const UJAFGSlateSettings* SlateSettings = GetDefault<UJAFGSlateSettings>();
     check( SlateSettings )
 
     UChatMenuEntry* ChatMenuEntry = CreateWidget<UChatMenuEntry>(this->GetWorld(), SlateSettings->ChatMenuEntryWidgetClass);
-    ChatMenuEntry->PassDataToWidget(ChatMessageData);
+    ChatMenuEntry->PassDataToWidget(FChatMessageData(Sender, Message));
 
     return ChatMenuEntry;
 }

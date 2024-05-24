@@ -39,7 +39,6 @@ public class JAFG : ModuleRules
             "Hyperlane",
             "JAFGCore",
             "JAFGSettings",
-            "JAFGSlateCore",
             "JAFGNetCore",
         }
         );
@@ -70,6 +69,7 @@ public class JAFG : ModuleRules
         }
         );
 
+        /* Plugins */
         PrivateDependencyModuleNames.AddRange(
         new string[]
         {

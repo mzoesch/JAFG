@@ -23,7 +23,6 @@ public class JAFGEditorTarget : TargetRules
             "JAFGCore",
             "JAFGNetCore",
             "JAFGSettings",
-            "JAFGSlateCore",
         }
         );
     }

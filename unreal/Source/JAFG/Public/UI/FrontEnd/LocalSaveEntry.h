@@ -3,7 +3,7 @@
 #pragma once
 
 #include "MyCore.h"
-#include "JAFGFocusableWidget.h"
+#include "JAFGFocusableUserWidget.h"
 
 #include "LocalSaveEntry.generated.h"
 
@@ -14,15 +14,10 @@ class UTextBlock;
 struct FPassedLocalSaveEntryData final : public FPassedFocusableWidgetData
 {
     FString SaveName;
-
-    FORCEINLINE virtual FString ToString(void) const override
-    {
-        return FString::Printf(TEXT("FPassedLocalSaveEntryData{SaveName:%s}"), *this->SaveName);
-    }
 };
 
 UCLASS(Abstract, Blueprintable)
-class JAFG_API ULocalSaveEntry : public UJAFGFocusableWidget
+class JAFG_API ULocalSaveEntry : public UJAFGFocusableUserWidget
 {
     GENERATED_BODY()
 
@@ -30,7 +25,7 @@ public:
 
     explicit ULocalSaveEntry(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
-    virtual void PassDataToWidget(const FMyPassedData& MyPassedData) override;
+    virtual void PassDataToWidget(const FWidgetPassData& UncastedData) override;
 
 protected:
 

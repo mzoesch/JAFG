@@ -132,7 +132,7 @@ public:
 
     /**
      * @return True if the player has reached their maximum strike count.
-     *         They are going to be disconnected short after. Safely
+     *         They are going to be disconnected short after.
      */
     bool SafelyIncreaseStrikeCount(void);
 

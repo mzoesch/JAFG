@@ -1,8 +1,8 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
-#include "JAFGDirtyWidget.h"
+#include "JAFGDirtyUserWidget.h"
 
-void UJAFGDirtyWidget::NativeConstruct(void)
+void UJAFGDirtyUserWidget::NativeConstruct()
 {
     Super::NativeConstruct();
 
@@ -11,7 +11,7 @@ void UJAFGDirtyWidget::NativeConstruct(void)
     return;
 }
 
-void UJAFGDirtyWidget::NativeTick(const FGeometry& MyGeometry, const float InDeltaTime)
+void UJAFGDirtyUserWidget::NativeTick(const FGeometry& MyGeometry, const float InDeltaTime)
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
 

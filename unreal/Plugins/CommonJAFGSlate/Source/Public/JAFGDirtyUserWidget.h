@@ -3,12 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "JAFGWidget.h"
+#include "JAFGUserWidget.h"
 
-#include "JAFGDirtyWidget.generated.h"
+#include "JAFGDirtyUserWidget.generated.h"
 
 UCLASS(Abstract, Blueprintable)
-class JAFGSLATECORE_API UJAFGDirtyWidget : public UJAFGWidget
+class COMMONJAFGSLATE_API UJAFGDirtyUserWidget : public UJAFGUserWidget
 {
     GENERATED_BODY()
 
@@ -26,7 +26,7 @@ protected:
     virtual auto NativeTick(const FGeometry& MyGeometry, const float InDeltaTime) -> void final override;
 
     /** Called on the next tick if the user widget is marked as dirty. */
-    virtual auto OnRefresh(void) -> void PURE_VIRTUAL(UJAFGCommonDirtyWidget::OnRefresh)
+    virtual auto OnRefresh(void) -> void PURE_VIRTUAL(UJAFGDirtyUserWidget::OnRefresh)
 
 private:
 

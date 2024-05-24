@@ -9,7 +9,7 @@
 
 JAFG_VOID
 
-class UJAFGWidget;
+class UJAFGUserWidget;
 
 UCLASS(NotBlueprintable)
 class JAFG_API AFrontEndHUD : public ACommonHUD
@@ -26,5 +26,5 @@ protected:
 
 private:
 
-    TObjectPtr<UJAFGWidget> FrontEnd = nullptr;
+    TObjectPtr<UJAFGUserWidget> FrontEnd = nullptr;
 };

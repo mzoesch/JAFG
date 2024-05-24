@@ -24,16 +24,15 @@ public class Chat : ModuleRules
         new string[]
         {
             "JAFGCore",
-            "JAFGSlateCore",
         }
         );
 
         /* Plugins */
         PublicDependencyModuleNames.AddRange(
-            new string[]
-            {
-                "CommonJAFGSlate",
-            }
+        new string[]
+        {
+            "CommonJAFGSlate",
+        }
         );
 
         PrivateDependencyModuleNames.AddRange(

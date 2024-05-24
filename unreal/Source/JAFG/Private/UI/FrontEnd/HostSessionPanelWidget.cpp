@@ -2,6 +2,7 @@
 
 #include "UI/FrontEnd/HostSessionPanelWidget.h"
 
+#include "JAFGFocusableUserWidget.h"
 #include "Components/EditableText.h"
 #include "Components/ScrollBox.h"
 #include "UI/FrontEnd/LocalSaveEntry.h"
@@ -25,8 +26,6 @@ void UHostSessionPanelWidget::OnNativeMadeVisible(void)
         this->ET_NewSessionMaxPublicConnections->OnTextChanged.AddDynamic(this, &UHostSessionPanelWidget::OnNewSessionMaxPublicConnectionsChanged);
         this->bBoundToDynamicWidgetEvents = true;
     }
-
-    this->OnDeferredConstruct();
 
     return;
 }
@@ -81,7 +80,7 @@ void UHostSessionPanelWidget::OnNativeLocalSaveEntryClicked(const int32 WidgetId
 {
     if (this->HasFocusedLocalSaveEntry())
     {
-        Cast<UJAFGFocusableWidget>(this->SB_SavedLocalSessions->GetChildAt(this->CurrentlyFocusedLocalSaveEntryIndex))->SetWidgetUnfocus();
+        Cast<UJAFGFocusableUserWidget>(this->SB_SavedLocalSessions->GetChildAt(this->CurrentlyFocusedLocalSaveEntryIndex))->SetWidgetUnfocus();
     }
 
     if (this->CurrentlyFocusedLocalSaveEntryIndex == WidgetIdentifier)
@@ -91,7 +90,7 @@ void UHostSessionPanelWidget::OnNativeLocalSaveEntryClicked(const int32 WidgetId
     }
 
     this->CurrentlyFocusedLocalSaveEntryIndex = WidgetIdentifier;
-    Cast<UJAFGFocusableWidget>(this->SB_SavedLocalSessions->GetChildAt(this->CurrentlyFocusedLocalSaveEntryIndex))->SetWidgetFocus();
+    Cast<UJAFGFocusableUserWidget>(this->SB_SavedLocalSessions->GetChildAt(this->CurrentlyFocusedLocalSaveEntryIndex))->SetWidgetFocus();
 
     return;
 }

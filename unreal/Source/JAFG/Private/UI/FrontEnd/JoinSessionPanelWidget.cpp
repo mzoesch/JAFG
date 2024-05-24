@@ -2,6 +2,7 @@
 
 #include "UI/FrontEnd/JoinSessionPanelWidget.h"
 
+#include "JAFGFocusableUserWidget.h"
 #include "Components/Button.h"
 #include "Components/ScrollBox.h"
 #include "UI/FrontEnd/RemoteSessionEntry.h"
@@ -95,7 +96,7 @@ void UJoinSessionPanelWidget::OnNativeRemoteSessionEntryClicked(const int32 Widg
 {
     if (this->HasFocusedRemoteSessionEntry())
     {
-        Cast<UJAFGFocusableWidget>(this->SB_RemoteSessions->GetChildAt(this->CurrentlyFocusedRemoteSessionEntryIndex))->SetWidgetUnfocus();
+        Cast<UJAFGFocusableUserWidget>(this->SB_RemoteSessions->GetChildAt(this->CurrentlyFocusedRemoteSessionEntryIndex))->SetWidgetUnfocus();
     }
 
     if (this->CurrentlyFocusedRemoteSessionEntryIndex == WidgetIdentifier)
@@ -105,7 +106,7 @@ void UJoinSessionPanelWidget::OnNativeRemoteSessionEntryClicked(const int32 Widg
     }
 
     this->CurrentlyFocusedRemoteSessionEntryIndex = WidgetIdentifier;
-    Cast<UJAFGFocusableWidget>(this->SB_RemoteSessions->GetChildAt(this->CurrentlyFocusedRemoteSessionEntryIndex))->SetWidgetFocus();
+    Cast<UJAFGFocusableUserWidget>(this->SB_RemoteSessions->GetChildAt(this->CurrentlyFocusedRemoteSessionEntryIndex))->SetWidgetFocus();
 
     return;
 }

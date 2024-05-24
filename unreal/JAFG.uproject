@@ -15,11 +15,6 @@
 			"LoadingPhase": "Default"
 		},
 		{
-			"Name": "JAFGSlateCore",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		},
-		{
 			"Name": "JAFGNetCore",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
