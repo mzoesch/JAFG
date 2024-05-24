@@ -18,6 +18,8 @@ void UChunkValidationSubsystemCl::Initialize(FSubsystemCollectionBase& Collectio
     Collection.InitializeDependency<ULocalChunkWorldSettings>();
     Super::Initialize(Collection);
 
+    LOG_DISPLAY(LogChunkValidation, "Called.")
+
     this->SetTickInterval(2.0f);
 
     return;

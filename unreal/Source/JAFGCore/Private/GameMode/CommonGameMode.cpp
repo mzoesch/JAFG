@@ -4,6 +4,9 @@
 
 #include "JAFGLogDefs.h"
 #include "Player/CommonPlayerController.h"
+#if WITH_EDITOR
+    #include "Editor.h"
+#endif /* WITH_EDITOR */
 
 ACommonGameMode::ACommonGameMode(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -39,6 +42,11 @@ void ACommonGameMode::PostLogin(APlayerController* NewPlayer)
         else
         {
 #if WITH_EDITOR
+            if (GEditor && GEditor->IsSimulateInEditorInProgress())
+            {
+                LOG_DISPLAY(LogCommonSlate, "Detected editor simulation mode. Discarding post login error.");
+                return;
+            }
             LOG_ERROR(LogGameMode, "Player controller is not of type a Common Player Controller.");
 #else /* WITH_EDITOR */
             LOG_FATAL(LogGameMode, "Player controller is not of type a Common Player Controller.");

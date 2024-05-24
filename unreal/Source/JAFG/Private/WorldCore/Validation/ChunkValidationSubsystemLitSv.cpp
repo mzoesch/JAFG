@@ -22,6 +22,8 @@ void UChunkValidationSubsystemLitSv::Initialize(FSubsystemCollectionBase& Collec
     Collection.InitializeDependency<UChunkGenerationSubsystem>();
     Super::Initialize(Collection);
 
+    LOG_DISPLAY(LogChunkValidation, "Called.")
+
     this->SetTickInterval(2.0f);
 
     return;

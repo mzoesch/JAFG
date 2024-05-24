@@ -23,6 +23,8 @@ void UChunkValidationSubsystemStandalone::Initialize(FSubsystemCollectionBase& C
     Collection.InitializeDependency<UChunkGenerationSubsystem>();
     Super::Initialize(Collection);
 
+    LOG_DISPLAY(LogChunkValidation, "Called.")
+
     this->SetTickInterval(2.0f);
 
     return;
@@ -35,7 +37,11 @@ bool UChunkValidationSubsystemStandalone::ShouldCreateSubsystem(UObject* Outer) 
         return false;
     }
 
+#if WITH_EDITOR
+    return UNetStatics::IsSafeStandalone(Outer);
+#else /* WITH_EDITOR */
     return UNetStatics::IsSafeStandaloneNoServer(Outer);
+#endif /* !WITH_EDITOR */
 }
 
 void UChunkValidationSubsystemStandalone::OnWorldBeginPlay(UWorld& InWorld)

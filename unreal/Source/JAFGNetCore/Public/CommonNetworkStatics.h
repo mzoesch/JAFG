@@ -50,7 +50,6 @@ public:
             && UKismetSystemLibrary::IsServer(WorldContextObject)     == false;
     }
 
-
     UFUNCTION(BlueprintPure, Category = "JAFG|NetworkStatics", meta = (WorldContext = "WorldContextObject"))
     static JAFGNETCORE_API bool IsSafeServer(const UObject* WorldContextObject)
     {
@@ -66,6 +65,12 @@ public:
     UFUNCTION(BlueprintPure, Category = "JAFG|NetworkStatics", meta = (WorldContext = "WorldContextObject"))
     static JAFGNETCORE_API bool IsSafeListenServer(const UObject* WorldContextObject)
     {
+#if WITH_EDITOR
+        return
+               UKismetSystemLibrary::IsStandalone(WorldContextObject)      == false
+            && UKismetSystemLibrary::IsDedicatedServer(WorldContextObject) == false
+            && UKismetSystemLibrary::IsServer(WorldContextObject)          == true;
+#else /* WITH_EDITOR */
         return
             /*
              * This is a little bit unique here. When in the editor, we have the option to directly start a listen
@@ -80,6 +85,7 @@ public:
             /* UKismetSystemLibrary::IsStandalone(WorldContextObject)      == true */
                UKismetSystemLibrary::IsDedicatedServer(WorldContextObject) == false
             && UKismetSystemLibrary::IsServer(WorldContextObject)          == true;
+#endif /* !WITH_EDITOR */
     }
 
     UFUNCTION(BlueprintPure, Category = "JAFG|NetworkStatics", meta = (WorldContext = "WorldContextObject"))
