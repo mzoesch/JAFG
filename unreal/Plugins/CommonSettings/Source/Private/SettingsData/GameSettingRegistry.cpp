@@ -10,7 +10,7 @@ UGameSettingRegistry::UGameSettingRegistry(const FObjectInitializer& ObjectIniti
     return;
 }
 
-void UGameSettingRegistry::Initialize(ULocalPlayer* InLocalPlayer)
+void UGameSettingRegistry::Initialize(UCustomSettingsLocalPlayer* InLocalPlayer)
 {
     if (InLocalPlayer == nullptr)
     {
@@ -22,7 +22,7 @@ void UGameSettingRegistry::Initialize(ULocalPlayer* InLocalPlayer)
     this->TopLevelSettings.Empty();
     this->RegisteredSettings.Empty();
 
-    this->OnInitialize();
+    this->OnInitialize(InLocalPlayer);
 
     return;
 }

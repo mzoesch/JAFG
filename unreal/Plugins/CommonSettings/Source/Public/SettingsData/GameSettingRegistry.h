@@ -8,6 +8,7 @@
 #include "GameSettingRegistry.generated.h"
 
 class UGameSetting;
+class UCustomSettingsLocalPlayer;
 
 /**
  * Unique to one local player. Should store all settings for this player.
@@ -24,17 +25,19 @@ public:
 
     explicit UGameSettingRegistry(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
-    void Initialize(ULocalPlayer* InLocalPlayer);
+    void Initialize(UCustomSettingsLocalPlayer* InLocalPlayer);
+
+    const TArray<TObjectPtr<UGameSetting>>& GetTopLevelSettings(void) const { return this->TopLevelSettings; }
 
 protected:
 
-    virtual void OnInitialize(void) { };
+    virtual void OnInitialize(UCustomSettingsLocalPlayer* InOwningPlayer) { };
 
     auto RegisterTopLevelSetting(UGameSetting* InSetting) -> void;
     auto RegisterInnerSetting(UGameSetting* InSetting) -> void;
 
     UPROPERTY()
-    TObjectPtr<ULocalPlayer> OwingLocalPlayer;
+    TObjectPtr<UCustomSettingsLocalPlayer> OwingLocalPlayer;
 
     UPROPERTY(Transient)
     TArray<TObjectPtr<UGameSetting>> TopLevelSettings;

@@ -3,7 +3,11 @@
 #include "JAFGGameSettingRegistry.h"
 #include "SettingsData/GameSettingCollection.h"
 
-UGameSettingCollection* UJAFGGameSettingRegistry::InitializeKeybindingSettings(void)
+UGameSettingCollection* UJAFGGameSettingRegistry::InitializeKeybindingSettings(UJAFGLocalPlayer* InOwningPlayer)
 {
-    return NewObject<UGameSettingCollection>();
+    UGameSettingCollection* Screen = NewObject<UGameSettingCollection>();
+    Screen->SetIdentifier("Keybindings");
+    Screen->SetDisplayName("Keybindings");
+
+    return Screen;
 }

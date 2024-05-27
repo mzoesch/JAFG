@@ -11,8 +11,9 @@ void UJAFGTabBarButton::PassDataToWidget(const FWidgetPassData& UncastedData)
 {
     CAST_PASSED_DATA(FButtonEntryDescriptor)
     {
-        this->OwningTabBar  = Data->Owner;
-        this->TabIdentifier = Data->Identifier;
+        this->OwningTabBar   = Data->Owner;
+        this->TabIdentifier  = Data->Identifier;
+        this->TabDisplayName = Data->DisplayName;
     }
 
     if (this->OwningTabBar == nullptr)
@@ -26,7 +27,7 @@ void UJAFGTabBarButton::PassDataToWidget(const FWidgetPassData& UncastedData)
     return;
 }
 
-void UJAFGTabBarButton::NativeOnThisTabPressed(void)
+void UJAFGTabBarButton::NativeOnThisTabClicked(void)
 {
     this->GetCheckedOwningTabBar<UJAFGTabBar>()->OnTabPressed(this->TabIdentifier);
 }
@@ -71,14 +72,14 @@ void UJAFGTabBarButton::InitializeTab(void)
     {
         FPassedFocusableWidgetData Data;
         Data.WidgetIdentifier        = 0;
-        Data.OnWidgetPressedDelegate = [this] (int32 WidgetIdentifier) { this->NativeOnThisTabPressed(); };
+        Data.OnWidgetPressedDelegate = [this] (const int32 WidgetIdentifier) { this->NativeOnThisTabClicked(); };
         this->W_TargetFocusableWidget->PassDataToWidget(Data);
-        this->W_TargetFocusableWidget->SetTextIfBound(this->TabIdentifier);
+        this->W_TargetFocusableWidget->SetTextIfBound(this->TabDisplayName);
     }
 
     if (this->TB_ButtonText)
     {
-        this->TB_ButtonText->SetText(FText::FromString(this->TabIdentifier));
+        this->TB_ButtonText->SetText(FText::FromString(this->TabDisplayName));
     }
 
     return;

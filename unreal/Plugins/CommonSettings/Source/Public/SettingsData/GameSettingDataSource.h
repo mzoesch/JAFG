@@ -4,6 +4,8 @@
 
 #include "PropertyPathHelpers.h"
 
+class UCustomSettingsLocalPlayer;
+
 class COMMONSETTINGS_API FGameSettingDataSource final : public TSharedFromThis<FGameSettingDataSource>
 {
 
@@ -15,9 +17,9 @@ public:
     explicit FGameSettingDataSource(const TArray<FString>& InDynamicPath);
     ~FGameSettingDataSource(void) { }
 
-    auto Resolve(ULocalPlayer* InLocalPlayer) const -> bool;
-    auto GetValueAsString(ULocalPlayer* InLocalPlayer) const -> FString;
-    auto SetValue(ULocalPlayer* InLocalPlayer, const FString& InStringValue) const -> void;
+    auto Resolve(UCustomSettingsLocalPlayer* InLocalPlayer) const -> bool;
+    auto GetValueAsString(UCustomSettingsLocalPlayer* InLocalPlayer) const -> FString;
+    auto SetValue(UCustomSettingsLocalPlayer* InLocalPlayer, const FString& InStringValue) const -> void;
     auto ToString(void) const -> FString;
 
 private:

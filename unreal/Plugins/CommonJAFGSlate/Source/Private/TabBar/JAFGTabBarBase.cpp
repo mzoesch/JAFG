@@ -2,3 +2,8 @@
 
 
 #include "TabBar/JAFGTabBarBase.h"
+
+UJAFGTabBarBase::UJAFGTabBarBase(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+{
+    return;
+}

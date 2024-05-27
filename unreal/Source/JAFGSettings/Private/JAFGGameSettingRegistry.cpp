@@ -3,6 +3,8 @@
 #include "JAFGGameSettingRegistry.h"
 
 #include "JAFGLogDefs.h"
+#include "CustomSettingsLocalPlayer.h"
+#include "Player/JAFGLocalPlayer.h"
 #include "SettingsData/GameSetting.h"
 #include "SettingsData/GameSettingCollection.h"
 
@@ -16,7 +18,7 @@ void UJAFGGameSettingRegistrySubsystem::Initialize(FSubsystemCollectionBase& Col
     Super::Initialize(Collection);
 
     this->LocalRegistry = NewObject<UJAFGGameSettingRegistry>(); check( this->LocalRegistry )
-    this->LocalRegistry->Initialize(this->GetLocalPlayer());
+    this->LocalRegistry->Initialize(this->GetLocalPlayer<UCustomSettingsLocalPlayer>());
 
     LOG_VERBOSE(LogGameSettings, "Initialzied local registry.")
 
@@ -28,17 +30,24 @@ UJAFGGameSettingRegistry::UJAFGGameSettingRegistry(const FObjectInitializer& Obj
     return;
 }
 
-void UJAFGGameSettingRegistry::OnInitialize(void)
+void UJAFGGameSettingRegistry::OnInitialize(UCustomSettingsLocalPlayer* InOwningPlayer)
 {
-    Super::OnInitialize();
+    Super::OnInitialize(InOwningPlayer);
 
-    this->GameplaySettings      = this->InitializeGameplaySettings();
-    this->AudioSettings         = this->InitializeAudioSettings();
-    this->VideoSettings         = this->InitializeVideoSettings();
-    this->ControlSettings       = this->InitializeControlSettings();
-    this->KeybindingSettings    = this->InitializeKeybindingSettings();
-    this->UserInterfaceSettings = this->InitializeUserInterfaceSettings();
-    this->DebugSettings         = this->InitializeDebugSettings();
+    UJAFGLocalPlayer* CastedIn = Cast<UJAFGLocalPlayer>(InOwningPlayer);
+    if (CastedIn == nullptr)
+    {
+        LOG_FATAL(LogGameSettings, "Invalid Owning Player received. It is not of type UJAFGLocalPlayer.")
+        return;
+    }
+
+    this->GameplaySettings      = this->InitializeGameplaySettings(CastedIn);
+    this->AudioSettings         = this->InitializeAudioSettings(CastedIn);
+    this->VideoSettings         = this->InitializeVideoSettings(CastedIn);
+    this->ControlSettings       = this->InitializeControlSettings(CastedIn);
+    this->KeybindingSettings    = this->InitializeKeybindingSettings(CastedIn);
+    this->UserInterfaceSettings = this->InitializeUserInterfaceSettings(CastedIn);
+    this->DeveloperSettings     = this->InitializeDeveloperSettings(CastedIn);
 
     this->RegisterTopLevelSetting(this->GameplaySettings);
     this->RegisterTopLevelSetting(this->AudioSettings);
@@ -46,7 +55,7 @@ void UJAFGGameSettingRegistry::OnInitialize(void)
     this->RegisterTopLevelSetting(this->ControlSettings);
     this->RegisterTopLevelSetting(this->KeybindingSettings);
     this->RegisterTopLevelSetting(this->UserInterfaceSettings);
-    this->RegisterTopLevelSetting(this->DebugSettings);
+    this->RegisterTopLevelSetting(this->DeveloperSettings);
 
     return;
 }

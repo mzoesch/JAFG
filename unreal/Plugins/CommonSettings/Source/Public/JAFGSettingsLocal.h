@@ -7,8 +7,9 @@
 
 #include "JAFGSettingsLocal.generated.h"
 
+/** Base class to store all local settings */
 UCLASS(NotBlueprintable)
-class JAFGSETTINGS_API UJAFGSettingsLocal : public UGameUserSettings
+class COMMONSETTINGS_API UJAFGSettingsLocal : public UGameUserSettings
 {
     GENERATED_BODY()
 
@@ -18,8 +19,16 @@ public:
 
     static UJAFGSettingsLocal* Get();
 
-    float GetMasterVolume(void) const;
-    void SetMasterVolume(float InMasterVolume);
+    /*
+     * Please note.
+     * Always use UFUNCTION() to expose a method to the cached dynamic property paths if it should be accessible
+     * through the user interface.
+     */
+
+    UFUNCTION()
+    float GetMasterVolume( /* void */ ) const;
+    UFUNCTION()
+    void SetMasterVolume(const float InMasterVolume);
 
 protected:
 

@@ -19,7 +19,14 @@ struct COMMONJAFGSLATE_API FTabBarTabDescriptor final
     FString DisplayName = L"";
 
     TSubclassOf<UJAFGTabBarButton> ButtonWidgetClass = nullptr;
+
+    /** Optional panel. If not set, an empty non-hit testable overlay will be created as a placeholder. */
     TSubclassOf<UJAFGTabBarBase>   PanelWidgetClass  = nullptr;
+    /**
+     * Optional pass data for the panel widget. If set but panel not, the pass data will be ignored.
+     * @note Be aware of types.
+     */
+    FWidgetPassData* PanelPassData = nullptr;
 
     FMargin Padding  = FMargin(0.0f);
 };
@@ -62,7 +69,10 @@ protected:
 
     virtual auto RegisterAllTabs(void) -> void { }
             auto RegisterConcreteTab(const FTabBarTabDescriptor& TabDescriptor) -> void;
+#if !UE_BUILD_SHIPPING
     /** Will fill subclass references with the project defaults. */
+    static  auto GetDefaultTabDescriptorWithPanel(void) -> FTabBarTabDescriptor;
+#endif /* !UE_BUILD_SHIPPING */
     static  auto GetDefaultTabDescriptor(void) -> FTabBarTabDescriptor;
 
 private:

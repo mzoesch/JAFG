@@ -16,7 +16,8 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnTabPressedSignature, const FString& /* Id
 
 struct COMMONJAFGSLATE_API FButtonEntryDescriptor : public FWidgetPassData
 {
-    FString Identifier = L"";
+    FString Identifier  = L"";
+    FString DisplayName = L"";
     TObjectPtr<UJAFGTabBarBase> Owner;
 };
 
@@ -31,6 +32,10 @@ class COMMONJAFGSLATE_API UJAFGTabBarBase : public UJAFGUserWidget
 
     friend UJAFGTabBar;
     friend UJAFGTabBarButton;
+
+public:
+
+    explicit UJAFGTabBarBase(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 protected:
 

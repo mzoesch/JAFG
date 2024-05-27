@@ -15,4 +15,13 @@ UCLASS(Abstract, NotBlueprintable)
 class COMMONJAFGSLATE_API UJAFGTabBarPanel : public UJAFGTabBarBase
 {
     GENERATED_BODY()
+
+public:
+
+    explicit UJAFGTabBarPanel(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+protected:
+
+    virtual auto OnNativeMadeVisible(void) -> void override { }
+    virtual auto OnNativeMadeCollapsed(void) -> void override { }
 };

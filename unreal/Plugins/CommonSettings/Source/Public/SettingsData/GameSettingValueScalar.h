@@ -35,8 +35,9 @@ public:
     FORCEINLINE         auto SetDefaultValue(const double InValue) -> void { this->DefaultValue = InValue; }
     FORCEINLINE         auto SetDefaultValue(const float  InValue) -> void { this->SetDefaultValue(static_cast<double>(InValue)); }
     FORCEINLINE virtual auto GetDefaultValue(void) const -> TOptional<double> { return this->DefaultValue; }
+
     virtual auto GetValue(void) const -> double;
-    virtual auto SetValue(double Value, EGameSettingChangeReason::Type Reason = EGameSettingChangeReason::Change) -> void;
+    virtual auto SetValue(double InValue, EGameSettingChangeReason::Type Reason = EGameSettingChangeReason::Change) -> void;
 
     FORCEINLINE auto SetValueGetter(const TSharedRef<FGameSettingDataSource>& InGetter) -> void { this->ValueGetter = InGetter; }
     FORCEINLINE auto SetValueSetter(const TSharedRef<FGameSettingDataSource>& InSetter) -> void { this->ValueSetter = InSetter; }

@@ -7,17 +7,17 @@ UJAFGSettingsLocal::UJAFGSettingsLocal(const FObjectInitializer& ObjectInitializ
     return;
 }
 
-UJAFGSettingsLocal* UJAFGSettingsLocal::Get()
+UJAFGSettingsLocal* UJAFGSettingsLocal::Get(void)
 {
     return GEngine ? CastChecked<UJAFGSettingsLocal>(GEngine->GetGameUserSettings()) : nullptr;
 }
 
-float UJAFGSettingsLocal::GetMasterVolume() const
+float UJAFGSettingsLocal::GetMasterVolume(void) const
 {
     return this->MasterVolume;
 }
 
-void UJAFGSettingsLocal::SetMasterVolume(float InMasterVolume)
+void UJAFGSettingsLocal::SetMasterVolume(const float InMasterVolume)
 {
-    this->MasterVolume;
+    this->MasterVolume = InMasterVolume;
 }

@@ -3,19 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Engine/LocalPlayer.h"
+#include "CustomSettingsLocalPlayer.h"
 
 #include "JAFGLocalPlayer.generated.h"
 
-class UJAFGSettingsLocal;
-
-UCLASS()
-class JAFGCORE_API UJAFGLocalPlayer : public ULocalPlayer
+UCLASS(NotBlueprintable)
+class JAFGCORE_API UJAFGLocalPlayer : public UCustomSettingsLocalPlayer
 {
     GENERATED_BODY()
-
-public:
-
-    UFUNCTION()
-    UJAFGSettingsLocal* GetLocalSettings() const;
 };

@@ -3,6 +3,7 @@
 #include "SettingsData/GameSettingDataSource.h"
 
 #include "JAFGLogDefs.h"
+#include "CustomSettingsLocalPlayer.h"
 
 FGameSettingDataSource::FGameSettingDataSource(void)
 {
@@ -14,29 +15,29 @@ FGameSettingDataSource::FGameSettingDataSource(const TArray<FString>& InDynamicP
     return;
 }
 
-bool FGameSettingDataSource::Resolve(ULocalPlayer* InLocalPlayer) const
+bool FGameSettingDataSource::Resolve(UCustomSettingsLocalPlayer* InLocalPlayer) const
 {
     return DynamicPath.Resolve(InLocalPlayer);
 }
 
-FString FGameSettingDataSource::GetValueAsString(ULocalPlayer* InLocalPlayer) const
+FString FGameSettingDataSource::GetValueAsString(UCustomSettingsLocalPlayer* InLocalPlayer) const
 {
     FString OutStringValue;
 
     if (PropertyPathHelpers::GetPropertyValueAsString(InLocalPlayer, this->DynamicPath, OutStringValue) == false)
     {
-        LOG_ERROR(LogGameSettings, "Failed to get property value as string")
+        LOG_ERROR(LogGameSettings, "Failed to get property value as string. For path: %s.", *this->ToString())
         return FString();
     }
 
     return OutStringValue;
 }
 
-void FGameSettingDataSource::SetValue(ULocalPlayer* InLocalPlayer, const FString& InStringValue) const
+void FGameSettingDataSource::SetValue(UCustomSettingsLocalPlayer* InLocalPlayer, const FString& InStringValue) const
 {
     if (PropertyPathHelpers::SetPropertyValueFromString(InLocalPlayer, this->DynamicPath, InStringValue) == false)
     {
-        LOG_ERROR(LogGameSettings, "Failed to set property value from string")
+        LOG_ERROR(LogGameSettings, "Failed to set property value from string. For path: %s.", *this->ToString())
     }
 }
 

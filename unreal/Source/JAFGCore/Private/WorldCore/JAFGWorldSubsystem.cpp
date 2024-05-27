@@ -1,6 +1,5 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
-#include "ToolContextInterfaces.h"
 #include "WorldCore/JAFGWorldSubsystems.h"
 
 #include "WorldCore/RegisteredWorldNames.h"

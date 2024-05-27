@@ -20,5 +20,5 @@ public:
 
 protected:
 
-    virtual void NativeOnThisTabPressed(void) override;
+    virtual void NativeOnThisTabClicked(void) override;
 };

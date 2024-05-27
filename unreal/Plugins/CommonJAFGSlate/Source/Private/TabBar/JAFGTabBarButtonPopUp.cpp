@@ -10,7 +10,7 @@ UJAFGTabBarButtonPopUp::UJAFGTabBarButtonPopUp(const FObjectInitializer& ObjectI
     return;
 }
 
-void UJAFGTabBarButtonPopUp::NativeOnThisTabPressed(void)
+void UJAFGTabBarButtonPopUp::NativeOnThisTabClicked(void)
 {
     ACommonHUD* HUD = Cast<ACommonHUD>(this->GetOwningPlayer()->GetHUD());
     check( HUD )

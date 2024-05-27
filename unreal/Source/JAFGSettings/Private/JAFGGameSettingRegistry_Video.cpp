@@ -3,7 +3,11 @@
 #include "JAFGGameSettingRegistry.h"
 #include "SettingsData/GameSettingCollection.h"
 
-UGameSettingCollection* UJAFGGameSettingRegistry::InitializeVideoSettings(void)
+UGameSettingCollection* UJAFGGameSettingRegistry::InitializeVideoSettings(UJAFGLocalPlayer* InOwningPlayer)
 {
-    return NewObject<UGameSettingCollection>();
+    UGameSettingCollection* Screen = NewObject<UGameSettingCollection>();
+    Screen->SetIdentifier("Video");
+    Screen->SetDisplayName("Video");
+
+    return Screen;
 }

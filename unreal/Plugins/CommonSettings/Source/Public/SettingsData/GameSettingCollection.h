@@ -16,6 +16,8 @@ public:
 
     explicit UGameSettingCollection(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
+    virtual auto GetChildSettings() const -> TArray<UGameSetting*> override { return OwnedSettings; }
+
     void AddSetting(UGameSetting* InSetting);
 
     auto GetSettingByIdentifier(const FString& InIdentifier) const -> UGameSetting*;

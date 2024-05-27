@@ -29,9 +29,9 @@ protected:
      * UJAFGTabBarButton#B_MasterButton is not bound.
      */
     UFUNCTION(BlueprintCallable, Category = "JAFG|Widget", meta = (AllowPrivateAccess = "true"))
-    virtual void OnThisTabPressed( /* void */ ) { this->NativeOnThisTabPressed(); }
+    virtual void OnThisTabClicked( /* void */ ) { this->NativeOnThisTabClicked(); }
     /** Automatically called it the UJAFGTabBarButton#B_MasterButton is bound. */
-    virtual void NativeOnThisTabPressed(void);
+    virtual void NativeOnThisTabClicked(void);
 
     UFUNCTION(BlueprintImplementableEvent, Category = "JAFG|Widget", meta = (AllowPrivateAccess = "true"))
     void OnFocusTab( /* void */ );
@@ -49,6 +49,7 @@ protected:
     template<typename T> T* GetOwningTabBar(void) const { return Cast<T>(this->OwningTabBar); }
     template<typename T> T* GetCheckedOwningTabBar(void) const { return CastChecked<T>(this->OwningTabBar); }
     FString TabIdentifier = L"";
+    FString TabDisplayName = L"";
 
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget, OptionalWidget))
     TObjectPtr<UJAFGFocusableUserWidget> W_TargetFocusableWidget;
@@ -58,7 +59,7 @@ protected:
     TObjectPtr<UTextBlock> TB_ButtonText;
 
     UFUNCTION(BlueprintPure, Category = "JAFG|Widget", meta = (AllowPrivateAccess = "true"))
-    FString GetTextForButton( /* void */ ) const { return this->TabIdentifier; }
+    FString GetTextForButton( /* void */ ) const { return this->TabDisplayName; }
 
     virtual void InitializeTab(void);
 };

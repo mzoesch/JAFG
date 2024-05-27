@@ -8,8 +8,15 @@
 
 #include "JAFGGameSettingRegistry.generated.h"
 
+class UJAFGLocalPlayer;
 class UGameSettingCollection;
 class UJAFGGameSettingRegistry;
+
+#define GET_LOCAL_SETTINGS_FUNCTION_PATH(FunctionOrPropertyName)                      \
+    MakeShared<FGameSettingDataSource>(TArray<FString>({                              \
+        GET_FUNCTION_NAME_STRING_CHECKED(UJAFGLocalPlayer,   GetLocalSettings),       \
+        GET_FUNCTION_NAME_STRING_CHECKED(UJAFGSettingsLocal, FunctionOrPropertyName), \
+    }))
 
 UCLASS(NotBlueprintable)
 class UJAFGGameSettingRegistrySubsystem : public ULocalPlayerSubsystem
@@ -40,7 +47,7 @@ public:
 protected:
 
     // UGameSettingRegistry implementation
-    virtual void OnInitialize(void) override;
+    virtual void OnInitialize(UCustomSettingsLocalPlayer* InOwningPlayer) override;
     // ~UGameSettingRegistry implementation
 
     //////////////////////////////////////////////////////////////////////////
@@ -65,16 +72,16 @@ protected:
     TObjectPtr<UGameSettingCollection> UserInterfaceSettings = nullptr;
 
     UPROPERTY()
-    TObjectPtr<UGameSettingCollection> DebugSettings         = nullptr;
+    TObjectPtr<UGameSettingCollection> DeveloperSettings     = nullptr;
 
     // ~Top Level Settings
     //////////////////////////////////////////////////////////////////////////
 
-    auto InitializeGameplaySettings(void) -> UGameSettingCollection*;
-    auto InitializeAudioSettings(void) -> UGameSettingCollection*;
-    auto InitializeVideoSettings(void) -> UGameSettingCollection*;
-    auto InitializeControlSettings(void) -> UGameSettingCollection*;
-    auto InitializeKeybindingSettings(void) -> UGameSettingCollection*;
-    auto InitializeUserInterfaceSettings(void) -> UGameSettingCollection*;
-    auto InitializeDebugSettings(void) -> UGameSettingCollection*;
+    auto InitializeGameplaySettings(UJAFGLocalPlayer* InOwningPlayer) -> UGameSettingCollection*;
+    auto InitializeAudioSettings(UJAFGLocalPlayer* InOwningPlayer) -> UGameSettingCollection*;
+    auto InitializeVideoSettings(UJAFGLocalPlayer* InOwningPlayer) -> UGameSettingCollection*;
+    auto InitializeControlSettings(UJAFGLocalPlayer* InOwningPlayer) -> UGameSettingCollection*;
+    auto InitializeKeybindingSettings(UJAFGLocalPlayer* InOwningPlayer) -> UGameSettingCollection*;
+    auto InitializeUserInterfaceSettings(UJAFGLocalPlayer* InOwningPlayer) -> UGameSettingCollection*;
+    auto InitializeDeveloperSettings(UJAFGLocalPlayer* InOwningPlayer) -> UGameSettingCollection*;
 };

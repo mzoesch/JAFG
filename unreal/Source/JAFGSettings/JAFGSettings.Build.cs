@@ -13,6 +13,9 @@ public class JAFGSettings : ModuleRules
         {
             "Core",
             "DeveloperSettings",
+            "SlateCore",
+            "Slate",
+            "UMG",
         }
         );
 

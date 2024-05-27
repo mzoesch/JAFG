@@ -57,16 +57,12 @@ void UJAFGTabBar::RegisterConcreteTab(const FTabBarTabDescriptor& TabDescriptor)
         LOG_FATAL(LogCommonSlate, "Button widget class is invalid for %s.", *TabDescriptor.Identifier)
         return;
     }
-    if (TabDescriptor.PanelWidgetClass == nullptr)
-    {
-        LOG_FATAL(LogCommonSlate, "Panel widget class is invalid for %s.", *TabDescriptor.Identifier)
-        return;
-    }
 
     UJAFGTabBarButton* Button = CreateWidget<UJAFGTabBarButton>(this, TabDescriptor.ButtonWidgetClass);
     FButtonEntryDescriptor ButtonData = FButtonEntryDescriptor();
-    ButtonData.Owner      = this;
-    ButtonData.Identifier = TabDescriptor.Identifier;
+    ButtonData.Owner       = this;
+    ButtonData.Identifier  = TabDescriptor.Identifier;
+    ButtonData.DisplayName = TabDescriptor.DisplayName;
     Button->PassDataToWidget(ButtonData);
     UPanelSlot* MySlot = this->P_EntryButtonContainer->AddChild(Button);
 
@@ -87,11 +83,35 @@ void UJAFGTabBar::RegisterConcreteTab(const FTabBarTabDescriptor& TabDescriptor)
         }
     }
 
-    this->WS_PanelContainer->AddChild(CreateWidget<UJAFGTabBarPanel>(this, TabDescriptor.PanelWidgetClass));
+    if (TabDescriptor.PanelWidgetClass == nullptr)
+    {
+        this->WS_PanelContainer->AddChild(this->WidgetTree->ConstructWidget<UOverlay>());
+    }
+    else
+    {
+        UJAFGTabBarBase* Panel = CreateWidget<UJAFGTabBarBase>(this, TabDescriptor.PanelWidgetClass);
+        if (TabDescriptor.PanelPassData != nullptr)
+        {
+            Panel->PassDataToWidget(*TabDescriptor.PanelPassData);
+        }
+        this->WS_PanelContainer->AddChild(Panel);
+    }
 
     this->RegisteredTabIdentifiersInOrder.Add(TabDescriptor.Identifier);
 
     return;
+}
+
+FTabBarTabDescriptor UJAFGTabBar::GetDefaultTabDescriptorWithPanel(void)
+{
+    FTabBarTabDescriptor DefaultDescriptor = FTabBarTabDescriptor();
+
+    const UCommonJAFGSlateDeveloperSettings* Settings = GetDefault<UCommonJAFGSlateDeveloperSettings>();
+
+    DefaultDescriptor.ButtonWidgetClass = Settings->DefaultTabBarButtonWidgetClass;
+    DefaultDescriptor.PanelWidgetClass  = Settings->DefaultTabBarPanelWidgetClass;
+
+    return DefaultDescriptor;
 }
 
 FTabBarTabDescriptor UJAFGTabBar::GetDefaultTabDescriptor(void)
@@ -101,7 +121,7 @@ FTabBarTabDescriptor UJAFGTabBar::GetDefaultTabDescriptor(void)
     const UCommonJAFGSlateDeveloperSettings* Settings = GetDefault<UCommonJAFGSlateDeveloperSettings>();
 
     DefaultDescriptor.ButtonWidgetClass = Settings->DefaultTabBarButtonWidgetClass;
-    DefaultDescriptor.PanelWidgetClass  = Settings->DefaultTabBarPanelWidgetClass;
+    DefaultDescriptor.PanelWidgetClass  = nullptr;
 
     return DefaultDescriptor;
 }

@@ -7,6 +7,7 @@
 
 #include "GameSetting.generated.h"
 
+class UCustomSettingsLocalPlayer;
 class UGameSettingRegistry;
 
 UCLASS(Abstract, NotBlueprintable)
@@ -18,8 +19,9 @@ public:
 
     explicit UGameSetting(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
+    void Initialize(UCustomSettingsLocalPlayer* InOwningPlayer);
 
-    FORCEINLINE virtual auto GetChildSettings(void) -> TArray<UGameSetting*> { return TArray<UGameSetting*>(); }
+    FORCEINLINE virtual auto GetChildSettings(void) const -> TArray<UGameSetting*> { return TArray<UGameSetting*>(); }
 
     FORCEINLINE auto SetOwningRegistry(UGameSettingRegistry* InRegistry) -> void { this->OwningRegistry = InRegistry; }
     FORCEINLINE auto GetOwningRegistry(void) const -> UGameSettingRegistry* { return this->OwningRegistry.Get(); }
@@ -35,9 +37,12 @@ protected:
     virtual void OnInitialized(void) { }
 
     UPROPERTY(Transient)
+    TObjectPtr<UCustomSettingsLocalPlayer> OwningPlayer;
+
+    UPROPERTY(Transient)
     TObjectPtr<UGameSettingRegistry> OwningRegistry;
 
-    /** Must always unique inside a reigstry. */
+    /** Must always unique inside a registry. */
     FString Identifier  = L"";
     FText   DisplayName = FText::GetEmpty();
 };

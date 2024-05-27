@@ -20,7 +20,7 @@ public:
 protected:
 
     /** Override to allow for more pop-ups than simple ones and yes no. */
-    virtual void NativeOnThisTabPressed(void) override;
+    virtual void NativeOnThisTabClicked(void) override;
 
     /** Here add custom behavior in derived class. Only called if yes no. */
     virtual void OnPopUpClosed(const bool bAccepted) { }

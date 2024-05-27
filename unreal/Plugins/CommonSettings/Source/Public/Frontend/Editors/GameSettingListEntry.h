@@ -4,10 +4,29 @@
 
 #include "CoreMinimal.h"
 #include "JAFGUserWidget.h"
+
 #include "GameSettingListEntry.generated.h"
 
-UCLASS()
+class UJAFGTextBlock;
+
+struct COMMONSETTINGS_API FGameSettingListEntryPassData : public FWidgetPassData
+{
+    FText SettingName;
+};
+
+UCLASS(Transient, NotBlueprintable)
 class COMMONSETTINGS_API UGameSettingListEntry : public UJAFGUserWidget
 {
     GENERATED_BODY()
+
+public:
+
+    explicit UGameSettingListEntry(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+    virtual void PassDataToWidget(const FWidgetPassData& UncastedData) override;
+
+protected:
+
+    UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
+    TObjectPtr<UJAFGTextBlock> Text_SettingName;
 };

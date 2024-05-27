@@ -10,7 +10,7 @@ UEscapeMenuResumeButton::UEscapeMenuResumeButton(const FObjectInitializer& Objec
     return;
 }
 
-void UEscapeMenuResumeButton::NativeOnThisTabPressed(void)
+void UEscapeMenuResumeButton::NativeOnThisTabClicked(void)
 {
     this->GetOwningTabBar<UJAFGTabBar>()->UnfocusAllTabs();
 

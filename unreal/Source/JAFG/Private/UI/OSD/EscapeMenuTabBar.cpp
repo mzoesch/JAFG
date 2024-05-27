@@ -67,9 +67,11 @@ void UEscapeMenuTabBar::RegisterAllTabs(void)
     Achievements.DisplayName       = "Achievements";
     Achievements.Padding           = FMargin(0.0f, 200.0f, 0.0f, 0.0f);
 
+    check( this->SettingsPanelWidgetClass && "Settings Panel Widget Class is not set." )
     FTabBarTabDescriptor Settings = UJAFGTabBar::GetDefaultTabDescriptor();
     Settings.Identifier        = "Settings";
     Settings.DisplayName       = "Settings";
+    Settings.PanelWidgetClass  = this->SettingsPanelWidgetClass;
 
     FTabBarTabDescriptor SessionOptions = UJAFGTabBar::GetDefaultTabDescriptor();
     SessionOptions.Identifier        = "SessionOptions";

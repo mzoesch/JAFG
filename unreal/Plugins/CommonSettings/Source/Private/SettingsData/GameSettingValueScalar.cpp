@@ -25,16 +25,34 @@ void UGameSettingValueScalar::RestoreToInitial(void)
 
 FText UGameSettingValueScalar::GetFormattedText(void) const
 {
-    return FText::GetEmpty();
+    return this->DisplayFormat(this->GetValue());
 }
 
 double UGameSettingValueScalar::GetValue(void) const
 {
-    return 0;
+    const FString OutValue = this->ValueGetter->GetValueAsString(this->OwningPlayer);
+
+    double Value;
+    LexFromString(Value, *OutValue);
+
+    return Value;
 }
 
-void UGameSettingValueScalar::SetValue(double Value, EGameSettingChangeReason::Type Reason)
+void UGameSettingValueScalar::SetValue(double InValue, EGameSettingChangeReason::Type Reason)
 {
+    if (this->Minimum.IsSet())
+    {
+        InValue = FMath::Max(this->Minimum.GetValue(), InValue);
+    }
+    if (this->Maximum.IsSet())
+    {
+        InValue = FMath::Min(this->Maximum.GetValue(), InValue);
+    }
+
+    const FString StringValue = LexToString(InValue);
+    this->ValueSetter->SetValue(this->OwningPlayer, StringValue);
+
+    return;
 }
 
 FSettingScalarFormatFunction UGameSettingValueScalar::Raw( [] (const double Value)
@@ -46,9 +64,11 @@ FSettingScalarFormatFunction UGameSettingValueScalar::ZeroToOneAsPercent( [] (co
 {
     if (Value < 0.0 || Value > 1.0)
     {
-        LOG_ERROR(LogGameSettings, "Value is not in the range [0, 1]. Found: %f", Value)
-        return FText::GetEmpty();
+        LOG_ERROR(LogGameSettings, "Value is not in the range [0, 1]. Found: %f.", Value)
+        return FText::FromString(TEXT("ERROR"));
     }
 
     return FText::Format(PercentFormat, static_cast<int32>(FMath::RoundHalfFromZero(100.0 * Value)));
 });
+
+#undef LOCAL_OWNER

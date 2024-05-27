@@ -30,6 +30,9 @@ protected:
     TSubclassOf<UJAFGTabBarButton> ResumeEntryButtonWidgetClass;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    TSubclassOf<UJAFGTabBarBase> SettingsPanelWidgetClass;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
     TSubclassOf<UJAFGTabBarButton> ExitToMenuEntryButtonWidgetClass;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)

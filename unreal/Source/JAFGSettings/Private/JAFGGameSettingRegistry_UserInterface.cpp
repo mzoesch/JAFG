@@ -3,7 +3,11 @@
 #include "JAFGGameSettingRegistry.h"
 #include "SettingsData/GameSettingCollection.h"
 
-UGameSettingCollection* UJAFGGameSettingRegistry::InitializeUserInterfaceSettings(void)
+UGameSettingCollection* UJAFGGameSettingRegistry::InitializeUserInterfaceSettings(UJAFGLocalPlayer* InOwningPlayer)
 {
-    return NewObject<UGameSettingCollection>();
+    UGameSettingCollection* Screen = NewObject<UGameSettingCollection>();
+    Screen->SetIdentifier("UserInterface");
+    Screen->SetDisplayName("User Interface");
+
+    return Screen;
 }

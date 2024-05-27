@@ -12,6 +12,7 @@ public class JAFGCore : ModuleRules
         new string[]
         {
             "Core",
+            "CommonSettings",
         }
         );
 
