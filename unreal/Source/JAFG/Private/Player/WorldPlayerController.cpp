@@ -5,10 +5,9 @@
 #include "ChatComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "GameFramework/GameModeBase.h"
-#include "Input/JAFGInputSubsystem.h"
 #include "Input/CustomInputNames.h"
 #include "Network/MyHyperlaneComponent.h"
+#include "SettingsData/JAFGInputSubsystem.h"
 
 #define ENHANCED_INPUT_SUBSYSTEM                                    \
     ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>( \
@@ -170,7 +169,7 @@ void AWorldPlayerController::SetupCommonPlayerInput(void)
 #endif /* WITH_EDITOR */
 
     EnhancedSubsystem->ClearAllMappings();
-    EnhancedSubsystem->AddMappingContext(JAFGInputSubsystem->GetSafeContextByName(InputContexts::Foot), 0);
+    EnhancedSubsystem->AddMappingContext(JAFGInputSubsystem->GetSafeContextValue(InputContexts::Foot), 0);
 
     for (const FString& Name : JAFGInputSubsystem->GetAllActionNames())
     {
@@ -314,7 +313,7 @@ void AWorldPlayerController::BindAction(
     check( JAFGInputSubsystem )
 
     EnhancedInputComponent->BindAction(
-        JAFGInputSubsystem->GetActionByName(ActionName),
+        JAFGInputSubsystem->GetSafeActionValue(ActionName),
         Event,
         this,
         Method

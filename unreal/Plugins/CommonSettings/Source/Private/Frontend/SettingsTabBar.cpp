@@ -2,7 +2,9 @@
 
 #include "Frontend/SettingsTabBar.h"
 
+#include "CustomSettingsLocalPlayer.h"
 #include "Frontend/SettingsTabBarPanel.h"
+#include "SettingsData/GameSettingCollections.h"
 #include "SettingsData/GameSettingRegistry.h"
 
 USettingsTabBar::USettingsTabBar(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -42,6 +44,13 @@ void USettingsTabBar::RegisterAllTabs(void)
             LOG_FATAL(LogGameSettings, "Invalid Setting received.")
 #endif /* !ITH_EDITOR */
             continue;
+        }
+
+        if (Setting->IsA(ULazyGameSettingCollection::StaticClass()))
+        {
+            Cast<ULazyGameSettingCollection>(Setting)->LazyInitialize(
+                Cast<UCustomSettingsLocalPlayer>(GEngine->GetGamePlayer(this->GetWorld(), 0))
+            );
         }
 
         FTabBarTabDescriptor TopLevel = this->GetDefaultSettingsTabDescriptor();

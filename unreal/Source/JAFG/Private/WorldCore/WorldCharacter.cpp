@@ -11,7 +11,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Input/CustomInputNames.h"
-#include "Input/JAFGInputSubsystem.h"
+#include "SettingsData/JAFGInputSubsystem.h"
 #include "Player/WorldPlayerController.h"
 #include "WorldCore/Chunk/CommonChunk.h"
 
@@ -159,7 +159,7 @@ void AWorldCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
         check( JAFGSubsystem )
 
         Subsystem->ClearAllMappings();
-        Subsystem->AddMappingContext(JAFGSubsystem->GetContextByName(InputContexts::Foot), 0);
+        Subsystem->AddMappingContext(JAFGSubsystem->GetSafeContextValue(InputContexts::Foot), 0);
 
         for (const FString& ActionName : JAFGSubsystem->GetAllActionNames())
         {
@@ -570,7 +570,7 @@ void AWorldCharacter::BindAction(
     UJAFGInputSubsystem* JAFGInputSubsystem = this->GetWorld()->GetFirstPlayerController()->GetLocalPlayer()->GetSubsystem<UJAFGInputSubsystem>();
     check( JAFGInputSubsystem )
 
-    EnhancedInputComponent->BindAction(JAFGInputSubsystem->GetActionByName(ActionName), Event, this, Method);
+    EnhancedInputComponent->BindAction(JAFGInputSubsystem->GetSafeActionValue(ActionName), Event, this, Method);
 
     return;
 }
@@ -584,7 +584,7 @@ void AWorldCharacter::OnEscapeMenuVisibilityChanged(const bool bVisible)
     check( JAFGSubsystem )
 
     Subsystem->ClearAllMappings();
-    Subsystem->AddMappingContext(JAFGSubsystem->GetContextByName(bVisible ? InputContexts::Escape : InputContexts::Foot), 0);
+    Subsystem->AddMappingContext(JAFGSubsystem->GetSafeContextValue(bVisible ? InputContexts::Escape : InputContexts::Foot), 0);
 
     return;
 }

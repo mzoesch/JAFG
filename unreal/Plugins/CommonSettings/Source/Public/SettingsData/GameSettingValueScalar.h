@@ -11,7 +11,7 @@
 
 typedef TFunction<FText(const double Value)> FSettingScalarFormatFunction;
 
-UCLASS()
+UCLASS(NotBlueprintable)
 class COMMONSETTINGS_API UGameSettingValueScalar : public UGameSettingValue
 {
     GENERATED_BODY()

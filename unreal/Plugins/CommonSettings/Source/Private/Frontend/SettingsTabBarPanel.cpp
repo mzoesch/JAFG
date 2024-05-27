@@ -2,13 +2,16 @@
 
 #include "Frontend/SettingsTabBarPanel.h"
 
+#include "CustomSettingsLocalPlayer.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/JAFGScrollBox.h"
 #include "Components/JAFGTextBlock.h"
 #include "Components/VerticalBox.h"
-#include "SettingsData/GameSettingCollection.h"
+#include "SettingsData/GameSettingCollections.h"
 #include "SettingsData/GameSettingValueScalar.h"
 #include "Frontend/Editors/GameSettingListEntry_Scalar.h"
+#include "Frontend/Editors/GameSettingListEntry_Keyin.h"
+#include "SettingsData/GameSettingValueKeyIn.h"
 
 USettingsTabBarPanel::USettingsTabBarPanel(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -76,9 +79,9 @@ void USettingsTabBarPanel::CreateCollectionSubPage(const UGameSettingCollection*
 {
     LOG_DISPLAY(LogCommonSlate, "Creating Collection Sub Page for %s.", *InCollection->GetDisplayName().ToString())
 
-    UVerticalBox* VBox = WidgetTree->ConstructWidget<UVerticalBox>();
+    UVerticalBox* VBox = this->WidgetTree->ConstructWidget<UVerticalBox>();
 
-    UJAFGTextBlock* CollectionHeader = WidgetTree->ConstructWidget<UJAFGTextBlock>();
+    UJAFGTextBlock* CollectionHeader = this->WidgetTree->ConstructWidget<UJAFGTextBlock>();
     CollectionHeader->SetText(InCollection->GetDisplayName());
     VBox->AddChild(CollectionHeader);
 
@@ -88,6 +91,13 @@ void USettingsTabBarPanel::CreateCollectionSubPage(const UGameSettingCollection*
         {
             LOG_FATAL(LogCommonSlate, "Invalid Setting received. Parent: %s.", *InCollection->GetIdentifier())
             return;
+        }
+
+        if (Setting->IsA<ULazyGameSettingCollection>())
+        {
+            Cast<ULazyGameSettingCollection>(Setting)->LazyInitialize(
+                Cast<UCustomSettingsLocalPlayer>(GEngine->GetGamePlayer(this->GetWorld(), 0))
+            );
         }
 
         this->CreateConcreteSetting(Setting, VBox);
@@ -119,6 +129,20 @@ void USettingsTabBarPanel::CreateConcreteSetting(UGameSetting* InSetting, UPanel
         FGameSettingListEntryPassData_Scalar PassData;
         PassData.SettingName = InSetting->GetDisplayName();
         PassData.Scalar      = AsScalar;
+        Widget->PassDataToWidget(PassData);
+
+        Parent->AddChild(Widget);
+    }
+
+    else if (InSetting->IsA(UGameSettingValueKeyIn::StaticClass()))
+    {
+        UGameSettingValueKeyIn* AsKeyIn = Cast<UGameSettingValueKeyIn>(InSetting);
+
+        UGameSettingListEntry* Widget = CreateWidget<UGameSettingListEntry>(this->GetWorld(), this->GameSettingListEntry_KeyInWidgetClass);
+
+        FGameSettingListEntryPassData_KeyIn PassData;
+        PassData.SettingName = InSetting->GetDisplayName();
+        PassData.KeyIn       = AsKeyIn;
         Widget->PassDataToWidget(PassData);
 
         Parent->AddChild(Widget);

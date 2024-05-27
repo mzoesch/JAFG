@@ -6,7 +6,7 @@
 #include "CustomSettingsLocalPlayer.h"
 #include "Player/JAFGLocalPlayer.h"
 #include "SettingsData/GameSetting.h"
-#include "SettingsData/GameSettingCollection.h"
+#include "SettingsData/GameSettingCollections.h"
 
 UJAFGGameSettingRegistrySubsystem::UJAFGGameSettingRegistrySubsystem(void) : Super()
 {
@@ -32,6 +32,7 @@ UJAFGGameSettingRegistry::UJAFGGameSettingRegistry(const FObjectInitializer& Obj
 
 void UJAFGGameSettingRegistry::OnInitialize(UCustomSettingsLocalPlayer* InOwningPlayer)
 {
+    // This subsystem must be initialized last
     Super::OnInitialize(InOwningPlayer);
 
     UJAFGLocalPlayer* CastedIn = Cast<UJAFGLocalPlayer>(InOwningPlayer);

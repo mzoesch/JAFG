@@ -44,7 +44,10 @@ void UGameSettingRegistry::RegisterTopLevelSetting(UGameSetting* InSetting)
 
 void UGameSettingRegistry::RegisterInnerSetting(UGameSetting* InSetting)
 {
-    this->RegisteredSettings.Add(InSetting);
+    if (this->RegisteredSettings.Contains(InSetting) == false)
+    {
+        this->RegisteredSettings.Add(InSetting);
+    }
 
     for (UGameSetting* ChildSetting : InSetting->GetChildSettings())
     {

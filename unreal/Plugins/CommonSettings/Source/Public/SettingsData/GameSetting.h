@@ -7,8 +7,8 @@
 
 #include "GameSetting.generated.h"
 
-class UCustomSettingsLocalPlayer;
 class UGameSettingRegistry;
+class UCustomSettingsLocalPlayer;
 
 UCLASS(Abstract, NotBlueprintable)
 class COMMONSETTINGS_API UGameSetting : public UObject

@@ -8,6 +8,7 @@
 #include "GameSettingRegistry.generated.h"
 
 class UGameSetting;
+class ULazyGameSettingCollection;
 class UCustomSettingsLocalPlayer;
 
 /**
@@ -20,6 +21,7 @@ class COMMONSETTINGS_API UGameSettingRegistry : public UObject
     GENERATED_BODY()
 
     friend UGameSetting;
+    friend ULazyGameSettingCollection;
 
 public:
 

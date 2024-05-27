@@ -48,6 +48,7 @@ public class JAFG : ModuleRules
         new string[]
         {
             "CommonJAFGSlate",
+            "CommonSettings",
         }
         );
 

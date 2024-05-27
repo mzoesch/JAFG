@@ -2,7 +2,7 @@
 
 #include "JAFGGameSettingRegistry.h"
 #include "Player/JAFGLocalPlayer.h"
-#include "SettingsData/GameSettingCollection.h"
+#include "SettingsData/GameSettingCollections.h"
 #include "SettingsData/GameSettingValueScalar.h"
 
 UGameSettingCollection* UJAFGGameSettingRegistry::InitializeGameplaySettings(UJAFGLocalPlayer* InOwningPlayer)

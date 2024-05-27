@@ -29,6 +29,8 @@ public class CommonSettings : ModuleRules
             "Slate",
             "SlateCore",
             "UMG",
+            "InputCore",
+            "EnhancedInput",
         }
         );
 

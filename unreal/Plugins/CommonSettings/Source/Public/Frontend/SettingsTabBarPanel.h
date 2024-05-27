@@ -8,6 +8,7 @@
 
 #include "SettingsTabBarPanel.generated.h"
 
+class UGameSettingListEntry_KeyIn;
 class UGameSettingListEntry_Scalar;
 class UGameSettingCollection;
 class UJAFGScrollBox;
@@ -43,6 +44,9 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
     TSubclassOf<UGameSettingListEntry_Scalar> GameSettingListEntry_ScalarWidgetClass;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    TSubclassOf<UGameSettingListEntry_KeyIn> GameSettingListEntry_KeyInWidgetClass;
 
     virtual auto OnNativeMadeVisible(void) -> void override;
     virtual auto OnNativeMadeCollapsed(void) -> void override;

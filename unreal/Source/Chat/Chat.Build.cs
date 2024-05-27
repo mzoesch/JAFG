@@ -32,6 +32,7 @@ public class Chat : ModuleRules
         new string[]
         {
             "CommonJAFGSlate",
+            "CommonSettings",
         }
         );
 

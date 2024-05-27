@@ -3,7 +3,7 @@
 #include "JAFGGameSettingRegistry.h"
 #include "JAFGSettingsLocal.h"
 #include "Player/JAFGLocalPlayer.h"
-#include "SettingsData/GameSettingCollection.h"
+#include "SettingsData/GameSettingCollections.h"
 #include "SettingsData/GameSettingValueScalar.h"
 
 UGameSettingCollection* UJAFGGameSettingRegistry::InitializeAudioSettings(UJAFGLocalPlayer* InOwningPlayer)

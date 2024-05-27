@@ -12,7 +12,7 @@
 #include "Components/VerticalBox.h"
 #include "Input/CustomInputNames.h"
 #include "Input/JAFGEditableText.h"
-#include "Input/JAFGInputSubsystem.h"
+#include "SettingsData/JAFGInputSubsystem.h"
 #include "Player/WorldPlayerController.h"
 #include "JAFGLogDefs.h"
 
@@ -186,7 +186,7 @@ void UChatMenu::OnChatMenuVisibilityChanged(const bool bVisible)
     check( JAFGSubsystem )
 
     Subsystem->ClearAllMappings();
-    Subsystem->AddMappingContext(JAFGSubsystem->GetContextByName(bVisible ? InputContexts::Chat : InputContexts::Foot), 0);
+    Subsystem->AddMappingContext(JAFGSubsystem->GetSafeContextValue(bVisible ? InputContexts::Chat : InputContexts::Foot), 0);
 
     if (bVisible)
     {

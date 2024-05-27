@@ -2,6 +2,8 @@
 
 #include "JAFGSettingsLocal.h"
 
+#include "JAFGLogDefs.h"
+
 UJAFGSettingsLocal::UJAFGSettingsLocal(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
     return;
@@ -20,4 +22,16 @@ float UJAFGSettingsLocal::GetMasterVolume(void) const
 void UJAFGSettingsLocal::SetMasterVolume(const float InMasterVolume)
 {
     this->MasterVolume = InMasterVolume;
+}
+
+const TArray<FLoadedInputAction>& UJAFGSettingsLocal::GetAllLoadedInputActions(void) const
+{
+    if (this->OwningInputSubsystem == nullptr)
+    {
+        LOG_FATAL(LogGameSettings, "Owning input subsystem is not set.")
+        static const TArray<FLoadedInputAction> Out = TArray<FLoadedInputAction>();
+        return Out;
+    }
+
+    return this->OwningInputSubsystem->GetAllLoadedInputActions();
 }

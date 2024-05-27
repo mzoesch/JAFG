@@ -3,7 +3,7 @@
 #include "Input/CustomInputSubsystem.h"
 
 #include "Input/CustomInputNames.h"
-#include "Input/JAFGInputSubsystem.h"
+#include "SettingsData/JAFGInputSubsystem.h"
 
 void UCustomInputSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -71,16 +71,16 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
     // Move Action
     //////////////////////////////////////////////////////////////////////////
     {
-        FJAFG2DInputAction Action;
-        Action.Name             = InputActions::Move;
-        Action.NorthDefaultKeyA = EKeys::W;
-        Action.NorthDefaultKeyB = EKeys::Invalid;
-        Action.SouthDefaultKeyA = EKeys::S;
-        Action.SouthDefaultKeyB = EKeys::Invalid;
-        Action.WestDefaultKeyA  = EKeys::A;
-        Action.WestDefaultKeyB  = EKeys::Invalid;
-        Action.EastDefaultKeyA  = EKeys::D;
-        Action.EastDefaultKeyB  = EKeys::Invalid;
+        FJAFGTwoDimensionalInputAction Action;
+        Action.Name           = InputActions::Move;
+        Action.NorthKeys.KeyA = EKeys::W;
+        Action.NorthKeys.KeyB = EKeys::Invalid;
+        Action.SouthKeys.KeyA = EKeys::S;
+        Action.SouthKeys.KeyB = EKeys::Invalid;
+        Action.WestKeys.KeyA  = EKeys::A;
+        Action.WestKeys.KeyB  = EKeys::Invalid;
+        Action.EastKeys.KeyA  = EKeys::D;
+        Action.EastKeys.KeyB  = EKeys::Invalid;
         Action.Contexts.Add(InputContexts::Foot);
         InputSubsystem->AddAction(Action);
     }
@@ -88,7 +88,7 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
     // Look Action
     //////////////////////////////////////////////////////////////////////////
     {
-        FJAFG2DMouseInputAction Action;
+        FJAFGTwoDimensionalMouseInputAction Action;
         Action.Name = InputActions::Look;
         Action.Contexts.Add(InputContexts::Foot);
         InputSubsystem->AddAction(Action);
@@ -97,10 +97,10 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
     // Jump Action
     //////////////////////////////////////////////////////////////////////////
     {
-        FJAFGInputAction Action;
-        Action.Name        = InputActions::Jump;
-        Action.DefaultKeyA = EKeys::SpaceBar;
-        Action.DefaultKeyB = EKeys::E;
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::Jump;
+        Action.Keys.KeyA = EKeys::SpaceBar;
+        Action.Keys.KeyB = EKeys::E;
         Action.Contexts.Add(InputContexts::Foot);
         InputSubsystem->AddAction(Action);
     }
@@ -108,10 +108,10 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
     // Crouch Action
     //////////////////////////////////////////////////////////////////////////
     {
-        FJAFGInputAction Action;
-        Action.Name        = InputActions::Crouch;
-        Action.DefaultKeyA = EKeys::Q;
-        Action.DefaultKeyB = EKeys::Invalid;
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::Crouch;
+        Action.Keys.KeyA = EKeys::Q;
+        Action.Keys.KeyB = EKeys::Invalid;
         Action.Contexts.Add(InputContexts::Foot);
         InputSubsystem->AddAction(Action);
     }
@@ -119,10 +119,10 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
     // Primary Action
     //////////////////////////////////////////////////////////////////////////
     {
-        FJAFGInputAction Action;
-        Action.Name        = InputActions::Primary;
-        Action.DefaultKeyA = EKeys::LeftMouseButton;
-        Action.DefaultKeyB = EKeys::Invalid;
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::Primary;
+        Action.Keys.KeyA = EKeys::LeftMouseButton;
+        Action.Keys.KeyB = EKeys::Invalid;
         Action.Contexts.Add(InputContexts::Foot);
         InputSubsystem->AddAction(Action);
     }
@@ -130,10 +130,10 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
     // Secondary Action
     //////////////////////////////////////////////////////////////////////////
     {
-        FJAFGInputAction Action;
-        Action.Name        = InputActions::Secondary;
-        Action.DefaultKeyA = EKeys::RightMouseButton;
-        Action.DefaultKeyB = EKeys::Invalid;
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::Secondary;
+        Action.Keys.KeyA = EKeys::RightMouseButton;
+        Action.Keys.KeyB = EKeys::Invalid;
         Action.Contexts.Add(InputContexts::Foot);
         InputSubsystem->AddAction(Action);
     }
@@ -141,10 +141,10 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
     // Toggle Escape Menu Action
     //////////////////////////////////////////////////////////////////////////
     {
-        FJAFGInputAction Action;
-        Action.Name        = InputActions::ToggleEscapeMenu;
-        Action.DefaultKeyA = EKeys::Escape;
-        Action.DefaultKeyB = EKeys::Invalid;
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::ToggleEscapeMenu;
+        Action.Keys.KeyA = EKeys::Escape;
+        Action.Keys.KeyB = EKeys::Invalid;
         Action.Contexts.Add(InputContexts::Escape);
         Action.Contexts.Add(InputContexts::Foot);
         InputSubsystem->AddAction(Action);
@@ -153,14 +153,14 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
     // Toggle Debug Screen Action
     //////////////////////////////////////////////////////////////////////////
     {
-        FJAFGInputAction Action;
-        Action.Name        = InputActions::ToggleDebugScreen;
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::ToggleDebugScreen;
 #if WITH_EDITOR
-        Action.DefaultKeyA = EKeys::RightAlt;
+        Action.Keys.KeyA = EKeys::RightAlt;
 #else /* WITH_EDITOR */
-        Action.DefaultKeyA = EKeys::F3;
+        Action.Keys.KeyA = EKeys::F3;
 #endif /* !WITH_EDITOR */
-        Action.DefaultKeyB = EKeys::Invalid;
+        Action.Keys.KeyB = EKeys::Invalid;
         Action.Contexts.Add(InputContexts::Foot);
         InputSubsystem->AddAction(Action);
     }
@@ -168,8 +168,8 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
     // Toggle Chat Action
     //////////////////////////////////////////////////////////////////////////
     {
-        FJAFGInputActionDual Action;
-        Action.Name        = InputActions::ToggleChat;
+        FJAFGDualInputAction Action;
+        Action.Name = InputActions::ToggleChat;
         Action.Keys.Add( { EKeys::T,      EKeys::Invalid } );
         Action.Keys.Add( { EKeys::Escape, EKeys::Invalid } );
         Action.Contexts.Add( { InputContexts::Foot } );
@@ -180,10 +180,10 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
     // Toggle Quick Session Preview Action
     //////////////////////////////////////////////////////////////////////////
     {
-        FJAFGInputAction Action;
-        Action.Name        = InputActions::ToggleQuickSessionPreview;
-        Action.DefaultKeyA = EKeys::Tab;
-        Action.DefaultKeyB = EKeys::Invalid;
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::ToggleQuickSessionPreview;
+        Action.Keys.KeyA = EKeys::Tab;
+        Action.Keys.KeyB = EKeys::Invalid;
         Action.Contexts.Add(InputContexts::Foot);
         InputSubsystem->AddAction(Action);
     }
@@ -191,10 +191,10 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
     // Previous Chat StdIn Action
     //////////////////////////////////////////////////////////////////////////
     {
-        FJAFGInputAction Action;
-        Action.Name        = InputActions::PreviousChatStdIn;
-        Action.DefaultKeyA = EKeys::Up;
-        Action.DefaultKeyB = EKeys::Invalid;
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::PreviousChatStdIn;
+        Action.Keys.KeyA = EKeys::Up;
+        Action.Keys.KeyB = EKeys::Invalid;
         Action.Contexts.Add(InputContexts::Chat);
         InputSubsystem->AddAction(Action);
     }
@@ -202,10 +202,10 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
     // Next Chat StdIn Action
     //////////////////////////////////////////////////////////////////////////
     {
-        FJAFGInputAction Action;
-        Action.Name        = InputActions::NextChatStdIn;
-        Action.DefaultKeyA = EKeys::Down;
-        Action.DefaultKeyB = EKeys::Invalid;
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::NextChatStdIn;
+        Action.Keys.KeyA = EKeys::Down;
+        Action.Keys.KeyB = EKeys::Invalid;
         Action.Contexts.Add(InputContexts::Chat);
         InputSubsystem->AddAction(Action);
     }
@@ -213,14 +213,14 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
     // Toggle Cameras Action
     //////////////////////////////////////////////////////////////////////////
     {
-        FJAFGInputAction Action;
-        Action.Name        = InputActions::ToggleCameras;
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::ToggleCameras;
 #if WITH_EDITOR
-        Action.DefaultKeyA = EKeys::Y;
+        Action.Keys.KeyA = EKeys::Y;
 #else /* WITH_EDITOR */
-        Action.DefaultKeyA = EKeys::LeftShift;
+        Action.Keys.KeyA = EKeys::LeftShift;
 #endif /* !WITH_EDITOR */
-        Action.DefaultKeyB = EKeys::Invalid;
+        Action.Keys.KeyB = EKeys::Invalid;
         Action.Contexts.Add(InputContexts::Foot);
         InputSubsystem->AddAction(Action);
     }
@@ -228,10 +228,10 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
     // Toggle Zoom Cameras Action
     //////////////////////////////////////////////////////////////////////////
     {
-        FJAFGInputAction Action;
-        Action.Name        = InputActions::ZoomCameras;
-        Action.DefaultKeyA = EKeys::C;
-        Action.DefaultKeyB = EKeys::Invalid;
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::ZoomCameras;
+        Action.Keys.KeyA = EKeys::C;
+        Action.Keys.KeyB = EKeys::Invalid;
         Action.Contexts.Add(InputContexts::Foot);
         InputSubsystem->AddAction(Action);
     }
@@ -239,10 +239,10 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
     // Toggle Zoom First-Person Camera Action
     //////////////////////////////////////////////////////////////////////////
     {
-        FJAFGInputAction Action;
-        Action.Name        = InputActions::TogglePerspective;
-        Action.DefaultKeyA = EKeys::O;
-        Action.DefaultKeyB = EKeys::Invalid;
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::TogglePerspective;
+        Action.Keys.KeyA = EKeys::O;
+        Action.Keys.KeyB = EKeys::Invalid;
         Action.Contexts.Add(InputContexts::Foot);
         InputSubsystem->AddAction(Action);
     }
@@ -250,10 +250,10 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
     // Up Max Fly Speed Action
     //////////////////////////////////////////////////////////////////////////
     {
-        FJAFGInputAction Action;
-        Action.Name        = InputActions::UpMaxFlySpeed;
-        Action.DefaultKeyA = EKeys::MouseScrollUp;
-        Action.DefaultKeyB = EKeys::Invalid;
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::UpMaxFlySpeed;
+        Action.Keys.KeyA = EKeys::MouseScrollUp;
+        Action.Keys.KeyB = EKeys::Invalid;
         Action.Contexts.Add(InputContexts::Foot);
         InputSubsystem->AddAction(Action);
     }
@@ -261,10 +261,10 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
     // Up Max Fly Speed Action
     //////////////////////////////////////////////////////////////////////////
     {
-        FJAFGInputAction Action;
-        Action.Name        = InputActions::DownMaxFlySpeed;
-        Action.DefaultKeyA = EKeys::MouseScrollDown;
-        Action.DefaultKeyB = EKeys::Invalid;
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::DownMaxFlySpeed;
+        Action.Keys.KeyA = EKeys::MouseScrollDown;
+        Action.Keys.KeyB = EKeys::Invalid;
         Action.Contexts.Add(InputContexts::Foot);
         InputSubsystem->AddAction(Action);
     }

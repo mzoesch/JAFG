@@ -26,7 +26,7 @@ protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
     TSubclassOf<USettingsTabBarPanel> TabBarPanelClass;
 
-    FTabBarTabDescriptor GetDefaultSettingsTabDescriptor(void) const;
+    virtual auto GetDefaultSettingsTabDescriptor(void) const -> FTabBarTabDescriptor;
 
     virtual void RegisterAllTabs(void) override;
 
