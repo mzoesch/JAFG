@@ -95,6 +95,17 @@ public:
      */
     virtual void PassDataToWidget(const FWidgetPassData& UncastedData) PURE_VIRTUAL(UJAFGUserWidget::PassDataToWidget)
 
+protected:
+
+    // UUserWidget implementation
+    virtual void NativeConstruct(void) override;
+    // ~UUserWidget implementation
+
+public:
+
+    /** Updates all children in the widget tree with their wanted colors. */
+    void UpdateTreeBrushes(void) const;
+
 private:
 
     /**

@@ -11,7 +11,7 @@ ACommonHUD::ACommonHUD(const FObjectInitializer& ObjectInitializer) : Super(Obje
     return;
 }
 
-void ACommonHUD::CreateWarningPopup(const FString& Message, const FString& Header)
+void ACommonHUD::CreateWarningPopup(const FString& Message, const FString& Header) const
 {
     const UCommonJAFGSlateDeveloperSettings* Settings = GetDefault<UCommonJAFGSlateDeveloperSettings>();
     check( Settings )
@@ -30,7 +30,7 @@ void ACommonHUD::CreateWarningPopup(const FString& Message, const FString& Heade
     return;
 }
 
-void ACommonHUD::CreateWarningPopup(const FString& Message, const FString& Header, const TFunction<void(bool bAccepted)>& OnPopUpClosedDelegate)
+void ACommonHUD::CreateWarningPopup(const FString& Message, const FString& Header, const TFunction<void(bool bAccepted)>& OnPopUpClosedDelegate) const
 {
     const UCommonJAFGSlateDeveloperSettings* Settings = GetDefault<UCommonJAFGSlateDeveloperSettings>();
     check( Settings )
@@ -50,7 +50,7 @@ void ACommonHUD::CreateWarningPopup(const FString& Message, const FString& Heade
     return;
 }
 
-void ACommonHUD::CreateWarningPopup(const FString& Message, const TFunction<void(bool bAccepted)>& OnPopupClosedDelegate)
+void ACommonHUD::CreateWarningPopup(const FString& Message, const TFunction<void(bool bAccepted)>& OnPopupClosedDelegate) const
 {
     this->CreateWarningPopup(Message, TEXT("Warning"), OnPopupClosedDelegate);
 }

@@ -17,7 +17,7 @@ void UGameSettingValueColor::StoreInitial(void)
 
 void UGameSettingValueColor::ResetToDefault(void)
 {
-    Super::ResetToDefault();
+    this->SetValue(this->DefaultValue, EGameSettingChangeReason::ResetToDefault);
 }
 
 void UGameSettingValueColor::RestoreToInitial(void)

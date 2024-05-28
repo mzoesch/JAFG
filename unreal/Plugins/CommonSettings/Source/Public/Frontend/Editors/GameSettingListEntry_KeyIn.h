@@ -10,7 +10,7 @@
 class UGameSettingValueKeyIn;
 class UJAFGEnhancedButton;
 
-struct FGameSettingListEntryPassData_KeyIn : public FGameSettingListEntryPassData
+struct COMMONSETTINGS_API FGameSettingListEntryPassData_KeyIn : public FGameSettingListEntryPassData
 {
     UGameSettingValueKeyIn* KeyIn;
 };

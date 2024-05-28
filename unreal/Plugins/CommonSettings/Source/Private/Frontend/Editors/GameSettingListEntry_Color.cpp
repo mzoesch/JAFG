@@ -3,6 +3,7 @@
 #include "Frontend/Editors/GameSettingListEntry_Color.h"
 
 #include "Components/Border.h"
+#include "Foundation/JAFGEnhancedButton.h"
 #include "Frontend/SettingsTabBarPanel.h"
 #include "Input/JAFGEditableText.h"
 #include "SettingsData/GameSettingValueColor.h"
@@ -20,6 +21,9 @@ void UGameSettingListEntry_Color::NativeConstruct(void)
     this->EditableText_SettingValue->OnTrimmedTextChanged.AddUObject(this, &UGameSettingListEntry_Color::OnTextChanged);
 
     this->StandardContainerColor = this->Border_Container->GetBrushColor().ToFColor(false);
+
+    this->Button_ResetToDefault->SetContent(FText::FromString(TEXT("X")));
+    this->Button_ResetToDefault->OnClicked().AddUObject(this, &UGameSettingListEntry_Color::OnResetToDefaultClicked);
 
     return;
 }
@@ -43,6 +47,7 @@ void UGameSettingListEntry_Color::PassDataToWidget(const FWidgetPassData& Uncast
 
     this->SetEditableText(CurrentColor);
     this->Border_ColorPreview->SetBrushColor(CurrentColor);
+    this->UpdateResetToDefaultButton();
 
     return;
 }
@@ -51,24 +56,29 @@ void UGameSettingListEntry_Color::PassDataToWidget(const FWidgetPassData& Uncast
 // ReSharper disable once CppMemberFunctionMayBeConst
 void UGameSettingListEntry_Color::OnTextChanged(const FText& Text)
 {
-    if (this->IsInTextAViableColor(Text) == false)
+    if (UGameSettingListEntry_Color::IsInTextAViableColor(Text) == false)
     {
         this->OwningPanel->DisallowApply(this->Setting->GetIdentifier());
         this->Border_Container->SetBrushColor(this->DangerContainerColor);
+        this->UpdateResetToDefaultButton();
         return;
     }
 
     this->OwningPanel->ReleaseDisallowApply(this->Setting->GetIdentifier());
     this->Border_Container->SetBrushColor(this->StandardContainerColor);
+
     const FColor NewUserColor = FColor::FromHex(Text.ToString());
     this->Border_ColorPreview->SetBrushColor(NewUserColor);
     this->Setting->SetValue(NewUserColor);
+
     this->OwningPanel->OnApplyableSettingChanged();
+
+    this->UpdateResetToDefaultButton();
 
     return;
 }
 
-bool UGameSettingListEntry_Color::IsInTextAViableColor(const FText& Text) const
+bool UGameSettingListEntry_Color::IsInTextAViableColor(const FText& Text)
 {
     if (Text.ToString().Len() != 9)
     {
@@ -103,4 +113,37 @@ bool UGameSettingListEntry_Color::IsInTextAViableColor(const FText& Text) const
 void UGameSettingListEntry_Color::SetEditableText(const FColor& Color) const
 {
     this->EditableText_SettingValue->SetText(FText::FromString(FString::Printf(TEXT("#%s"), *Color.ToHex())));
+}
+
+void UGameSettingListEntry_Color::OnResetToDefaultClicked(void) const
+{
+    LOG_DISPLAY(
+        LogGameSettings,
+        "Resetting [%s] color setting to default [%s].",
+        *this->Setting->GetIdentifier(), *this->Setting->GetDefaultValue().ToString()
+    )
+
+    this->Setting->ResetToDefault();
+
+    this->SetEditableText(this->Setting->GetValue());
+    this->Border_ColorPreview->SetBrushColor(this->Setting->GetValue());
+
+    this->OwningPanel->OnApplyableSettingChanged();
+
+    this->UpdateResetToDefaultButton();
+
+    return;
+}
+
+void UGameSettingListEntry_Color::UpdateResetToDefaultButton(void) const
+{
+    if (this->Setting->GetDefaultValue() == this->Setting->GetValue())
+    {
+        this->Button_ResetToDefault->SetIsEnabled(false);
+        return;
+    }
+
+    this->Button_ResetToDefault->SetIsEnabled(true);
+
+    return;
 }

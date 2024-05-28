@@ -25,7 +25,7 @@ UGameSettingCollection* UJAFGGameSettingRegistry::InitializeAudioSettings(UJAFGL
 
             ConcreteSetting->SetValueGetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(GetMasterVolume));
             ConcreteSetting->SetValueSetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(SetMasterVolume));
-            ConcreteSetting->SetDefaultValue(0.5f);
+            ConcreteSetting->SetDefaultValue(UJAFGSettingsLocal::DefaultMasterVolume);
 
             ConcreteSetting->SetDisplayFormat(UGameSettingValueScalar::ZeroToOneAsPercent);
 
@@ -37,9 +37,9 @@ UGameSettingCollection* UJAFGGameSettingRegistry::InitializeAudioSettings(UJAFGL
             ConcreteSetting->SetIdentifier("MusicVolume");
             ConcreteSetting->SetDisplayName("Music");
 
-            ConcreteSetting->SetValueGetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(GetMasterVolume));
-            ConcreteSetting->SetValueSetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(SetMasterVolume));
-            ConcreteSetting->SetDefaultValue(0.75f);
+            ConcreteSetting->SetValueGetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(GetMusicVolume));
+            ConcreteSetting->SetValueSetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(SetMiscVolume));
+            ConcreteSetting->SetDefaultValue(UJAFGSettingsLocal::DefaultMusicVolume);
 
             ConcreteSetting->SetDisplayFormat(UGameSettingValueScalar::ZeroToOneAsPercent);
 
@@ -48,12 +48,12 @@ UGameSettingCollection* UJAFGGameSettingRegistry::InitializeAudioSettings(UJAFGL
 
         {
             UGameSettingValueScalar* ConcreteSetting = NewObject<UGameSettingValueScalar>();
-            ConcreteSetting->SetIdentifier("MISCVolume");
-            ConcreteSetting->SetDisplayName("MISC");
+            ConcreteSetting->SetIdentifier("MiscVolume");
+            ConcreteSetting->SetDisplayName("Misc");
 
-            ConcreteSetting->SetValueGetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(GetMasterVolume));
-            ConcreteSetting->SetValueSetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(SetMasterVolume));
-            ConcreteSetting->SetDefaultValue(0.25f);
+            ConcreteSetting->SetValueGetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(GetMiscVolume));
+            ConcreteSetting->SetValueSetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(SetMiscVolume));
+            ConcreteSetting->SetDefaultValue(UJAFGSettingsLocal::DefaultMiscVolume);
 
             ConcreteSetting->SetDisplayFormat(UGameSettingValueScalar::ZeroToOneAsPercent);
 
@@ -62,12 +62,12 @@ UGameSettingCollection* UJAFGGameSettingRegistry::InitializeAudioSettings(UJAFGL
 
         {
             UGameSettingValueScalar* ConcreteSetting = NewObject<UGameSettingValueScalar>();
-            ConcreteSetting->SetIdentifier("OtherVolume");
-            ConcreteSetting->SetDisplayName("Other");
+            ConcreteSetting->SetIdentifier("VoiceVolume");
+            ConcreteSetting->SetDisplayName("Voice");
 
-            ConcreteSetting->SetValueGetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(GetMasterVolume));
-            ConcreteSetting->SetValueSetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(SetMasterVolume));
-            ConcreteSetting->SetDefaultValue(1.0f);
+            ConcreteSetting->SetValueGetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(GetVoiceVolume));
+            ConcreteSetting->SetValueSetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(SetVoiceVolume));
+            ConcreteSetting->SetDefaultValue(UJAFGSettingsLocal::DefaultVoiceVolume);
 
             ConcreteSetting->SetDisplayFormat(UGameSettingValueScalar::ZeroToOneAsPercent);
 

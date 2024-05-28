@@ -16,7 +16,7 @@ public:
 
     explicit ACommonHUD(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
-    auto CreateWarningPopup(const FString& Message, const FString& Header = TEXT("Warning")) -> void;
-    auto CreateWarningPopup(const FString& Message, const FString& Header, const TFunction<void(bool bAccepted)>& OnPopUpClosedDelegate) -> void;
-    auto CreateWarningPopup(const FString& Message, const TFunction<void(bool bAccepted)>& OnPopupClosedDelegate) -> void;
+    auto CreateWarningPopup(const FString& Message, const FString& Header = TEXT("Warning")) const -> void;
+    auto CreateWarningPopup(const FString& Message, const FString& Header, const TFunction<void(bool bAccepted)>& OnPopUpClosedDelegate) const -> void;
+    auto CreateWarningPopup(const FString& Message, const TFunction<void(bool bAccepted)>& OnPopupClosedDelegate) const -> void;
 };

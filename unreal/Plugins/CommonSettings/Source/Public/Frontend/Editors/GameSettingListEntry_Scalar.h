@@ -11,7 +11,7 @@ class UGameSettingValueScalar;
 class UJAFGSlider;
 class UJAFGTextBlock;
 
-struct FGameSettingListEntryPassData_Scalar : public FGameSettingListEntryPassData
+struct COMMONSETTINGS_API FGameSettingListEntryPassData_Scalar : public FGameSettingListEntryPassData
 {
     UGameSettingValueScalar* Scalar;
 };

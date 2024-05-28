@@ -17,7 +17,11 @@ class COMMONJAFGSLATE_API UJAFGEnhancedButton : public UJAFGUserWidget
 
 public:
 
-    auto SetContent(const FText& InContent) -> void;
+    // UUserWidget implementation
+    virtual void NativeConstruct(void) override;
+    // ~UUserWidget implementation
+
+    auto SetContent(const FText& InContent) const -> void;
     auto GetContent(void) const -> FText;
 
     DECLARE_EVENT(UJAFGEnhancedButton, FJAFGButtonEvent)
@@ -36,5 +40,7 @@ private:
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true"))
     TObjectPtr<UJAFGTextBlock> Text_Content;
 
+    UFUNCTION()
+    void OnNativeButtonClicked( /* void */ );
     mutable FJAFGButtonEvent OnClickedEvent;
 };

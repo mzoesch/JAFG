@@ -8,6 +8,8 @@
 
 #include "JAFGSettingsLocal.generated.h"
 
+class UDefaultColorsSubsystem;
+
 /** Base class to store all local settings */
 UCLASS(NotBlueprintable)
 class COMMONSETTINGS_API UJAFGSettingsLocal : public UGameUserSettings
@@ -20,6 +22,8 @@ public:
 
     static auto Get(void) -> UJAFGSettingsLocal*;
 
+    virtual void ApplySettings(bool bCheckForCommandLineOverrides) override;
+
     /*
      * Please note.
      * Always use UFUNCTION() to expose a method to the cached dynamic property paths if it should be accessible
@@ -31,14 +35,42 @@ public:
 
     UFUNCTION()
     float GetMasterVolume( /* void */ ) const;
-
     UFUNCTION()
     void SetMasterVolume(const float InMasterVolume);
+
+    UFUNCTION()
+    float GetMusicVolume( /* void */ ) const;
+    UFUNCTION()
+    void SetMusicVolume(const float InMusicVolume);
+
+    UFUNCTION()
+    float GetMiscVolume( /* void */ ) const;
+    UFUNCTION()
+    void SetMiscVolume(const float InMiscVolume);
+
+    UFUNCTION()
+    float GetVoiceVolume( /* void */ ) const;
+    UFUNCTION()
+    void SetVoiceVolume(const float InVoiceVolume);
+
+    inline static constexpr float DefaultMasterVolume = 1.00f;
+    inline static constexpr float DefaultMusicVolume  = 0.75f;
+    inline static constexpr float DefaultMiscVolume   = 0.25f;
+    inline static constexpr float DefaultVoiceVolume  = 1.00f;
 
 protected:
 
     UPROPERTY(Config)
-    float MasterVolume;
+    float JAFGMasterVolume = UJAFGSettingsLocal::DefaultMasterVolume;
+
+    UPROPERTY(Config)
+    float MusicVolume      = UJAFGSettingsLocal::DefaultMusicVolume;
+
+    UPROPERTY(Config)
+    float MiscVolume       = UJAFGSettingsLocal::DefaultMiscVolume;
+
+    UPROPERTY(Config)
+    float VoiceVolume      = UJAFGSettingsLocal::DefaultVoiceVolume;
 
     // ~Audio
     //////////////////////////////////////////////////////////////////////////
@@ -65,16 +97,57 @@ private:
 
 public:
 
-    UFUNCTION()
-    FColor GetPrimaryColor( /* void */ ) const;
+    void SetAndUpdateDefaultColorsSubsystem(UDefaultColorsSubsystem* InDefaultColors);
+    /** Will smartly avoid unnecessary widget updates, to reduce color schemes update lag. */
+    void SmartUpdateUserInterfaceColors(void) const;
 
     UFUNCTION()
+    FColor GetPrimaryColor( /* void */ ) const;
+    UFUNCTION()
     void SetPrimaryColor(const FColor InPrimaryColor);
+
+    UFUNCTION()
+    FColor GetPrimaryColorAlpha( /* void */ ) const;
+    UFUNCTION()
+    void SetPrimaryColorAlpha(const FColor InPrimaryColorAlpha);
+
+    UFUNCTION()
+    FColor GetSecondaryColor( /* void */ ) const;
+    UFUNCTION()
+    void SetSecondaryColor(const FColor InSecondaryColor);
+
+    UFUNCTION()
+    FColor GetAddedSubMenuColor( /* void */ ) const;
+    UFUNCTION()
+    void SetAddedSubMenuColor(const FColor InAddedSubMenuColor);
+
+    inline static constexpr FColor DefaultPrimaryColor      = FColor(  20,  20,  20, 255 );
+    inline static constexpr FColor DefaultPrimaryColorAlpha = FColor(  20,  20,  20, 127 );
+    inline static constexpr FColor DefaultSecondaryColor    = FColor(  60,  60,  60, 255 );
+    inline static constexpr FColor DefaultAddedSubMenuColor = FColor(   0,   0,   0,  25 );
 
 private:
 
     UPROPERTY(Config)
-    FColor PrimaryColor;
+    FColor PrimaryColor      = UJAFGSettingsLocal::DefaultPrimaryColor;
+
+    UPROPERTY(Config)
+    FColor PrimaryColorAlpha = UJAFGSettingsLocal::DefaultPrimaryColorAlpha;
+
+    UPROPERTY(Config)
+    FColor SecondaryColor    = UJAFGSettingsLocal::DefaultSecondaryColor;
+
+    UPROPERTY(Config)
+    FColor AddedSubMenuColor = UJAFGSettingsLocal::DefaultAddedSubMenuColor;
+
+    /**
+     * From the CommonJAFGSlate plugin. All JAFG slate widgets will use this class to get their colors.
+     * We not only set the config values but also update this subsystem to reflect the changes.
+     * @note I know that this is kinda bad design (two sources of truth), but this is the best way to do it with my
+     *       limited knowledge of computer science (We want to avoid circular dependencies).
+     */
+    UPROPERTY()
+    TObjectPtr<UDefaultColorsSubsystem> DefaultColors = nullptr;
 
     // ~User Interface
     //////////////////////////////////////////////////////////////////////////

@@ -7,11 +7,12 @@
 
 #include "GameSettingListEntry_Color.generated.h"
 
+class UJAFGEnhancedButton;
 class UJAFGEditableText;
 class UBorder;
 class UGameSettingValueColor;
 
-struct FGameSettingListEntryPassData_Color : public FGameSettingListEntryPassData
+struct COMMONSETTINGS_API FGameSettingListEntryPassData_Color : public FGameSettingListEntryPassData
 {
     UGameSettingValueColor* Color;
 };
@@ -49,10 +50,18 @@ protected:
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
     TObjectPtr<UBorder> Border_ColorPreview;
 
+    UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
+    TObjectPtr<UJAFGEnhancedButton> Button_ResetToDefault;
+
     UFUNCTION()
     void OnTextChanged(const FText& Text);
-    auto IsInTextAViableColor(const FText& Text) const -> bool;
+    static auto IsInTextAViableColor(const FText& Text) -> bool;
     auto SetEditableText(const FColor& Color) const -> void;
+
+    UFUNCTION()
+    void OnResetToDefaultClicked( /* void */ ) const;
+
+    void UpdateResetToDefaultButton(void) const;
 
 private:
 

@@ -24,6 +24,7 @@ public:
     virtual void RestoreToInitial(void) override;
     // ~UGameSettingValue implementation
 
+    FORCEINLINE auto GetDefaultValue(void) const -> FColor { return this->DefaultValue; }
     FORCEINLINE auto SetDefaultValue(const FColor& InValue) -> void { this->DefaultValue = InValue; }
 
     virtual auto GetValue(void) -> FColor;
