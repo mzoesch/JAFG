@@ -27,7 +27,7 @@ public:
     FORCEINLINE auto SetDefaultValue(const FColor& InValue) -> void { this->DefaultValue = InValue; }
 
     virtual auto GetValue(void) -> FColor;
-    virtual auto SetValue(FColor InValue, EGameSettingChangeReason::Type Reason = EGameSettingChangeReason::Change) -> void;
+    virtual auto SetValue(const FColor InValue, const EGameSettingChangeReason::Type Reason = EGameSettingChangeReason::Change) -> void;
 
     FORCEINLINE auto SetValueGetter(const TSharedRef<FGameSettingDataSource>& InGetter) -> void { this->ValueGetter = InGetter; }
     FORCEINLINE auto SetValueSetter(const TSharedRef<FGameSettingDataSource>& InSetter) -> void { this->ValueSetter = InSetter; }

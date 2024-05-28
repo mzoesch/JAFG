@@ -16,6 +16,8 @@ public class JAFGSettings : ModuleRules
             "SlateCore",
             "Slate",
             "UMG",
+            "InputCore",
+            "EnhancedInput",
         }
         );
 

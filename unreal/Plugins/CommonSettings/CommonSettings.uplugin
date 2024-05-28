@@ -22,11 +22,15 @@
 	],
 	"Plugins": [
 		{
-			"Name" : "CommonJAFGSlate",
+			"Name": "EnhancedInput",
 			"Enabled": true
 		},
 		{
-			"Name" : "JAFGGlobalLogging",
+			"Name": "CommonJAFGSlate",
+			"Enabled": true
+		},
+		{
+			"Name": "JAFGGlobalLogging",
 			"Enabled": true
 		}
 	]

@@ -1,11 +1,11 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "JAFGGameSettingRegistry.h"
-#include "JAFGLogDefs.h"
 #include "JAFGSettingsLocal.h"
 #include "Player/JAFGLocalPlayer.h"
 #include "SettingsData/GameSettingCollections.h"
 #include "SettingsData/GameSettingValueKeyIn.h"
+#include "SettingsData/JAFGInputSubsystem.h"
 
 UGameSettingCollection* UJAFGGameSettingRegistry::InitializeKeybindingSettings(UJAFGLocalPlayer* InOwningPlayer)
 {

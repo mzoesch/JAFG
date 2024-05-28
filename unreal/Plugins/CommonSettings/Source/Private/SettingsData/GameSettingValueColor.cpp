@@ -40,10 +40,24 @@ FColor UGameSettingValueColor::GetValue(void)
         return FColor::Transparent;
     }
 
-    return AsLinearColor.ToFColor(false);
+    /*
+     * Seeing this. You will see that this is wrong. We save the color in B8G8R8A8 format using the FColor struct.
+     * 8 bits meaning: 8^2 = 256 values (for each channel respectively).
+     * But the FLinearColor struct uses F32 values for each color channel. To rightfully convert from FLinearColor to
+     * FColor, we should multiply each channel by 255 and then cast to uint8.
+     * *But* this color is actually not a linear color. But a FColor loaded into a linear struct.
+     * Q: Why??
+     * A: Because there is a string to FLinearColor conversion function, but not a string to FColor. So we convert to
+     *    FLinearColor (but that linear color is invalid, but somehow allowed by the engine (because the correctness
+     *    is currently not enforced by it)) and then back to FColor with a falsy conversion.
+     *    The soul reason for this is, so we can easily manipulate the color channels directly in the ini files. Using
+     *    linear colors is wrong and tells the user that they have so much more color space (which does not exist), as
+     *    the JAFG slate plugin uses FColor for the User Interface.
+     */
+    return FColor(AsLinearColor.R, AsLinearColor.G, AsLinearColor.B, AsLinearColor.A);
 }
 
-void UGameSettingValueColor::SetValue(FColor InValue, EGameSettingChangeReason::Type Reason)
+void UGameSettingValueColor::SetValue(const FColor InValue, const EGameSettingChangeReason::Type Reason /* = EGameSettingChangeReason::Change */)
 {
     this->ValueSetter->SetValue(this->OwningPlayer, InValue.ToString());
 }

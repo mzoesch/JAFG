@@ -8,7 +8,6 @@
 
 #include "JAFGSettingsLocal.generated.h"
 
-struct FLoadedInputAction;
 /** Base class to store all local settings */
 UCLASS(NotBlueprintable)
 class COMMONSETTINGS_API UJAFGSettingsLocal : public UGameUserSettings
@@ -51,7 +50,7 @@ public:
 
     FORCEINLINE auto SetOwningInputSubsystem(UJAFGInputSubsystem* InOwningInputSubsystem) -> void { this->OwningInputSubsystem = InOwningInputSubsystem; }
 
-    FORCEINLINE auto GetAllLoadedInputActions(void) const -> const TArray<FLoadedInputAction>&;
+    auto GetAllLoadedInputActions(void) const -> const TArray<FLoadedInputAction>&;
 
 private:
 
