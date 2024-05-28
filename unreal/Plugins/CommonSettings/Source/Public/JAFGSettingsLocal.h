@@ -39,7 +39,7 @@ public:
 protected:
 
     UPROPERTY(Config)
-    float MasterVolume = 1.0f;
+    float MasterVolume;
 
     // ~Audio
     //////////////////////////////////////////////////////////////////////////
@@ -59,5 +59,24 @@ private:
     TObjectPtr<UJAFGInputSubsystem> OwningInputSubsystem;
 
     // ~Keybindings
+    //////////////////////////////////////////////////////////////////////////
+
+    //////////////////////////////////////////////////////////////////////////
+    // User Interface
+
+public:
+
+    UFUNCTION()
+    FColor GetPrimaryColor( /* void */ ) const;
+
+    UFUNCTION()
+    void SetPrimaryColor(const FColor InPrimaryColor);
+
+private:
+
+    UPROPERTY(Config)
+    FColor PrimaryColor;
+
+    // ~User Interface
     //////////////////////////////////////////////////////////////////////////
 };

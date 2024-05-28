@@ -35,13 +35,13 @@ public:
 
     virtual void PassDataToWidget(const FWidgetPassData& UncastedData) override;
 
+protected:
+
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
     TObjectPtr<UJAFGSlider> Slider_SettingValue;
 
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
     TObjectPtr<UJAFGTextBlock> Text_SettingValue;
-
-protected:
 
     UFUNCTION()
     void OnSliderValueChanged(const float Value);

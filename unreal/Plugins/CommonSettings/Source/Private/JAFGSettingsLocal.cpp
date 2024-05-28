@@ -35,3 +35,13 @@ const TArray<FLoadedInputAction>& UJAFGSettingsLocal::GetAllLoadedInputActions(v
 
     return this->OwningInputSubsystem->GetAllLoadedInputActions();
 }
+
+FColor UJAFGSettingsLocal::GetPrimaryColor(void) const
+{
+    return this->PrimaryColor;
+}
+
+void UJAFGSettingsLocal::SetPrimaryColor(const FColor InPrimaryColor)
+{
+    this->PrimaryColor = InPrimaryColor;
+}

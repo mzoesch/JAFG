@@ -8,6 +8,7 @@
 
 #include "SettingsTabBarPanel.generated.h"
 
+class UGameSettingListEntry_Color;
 class UGameSettingListEntry_KeyIn;
 class UGameSettingListEntry_Scalar;
 class UGameSettingCollection;
@@ -47,6 +48,9 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
     TSubclassOf<UGameSettingListEntry_KeyIn> GameSettingListEntry_KeyInWidgetClass;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    TSubclassOf<UGameSettingListEntry_Color> GameSettingListEntry_ColorWidgetClass;
 
     virtual auto OnNativeMadeVisible(void) -> void override;
     virtual auto OnNativeMadeCollapsed(void) -> void override;
