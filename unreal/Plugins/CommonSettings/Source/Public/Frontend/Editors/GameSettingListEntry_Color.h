@@ -37,6 +37,12 @@ public:
 
 protected:
 
+          FColor StandardContainerColor;
+    const FColor DangerContainerColor = FColor(127, 0, 0, 127);
+
+    UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
+    TObjectPtr<UBorder> Border_Container;
+
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
     TObjectPtr<UJAFGEditableText> EditableText_SettingValue;
 
@@ -45,6 +51,8 @@ protected:
 
     UFUNCTION()
     void OnTextChanged(const FText& Text);
+    auto IsInTextAViableColor(const FText& Text) const -> bool;
+    auto SetEditableText(const FColor& Color) const -> void;
 
 private:
 

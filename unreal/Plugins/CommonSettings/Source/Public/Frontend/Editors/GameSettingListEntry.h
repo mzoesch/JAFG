@@ -8,10 +8,12 @@
 #include "GameSettingListEntry.generated.h"
 
 class UJAFGTextBlock;
+class USettingsTabBarPanel;
 
 struct COMMONSETTINGS_API FGameSettingListEntryPassData : public FWidgetPassData
 {
     FText SettingName;
+    USettingsTabBarPanel* OwningPanel;
 };
 
 UCLASS(Transient, NotBlueprintable)
@@ -29,4 +31,7 @@ protected:
 
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
     TObjectPtr<UJAFGTextBlock> Text_SettingName;
+
+    UPROPERTY()
+    TObjectPtr<USettingsTabBarPanel> OwningPanel;
 };

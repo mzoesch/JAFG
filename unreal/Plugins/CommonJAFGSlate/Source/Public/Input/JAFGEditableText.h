@@ -7,6 +7,11 @@
 
 #include "JAFGEditableText.generated.h"
 
+/**
+ * An editable text with additional features.
+ * Never bind to the OnTextChanged event if the text should be trimmed.
+ * Instead, bind to the OnTrimmedTextChanged event.
+ */
 UCLASS(Blueprintable)
 class COMMONJAFGSLATE_API UJAFGEditableText : public UEditableText
 {
@@ -15,4 +20,18 @@ class COMMONJAFGSLATE_API UJAFGEditableText : public UEditableText
 public:
 
     void SetCustomEventToKeyDown(const FOnKeyDown& InOnKeyDownHandler) const;
+
+    DECLARE_EVENT_OneParam(UJAFGEditableText, OnTrimmedTextChangedSignature, const FText& /* InText */);
+    OnTrimmedTextChangedSignature OnTrimmedTextChanged;
+
+    /** @param InMaxSize The max size allowed. -1 for engine maximum. */
+    void SetMaxSize(int32 InMaxSize);
+
+private:
+
+    UFUNCTION()
+    void OnNativeTextChanged(const FText& InText);
+
+    int32 TrimTo        = -1;
+    FText LastValidText = FText::GetEmpty();
 };

@@ -23,7 +23,8 @@ void UJAFGGameInstance::Init()
     }
 
     GEngine->GetGameUserSettings()->SetFullscreenMode(EWindowMode::Windowed);
-    GEngine->GetGameUserSettings()->SetScreenResolution(FIntPoint(1024, 768));
+    GEngine->GetGameUserSettings()->SetScreenResolution(FIntPoint(1440, 900));
+    GEngine->GetGameUserSettings()->ApplySettings(false);
 
     return;
 }

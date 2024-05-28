@@ -3,7 +3,9 @@
 #include "Frontend/SettingsTabBarPanel.h"
 
 #include "CustomSettingsLocalPlayer.h"
+#include "JAFGSettingsLocal.h"
 #include "Blueprint/WidgetTree.h"
+#include "Components/JAFGButton.h"
 #include "Components/JAFGScrollBox.h"
 #include "Components/JAFGTextBlock.h"
 #include "Components/VerticalBox.h"
@@ -17,6 +19,18 @@
 
 USettingsTabBarPanel::USettingsTabBarPanel(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
+    return;
+}
+
+void USettingsTabBarPanel::NativeConstruct(void)
+{
+    Super::NativeConstruct();
+
+    this->B_Apply->OnClicked.AddDynamic(this, &USettingsTabBarPanel::OnApplyClicked);
+    this->B_Cancel->OnClicked.AddDynamic(this, &USettingsTabBarPanel::OnCancelClicked);
+
+    this->B_Apply->SetIsEnabled(false);
+
     return;
 }
 
@@ -36,6 +50,30 @@ void USettingsTabBarPanel::PassDataToWidget(const FWidgetPassData& UncastedData)
     }
 
     this->CreateSettingsPage();
+
+    return;
+}
+
+void USettingsTabBarPanel::OnApplyableSettingChanged(void)
+{
+    this->bHasSettingChanged = true;
+    this->UpdateApplyButtonState();
+
+    return;
+}
+
+void USettingsTabBarPanel::DisallowApply(const FString& ChildIdentifier)
+{
+    this->ChildrenThatDisallowApply.Add(ChildIdentifier);
+    this->UpdateApplyButtonState();
+
+    return;
+}
+
+void USettingsTabBarPanel::ReleaseDisallowApply(const FString& ChildIdentifier)
+{
+    this->ChildrenThatDisallowApply.Remove(ChildIdentifier);
+    this->UpdateApplyButtonState();
 
     return;
 }
@@ -130,6 +168,7 @@ void USettingsTabBarPanel::CreateConcreteSetting(UGameSetting* InSetting, UPanel
 
         FGameSettingListEntryPassData_Scalar PassData;
         PassData.SettingName = InSetting->GetDisplayName();
+        PassData.OwningPanel = this;
         PassData.Scalar      = AsScalar;
         Widget->PassDataToWidget(PassData);
 
@@ -144,13 +183,14 @@ void USettingsTabBarPanel::CreateConcreteSetting(UGameSetting* InSetting, UPanel
 
         FGameSettingListEntryPassData_KeyIn PassData;
         PassData.SettingName = InSetting->GetDisplayName();
+        PassData.OwningPanel = this;
         PassData.KeyIn       = AsKeyIn;
         Widget->PassDataToWidget(PassData);
 
         Parent->AddChild(Widget);
     }
 
-    else if (InSetting)
+    else if (InSetting->IsA(UGameSettingValueColor::StaticClass()))
     {
         UGameSettingValueColor* AsColor = Cast<UGameSettingValueColor>(InSetting);
 
@@ -158,6 +198,7 @@ void USettingsTabBarPanel::CreateConcreteSetting(UGameSetting* InSetting, UPanel
 
         FGameSettingListEntryPassData_Color PassData;
         PassData.SettingName = InSetting->GetDisplayName();
+        PassData.OwningPanel = this;
         PassData.Color       = AsColor;
         Widget->PassDataToWidget(PassData);
 
@@ -173,4 +214,38 @@ void USettingsTabBarPanel::CreateConcreteSetting(UGameSetting* InSetting, UPanel
 
 
     return;
+}
+
+void USettingsTabBarPanel::OnApplyClicked(void)
+{
+    LOG_DISPLAY(LogGameSettings, "Applying settings.")
+
+    this->B_Apply->SetIsEnabled(false);
+
+    if (this->PageSetting->GetChildSettings().IsEmpty())
+    {
+        LOG_ERROR(LogCommonSlate, "No settings to apply.")
+        return;
+    }
+
+    UJAFGSettingsLocal* SettingsLocal = UJAFGSettingsLocal::Get();
+
+    if (SettingsLocal == nullptr || !SettingsLocal->IsValidLowLevel())
+    {
+        LOG_FATAL(LogCommonSlate, "Invalid local settings.")
+        return;
+    }
+
+    SettingsLocal->ApplySettings(false);
+
+    return;
+}
+
+void USettingsTabBarPanel::OnCancelClicked(void)
+{
+}
+
+void USettingsTabBarPanel::UpdateApplyButtonState(void) const
+{
+    this->B_Apply->SetIsEnabled(this->bHasSettingChanged && this->ChildrenThatDisallowApply.IsEmpty());
 }
