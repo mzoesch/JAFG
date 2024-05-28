@@ -107,38 +107,48 @@ public:
     void SetPrimaryColor(const FColor InPrimaryColor);
 
     UFUNCTION()
-    FColor GetPrimaryColorAlpha( /* void */ ) const;
+    FColor GetPrimaryColorAlphaMax( /* void */ ) const;
     UFUNCTION()
-    void SetPrimaryColorAlpha(const FColor InPrimaryColorAlpha);
+    void SetPrimaryColorAlphaMax(const FColor InPrimaryColorAlphaMax);
+
+    UFUNCTION()
+    FColor GetPrimaryColorAlphaMid( /* void */ ) const;
+    UFUNCTION()
+    void SetPrimaryColorAlphaMid(const FColor InPrimaryColorAlphaMid);
+
+    UFUNCTION()
+    FColor GetPrimaryColorAlphaLess( /* void */ ) const;
+    UFUNCTION()
+    void SetPrimaryColorAlphaLess(const FColor InPrimaryColorAlphaLess);
 
     UFUNCTION()
     FColor GetSecondaryColor( /* void */ ) const;
     UFUNCTION()
     void SetSecondaryColor(const FColor InSecondaryColor);
 
-    UFUNCTION()
-    FColor GetAddedSubMenuColor( /* void */ ) const;
-    UFUNCTION()
-    void SetAddedSubMenuColor(const FColor InAddedSubMenuColor);
-
-    inline static constexpr FColor DefaultPrimaryColor      = FColor(  20,  20,  20, 255 );
-    inline static constexpr FColor DefaultPrimaryColorAlpha = FColor(  20,  20,  20, 127 );
-    inline static constexpr FColor DefaultSecondaryColor    = FColor(  60,  60,  60, 255 );
-    inline static constexpr FColor DefaultAddedSubMenuColor = FColor(   0,   0,   0,  25 );
+    inline static constexpr FColor DefaultPrimaryColor          = FColor(  20,  20,  20, 255 );
+    inline static constexpr FColor DefaultPrimaryColorAlphaMax  = FColor(  20,  20,  20, 127 );
+    inline static constexpr FColor DefaultPrimaryColorAlphaMid  = FColor(  20,  20,  20, 170 );
+    inline static constexpr FColor DefaultPrimaryColorAlphaLess = FColor(  20,  20,  20, 210 );
+    inline static constexpr FColor DefaultSecondaryColor        = FColor(  60,  60,  60, 255 );
+    inline static constexpr FColor DefaultAddedSubMenuColor     = FColor(   0,   0,   0,  25 );
 
 private:
 
     UPROPERTY(Config)
-    FColor PrimaryColor      = UJAFGSettingsLocal::DefaultPrimaryColor;
+    FColor PrimaryColor          = UJAFGSettingsLocal::DefaultPrimaryColor;
 
     UPROPERTY(Config)
-    FColor PrimaryColorAlpha = UJAFGSettingsLocal::DefaultPrimaryColorAlpha;
+    FColor PrimaryColorAlphaMax  = UJAFGSettingsLocal::DefaultPrimaryColorAlphaMax;
 
     UPROPERTY(Config)
-    FColor SecondaryColor    = UJAFGSettingsLocal::DefaultSecondaryColor;
+    FColor PrimaryColorAlphaMid  = UJAFGSettingsLocal::DefaultPrimaryColorAlphaMid;
 
     UPROPERTY(Config)
-    FColor AddedSubMenuColor = UJAFGSettingsLocal::DefaultAddedSubMenuColor;
+    FColor PrimaryColorAlphaLess = UJAFGSettingsLocal::DefaultPrimaryColorAlphaLess;
+
+    UPROPERTY(Config)
+    FColor SecondaryColor        = UJAFGSettingsLocal::DefaultSecondaryColor;
 
     /**
      * From the CommonJAFGSlate plugin. All JAFG slate widgets will use this class to get their colors.

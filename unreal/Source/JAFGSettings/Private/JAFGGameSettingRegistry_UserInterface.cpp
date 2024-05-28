@@ -32,12 +32,36 @@ UGameSettingCollection* UJAFGGameSettingRegistry::InitializeUserInterfaceSetting
 
         {
             UGameSettingValueColor* ConcreteSetting = NewObject<UGameSettingValueColor>();
-            ConcreteSetting->SetIdentifier("PrimaryColorAlphaScheme");
-            ConcreteSetting->SetDisplayName("Primary Color Alpha");
+            ConcreteSetting->SetIdentifier("PrimaryColorAlphaMaxScheme");
+            ConcreteSetting->SetDisplayName("Primary Color Alpha Max");
 
-            ConcreteSetting->SetValueGetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(GetPrimaryColorAlpha));
-            ConcreteSetting->SetValueSetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(SetPrimaryColorAlpha));
-            ConcreteSetting->SetDefaultValue(UJAFGSettingsLocal::DefaultPrimaryColorAlpha);
+            ConcreteSetting->SetValueGetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(GetPrimaryColorAlphaMax));
+            ConcreteSetting->SetValueSetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(SetPrimaryColorAlphaMax));
+            ConcreteSetting->SetDefaultValue(UJAFGSettingsLocal::DefaultPrimaryColorAlphaMax);
+
+            Subsection->AddSetting(ConcreteSetting);
+        }
+
+        {
+            UGameSettingValueColor* ConcreteSetting = NewObject<UGameSettingValueColor>();
+            ConcreteSetting->SetIdentifier("PrimaryColorAlphaMidScheme");
+            ConcreteSetting->SetDisplayName("Primary Color Alpha Mid");
+
+            ConcreteSetting->SetValueGetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(GetPrimaryColorAlphaMid));
+            ConcreteSetting->SetValueSetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(SetPrimaryColorAlphaMid));
+            ConcreteSetting->SetDefaultValue(UJAFGSettingsLocal::DefaultPrimaryColorAlphaMid);
+
+            Subsection->AddSetting(ConcreteSetting);
+        }
+
+        {
+            UGameSettingValueColor* ConcreteSetting = NewObject<UGameSettingValueColor>();
+            ConcreteSetting->SetIdentifier("PrimaryColorAlphaLessScheme");
+            ConcreteSetting->SetDisplayName("Primary Color Alpha Less");
+
+            ConcreteSetting->SetValueGetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(GetPrimaryColorAlphaLess));
+            ConcreteSetting->SetValueSetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(SetPrimaryColorAlphaLess));
+            ConcreteSetting->SetDefaultValue(UJAFGSettingsLocal::DefaultPrimaryColorAlphaLess);
 
             Subsection->AddSetting(ConcreteSetting);
         }
@@ -50,25 +74,6 @@ UGameSettingCollection* UJAFGGameSettingRegistry::InitializeUserInterfaceSetting
             ConcreteSetting->SetValueGetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(GetSecondaryColor));
             ConcreteSetting->SetValueSetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(SetSecondaryColor));
             ConcreteSetting->SetDefaultValue(UJAFGSettingsLocal::DefaultSecondaryColor);
-
-            Subsection->AddSetting(ConcreteSetting);
-        }
-    }
-
-    {
-        UGameSettingCollection* Subsection = NewObject<UGameSettingCollection>();
-        Subsection->SetIdentifier("MenuUserInterfaceCollection");
-        Subsection->SetDisplayName("Menu");
-        Screen->AddSetting(Subsection);
-
-        {
-            UGameSettingValueColor* ConcreteSetting = NewObject<UGameSettingValueColor>();
-            ConcreteSetting->SetIdentifier("AddedSubMenuColorScheme");
-            ConcreteSetting->SetDisplayName("Added Sub Menu Color");
-
-            ConcreteSetting->SetValueGetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(GetAddedSubMenuColor));
-            ConcreteSetting->SetValueSetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(SetAddedSubMenuColor));
-            ConcreteSetting->SetDefaultValue(UJAFGSettingsLocal::DefaultAddedSubMenuColor);
 
             Subsection->AddSetting(ConcreteSetting);
         }

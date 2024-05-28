@@ -29,8 +29,9 @@ protected:
 
 public:
 
-    FColor PrimaryColor      = FColor(0, 0, 0, 0);
-    FColor PrimaryColorAlpha = FColor(0, 0, 0, 0);
-    FColor SecondaryColor    = FColor(0, 0, 0, 0);
-    FColor AddedSubMenuColor = FColor(0, 0, 0, 0);
+    FColor PrimaryColor          = FColor(0, 0, 0, 0);
+    FColor PrimaryColorAlphaMax  = FColor(0, 0, 0, 0);
+    FColor PrimaryColorAlphaMid  = FColor(0, 0, 0, 0);
+    FColor PrimaryColorAlphaLess = FColor(0, 0, 0, 0);
+    FColor SecondaryColor        = FColor(0, 0, 0, 0);
 };

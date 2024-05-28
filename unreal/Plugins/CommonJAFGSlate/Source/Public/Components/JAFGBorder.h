@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "JAFGSlateStatics.h"
+#include "UsesJAFGColorScheme.h"
 #include "Components/Border.h"
 
 #include "JAFGBorder.generated.h"
 
 /** A border that works hand in hand with the default colors subsystem. */
 UCLASS(Blueprintable)
-class COMMONJAFGSLATE_API UJAFGBorder : public UBorder
+class COMMONJAFGSLATE_API UJAFGBorder : public UBorder, public IUsesJAFGColorScheme
 {
     GENERATED_BODY()
 
@@ -18,7 +18,7 @@ public:
 
     explicit UJAFGBorder(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
-    void UpdateBrushWithDefaultValues(void);
+    virtual void UpdateBrushWithSetColorScheme(void) override;
 
 protected:
 

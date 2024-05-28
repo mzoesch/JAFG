@@ -24,17 +24,21 @@ FColor UDefaultColorsSubsystem::GetColorByScheme(const EJAFGColorScheme::Type In
     {
         return this->PrimaryColor;
     }
-    case EJAFGColorScheme::PrimaryReducedAlpha:
+    case EJAFGColorScheme::PrimaryAlphaMax:
     {
-        return this->PrimaryColorAlpha;
+        return this->PrimaryColorAlphaMax;
+    }
+    case EJAFGColorScheme::PrimaryAlphaMid:
+    {
+        return this->PrimaryColorAlphaMid;
+    }
+    case EJAFGColorScheme::PrimaryAlphaLess:
+    {
+        return this->PrimaryColorAlphaLess;
     }
     case EJAFGColorScheme::Secondary:
     {
         return this->SecondaryColor;
-    }
-    case EJAFGColorScheme::AddedSubMenuColor:
-    {
-        return this->AddedSubMenuColor;
     }
     default:
     {

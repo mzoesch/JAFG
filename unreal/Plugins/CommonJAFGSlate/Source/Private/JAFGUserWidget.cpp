@@ -13,8 +13,8 @@ UJAFGUserWidget::UJAFGUserWidget(const FObjectInitializer& ObjectInitializer) : 
 void UJAFGUserWidget::NativeConstruct(void)
 {
     Super::NativeConstruct();
-
     this->UpdateTreeBrushes();
+    return;
 }
 
 void UJAFGUserWidget::UpdateTreeBrushes(void) const
@@ -23,7 +23,10 @@ void UJAFGUserWidget::UpdateTreeBrushes(void) const
 
     for (UWidget* Child : Children)
     {
-        if (UJAFGBorder* Border = Cast<UJAFGBorder>(Child); Border) { Border->UpdateBrushWithDefaultValues(); }
+        if (IUsesJAFGColorScheme* ColorSchemeUser = Cast<IUsesJAFGColorScheme>(Child); ColorSchemeUser)
+        {
+            ColorSchemeUser->UpdateBrushWithSetColorScheme();
+        }
     }
 
     return;

@@ -12,11 +12,14 @@ namespace EJAFGColorScheme
 
 enum Type : uint8
 {
+    /** The component will be treated normal and will never be updated by the JAFG color subsystem. */
     DontCare,
+
     Primary,
-    PrimaryReducedAlpha,
+    PrimaryAlphaMax,
+    PrimaryAlphaMid,
+    PrimaryAlphaLess,
     Secondary,
-    AddedSubMenuColor,
 };
 
 }

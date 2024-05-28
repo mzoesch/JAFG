@@ -49,35 +49,25 @@ void UJAFGSettingsLocal::SetAndUpdateDefaultColorsSubsystem(UDefaultColorsSubsys
     return;
 }
 
+
 void UJAFGSettingsLocal::SmartUpdateUserInterfaceColors(void) const
 {
+#define SMART_UPDATE_VALUE(Value)                  \
+    if (this->Value != this->DefaultColors->Value) \
+    {                                              \
+        this->DefaultColors->Value = this->Value;  \
+        ++UpdatedValues;                           \
+    }
+
     check( this->DefaultColors )
 
     int32 UpdatedValues = 0;
 
-    if (this->PrimaryColor != this->DefaultColors->PrimaryColor)
-    {
-        this->DefaultColors->PrimaryColor = this->PrimaryColor;
-        ++UpdatedValues;
-    }
-
-    if (this->PrimaryColorAlpha != this->DefaultColors->PrimaryColorAlpha)
-    {
-        this->DefaultColors->PrimaryColorAlpha = this->PrimaryColorAlpha;
-        ++UpdatedValues;
-    }
-
-    if (this->SecondaryColor != this->DefaultColors->SecondaryColor)
-    {
-        this->DefaultColors->SecondaryColor = this->SecondaryColor;
-        ++UpdatedValues;
-    }
-
-    if (this->AddedSubMenuColor != this->DefaultColors->AddedSubMenuColor)
-    {
-        this->DefaultColors->AddedSubMenuColor = this->AddedSubMenuColor;
-        ++UpdatedValues;
-    }
+    SMART_UPDATE_VALUE(PrimaryColor)
+    SMART_UPDATE_VALUE(PrimaryColorAlphaMax)
+    SMART_UPDATE_VALUE(PrimaryColorAlphaMid)
+    SMART_UPDATE_VALUE(PrimaryColorAlphaLess)
+    SMART_UPDATE_VALUE(SecondaryColor)
 
     if (UpdatedValues <= 0)
     {
@@ -86,7 +76,7 @@ void UJAFGSettingsLocal::SmartUpdateUserInterfaceColors(void) const
     }
 
     TArray<UUserWidget*> Widgets;
-    UWidgetBlueprintLibrary::GetAllWidgetsOfClass(this->DefaultColors, Widgets, UJAFGUserWidget::StaticClass(), true);
+    UWidgetBlueprintLibrary::GetAllWidgetsOfClass(this->DefaultColors, Widgets, UJAFGUserWidget::StaticClass(), false);
     for (UUserWidget* Widget : Widgets)
     {
         if (const UJAFGUserWidget* JAFGWidget = Cast<UJAFGUserWidget>(Widget); JAFGWidget)
@@ -96,6 +86,8 @@ void UJAFGSettingsLocal::SmartUpdateUserInterfaceColors(void) const
     }
 
     LOG_DISPLAY(LogGameSettings, "Updated %d user interface colors on %d widgets.", UpdatedValues, Widgets.Num())
+
+#undef SMART_UPDATE_VALUE
 
     return;
 }
@@ -162,14 +154,34 @@ void UJAFGSettingsLocal::SetPrimaryColor(const FColor InPrimaryColor)
     this->PrimaryColor = InPrimaryColor;
 }
 
-FColor UJAFGSettingsLocal::GetPrimaryColorAlpha(void) const
+FColor UJAFGSettingsLocal::GetPrimaryColorAlphaMax(void) const
 {
-    return this->PrimaryColorAlpha;
+    return this->PrimaryColorAlphaMax;
 }
 
-void UJAFGSettingsLocal::SetPrimaryColorAlpha(const FColor InPrimaryColorAlpha)
+void UJAFGSettingsLocal::SetPrimaryColorAlphaMax(const FColor InPrimaryColorAlphaMax)
 {
-    this->PrimaryColorAlpha = InPrimaryColorAlpha;
+    this->PrimaryColorAlphaMax = InPrimaryColorAlphaMax;
+}
+
+FColor UJAFGSettingsLocal::GetPrimaryColorAlphaMid(void) const
+{
+    return this->PrimaryColorAlphaMid;
+}
+
+void UJAFGSettingsLocal::SetPrimaryColorAlphaMid(const FColor InPrimaryColorAlphaMid)
+{
+    this->PrimaryColorAlphaMid = InPrimaryColorAlphaMid;
+}
+
+FColor UJAFGSettingsLocal::GetPrimaryColorAlphaLess(void) const
+{
+    return this->PrimaryColorAlphaLess;
+}
+
+void UJAFGSettingsLocal::SetPrimaryColorAlphaLess(const FColor InPrimaryColorAlphaLess)
+{
+    this->PrimaryColorAlphaLess = InPrimaryColorAlphaLess;
 }
 
 FColor UJAFGSettingsLocal::GetSecondaryColor(void) const
@@ -180,14 +192,4 @@ FColor UJAFGSettingsLocal::GetSecondaryColor(void) const
 void UJAFGSettingsLocal::SetSecondaryColor(const FColor InSecondaryColor)
 {
     this->SecondaryColor = InSecondaryColor;
-}
-
-FColor UJAFGSettingsLocal::GetAddedSubMenuColor(void) const
-{
-    return this->AddedSubMenuColor;
-}
-
-void UJAFGSettingsLocal::SetAddedSubMenuColor(const FColor InAddedSubMenuColor)
-{
-    this->AddedSubMenuColor = InAddedSubMenuColor;
 }
