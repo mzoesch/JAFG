@@ -92,7 +92,7 @@ void AWorldCharacter::BeginPlay(void)
         );
 
     this->ListenForCameraChangedEventWithNonFPMeshWrapper();
-    this->GetMyCharacterMovement()->OnSprintStateChanged.AddLambda( [this] (const bool bSprinting)
+    this->GetMyCharacterMovement()->OnSprintStateChangedDelegate.AddLambda( [this] (const bool bSprinting)
     {
         this->UpdateFOVBasedOnSprintState();
     });

@@ -122,14 +122,32 @@ void UMyCharacterMovementComponent::EvaluateSprint(void)
         this->bSpringing = true;
         this->MaxWalkSpeed = this->MaxWalkSpeed * this->SprintMaxWalkSpeedMultiplier;
 
-        this->OnSprintStateChanged.Broadcast(true);
+        this->OnSprintStateChangedDelegate.Broadcast(true);
     }
     else
     {
         this->bSpringing = false;
         this->MaxWalkSpeed = this->NormalMaxWalkingSpeed;
 
-        this->OnSprintStateChanged.Broadcast(false);
+        this->OnSprintStateChangedDelegate.Broadcast(false);
+    }
+
+    this->EvaluateSprint_ServerRPC(this->bWantsToSprint);
+
+    return;
+}
+
+void UMyCharacterMovementComponent::EvaluateSprint_ServerRPC_Implementation(const bool bRemoteWantsToSprint)
+{
+    if (bRemoteWantsToSprint && this->IsCrouching() == false)
+    {
+        this->bSpringing   = true;
+        this->MaxWalkSpeed = this->MaxWalkSpeed * this->SprintMaxWalkSpeedMultiplier;
+    }
+    else
+    {
+        this->bSpringing   = false;
+        this->MaxWalkSpeed = this->NormalMaxWalkingSpeed;
     }
 
     return;

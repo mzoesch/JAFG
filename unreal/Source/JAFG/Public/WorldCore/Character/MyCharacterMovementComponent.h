@@ -9,7 +9,7 @@
 
 JAFG_VOID
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnSprintStateChanged, const bool /* bSprinting */)
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnSprintStateChangedSignature, const bool /* bSprinting */)
 
 UCLASS(NotBlueprintable)
 class JAFG_API UMyCharacterMovementComponent : public UCharacterMovementComponent
@@ -54,7 +54,8 @@ public:
     FORCEINLINE auto IsWantingToSprint(void) const -> bool { return this->bWantsToSprint; }
     FORCEINLINE auto IsSprinting(void) const -> bool { return this->bSpringing; }
 
-    FOnSprintStateChanged OnSprintStateChanged;
+    /** Delegate only broadcasted on the local owner. */
+    FOnSprintStateChangedSignature OnSprintStateChangedDelegate;
 
 protected:
 
@@ -66,11 +67,16 @@ protected:
     virtual void OnMovementModeChanged(const EMovementMode PreviousMovementMode, const uint8 PreviousCustomMode) override;
 
     /** Will check the current state of the component and then sprint or not. */
-    virtual void EvaluateSprint(void);
+    void EvaluateSprint(void);
+    UFUNCTION(Server, Reliable)
+    void EvaluateSprint_ServerRPC(const bool bRemoteWantsToSprint);
 
 private:
 
-    /** If the user wants to sprint (pressing the keys while in the correct context). */
+    /**
+     * If the user wants to sprint (pressing the keys while in the correct context).
+     * Therefore, it only exists on the local owner. Meaningless on a remote component.
+     */
     bool bWantsToSprint = false;
     bool bSpringing     = false;
 };
