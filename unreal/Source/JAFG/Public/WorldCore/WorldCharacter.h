@@ -49,6 +49,7 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UPrimitiveComponent> NonFPMeshWrapper;
     auto ListenForCameraChangedEventWithNonFPMeshWrapper(void) -> void;
+    auto UpdateFOVBasedOnSprintState(void) const -> void;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UCameraComponent> FirstPersonCameraComponent;
@@ -71,9 +72,10 @@ protected:
 
 #pragma region Member Variables
 
-    float DefaultFieldOfView = 120.0f;
-    float ZoomedFieldOfView  = 60.0f;
-    float DefaultOrthoWidth  = 8192.0f;
+    float DefaultFieldOfView          = 120.0f;
+    float SprintFieldOfViewMultiplier = 1.1f;
+    float ZoomedFieldOfView           = 60.0f;
+    float DefaultOrthoWidth           = 8192.0f;
 
 #pragma endregion Member Variables
 
@@ -113,6 +115,8 @@ protected:
     virtual auto OnStartedJump(const FInputActionValue& Value) -> void;
     virtual auto OnTriggerJump(const FInputActionValue& Value) -> void;
     virtual auto OnCompleteJump(const FInputActionValue& Value) -> void;
+    virtual auto OnStartedSprint(const FInputActionValue& Value) -> void;
+    virtual auto OnCompletedSprint(const FInputActionValue& Value) -> void;
     virtual auto OnTriggerCrouch(const FInputActionValue& Value) -> void;
     virtual auto OnCompleteCrouch(const FInputActionValue& Value) -> void;
     virtual auto OnStartedPrimary(const FInputActionValue& Value) -> void;
@@ -127,6 +131,7 @@ protected:
     virtual auto OnToggleCameras(const FInputActionValue& Value) -> void;
     virtual auto OnTriggerZoomCameras(const FInputActionValue& Value) -> void;
     virtual auto OnCompleteZoomCameras(const FInputActionValue& Value) -> void;
+    bool bZooming = false;
     virtual auto OnTogglePerspective(const FInputActionValue& Value) -> void;
 
     float LastJumpStarted = 0.0f;

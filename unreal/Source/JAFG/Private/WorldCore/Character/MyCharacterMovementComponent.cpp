@@ -17,6 +17,7 @@ UMyCharacterMovementComponent::UMyCharacterMovementComponent(const FObjectInitia
     this->MaxStepHeight              = 60.0f;
     this->bUseFlatBaseForFloorChecks = true;
     this->LedgeCheckThreshold        = 4.0f;
+    this->MaxWalkSpeed               = this->NormalMaxWalkingSpeed;
 
     /* Crouching */
     this->NavAgentProps.bCanCrouch       = true;
@@ -67,6 +68,27 @@ void UMyCharacterMovementComponent::DecrementFlySpeed(void)
     return;
 }
 
+void UMyCharacterMovementComponent::Crouch(const bool bClientSimulation)
+{
+    Super::Crouch(bClientSimulation);
+    this->EvaluateSprint();
+    return;
+}
+
+void UMyCharacterMovementComponent::UnCrouch(const bool bClientSimulation)
+{
+    Super::UnCrouch(bClientSimulation);
+    this->EvaluateSprint();
+    return;
+}
+
+void UMyCharacterMovementComponent::SetWantsToSprint(const bool bInWantsToSprint)
+{
+    this->bWantsToSprint = bInWantsToSprint;
+    this->EvaluateSprint();
+    return;
+}
+
 void UMyCharacterMovementComponent::IncrementFlySpeed_ServerRPC_Implementation()
 {
     this->MaxFlySpeed = FMath::Clamp(this->MaxFlySpeed + this->FlySpeedSteps, this->AbsoluteMinFlySpeed, this->AbsoluteMaxFlySpeed);
@@ -88,6 +110,26 @@ void UMyCharacterMovementComponent::OnMovementModeChanged(const EMovementMode Pr
     else
     {
         this->MaxAcceleration = this->MaxAccelerationWalking;
+    }
+
+    return;
+}
+
+void UMyCharacterMovementComponent::EvaluateSprint(void)
+{
+    if (this->bWantsToSprint && this->IsCrouching() == false)
+    {
+        this->bSpringing = true;
+        this->MaxWalkSpeed = this->MaxWalkSpeed * this->SprintMaxWalkSpeedMultiplier;
+
+        this->OnSprintStateChanged.Broadcast(true);
+    }
+    else
+    {
+        this->bSpringing = false;
+        this->MaxWalkSpeed = this->NormalMaxWalkingSpeed;
+
+        this->OnSprintStateChanged.Broadcast(false);
     }
 
     return;

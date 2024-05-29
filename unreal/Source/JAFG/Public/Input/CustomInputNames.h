@@ -27,6 +27,7 @@ namespace InputActions
 extern inline const FString Move                      = TEXT("Move");
 extern inline const FString Look                      = TEXT("Look");
 extern inline const FString Jump                      = TEXT("Jump");
+extern inline const FString Sprint                    = TEXT("Sprint");
 extern inline const FString FlyUp                     = TEXT("FlyUp");
 extern inline const FString Crouch                    = TEXT("Crouch");
 extern inline const FString FlyDown                   = TEXT("FlyDown");

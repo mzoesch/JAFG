@@ -92,6 +92,10 @@ void AWorldCharacter::BeginPlay(void)
         );
 
     this->ListenForCameraChangedEventWithNonFPMeshWrapper();
+    this->GetMyCharacterMovement()->OnSprintStateChanged.AddLambda( [this] (const bool bSprinting)
+    {
+        this->UpdateFOVBasedOnSprintState();
+    });
 
     /* Let components set the current defaults for the active camera. */
     this->OnCameraChangedEvent.Broadcast();
@@ -141,6 +145,20 @@ void AWorldCharacter::ListenForCameraChangedEventWithNonFPMeshWrapper(void)
 
         return;
     });
+
+    return;
+}
+
+void AWorldCharacter::UpdateFOVBasedOnSprintState(void) const
+{
+    if (this->GetMyCharacterMovement()->IsSprinting())
+    {
+        this->FirstPersonCameraComponent->SetFieldOfView(this->FirstPersonCameraComponent->FieldOfView * this->SprintFieldOfViewMultiplier);
+    }
+    else
+    {
+        this->FirstPersonCameraComponent->SetFieldOfView(this->bZooming ? this->ZoomedFieldOfView : this->DefaultFieldOfView);
+    }
 
     return;
 }
@@ -257,6 +275,12 @@ void AWorldCharacter::BindAction(const FString& ActionName, UEnhancedInputCompon
         this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Completed, &AWorldCharacter::OnCompleteJump);
     }
 
+    else if (ActionName == InputActions::Sprint)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldCharacter::OnStartedSprint);
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Completed, &AWorldCharacter::OnCompletedSprint);
+    }
+
     else if (ActionName == InputActions::FlyUp)
     {
         this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldCharacter::OnStartedJump);
@@ -339,6 +363,7 @@ void AWorldCharacter::OnStartedJump(const FInputActionValue& Value)
         {
             this->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
             this->LastJumpStarted = this->GetWorld()->GetTimeSeconds();
+            this->SetFootContextBasedOnCharacterState();
             return;
         }
 
@@ -352,6 +377,7 @@ void AWorldCharacter::OnStartedJump(const FInputActionValue& Value)
         {
             this->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
             this->LastJumpStarted = this->GetWorld()->GetTimeSeconds();
+            this->SetFootContextBasedOnCharacterState();
             return;
         }
 
@@ -384,6 +410,16 @@ void AWorldCharacter::OnTriggerJump(const FInputActionValue& Value)
 void AWorldCharacter::OnCompleteJump(const FInputActionValue& Value)
 {
     Super::StopJumping();
+}
+
+void AWorldCharacter::OnStartedSprint(const FInputActionValue& Value)
+{
+    this->GetMyCharacterMovement()->SetWantsToSprint(true);
+}
+
+void AWorldCharacter::OnCompletedSprint(const FInputActionValue& Value)
+{
+    this->GetMyCharacterMovement()->SetWantsToSprint(false);
 }
 
 void AWorldCharacter::OnTriggerCrouch(const FInputActionValue& Value)
@@ -606,9 +642,11 @@ void AWorldCharacter::OnTriggerZoomCameras(const FInputActionValue& Value)
 {
     if (this->FirstPersonCameraComponent->FieldOfView == this->DefaultFieldOfView)
     {
-        this->FirstPersonCameraComponent->SetFieldOfView(this->ZoomedFieldOfView);
-        this->ThirdPersonCameraComponent->SetFieldOfView(this->ZoomedFieldOfView);
-        this->ThirdPersonFrontCameraComponent->SetFieldOfView(this->ZoomedFieldOfView);
+        this->FirstPersonCameraComponent->SetFieldOfView(this->ZoomedFieldOfView * this->GetMyCharacterMovement()->IsSprinting() ? this->SprintFieldOfViewMultiplier : 1.0f);
+        this->ThirdPersonCameraComponent->SetFieldOfView(this->ZoomedFieldOfView * this->GetMyCharacterMovement()->IsSprinting() ? this->SprintFieldOfViewMultiplier : 1.0f);
+        this->ThirdPersonFrontCameraComponent->SetFieldOfView(this->ZoomedFieldOfView * this->GetMyCharacterMovement()->IsSprinting() ? this->SprintFieldOfViewMultiplier : 1.0f);
+
+        this->bZooming = true;
     }
 
     return;
@@ -616,9 +654,11 @@ void AWorldCharacter::OnTriggerZoomCameras(const FInputActionValue& Value)
 
 void AWorldCharacter::OnCompleteZoomCameras(const FInputActionValue& Value)
 {
-    this->FirstPersonCameraComponent->SetFieldOfView(this->DefaultFieldOfView);
-    this->ThirdPersonCameraComponent->SetFieldOfView(this->DefaultFieldOfView);
-    this->ThirdPersonFrontCameraComponent->SetFieldOfView(this->DefaultFieldOfView);
+    this->FirstPersonCameraComponent->SetFieldOfView(this->DefaultFieldOfView * this->GetMyCharacterMovement()->IsSprinting() ? this->SprintFieldOfViewMultiplier : 1.0f);
+    this->ThirdPersonCameraComponent->SetFieldOfView(this->DefaultFieldOfView * this->GetMyCharacterMovement()->IsSprinting() ? this->SprintFieldOfViewMultiplier : 1.0f);
+    this->ThirdPersonFrontCameraComponent->SetFieldOfView(this->DefaultFieldOfView * this->GetMyCharacterMovement()->IsSprinting() ? this->SprintFieldOfViewMultiplier : 1.0f);
+
+    this->bZooming = false;
 
     return;
 }

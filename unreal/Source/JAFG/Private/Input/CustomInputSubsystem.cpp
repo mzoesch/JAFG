@@ -127,6 +127,17 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
         InputSubsystem->AddAction(Action);
     }
 
+    // Sprint Action
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::Sprint;
+        Action.Keys.KeyA = EKeys::LeftControl;
+        Action.Keys.KeyB = EKeys::Invalid;
+        Action.Contexts.Add(InputContexts::Footlike);
+        InputSubsystem->AddAction(Action);
+    }
+
     // Fly Up Action
     //////////////////////////////////////////////////////////////////////////
     {

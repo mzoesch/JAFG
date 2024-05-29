@@ -9,6 +9,8 @@
 
 JAFG_VOID
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnSprintStateChanged, const bool /* bSprinting */)
+
 UCLASS(NotBlueprintable)
 class JAFG_API UMyCharacterMovementComponent : public UCharacterMovementComponent
 {
@@ -22,6 +24,10 @@ public:
 
     float MaxAccelerationWalking         = 2048.0f;
 
+    /*
+     * Flying
+     */
+
     float FlyBreakDeceleration           = 32768.0f;
     float AbsoluteMaxFlySpeed            = 16384.0f;
     float AbsoluteMinFlySpeed            = 100.0f;
@@ -29,10 +35,26 @@ public:
     float MaxAccelerationFly             = FLT_MAX;
     bool  bAllowInputFly                 = false;
 
+    /*
+     * Stepping
+     */
+    float NormalMaxWalkingSpeed          = 600.0f;
+
+    float SprintMaxWalkSpeedMultiplier   = 2.0f;
+
 #pragma endregion Member Variables
 
     void IncrementFlySpeed(void);
     void DecrementFlySpeed(void);
+
+    virtual void Crouch(const bool bClientSimulation) override;
+    virtual void UnCrouch(const bool bClientSimulation) override;
+
+    void SetWantsToSprint(const bool bInWantsToSprint);
+    FORCEINLINE auto IsWantingToSprint(void) const -> bool { return this->bWantsToSprint; }
+    FORCEINLINE auto IsSprinting(void) const -> bool { return this->bSpringing; }
+
+    FOnSprintStateChanged OnSprintStateChanged;
 
 protected:
 
@@ -42,4 +64,13 @@ protected:
     void DecrementFlySpeed_ServerRPC();
 
     virtual void OnMovementModeChanged(const EMovementMode PreviousMovementMode, const uint8 PreviousCustomMode) override;
+
+    /** Will check the current state of the component and then sprint or not. */
+    virtual void EvaluateSprint(void);
+
+private:
+
+    /** If the user wants to sprint (pressing the keys while in the correct context). */
+    bool bWantsToSprint = false;
+    bool bSpringing     = false;
 };
