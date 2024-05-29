@@ -10,8 +10,8 @@ UMyCharacterMovementComponent::UMyCharacterMovementComponent(const FObjectInitia
     this->MaxAcceleration            = this->MaxAccelerationWalking;
 
     /* Flying */
-    this->BrakingDecelerationFlying  = 8192.0f;
-    this->MaxFlySpeed                = 600.0f;
+    this->BrakingDecelerationFlying  = this->FlyBreakDeceleration;
+    this->MaxFlySpeed                = this->AbsoluteMaxFlySpeed / 4 < this->AbsoluteMinFlySpeed ? this->AbsoluteMinFlySpeed : this->AbsoluteMaxFlySpeed / 4;
 
     /* Stepping */
     this->MaxStepHeight              = 60.0f;

@@ -16,6 +16,12 @@ class UJAFGSettingsLocal;
 // Use these types to load custom input actions and contexts.
 //////////////////////////////////////////////////////////////////////////
 
+struct COMMONSETTINGS_API FJAFGUpperInputContext
+{
+    FString         Name;
+    TArray<FString> InputContextRedirections;
+};
+
 struct COMMONSETTINGS_API FJAFGInputContext
 {
     FString Name;
@@ -114,6 +120,15 @@ struct COMMONSETTINGS_API FLoadedInputAction
     TObjectPtr<UInputAction> Action;
 };
 
+USTRUCT(NotBlueprintType)
+struct COMMONSETTINGS_API FUpperContextValue
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    TArray<FString> InputContextRedirections;
+};
+
 /**
  * The backbone of the input system. Handles all input related tasks.
  * Bindings, actions, key mappings / re-mappings, etc.
@@ -134,6 +149,7 @@ public:
     virtual auto Deinitialize(void) -> void override;
     // ~Subsystem implementation
 
+    auto AddUpperContext(const FJAFGUpperInputContext& InContext) -> void;
     auto AddContext(const FJAFGInputContext& InContext) -> void;
 
     auto AddAction(const FJAFGSingleInputAction& InAction) -> void;
@@ -141,6 +157,7 @@ public:
     auto AddAction(const FJAFGTwoDimensionalInputAction& InAction) -> void;
     auto AddAction(const FJAFGTwoDimensionalMouseInputAction& InAction) -> void;
 
+    auto DoesUpperContextExist(const FString& Name) const -> bool;
     auto DoesContextExist(const FString& Name) const -> bool;
     auto DoesActionExist(const FString& Name) const -> bool;
 
@@ -153,6 +170,9 @@ public:
 
     /** @return Will only return non-invalid keys. */
     auto GetAllKeysForAction(const FString& Name) const -> TArray<FKey>;
+
+    auto GetUpperContext(const FString& Name) -> FUpperContextValue*;
+    auto GetSafeUpperContext(const FString& Name) -> FUpperContextValue*;
 
     auto GetContext(const FString& Name) -> FLoadedContext*;
     auto GetSafeContext(const FString& Name) -> FLoadedContext*;
@@ -170,6 +190,8 @@ private:
 
     static auto CreateEmptyAction(const FString& Name, const TArray<FString>& Contexts) -> FLoadedInputAction;
 
+    UPROPERTY() /* Do not remove UPROPERTY - Garbage Collection!!! */
+    TMap<FString, FUpperContextValue> UpperContexts;
     UPROPERTY() /* Do not remove UPROPERTY - Garbage Collection!!! */
     TArray<FLoadedContext> Contexts;
     UPROPERTY() /* Do not remove UPROPERTY - Garbage Collection!!! */

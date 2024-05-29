@@ -4,7 +4,6 @@
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "InputMappingContext.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -14,6 +13,15 @@
 #include "SettingsData/JAFGInputSubsystem.h"
 #include "Player/WorldPlayerController.h"
 #include "WorldCore/Chunk/CommonChunk.h"
+
+#define ENHANCED_INPUT_SUBSYSTEM                                       \
+    ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(    \
+        this->GetWorld()->GetFirstPlayerController()->GetLocalPlayer() \
+    )
+#define JAFG_INPUT_SUBSYSTEM                                           \
+    ULocalPlayer::GetSubsystem<UJAFGInputSubsystem>(                   \
+        this->GetWorld()->GetFirstPlayerController()->GetLocalPlayer() \
+    )
 
 AWorldCharacter::AWorldCharacter(const FObjectInitializer& ObjectInitializer) :
 Super(ObjectInitializer.SetDefaultSubobjectClass<UMyCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -151,15 +159,15 @@ void AWorldCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
     if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
     {
-        UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(this->GetWorld()->GetFirstPlayerController()->GetLocalPlayer());
-        UJAFGInputSubsystem* JAFGSubsystem = ULocalPlayer::GetSubsystem<UJAFGInputSubsystem>(this->GetWorld()->GetFirstPlayerController()->GetLocalPlayer());
+        UEnhancedInputLocalPlayerSubsystem* Subsystem     = ENHANCED_INPUT_SUBSYSTEM;
+        UJAFGInputSubsystem*                JAFGSubsystem = JAFG_INPUT_SUBSYSTEM;
 
         check( EnhancedInputComponent )
         check( Subsystem )
         check( JAFGSubsystem )
 
         Subsystem->ClearAllMappings();
-        Subsystem->AddMappingContext(JAFGSubsystem->GetSafeContextValue(InputContexts::Foot), 0);
+        Subsystem->AddMappingContext(JAFGSubsystem->GetSafeContextValue(InputContexts::FootWalk), 0);
 
         for (const FString& ActionName : JAFGSubsystem->GetAllActionNames())
         {
@@ -168,6 +176,66 @@ void AWorldCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
         return;
     }
+}
+
+void AWorldCharacter::SetFootContextBasedOnCharacterState(const bool bClearOldMappings /* = true */, const int32 Priority /* = 0 */)
+{
+    UEnhancedInputLocalPlayerSubsystem* Subsystem = ENHANCED_INPUT_SUBSYSTEM;
+
+    if (bClearOldMappings)
+    {
+        Subsystem->ClearAllMappings();
+    }
+
+    Subsystem->AddMappingContext(this->GetSafeFootContextBasedOnCharacterState(), Priority);
+
+    return;
+}
+
+UInputMappingContext* AWorldCharacter::GetFootContextBasedOnCharacterState(void) const
+{
+    UJAFGInputSubsystem* JAFGInputSubsystem =
+        ULocalPlayer::GetSubsystem<UJAFGInputSubsystem>(
+            this->GetWorld()->GetFirstPlayerController()->GetLocalPlayer()
+        );
+
+    check( JAFGInputSubsystem )
+
+    return this->GetFootContextBasedOnCharacterState(JAFGInputSubsystem);
+}
+
+UInputMappingContext* AWorldCharacter::GetSafeFootContextBasedOnCharacterState(void) const
+{
+    if (UInputMappingContext* Context = this->GetFootContextBasedOnCharacterState(); Context)
+    {
+        return Context;
+    }
+
+    LOG_FATAL(LogWorldChar, "Failed to get foot context based on character state.")
+
+    return nullptr;
+}
+
+UInputMappingContext* AWorldCharacter::GetFootContextBasedOnCharacterState(UJAFGInputSubsystem* JAFGInputSubsystem) const
+{
+    if (this->GetMyCharacterMovement()->MovementMode == EMovementMode::MOVE_Flying)
+    {
+        return JAFGInputSubsystem->GetSafeContextValue(InputContexts::FootFly);
+    }
+
+    return JAFGInputSubsystem->GetSafeContextValue(InputContexts::FootWalk);
+}
+
+UInputMappingContext* AWorldCharacter::GetSafeFootContextBasedOnCharacterState(UJAFGInputSubsystem* JAFGInputSubsystem) const
+{
+    if (UInputMappingContext* Context = this->GetFootContextBasedOnCharacterState(JAFGInputSubsystem); Context)
+    {
+        return Context;
+    }
+
+    LOG_FATAL(LogWorldChar, "Failed to get safe foot context based on character state.")
+
+    return nullptr;
 }
 
 void AWorldCharacter::BindAction(const FString& ActionName, UEnhancedInputComponent* EnhancedInputComponent)
@@ -189,7 +257,20 @@ void AWorldCharacter::BindAction(const FString& ActionName, UEnhancedInputCompon
         this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Completed, &AWorldCharacter::OnCompleteJump);
     }
 
+    else if (ActionName == InputActions::FlyUp)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldCharacter::OnStartedJump);
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Triggered, &AWorldCharacter::OnTriggerJump);
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Completed, &AWorldCharacter::OnCompleteJump);
+    }
+
     else if (ActionName == InputActions::Crouch)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Triggered, &AWorldCharacter::OnTriggerCrouch);
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Completed, &AWorldCharacter::OnCompleteCrouch);
+    }
+
+    else if (ActionName == InputActions::FlyDown)
     {
         this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Triggered, &AWorldCharacter::OnTriggerCrouch);
         this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Completed, &AWorldCharacter::OnCompleteCrouch);
@@ -577,19 +658,30 @@ void AWorldCharacter::BindAction(
 
 void AWorldCharacter::OnEscapeMenuVisibilityChanged(const bool bVisible)
 {
-    UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(this->GetWorld()->GetFirstPlayerController()->GetLocalPlayer());
-    check( Subsystem )
-
-    UJAFGInputSubsystem* JAFGSubsystem = ULocalPlayer::GetSubsystem<UJAFGInputSubsystem>(this->GetWorld()->GetFirstPlayerController()->GetLocalPlayer());
+    UEnhancedInputLocalPlayerSubsystem* Subsystem     = ENHANCED_INPUT_SUBSYSTEM;
+    UJAFGInputSubsystem*                JAFGSubsystem = JAFG_INPUT_SUBSYSTEM;
+    check(     Subsystem )
     check( JAFGSubsystem )
 
     Subsystem->ClearAllMappings();
-    Subsystem->AddMappingContext(JAFGSubsystem->GetSafeContextValue(bVisible ? InputContexts::Escape : InputContexts::Foot), 0);
+
+    if (bVisible)
+    {
+        Subsystem->AddMappingContext(JAFGSubsystem->GetSafeContextValue(InputContexts::Escape), 0);
+    }
+    else
+    {
+        Subsystem->AddMappingContext(this->GetSafeFootContextBasedOnCharacterState(JAFGSubsystem), 0);
+    }
 
     return;
 }
 
-void AWorldCharacter::ToggleFly(void) const
+#pragma endregion Enhanced Input
+
+#pragma region Command Interface
+
+void AWorldCharacter::ToggleFly(void)
 {
     if (this->GetCharacterMovement()->MovementMode == EMovementMode::MOVE_Flying)
     {
@@ -599,6 +691,8 @@ void AWorldCharacter::ToggleFly(void) const
 
     this->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
 
+    this->SetFootContextBasedOnCharacterState();
+
     return;
 }
 
@@ -606,6 +700,10 @@ void AWorldCharacter::ToggleInputFly(void) const
 {
     this->GetMyCharacterMovement()->bAllowInputFly = !this->GetMyCharacterMovement()->bAllowInputFly;
 }
+
+#pragma endregion Command Interface
+
+#pragma region World Interaction
 
 void AWorldCharacter::GetPOVTargetedData(
     ACommonChunk*& OutChunk,
@@ -648,4 +746,7 @@ void AWorldCharacter::GetPOVTargetedData(
     return;
 }
 
-#pragma endregion Enhanced Input
+#pragma endregion World Interaction
+
+#undef ENHANCED_INPUT_SUBSYSTEM
+#undef JAFG_INPUT_SUBSYSTEM

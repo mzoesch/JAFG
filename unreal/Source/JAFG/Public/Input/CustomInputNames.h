@@ -13,9 +13,11 @@ JAFG_VOID
 namespace InputContexts
 {
 
-extern inline const FString Foot   = TEXT("Foot");
-extern inline const FString Escape = TEXT("Escape");
-extern inline const FString Chat   = TEXT("Chat");
+extern inline const FString Footlike = TEXT("Footlike");
+extern inline const FString FootWalk = TEXT("FootWalk");
+extern inline const FString FootFly  = TEXT("FootFly");
+extern inline const FString Escape   = TEXT("Escape");
+extern inline const FString Chat     = TEXT("Chat");
 
 }
 
@@ -25,7 +27,9 @@ namespace InputActions
 extern inline const FString Move                      = TEXT("Move");
 extern inline const FString Look                      = TEXT("Look");
 extern inline const FString Jump                      = TEXT("Jump");
+extern inline const FString FlyUp                     = TEXT("FlyUp");
 extern inline const FString Crouch                    = TEXT("Crouch");
+extern inline const FString FlyDown                   = TEXT("FlyDown");
 extern inline const FString Primary                   = TEXT("Primary");
 extern inline const FString Secondary                 = TEXT("Secondary");
 extern inline const FString ToggleEscapeMenu          = TEXT("ToggleEscapeMenu");

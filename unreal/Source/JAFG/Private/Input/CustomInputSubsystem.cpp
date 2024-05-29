@@ -37,6 +37,20 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
 #endif /* WITH_EDITOR */
 
     /*----------------------------------------------------------------------------
+        Upper Contexts
+    ----------------------------------------------------------------------------*/
+
+    // Footlike Context
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGUpperInputContext Context;
+        Context.Name = InputContexts::Footlike;
+        Context.InputContextRedirections.Add(InputContexts::FootWalk);
+        Context.InputContextRedirections.Add(InputContexts::FootFly);
+        InputSubsystem->AddUpperContext(Context);
+    }
+
+    /*----------------------------------------------------------------------------
         Contexts
     ----------------------------------------------------------------------------*/
 
@@ -48,11 +62,19 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
         InputSubsystem->AddContext(Context);
     }
 
-    // Foot Context
+    // Foot Walk Context
     //////////////////////////////////////////////////////////////////////////
     {
         FJAFGInputContext Context;
-        Context.Name = InputContexts::Foot;
+        Context.Name = InputContexts::FootWalk;
+        InputSubsystem->AddContext(Context);
+    }
+
+    // Foot Fly Context
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGInputContext Context;
+        Context.Name = InputContexts::FootFly;
         InputSubsystem->AddContext(Context);
     }
 
@@ -81,7 +103,7 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
         Action.WestKeys.KeyB  = EKeys::Invalid;
         Action.EastKeys.KeyA  = EKeys::D;
         Action.EastKeys.KeyB  = EKeys::Invalid;
-        Action.Contexts.Add(InputContexts::Foot);
+        Action.Contexts.Add(InputContexts::Footlike);
         InputSubsystem->AddAction(Action);
     }
 
@@ -90,7 +112,7 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
     {
         FJAFGTwoDimensionalMouseInputAction Action;
         Action.Name = InputActions::Look;
-        Action.Contexts.Add(InputContexts::Foot);
+        Action.Contexts.Add(InputContexts::Footlike);
         InputSubsystem->AddAction(Action);
     }
 
@@ -100,8 +122,19 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
         FJAFGSingleInputAction Action;
         Action.Name      = InputActions::Jump;
         Action.Keys.KeyA = EKeys::SpaceBar;
-        Action.Keys.KeyB = EKeys::E;
-        Action.Contexts.Add(InputContexts::Foot);
+        Action.Keys.KeyB = EKeys::Invalid;
+        Action.Contexts.Add(InputContexts::FootWalk);
+        InputSubsystem->AddAction(Action);
+    }
+
+    // Fly Up Action
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::FlyUp;
+        Action.Keys.KeyA = EKeys::E;
+        Action.Keys.KeyB = EKeys::Invalid;
+        Action.Contexts.Add(InputContexts::FootFly);
         InputSubsystem->AddAction(Action);
     }
 
@@ -112,7 +145,18 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
         Action.Name      = InputActions::Crouch;
         Action.Keys.KeyA = EKeys::Q;
         Action.Keys.KeyB = EKeys::Invalid;
-        Action.Contexts.Add(InputContexts::Foot);
+        Action.Contexts.Add(InputContexts::FootWalk);
+        InputSubsystem->AddAction(Action);
+    }
+
+    // Fly Down Action
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::FlyDown;
+        Action.Keys.KeyA = EKeys::Q;
+        Action.Keys.KeyB = EKeys::Invalid;
+        Action.Contexts.Add(InputContexts::FootFly);
         InputSubsystem->AddAction(Action);
     }
 
@@ -123,7 +167,7 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
         Action.Name      = InputActions::Primary;
         Action.Keys.KeyA = EKeys::LeftMouseButton;
         Action.Keys.KeyB = EKeys::Invalid;
-        Action.Contexts.Add(InputContexts::Foot);
+        Action.Contexts.Add(InputContexts::Footlike);
         InputSubsystem->AddAction(Action);
     }
 
@@ -134,7 +178,7 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
         Action.Name      = InputActions::Secondary;
         Action.Keys.KeyA = EKeys::RightMouseButton;
         Action.Keys.KeyB = EKeys::Invalid;
-        Action.Contexts.Add(InputContexts::Foot);
+        Action.Contexts.Add(InputContexts::Footlike);
         InputSubsystem->AddAction(Action);
     }
 
@@ -146,7 +190,7 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
         Action.Keys.KeyA = EKeys::Escape;
         Action.Keys.KeyB = EKeys::Invalid;
         Action.Contexts.Add(InputContexts::Escape);
-        Action.Contexts.Add(InputContexts::Foot);
+        Action.Contexts.Add(InputContexts::Footlike);
         InputSubsystem->AddAction(Action);
     }
 
@@ -161,7 +205,7 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
         Action.Keys.KeyA = EKeys::F3;
 #endif /* !WITH_EDITOR */
         Action.Keys.KeyB = EKeys::Invalid;
-        Action.Contexts.Add(InputContexts::Foot);
+        Action.Contexts.Add(InputContexts::Footlike);
         InputSubsystem->AddAction(Action);
     }
 
@@ -172,7 +216,7 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
         Action.Name = InputActions::ToggleChat;
         Action.Keys.Add( { EKeys::T,      EKeys::Invalid } );
         Action.Keys.Add( { EKeys::Escape, EKeys::Invalid } );
-        Action.Contexts.Add( { InputContexts::Foot } );
+        Action.Contexts.Add( { InputContexts::Footlike } );
         Action.Contexts.Add( { InputContexts::Chat } );
         InputSubsystem->AddAction(Action);
     }
@@ -184,7 +228,7 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
         Action.Name      = InputActions::ToggleQuickSessionPreview;
         Action.Keys.KeyA = EKeys::Tab;
         Action.Keys.KeyB = EKeys::Invalid;
-        Action.Contexts.Add(InputContexts::Foot);
+        Action.Contexts.Add(InputContexts::Footlike);
         InputSubsystem->AddAction(Action);
     }
 
@@ -221,7 +265,7 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
         Action.Keys.KeyA = EKeys::LeftShift;
 #endif /* !WITH_EDITOR */
         Action.Keys.KeyB = EKeys::Invalid;
-        Action.Contexts.Add(InputContexts::Foot);
+        Action.Contexts.Add(InputContexts::Footlike);
         InputSubsystem->AddAction(Action);
     }
 
@@ -232,7 +276,7 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
         Action.Name      = InputActions::ZoomCameras;
         Action.Keys.KeyA = EKeys::C;
         Action.Keys.KeyB = EKeys::Invalid;
-        Action.Contexts.Add(InputContexts::Foot);
+        Action.Contexts.Add(InputContexts::Footlike);
         InputSubsystem->AddAction(Action);
     }
 
@@ -243,7 +287,7 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
         Action.Name      = InputActions::TogglePerspective;
         Action.Keys.KeyA = EKeys::O;
         Action.Keys.KeyB = EKeys::Invalid;
-        Action.Contexts.Add(InputContexts::Foot);
+        Action.Contexts.Add(InputContexts::Footlike);
         InputSubsystem->AddAction(Action);
     }
 
@@ -254,7 +298,7 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
         Action.Name      = InputActions::UpMaxFlySpeed;
         Action.Keys.KeyA = EKeys::MouseScrollUp;
         Action.Keys.KeyB = EKeys::Invalid;
-        Action.Contexts.Add(InputContexts::Foot);
+        Action.Contexts.Add(InputContexts::FootFly);
         InputSubsystem->AddAction(Action);
     }
 
@@ -265,7 +309,7 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
         Action.Name      = InputActions::DownMaxFlySpeed;
         Action.Keys.KeyA = EKeys::MouseScrollDown;
         Action.Keys.KeyB = EKeys::Invalid;
-        Action.Contexts.Add(InputContexts::Foot);
+        Action.Contexts.Add(InputContexts::FootFly);
         InputSubsystem->AddAction(Action);
     }
 

@@ -22,10 +22,11 @@ public:
 
     float MaxAccelerationWalking         = 2048.0f;
 
+    float FlyBreakDeceleration           = 32768.0f;
     float AbsoluteMaxFlySpeed            = 16384.0f;
     float AbsoluteMinFlySpeed            = 100.0f;
-    float FlySpeedSteps                  = 100.0f;
-    float MaxAccelerationFly             = 16384.0f;
+    float FlySpeedSteps                  = 400.0f;
+    float MaxAccelerationFly             = FLT_MAX;
     bool  bAllowInputFly                 = false;
 
 #pragma endregion Member Variables

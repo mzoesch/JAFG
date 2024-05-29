@@ -19,8 +19,48 @@ void UJAFGInputSubsystem::Deinitialize(void)
     Super::Deinitialize();
 }
 
+void UJAFGInputSubsystem::AddUpperContext(const FJAFGUpperInputContext& InContext)
+{
+    if (this->DoesContextExist(InContext.Name))
+    {
+#if WITH_EDITOR
+        LOG_ERROR(LogGameSettings, "Context already exists: %s. Discarding implementation.", *InContext.Name)
+#else /* WITH_EDITOR */
+        LOG_FATAL(LogGameSettings, "Context already exists: %s.", *InContext.Name)
+#endif /* !WITH_EDITOR */
+        return;
+    }
+
+    if (this->DoesUpperContextExist(InContext.Name))
+    {
+        int32 Added = 0;
+        for (const FString& Redirection : InContext.InputContextRedirections)
+        {
+            this->UpperContexts[InContext.Name].InputContextRedirections.AddUnique(Redirection);
+            ++Added;
+        }
+        LOG_VERBOSE(LogGameSettings, "Added %d of %d redirections to existing upper context: %s.", Added, InContext.InputContextRedirections.Num(), *InContext.Name)
+        return;
+    }
+
+    this->UpperContexts.Add(InContext.Name, FUpperContextValue(InContext.InputContextRedirections));
+    LOG_VERBOSE(LogGameSettings, "Added upper context [%s] with %d redirections.", *InContext.Name, InContext.InputContextRedirections.Num())
+
+    return;
+}
+
 void UJAFGInputSubsystem::AddContext(const FJAFGInputContext& InContext)
 {
+    if (this->DoesUpperContextExist(InContext.Name))
+    {
+#if WITH_EDITOR
+        LOG_ERROR(LogGameSettings, "Upper context already exists: %s. Discarding implementation.", *InContext.Name)
+#else /* WITH_EDITOR */
+        LOG_FATAL(LogGameSettings, "Upper context already exists: %s.", *InContext.Name)
+#endif /* !WITH_EDITOR */
+        return;
+    }
+
     if (this->DoesContextExist(InContext.Name))
     {
 #if WITH_EDITOR
@@ -73,10 +113,23 @@ void UJAFGInputSubsystem::AddAction(const FJAFGSingleInputAction& InAction)
 
     for (const FString& ContextName : InAction.Contexts)
     {
-        const FLoadedContext* Context = this->GetSafeContext(ContextName);
+        if (const FLoadedContext* Context = this->GetContext(ContextName); Context)
+        {
+            Context->Context->MapKey(Action, OutAction.NorthDefaultKeyA);
+            Context->Context->MapKey(Action, OutAction.NorthDefaultKeyB);
 
-        Context->Context->MapKey(Action, OutAction.NorthDefaultKeyA);
-        Context->Context->MapKey(Action, OutAction.NorthDefaultKeyB);
+            continue;
+        }
+
+        for (const FString& Redirection : this->GetSafeUpperContext(ContextName)->InputContextRedirections)
+        {
+            const FLoadedContext* Context = this->GetSafeContext(Redirection);
+
+            Context->Context->MapKey(Action, OutAction.NorthDefaultKeyA);
+            Context->Context->MapKey(Action, OutAction.NorthDefaultKeyB);
+
+            continue;
+        }
 
         continue;
     }
@@ -160,20 +213,46 @@ void UJAFGInputSubsystem::AddAction(const FJAFGDualInputAction& InAction)
 
     for (const FString& ContextName : InAction.Contexts[0])
     {
-        const FLoadedContext* Context = this->GetSafeContext(ContextName);
+        if (const FLoadedContext* Context = this->GetContext(ContextName); Context)
+        {
+            Context->Context->MapKey(Action, OutAction.NorthDefaultKeyA);
+            Context->Context->MapKey(Action, OutAction.NorthDefaultKeyB);
 
-        Context->Context->MapKey(Action, OutAction.NorthDefaultKeyA);
-        Context->Context->MapKey(Action, OutAction.NorthDefaultKeyB);
+            continue;
+        }
+
+        for (const FString& Redirection : this->GetSafeUpperContext(ContextName)->InputContextRedirections)
+        {
+            const FLoadedContext* Context = this->GetSafeContext(Redirection);
+
+            Context->Context->MapKey(Action, OutAction.NorthDefaultKeyA);
+            Context->Context->MapKey(Action, OutAction.NorthDefaultKeyB);
+
+            continue;
+        }
 
         continue;
     }
 
     for (const FString& ContextName : InAction.Contexts[1])
     {
-        const FLoadedContext* Context = this->GetSafeContext(ContextName);
+        if (const FLoadedContext* Context = this->GetContext(ContextName); Context)
+        {
+            Context->Context->MapKey(Action, OutAction.SouthDefaultKeyA);
+            Context->Context->MapKey(Action, OutAction.SouthDefaultKeyB);
 
-        Context->Context->MapKey(Action, OutAction.SouthDefaultKeyA);
-        Context->Context->MapKey(Action, OutAction.SouthDefaultKeyB);
+            continue;
+        }
+
+        for (const FString& Redirection : this->GetSafeUpperContext(ContextName)->InputContextRedirections)
+        {
+            const FLoadedContext* Context = this->GetSafeContext(Redirection);
+
+            Context->Context->MapKey(Action, OutAction.SouthDefaultKeyA);
+            Context->Context->MapKey(Action, OutAction.SouthDefaultKeyB);
+
+            continue;
+        }
 
         continue;
     }
@@ -222,27 +301,57 @@ void UJAFGInputSubsystem::AddAction(const FJAFGTwoDimensionalInputAction& InActi
 
     for (const FString& ContextName : OutAction.Contexts)
     {
-        const FLoadedContext* Context = this->GetSafeContext(ContextName);
+        if (const FLoadedContext* Context = this->GetContext(ContextName); Context)
+        {
+            FEnhancedActionKeyMapping& MappingNorthA = Context->Context->MapKey(Action, OutAction.NorthDefaultKeyA);
+            MappingNorthA.Modifiers.Add(NewObject<UInputModifierSwizzleAxis>());
+            FEnhancedActionKeyMapping& MappingNorthB = Context->Context->MapKey(Action, OutAction.NorthDefaultKeyB);
+            MappingNorthB.Modifiers.Add(NewObject<UInputModifierSwizzleAxis>());
 
-        FEnhancedActionKeyMapping& MappingNorthA = Context->Context->MapKey(Action, OutAction.NorthDefaultKeyA);
-        MappingNorthA.Modifiers.Add(NewObject<UInputModifierSwizzleAxis>());
-        FEnhancedActionKeyMapping& MappingNorthB = Context->Context->MapKey(Action, OutAction.NorthDefaultKeyB);
-        MappingNorthB.Modifiers.Add(NewObject<UInputModifierSwizzleAxis>());
+            FEnhancedActionKeyMapping& MappingSouthA = Context->Context->MapKey(Action, OutAction.SouthDefaultKeyA);
+            MappingSouthA.Modifiers.Add(NewObject<UInputModifierSwizzleAxis>());
+            MappingSouthA.Modifiers.Add(NewObject<UInputModifierNegate>());
+            FEnhancedActionKeyMapping& MappingSouthB = Context->Context->MapKey(Action, OutAction.SouthDefaultKeyB);
+            MappingSouthB.Modifiers.Add(NewObject<UInputModifierSwizzleAxis>());
+            MappingSouthB.Modifiers.Add(NewObject<UInputModifierNegate>());
 
-        FEnhancedActionKeyMapping& MappingSouthA = Context->Context->MapKey(Action, OutAction.SouthDefaultKeyA);
-        MappingSouthA.Modifiers.Add(NewObject<UInputModifierSwizzleAxis>());
-        MappingSouthA.Modifiers.Add(NewObject<UInputModifierNegate>());
-        FEnhancedActionKeyMapping& MappingSouthB = Context->Context->MapKey(Action, OutAction.SouthDefaultKeyB);
-        MappingSouthB.Modifiers.Add(NewObject<UInputModifierSwizzleAxis>());
-        MappingSouthB.Modifiers.Add(NewObject<UInputModifierNegate>());
+            FEnhancedActionKeyMapping& MappingWestA = Context->Context->MapKey(Action, OutAction.WestDefaultKeyA);
+            MappingWestA.Modifiers.Add(NewObject<UInputModifierNegate>());
+            FEnhancedActionKeyMapping& MappingWestB = Context->Context->MapKey(Action, OutAction.WestDefaultKeyB);
+            MappingWestB.Modifiers.Add(NewObject<UInputModifierNegate>());
 
-        FEnhancedActionKeyMapping& MappingWestA = Context->Context->MapKey(Action, OutAction.WestDefaultKeyA);
-        MappingWestA.Modifiers.Add(NewObject<UInputModifierNegate>());
-        FEnhancedActionKeyMapping& MappingWestB = Context->Context->MapKey(Action, OutAction.WestDefaultKeyB);
-        MappingWestB.Modifiers.Add(NewObject<UInputModifierNegate>());
+                                                      Context->Context->MapKey(Action, OutAction.EastDefaultKeyA);
+                                                      Context->Context->MapKey(Action, OutAction.EastDefaultKeyB);
 
-                                                  Context->Context->MapKey(Action, OutAction.EastDefaultKeyA);
-                                                  Context->Context->MapKey(Action, OutAction.EastDefaultKeyB);
+            continue;
+        }
+
+        for (const FString& Redirection : this->GetSafeUpperContext(ContextName)->InputContextRedirections)
+        {
+            const FLoadedContext* Context = this->GetSafeContext(Redirection);
+
+            FEnhancedActionKeyMapping& MappingNorthA = Context->Context->MapKey(Action, OutAction.NorthDefaultKeyA);
+            MappingNorthA.Modifiers.Add(NewObject<UInputModifierSwizzleAxis>());
+            FEnhancedActionKeyMapping& MappingNorthB = Context->Context->MapKey(Action, OutAction.NorthDefaultKeyB);
+            MappingNorthB.Modifiers.Add(NewObject<UInputModifierSwizzleAxis>());
+
+            FEnhancedActionKeyMapping& MappingSouthA = Context->Context->MapKey(Action, OutAction.SouthDefaultKeyA);
+            MappingSouthA.Modifiers.Add(NewObject<UInputModifierSwizzleAxis>());
+            MappingSouthA.Modifiers.Add(NewObject<UInputModifierNegate>());
+            FEnhancedActionKeyMapping& MappingSouthB = Context->Context->MapKey(Action, OutAction.SouthDefaultKeyB);
+            MappingSouthB.Modifiers.Add(NewObject<UInputModifierSwizzleAxis>());
+            MappingSouthB.Modifiers.Add(NewObject<UInputModifierNegate>());
+
+            FEnhancedActionKeyMapping& MappingWestA = Context->Context->MapKey(Action, OutAction.WestDefaultKeyA);
+            MappingWestA.Modifiers.Add(NewObject<UInputModifierNegate>());
+            FEnhancedActionKeyMapping& MappingWestB = Context->Context->MapKey(Action, OutAction.WestDefaultKeyB);
+            MappingWestB.Modifiers.Add(NewObject<UInputModifierNegate>());
+
+            Context->Context->MapKey(Action, OutAction.EastDefaultKeyA);
+            Context->Context->MapKey(Action, OutAction.EastDefaultKeyB);
+
+            continue;
+        }
 
         continue;
     }
@@ -276,9 +385,18 @@ void UJAFGInputSubsystem::AddAction(const FJAFGTwoDimensionalMouseInputAction& I
 
     for (const FString& ContextName : InAction.Contexts)
     {
-        const FLoadedContext* Context = this->GetSafeContext(ContextName);
+        if (const FLoadedContext* Context = this->GetContext(ContextName); Context)
+        {
+            Context->Context->MapKey(Action, EKeys::Mouse2D);
+            continue;
+        }
 
-        Context->Context->MapKey(Action, EKeys::Mouse2D);
+        for (const FString& Redirection : this->GetSafeUpperContext(ContextName)->InputContextRedirections)
+        {
+            const FLoadedContext* Context = this->GetSafeContext(Redirection);
+            Context->Context->MapKey(Action, EKeys::Mouse2D);
+            continue;
+        }
 
         continue;
     }
@@ -288,6 +406,11 @@ void UJAFGInputSubsystem::AddAction(const FJAFGTwoDimensionalMouseInputAction& I
     LOG_VERBOSE(LogGameSettings, "Added action: %s.", *InAction.Name)
 
     return;
+}
+
+bool UJAFGInputSubsystem::DoesUpperContextExist(const FString& Name) const
+{
+    return this->UpperContexts.Contains(Name);
 }
 
 bool UJAFGInputSubsystem::DoesContextExist(const FString& Name) const
@@ -320,7 +443,11 @@ bool UJAFGInputSubsystem::DoesActionExist(const FString& Name) const
 
 UInputMappingContext* UJAFGInputSubsystem::GetContextValue(const FString& Name)
 {
-    return this->GetContext(Name)->Context;
+    if (const FLoadedContext* LoadedContext = this->GetContext(Name); LoadedContext)
+    {
+        return LoadedContext->Context;
+    }
+    return nullptr;
 }
 
 UInputMappingContext* UJAFGInputSubsystem::GetSafeContextValue(const FString& Name)
@@ -417,6 +544,23 @@ TArray<FKey> UJAFGInputSubsystem::GetAllKeysForAction(const FString& Name) const
     }
 
     return Keys;
+}
+
+FUpperContextValue* UJAFGInputSubsystem::GetUpperContext(const FString& Name)
+{
+    return this->UpperContexts.Find(Name);
+}
+
+FUpperContextValue* UJAFGInputSubsystem::GetSafeUpperContext(const FString& Name)
+{
+    if (FUpperContextValue* UpperContext = this->GetUpperContext(Name))
+    {
+        return UpperContext;
+    }
+
+    LOG_FATAL(LogGameSettings, "Upper context does not exist: %s.", *Name)
+
+    return nullptr;
 }
 
 FLoadedContext* UJAFGInputSubsystem::GetContext(const FString& Name)

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "MyCore.h"
 #include "GameFramework/Character.h"
 #include "InputTriggers.h"
 #include "Camera/CameraComponent.h"
@@ -11,12 +11,16 @@
 
 #include "WorldCharacter.generated.h"
 
+JAFG_VOID
+
+class UJAFGInputSubsystem;
+class UInputMappingContext;
 class ACommonChunk;
 class USpringArmComponent;
 class UInputComponent;
 struct FInputActionValue;
 
-DECLARE_MULTICAST_DELEGATE(FOnCamerChangedEventSignature);
+DECLARE_MULTICAST_DELEGATE(FOnCamerChangedEventSignature)
 
 UCLASS(Abstract)
 class JAFG_API AWorldCharacter : public ACharacter
@@ -44,7 +48,7 @@ protected:
      */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UPrimitiveComponent> NonFPMeshWrapper;
-    void ListenForCameraChangedEventWithNonFPMeshWrapper(void);
+    auto ListenForCameraChangedEventWithNonFPMeshWrapper(void) -> void;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UCameraComponent> FirstPersonCameraComponent;
@@ -91,36 +95,39 @@ private:
 protected:
 
     /** Shortcut to the JAFG custom movement component. */
-    FORCEINLINE auto GetMyCharacterMovement(void) const -> UMyCharacterMovementComponent*
-    {
-        return this->GetCharacterMovement<UMyCharacterMovementComponent>();
-    }
+    FORCEINLINE auto GetMyCharacterMovement(void) const -> UMyCharacterMovementComponent* { return this->GetCharacterMovement<UMyCharacterMovementComponent>(); }
 
-    virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+    virtual auto SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) -> void override;
+
+    virtual auto SetFootContextBasedOnCharacterState(const bool bClearOldMappings = true, const int32 Priority = 0) -> void;
+    virtual auto GetFootContextBasedOnCharacterState(void) const -> UInputMappingContext*;
+    virtual auto GetSafeFootContextBasedOnCharacterState(void) const -> UInputMappingContext*;
+    virtual auto GetFootContextBasedOnCharacterState(UJAFGInputSubsystem* JAFGInputSubsystem) const -> UInputMappingContext*;
+    virtual auto GetSafeFootContextBasedOnCharacterState(UJAFGInputSubsystem* JAFGInputSubsystem) const -> UInputMappingContext*;
 
     /** Override this method to add custom key bindings in derived classes. */
     virtual auto BindAction(const FString& ActionName, UEnhancedInputComponent* EnhancedInputComponent) -> void;
 
-    virtual void OnTriggeredMove(const FInputActionValue& Value);
-    virtual void OnTriggeredLook(const FInputActionValue& Value);
-    virtual void OnStartedJump(const FInputActionValue& Value);
-    virtual void OnTriggerJump(const FInputActionValue& Value);
-    virtual void OnCompleteJump(const FInputActionValue& Value);
-    virtual void OnTriggerCrouch(const FInputActionValue& Value);
-    virtual void OnCompleteCrouch(const FInputActionValue& Value);
-    virtual void OnStartedPrimary(const FInputActionValue& Value);
+    virtual auto OnTriggeredMove(const FInputActionValue& Value) -> void;
+    virtual auto OnTriggeredLook(const FInputActionValue& Value) -> void;
+    virtual auto OnStartedJump(const FInputActionValue& Value) -> void;
+    virtual auto OnTriggerJump(const FInputActionValue& Value) -> void;
+    virtual auto OnCompleteJump(const FInputActionValue& Value) -> void;
+    virtual auto OnTriggerCrouch(const FInputActionValue& Value) -> void;
+    virtual auto OnCompleteCrouch(const FInputActionValue& Value) -> void;
+    virtual auto OnStartedPrimary(const FInputActionValue& Value) -> void;
     UFUNCTION(Server, Reliable)
     virtual void OnStartedPrimary_ServerRPC(const FInputActionValue& Value);
-    virtual void OnStartedSecondary(const FInputActionValue& Value);
+    virtual auto OnStartedSecondary(const FInputActionValue& Value) -> void;
     UFUNCTION(Server, Reliable)
     virtual void OnStartedSecondary_ServerRPC(const FInputActionValue& Value);
-    virtual void OnTriggeredUpMaxFlySpeed(const FInputActionValue& Value);
-    virtual void OnTriggeredDownMaxFlySpeed(const FInputActionValue& Value);
+    virtual auto OnTriggeredUpMaxFlySpeed(const FInputActionValue& Value) -> void;
+    virtual auto OnTriggeredDownMaxFlySpeed(const FInputActionValue& Value) -> void;
 
-    virtual void OnToggleCameras(const FInputActionValue& Value);
-    virtual void OnTriggerZoomCameras(const FInputActionValue& Value);
-    virtual void OnCompleteZoomCameras(const FInputActionValue& Value);
-    virtual void OnTogglePerspective(const FInputActionValue& Value);
+    virtual auto OnToggleCameras(const FInputActionValue& Value) -> void;
+    virtual auto OnTriggerZoomCameras(const FInputActionValue& Value) -> void;
+    virtual auto OnCompleteZoomCameras(const FInputActionValue& Value) -> void;
+    virtual auto OnTogglePerspective(const FInputActionValue& Value) -> void;
 
     float LastJumpStarted = 0.0f;
     static constexpr float JumpFlyModeDeactivationTime = 0.25f;
@@ -153,7 +160,7 @@ public:
     // Command Interface
     //////////////////////////////////////////////////////////////////////////
 
-    auto ToggleFly(void) const -> void;
+    auto ToggleFly(void) -> void;
     auto ToggleInputFly(void) const -> void;
 
 #pragma endregion Command Interface

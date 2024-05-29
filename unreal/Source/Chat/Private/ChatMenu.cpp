@@ -186,7 +186,7 @@ void UChatMenu::OnChatMenuVisibilityChanged(const bool bVisible)
     check( JAFGSubsystem )
 
     Subsystem->ClearAllMappings();
-    Subsystem->AddMappingContext(JAFGSubsystem->GetSafeContextValue(bVisible ? InputContexts::Chat : InputContexts::Foot), 0);
+    Subsystem->AddMappingContext(JAFGSubsystem->GetSafeContextValue(bVisible ? InputContexts::Chat : InputContexts::FootWalk), 0);
 
     if (bVisible)
     {

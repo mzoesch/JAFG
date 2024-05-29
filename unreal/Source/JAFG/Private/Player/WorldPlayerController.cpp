@@ -169,7 +169,7 @@ void AWorldPlayerController::SetupCommonPlayerInput(void)
 #endif /* WITH_EDITOR */
 
     EnhancedSubsystem->ClearAllMappings();
-    EnhancedSubsystem->AddMappingContext(JAFGInputSubsystem->GetSafeContextValue(InputContexts::Foot), 0);
+    EnhancedSubsystem->AddMappingContext(JAFGInputSubsystem->GetSafeContextValue(InputContexts::FootWalk), 0);
 
     for (const FString& Name : JAFGInputSubsystem->GetAllActionNames())
     {
