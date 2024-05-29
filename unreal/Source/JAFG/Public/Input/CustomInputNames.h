@@ -13,36 +13,36 @@ JAFG_VOID
 namespace InputContexts
 {
 
-extern inline const FString Footlike = TEXT("Footlike");
-extern inline const FString FootWalk = TEXT("FootWalk");
-extern inline const FString FootFly  = TEXT("FootFly");
-extern inline const FString Escape   = TEXT("Escape");
-extern inline const FString Chat     = TEXT("Chat");
+static const FString Footlike = TEXT("Footlike");
+static const FString FootWalk = TEXT("FootWalk");
+static const FString FootFly  = TEXT("FootFly");
+static const FString Escape   = TEXT("Escape");
+static const FString Chat     = TEXT("Chat");
 
 }
 
 namespace InputActions
 {
 
-extern inline const FString Move                      = TEXT("Move");
-extern inline const FString Look                      = TEXT("Look");
-extern inline const FString Jump                      = TEXT("Jump");
-extern inline const FString Sprint                    = TEXT("Sprint");
-extern inline const FString FlyUp                     = TEXT("FlyUp");
-extern inline const FString Crouch                    = TEXT("Crouch");
-extern inline const FString FlyDown                   = TEXT("FlyDown");
-extern inline const FString Primary                   = TEXT("Primary");
-extern inline const FString Secondary                 = TEXT("Secondary");
-extern inline const FString ToggleEscapeMenu          = TEXT("ToggleEscapeMenu");
-extern inline const FString ToggleDebugScreen         = TEXT("ToggleDebugScreen");
-extern inline const FString ToggleChat                = TEXT("ToggleChat");
-extern inline const FString ToggleQuickSessionPreview = TEXT("ToggleQuickSessionPreview");
-extern inline const FString PreviousChatStdIn         = TEXT("PreviousChatStdIn");
-extern inline const FString NextChatStdIn             = TEXT("NextChatStdIn");
-extern inline const FString ToggleCameras             = TEXT("ToggleCameras");
-extern inline const FString ZoomCameras               = TEXT("ZoomCameras");
-extern inline const FString TogglePerspective         = TEXT("TogglePerspective");
-extern inline const FString UpMaxFlySpeed             = TEXT("UpMaxFlySpeed");
-extern inline const FString DownMaxFlySpeed           = TEXT("DownMaxFlySpeed");
+static const FString Move                      = TEXT("Move");
+static const FString Look                      = TEXT("Look");
+static const FString Jump                      = TEXT("Jump");
+static const FString Sprint                    = TEXT("Sprint");
+static const FString FlyUp                     = TEXT("FlyUp");
+static const FString Crouch                    = TEXT("Crouch");
+static const FString FlyDown                   = TEXT("FlyDown");
+static const FString Primary                   = TEXT("Primary");
+static const FString Secondary                 = TEXT("Secondary");
+static const FString ToggleEscapeMenu          = TEXT("ToggleEscapeMenu");
+static const FString ToggleDebugScreen         = TEXT("ToggleDebugScreen");
+static const FString ToggleChat                = TEXT("ToggleChat");
+static const FString ToggleQuickSessionPreview = TEXT("ToggleQuickSessionPreview");
+static const FString PreviousChatStdIn         = TEXT("PreviousChatStdIn");
+static const FString NextChatStdIn             = TEXT("NextChatStdIn");
+static const FString ToggleCameras             = TEXT("ToggleCameras");
+static const FString ZoomCameras               = TEXT("ZoomCameras");
+static const FString TogglePerspective         = TEXT("TogglePerspective");
+static const FString UpMaxFlySpeed             = TEXT("UpMaxFlySpeed");
+static const FString DownMaxFlySpeed           = TEXT("DownMaxFlySpeed");
 
 }

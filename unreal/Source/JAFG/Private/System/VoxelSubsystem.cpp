@@ -16,7 +16,8 @@ void UVoxelSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     this->InitializeCommonVoxels();
     this->InitializeOptionalVoxels();
 
-    Accumulated::Initialize(this->GetItemIndexStart());
+    Accumulated::ItemIndexStart = this->GetItemIndexStart();
+    check( Accumulated::ItemIndexStart > 0 )
 
     LOG_DISPLAY(LogVoxelSubsystem, "Voxel Subsystem initialized with [%d/%d] voxels.", this->CommonVoxelNum, this->VoxelMasks.Num() )
 

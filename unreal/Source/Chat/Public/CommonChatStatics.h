@@ -161,9 +161,9 @@ namespace CommandStatics
 {
 
 
-extern inline const FString CommandPrefix       = TEXT("/");
-extern inline const FString ServerCommandPrefix = TEXT("sv_");
-extern inline const FString ClientCommandPrefix = TEXT("cl_");
+static const FString CommandPrefix       = TEXT("/");
+static const FString ServerCommandPrefix = TEXT("sv_");
+static const FString ClientCommandPrefix = TEXT("cl_");
 
 bool IsCommand(const FText& StdIn);
 bool IsServerCommand(const FText& StdIn);
@@ -181,10 +181,10 @@ FString GetCommandWithArgs(const FText& StdIn, TArray<FString>& OutArgs);
 namespace ChatStatics
 {
 
-extern inline const FString AuthorityName       = TEXT("AUTHORITY");
-extern inline const FString InternalName        = TEXT("INTERNAL");
+static const FString AuthorityName       = TEXT("AUTHORITY");
+static const FString InternalName        = TEXT("INTERNAL");
 
-extern inline constexpr int32 MaxChatInputLength = 0x7F;
+static constexpr int32 MaxChatInputLength = 0x7F;
 
 FORCEINLINE bool IsTextToLong(const FText& Text)
 {
