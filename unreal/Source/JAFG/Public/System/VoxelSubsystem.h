@@ -4,7 +4,6 @@
 
 #include "MyCore.h"
 #include "JAFGGameInstanceSubsystem.h"
-#include "WorldCore/Voxels/VoxelMask.h"
 
 #include "VoxelSubsystem.generated.h"
 

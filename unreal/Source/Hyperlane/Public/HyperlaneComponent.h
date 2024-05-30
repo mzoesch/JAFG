@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "HyperlaneTypes.h"
-#include "System/TypeDefs.h"
+#include "JAFGTypeDefs.h"
 
 #include "HyperlaneComponent.generated.h"
 

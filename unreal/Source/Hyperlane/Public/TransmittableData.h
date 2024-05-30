@@ -4,9 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "JAFGLogDefs.h"
-#include "System/TypeDefs.h"
+#include "JAFGTypeDefs.h"
+#include "JAFGTypes.h"
 #include "Serialization/BufferArchive.h"
-#include "WorldCore/WorldTypes.h"
 
 namespace TransmittableData
 {

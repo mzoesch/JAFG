@@ -26,6 +26,14 @@ public class Hyperlane : ModuleRules
         }
         );
 
+        /* Plugins */
+        PublicDependencyModuleNames.AddRange(
+        new string[]
+        {
+            "JAFGExternalCore",
+        }
+        );
+
         PrivateDependencyModuleNames.AddRange(
         new string[]
         {

@@ -28,6 +28,14 @@ public class JAFGExternalCore : ModuleRules
         }
         );
 
+        /* Plugins */
+        PublicDependencyModuleNames.AddRange(
+        new string[]
+        {
+            "JAFGGlobalLogging",
+        }
+        );
+
         PrivateDependencyModuleNames.AddRange(
         new string[]
         {

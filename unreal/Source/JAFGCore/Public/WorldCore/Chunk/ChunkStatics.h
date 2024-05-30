@@ -3,8 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "System/TypeDefs.h"
-#include "WorldCore/WorldTypes.h"
+#include "JAFGTypes.h"
 
 namespace ChunkStatics
 {

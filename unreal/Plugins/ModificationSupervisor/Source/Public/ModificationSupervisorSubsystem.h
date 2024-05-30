@@ -5,10 +5,11 @@
 #include "CoreMinimal.h"
 #include "ExternalModificationSubsystem.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "VoxelMask.h"
 
 #include "ModificationSupervisorSubsystem.generated.h"
 
-DECLARE_MULTICAST_DELEGATE(FInitializeOptionalVoxelsEventSignature)
+DECLARE_MULTICAST_DELEGATE_OneParam(FInitializeOptionalVoxelsEventSignature, TArray<FVoxelMask>& /* VoxelMasks */)
 
 UCLASS(NotBlueprintable)
 class MODIFICATIONSUPERVISOR_API UModificationSupervisorSubsystem : public UGameInstanceSubsystem

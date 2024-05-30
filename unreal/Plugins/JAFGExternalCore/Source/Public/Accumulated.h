@@ -2,22 +2,16 @@
 
 #pragma once
 
-/* Part of the MyCore package. */
 #include "CoreMinimal.h"
-#include "WorldCore/Voxels/CommonVoxels.h"
+#include "JAFGTypes.h"
 
 #include "Accumulated.generated.h"
-
-namespace Accumulated
-{
 
 /**
  * Value copied from the voxel subsystem for faster access and to not have to deal with UWorld pointers.
  * Not available before the voxel subsystem is completely initialized.
  */
-extern voxel_t ItemIndexStart;
-
-}
+extern JAFGEXTERNALCORE_API voxel_t GAccumulatedItemIndexStart;
 
 /**
  * The null accumulated index. Defined as a macro as we cannot forward declare the struct and use the constructors
@@ -36,7 +30,7 @@ extern voxel_t ItemIndexStart;
 #define ACCUMULATED_MAX_AMT 0xFFFF
 
 USTRUCT()
-struct JAFG_API FAccumulated
+struct JAFGEXTERNALCORE_API FAccumulated
 {
     GENERATED_BODY()
 
@@ -114,7 +108,7 @@ struct JAFG_API FAccumulated
     FORCEINLINE        auto operator==(const FAccumulated& O) const -> bool { return this->AccumulatedIndex == O.AccumulatedIndex; }
     /** Does not compare amount. */
     FORCEINLINE static auto Equals(const FAccumulated& A, const FAccumulated& B) -> bool { return A == B; }
-    FORCEINLINE        auto IsVoxel(void) const -> bool { return this->AccumulatedIndex < Accumulated::ItemIndexStart; }
+    FORCEINLINE        auto IsVoxel(void) const -> bool { return this->AccumulatedIndex < GAccumulatedItemIndexStart; }
     FORCEINLINE        auto ToString(void) const -> FString
     {
         return FString::Printf(TEXT("FAccumulated{AccumulatedIndex:%d, Amount:%d}"), this->AccumulatedIndex, this->Amount);

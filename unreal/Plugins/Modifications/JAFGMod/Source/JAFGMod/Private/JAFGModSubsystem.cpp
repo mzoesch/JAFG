@@ -4,6 +4,7 @@
 
 #include "JAFGLogDefs.h"
 #include "ModificationSupervisorSubsystem.h"
+#include "JAFGModTypes.h"
 
 void UJAFGModSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -15,12 +16,23 @@ void UJAFGModSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
     check( ModSupervisor )
 
-    ModSupervisor->InitializeOptionalVoxelsEvent.AddLambda( [this] { this->OnOptionalVoxelsInitialize(); });
+    ModSupervisor->InitializeOptionalVoxelsEvent.AddLambda(
+    [this] (TArray<FVoxelMask>& VoxelMasks)
+    {
+        this->OnOptionalVoxelsInitialize(VoxelMasks);
+    });
 
     return;
 }
 
-void UJAFGModSubsystem::OnOptionalVoxelsInitialize(void)
+// ReSharper disable once CppMemberFunctionMayBeStatic
+void UJAFGModSubsystem::OnOptionalVoxelsInitialize(TArray<FVoxelMask>& VoxelMasks)
 {
-    LOG_WARNING(LogModSubsystem, "Initializing optional voxels.")
+    LOG_DISPLAY(LogModSubsystem, "JAFG mod is initializing its voxels.")
+
+    VoxelMasks.Add(FVoxelMask(JAFGModNamespace, TEXT("StoneVoxel")));
+    VoxelMasks.Add(FVoxelMask(JAFGModNamespace, TEXT("DirtVoxel")));
+    VoxelMasks.Add(FVoxelMask(JAFGModNamespace, TEXT("GrassVoxel")));
+
+    return;
 }

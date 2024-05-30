@@ -7,6 +7,8 @@
 
 #include "JAFGModSubsystem.generated.h"
 
+struct FVoxelMask;
+
 UCLASS(NotBlueprintable)
 class JAFGMOD_API UJAFGModSubsystem : public UExternalModificationSubsystem
 {
@@ -20,5 +22,5 @@ public:
 
 protected:
 
-    void OnOptionalVoxelsInitialize(void);
+    void OnOptionalVoxelsInitialize(TArray<FVoxelMask>& VoxelMasks);
 };

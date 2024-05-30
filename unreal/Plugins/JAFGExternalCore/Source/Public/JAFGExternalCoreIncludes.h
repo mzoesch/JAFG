@@ -2,19 +2,15 @@
 
 #pragma once
 
-/**
- * Use this macro in a header file to make the IDEA shut up about false positive
- * possibly unused #include directive warnings.
+/*
+ * Add this file to get access to the most common headers and types.
  */
-#define JAFG_VOID
-
 
 /*----------------------------------------------------------------------------
     Engine includes.
 ----------------------------------------------------------------------------*/
 
 #include "CoreMinimal.h"
-
 
 /*----------------------------------------------------------------------------
     Commonly used headers.
@@ -28,23 +24,11 @@
  * So change the order with caution.
  */
 
-/* External core plugin */
 #include "JAFGMacros.h"
 #include "JAFGTypeDefs.h"
 #include "JAFGTypes.h"
 #include "VoxelMask.h"
 #include "Accumulated.h"
-
-#include "WorldCore/WorldTypes.h"
-#include "WorldCore/Chunk/ChunkStatics.h"
-#include "WorldCore/Validation/CommonValidation.h"
-
-
-/*----------------------------------------------------------------------------
-    Commonly used extern modules headers.
-----------------------------------------------------------------------------*/
-
-#include "JAFGNetCore/Public/CommonNetworkStatics.h"
 
 
 /*----------------------------------------------------------------------------

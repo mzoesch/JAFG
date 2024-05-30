@@ -32,6 +32,7 @@ public class JAFGMod : ModuleRules
         PublicDependencyModuleNames.AddRange(
         new string[]
         {
+            "JAFGExternalCore",
             "ModificationSupervisor",
         }
         );

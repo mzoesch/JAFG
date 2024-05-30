@@ -2,27 +2,22 @@
 
 #pragma once
 
-#include "MyCore.h"
+#include "CoreMinimal.h"
+#include "JAFGTypes.h"
 
 #include "VoxelMask.generated.h"
 
-JAFG_VOID
-
 class UMaterialSubsystem;
 
-/**
- * Has to be a USTRUCT to be used in a TArray.
- * If this overhead causes performance issues, the struct should be converted to a c++ struct.
- * And instead of a TArray, we should use a pointer. For a future problem :D.
- */
-USTRUCT()
-struct JAFG_API FVoxelMask
+USTRUCT(NotBlueprintType)
+struct JAFGEXTERNALCORE_API FVoxelMask
 {
     GENERATED_BODY()
 
     //////////////////////////////////////////////////////////////////////////
     // Constructors
     FVoxelMask(void) = default;
+    ~FVoxelMask(void) = default;
 
     FORCEINLINE explicit FVoxelMask(const FString& NameSpace, const FString& Name)
     {
@@ -50,37 +45,6 @@ struct JAFG_API FVoxelMask
 
         return;
     }
-
-    // FORCEINLINE explicit FVoxelMask(const FString& NameSpace, const FString& Name, const TMap<ENormalLookup::Type, ETextureGroup::Type>& TextureGroup)
-    // {
-    //     this->NameSpace = NameSpace;
-    //     this->Name      = Name;
-    //
-    //     this->TextureGroups.Empty();
-    //     const ETextureGroup::Type* DefaultGroup = TextureGroup.Find(ENormalLookup::Default);
-    //     if (DefaultGroup == nullptr)
-    //     {
-    //         LOG_FATAL(LogVoxelSubsystem, "Default group not found in Texture Group map. Faulty Mask: %s::%s.", *NameSpace, *Name)
-    //         return;
-    //     }
-    //     for (const TPair<ENormalLookup::Type, ETextureGroup::Type>& Pair : TextureGroup)
-    //     {
-    //         if (Pair.Key == ENormalLookup::Default)
-    //         {
-    //             continue;
-    //         }
-    //
-    //         this->TextureGroups.Add(FTextureGroup(Pair.Key, Pair.Value));
-    //     }
-    //     this->TextureGroups.Add(FTextureGroup(ENormalLookup::Default, *DefaultGroup));
-    //
-    //     /**
-    //      * Filled later on during the game boot-up by the Material Subsystem.
-    //      */
-    //     this->TextureIndices.Empty();
-    //
-    //     return;
-    // }
     // ~Constructors
     //////////////////////////////////////////////////////////////////////////
 
@@ -138,7 +102,7 @@ private:
      * Maps a normal vector to a texture group.
      * A texture group can be opaque, full blend opaque, flora blend opaque, transparent, etc.
      */
-    struct JAFG_API FTextureGroup
+    struct JAFGEXTERNALCORE_API FTextureGroup
     {
                     FTextureGroup(void) = default;
         FORCEINLINE FTextureGroup(const ENormalLookup::Type Normal, const ETextureGroup::Type TextureGroup)
@@ -156,7 +120,7 @@ private:
     /**
      * Maps a normal vector to a texture index in the owning texture array based on this normal.
      */
-    struct JAFG_API FTextureIndex
+    struct JAFGEXTERNALCORE_API FTextureIndex
     {
                     FTextureIndex(void) = default;
         FORCEINLINE FTextureIndex(const ENormalLookup::Type Normal, const int32 TextureIndex)

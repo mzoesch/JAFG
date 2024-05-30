@@ -1,7 +1,7 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "System/VoxelSubsystem.h"
-
+#include "Accumulated.h"
 #include "ModificationSupervisorSubsystem.h"
 
 UVoxelSubsystem::UVoxelSubsystem(void) : Super()
@@ -18,8 +18,8 @@ void UVoxelSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     this->InitializeCommonVoxels();
     this->InitializeOptionalVoxels();
 
-    Accumulated::ItemIndexStart = this->GetItemIndexStart();
-    check( Accumulated::ItemIndexStart > 0 )
+    GAccumulatedItemIndexStart = this->GetItemIndexStart();
+    jcheck( GAccumulatedItemIndexStart > 0 )
 
     LOG_DISPLAY(LogVoxelSubsystem, "Voxel Subsystem initialized with [%d/%d] voxels.", this->CommonVoxelNum, this->VoxelMasks.Num() )
 
@@ -74,18 +74,16 @@ void UVoxelSubsystem::InitializeCommonVoxels(void)
 
     this->SetCommonVoxelNum();
 
-    check( this->CommonVoxelNum != -1 && TEXT("Common voxels not initialized.") )
+    jcheck( this->CommonVoxelNum != -1 && TEXT("Common voxels not initialized.") )
 
     return;
 }
 
 void UVoxelSubsystem::InitializeOptionalVoxels(void)
 {
-    this->GetGameInstance()->GetSubsystem<UModificationSupervisorSubsystem>()->InitializeOptionalVoxelsEvent.Broadcast();
-
-    this->VoxelMasks.Add(FVoxelMask("JAFG", TEXT("StoneVoxel")));
-    this->VoxelMasks.Add(FVoxelMask("JAFG", TEXT("DirtVoxel")));
-    this->VoxelMasks.Add(FVoxelMask("JAFG", TEXT("GrassVoxel")));
+    this->GetGameInstance()
+        ->GetSubsystem<UModificationSupervisorSubsystem>()
+            ->InitializeOptionalVoxelsEvent.Broadcast(this->VoxelMasks);
 
     return;
 }

@@ -49,6 +49,7 @@ public class JAFG : ModuleRules
         {
             "CommonJAFGSlate",
             "CommonSettings",
+            "JAFGExternalCore",
             "ModificationSupervisor",
         }
         );

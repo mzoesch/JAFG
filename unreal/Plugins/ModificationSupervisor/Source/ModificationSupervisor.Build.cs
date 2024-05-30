@@ -28,6 +28,14 @@ public class ModificationSupervisor : ModuleRules
         }
         );
 
+        /* Plugins */
+        PublicDependencyModuleNames.AddRange(
+        new string[]
+        {
+            "JAFGExternalCore",
+        }
+        );
+
         PrivateDependencyModuleNames.AddRange(
         new string[]
         {
