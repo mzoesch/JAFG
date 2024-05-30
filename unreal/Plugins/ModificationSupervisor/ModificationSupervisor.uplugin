@@ -2,33 +2,25 @@
 	"FileVersion": 3,
 	"Version": 1,
 	"VersionName": "1.0",
-	"FriendlyName": "CommonSettings",
-	"Description": "Contains a common setting interface with a connection to widgets.",
+	"FriendlyName": "ModificationSupervisor",
+	"Description": "API for loading external modifications that are not part of the base game.",
 	"Category": "JAFG",
 	"CreatedBy": "mzoesch",
 	"CreatedByURL": "https://www.zoeschinger.com/",
 	"DocsURL": "",
 	"MarketplaceURL": "",
-	"CanContainContent": true,
+	"CanContainContent": false,
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
 	"Installed": false,
 	"Modules": [
 		{
-			"Name": "CommonSettings",
+			"Name": "ModificationSupervisor",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [
-		{
-			"Name": "EnhancedInput",
-			"Enabled": true
-		},
-		{
-			"Name": "CommonJAFGSlate",
-			"Enabled": true
-		},
 		{
 			"Name": "JAFGGlobalLogging",
 			"Enabled": true

@@ -2,20 +2,20 @@
 	"FileVersion": 3,
 	"Version": 1,
 	"VersionName": "1.0",
-	"FriendlyName": "JAFGGlobalLogging",
-	"Description": "Contains global logging logic for JAFG.",
-	"Category": "JAFG",
+	"FriendlyName": "JAFGExternalCore",
+	"Description": "Defines core types and delegates that plugins can hook into.",
+	"Category": "Other",
 	"CreatedBy": "mzoesch",
 	"CreatedByURL": "https://www.zoeschinger.com/",
 	"DocsURL": "",
 	"MarketplaceURL": "",
-	"CanContainContent": false,
+	"CanContainContent": true,
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
 	"Installed": false,
 	"Modules": [
 		{
-			"Name": "JAFGGlobalLogging",
+			"Name": "JAFGExternalCore",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}

@@ -3,14 +3,14 @@
 #pragma once
 
 #include "MyCore.h"
-#include "Subsystems/GameInstanceSubsystem.h"
+#include "JAFGGameInstanceSubsystem.h"
 
 #include "MaterialSubsystem.generated.h"
 
 JAFG_VOID
 
 UCLASS(NotBlueprintable)
-class JAFG_API UMaterialSubsystem : public UGameInstanceSubsystem
+class JAFG_API UMaterialSubsystem : public UJAFGGameInstanceSubsystem
 {
     GENERATED_BODY()
 

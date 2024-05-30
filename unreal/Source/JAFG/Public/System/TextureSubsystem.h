@@ -3,7 +3,7 @@
 #pragma once
 
 #include "MyCore.h"
-#include "Subsystems/GameInstanceSubsystem.h"
+#include "JAFGGameInstanceSubsystem.h"
 
 #include "TextureSubsystem.generated.h"
 
@@ -12,7 +12,7 @@ JAFG_VOID
 class UVoxelSubsystem;
 
 UCLASS(NotBlueprintable)
-class JAFG_API UTextureSubsystem : public UGameInstanceSubsystem
+class JAFG_API UTextureSubsystem : public UJAFGGameInstanceSubsystem
 {
     GENERATED_BODY()
 

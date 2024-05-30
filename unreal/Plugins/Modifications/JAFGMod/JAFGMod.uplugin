@@ -2,31 +2,27 @@
 	"FileVersion": 3,
 	"Version": 1,
 	"VersionName": "1.0",
-	"FriendlyName": "CommonSettings",
-	"Description": "Contains a common setting interface with a connection to widgets.",
-	"Category": "JAFG",
-	"CreatedBy": "mzoesch",
-	"CreatedByURL": "https://www.zoeschinger.com/",
+	"FriendlyName": "JAFGMod",
+	"Description": "",
+	"Category": "Other",
+	"CreatedBy": "",
+	"CreatedByURL": "",
 	"DocsURL": "",
 	"MarketplaceURL": "",
-	"CanContainContent": true,
+	"CanContainContent": false,
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
 	"Installed": false,
 	"Modules": [
 		{
-			"Name": "CommonSettings",
+			"Name": "JAFGMod",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [
 		{
-			"Name": "EnhancedInput",
-			"Enabled": true
-		},
-		{
-			"Name": "CommonJAFGSlate",
+			"Name": "ModificationSupervisor",
 			"Enabled": true
 		},
 		{

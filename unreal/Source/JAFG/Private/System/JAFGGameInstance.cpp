@@ -2,6 +2,7 @@
 
 #include "System/JAFGGameInstance.h"
 
+#include "ModificationSupervisorSubsystem.h"
 #include "GameFramework/GameUserSettings.h"
 #include "Net/Core/PushModel/PushModel.h"
 
@@ -21,6 +22,8 @@ void UJAFGGameInstance::Init()
         LOG_FATAL(LogSystem, "Push model is not enabled. This is a requirement for the game instance.")
         return;
     }
+
+    LOG_DISPLAY(LogSystem, "Found %d mods to load.", UModificationSupervisorSubsystem::ModSubsystems.Num())
 
     GEngine->GetGameUserSettings()->SetFullscreenMode(EWindowMode::Windowed);
     GEngine->GetGameUserSettings()->SetScreenResolution(FIntPoint(1440, 900));

@@ -2,6 +2,8 @@
 
 #include "System/VoxelSubsystem.h"
 
+#include "ModificationSupervisorSubsystem.h"
+
 UVoxelSubsystem::UVoxelSubsystem(void) : Super()
 {
     return;
@@ -79,6 +81,8 @@ void UVoxelSubsystem::InitializeCommonVoxels(void)
 
 void UVoxelSubsystem::InitializeOptionalVoxels(void)
 {
+    this->GetGameInstance()->GetSubsystem<UModificationSupervisorSubsystem>()->InitializeOptionalVoxelsEvent.Broadcast();
+
     this->VoxelMasks.Add(FVoxelMask("JAFG", TEXT("StoneVoxel")));
     this->VoxelMasks.Add(FVoxelMask("JAFG", TEXT("DirtVoxel")));
     this->VoxelMasks.Add(FVoxelMask("JAFG", TEXT("GrassVoxel")));

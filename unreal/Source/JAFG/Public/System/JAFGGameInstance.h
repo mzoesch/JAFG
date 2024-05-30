@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "DiffResults.h"
 #include "MyCore.h"
 #include "Engine/GameInstance.h"
 
@@ -21,6 +22,8 @@ public:
     explicit UJAFGGameInstance(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
     virtual void Init(void) override;
+
+    bool bInitializedExternalMods = false;
 
     auto SubscribeToShutdownRequest(const FOnShutdownRequestSignature::FDelegate& Delegate) -> FDelegateHandle;
     auto SubscribeToShutdownRequest(

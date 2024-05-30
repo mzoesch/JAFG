@@ -3,7 +3,7 @@
 #pragma once
 
 #include "MyCore.h"
-#include "Subsystems/GameInstanceSubsystem.h"
+#include "JAFGGameInstanceSubsystem.h"
 #include "WorldCore/Voxels/VoxelMask.h"
 
 #include "VoxelSubsystem.generated.h"
@@ -13,7 +13,7 @@ JAFG_VOID
 class UMaterialSubsystem;
 
 UCLASS(NotBlueprintable)
-class JAFG_API UVoxelSubsystem : public UGameInstanceSubsystem
+class JAFG_API UVoxelSubsystem : public UJAFGGameInstanceSubsystem
 {
     GENERATED_BODY()
 
