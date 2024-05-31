@@ -120,9 +120,62 @@ void UChunkGenerationSubsystem::AddVerticalChunkToPendingKillQueue(const FChunkK
     return;
 }
 
+bool UChunkGenerationSubsystem::FindAppropriateLocationForCharacterSpawn(const FVector2D& InApproximateLocation, FVector& OutLocation) const
+{
+    const FChunkKey2    TargetVKey = ChunkStatics::WorldToVerticalChunkKey(InApproximateLocation);
+    const FJCoordinate2 TargetJKey = ChunkStatics::WorldToVerticalJCoordinate(InApproximateLocation);
+
+    if (this->HasPersistentVerticalChunk(TargetVKey) == false)
+    {
+        return false;
+    }
+
+    TArray<FChunkKey> PossibleSpawnChunks = TArray<FChunkKey>();
+    this->GetAllChunksFromVerticalChunkReversed(TargetVKey, PossibleSpawnChunks);
+    check( PossibleSpawnChunks.Num() > 0 )
+
+    for (FChunkKey CurrentTarget : PossibleSpawnChunks)
+    {
+        ACommonChunk* Chunk = this->FindChunkByKey(CurrentTarget);
+        if (Chunk == nullptr)
+        {
+            continue;
+        }
+
+        for (int32 Z = WorldStatics::ChunkSize - 1; Z >= 0; --Z)
+        {
+            if (Chunk->GetLocalVoxelOnly(FJCoordinate(TargetJKey.X, TargetJKey.Y, Z)) == ECommonVoxels::Air)
+            {
+                continue;
+            }
+
+            OutLocation = ChunkStatics::JCoordinateToWorldLocation(FJCoordinate(
+                TargetJKey.X,
+                TargetJKey.Y,
+                /*
+                 * +1 To get the above air voxel where we want to spawn.
+                 * +1 Extra voxel buffer to avoid unwanted collisions inside the procedural mesh.
+                 */
+                CurrentTarget.Z * WorldStatics::ChunkSize + (Z + 2)
+            ));
+
+            return true;
+        }
+
+        continue;
+    }
+
+    return false;
+}
+
+bool UChunkGenerationSubsystem::FindAppropriateLocationForCharacterSpawn(const FVector& InApproximateLocation, FVector& OutLocation) const
+{
+    return this->FindAppropriateLocationForCharacterSpawn(FVector2D(InApproximateLocation.X, InApproximateLocation.Y), OutLocation);
+}
+
 void UChunkGenerationSubsystem::DequeueNextVerticalChunk(void)
 {
-    FIntVector2 NewActiveKey;
+    FChunkKey2 NewActiveKey;
     if (this->VerticalChunkQueue.Dequeue(NewActiveKey) == false)
     {
         LOG_WARNING(LogChunkGeneration, "Called but the queue was empty.")
@@ -130,12 +183,7 @@ void UChunkGenerationSubsystem::DequeueNextVerticalChunk(void)
     }
 
     TArray<FChunkKey> NewChunks = TArray<FChunkKey>();
-    NewChunks.Reserve(this->CopiedChunksAboveZero);
-
-    for (int32 Z = 0; Z < this->CopiedChunksAboveZero; ++Z)
-    {
-        NewChunks.Add(FChunkKey(NewActiveKey.X, NewActiveKey.Y, Z));
-    }
+    this->GetAllChunksFromVerticalChunk(NewActiveKey, NewChunks);
 
     if (this->VerticalChunks.Contains(NewActiveKey) == false)
     {
@@ -321,4 +369,30 @@ ACommonChunk* UChunkGenerationSubsystem::SpawnChunk(const FChunkKey& ChunkKey) c
     );
 
     return Chunk;
+}
+
+void UChunkGenerationSubsystem::GetAllChunksFromVerticalChunk(const FChunkKey2& ChunkKey, TArray<FChunkKey>& Out) const
+{
+    jcheck( Out.IsEmpty() )
+
+    Out.Reserve(this->CopiedChunksAboveZero);
+    for (int32 Z = 0; Z < this->CopiedChunksAboveZero; ++Z)
+    {
+        Out.Emplace(FChunkKey(ChunkKey.X, ChunkKey.Y, Z));
+    }
+
+    return;
+}
+
+void UChunkGenerationSubsystem::GetAllChunksFromVerticalChunkReversed(const FChunkKey2& ChunkKey, TArray<FChunkKey>& Out) const
+{
+    jcheck( Out.IsEmpty() )
+
+    Out.Reserve(this->CopiedChunksAboveZero);
+    for (int32 Z = this->CopiedChunksAboveZero - 1; Z >= 0; --Z)
+    {
+        Out.Emplace(FChunkKey(ChunkKey.X, ChunkKey.Y, Z));
+    }
+
+    return;
 }

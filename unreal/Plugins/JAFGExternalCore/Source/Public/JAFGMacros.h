@@ -9,8 +9,10 @@
  * A check that is always executed even in shipping builds.
  */
 #if DO_CHECK
+    // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
     #define jcheck(expr) check(expr)
 #else
+    // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
     #define jcheck(expr)                                            \
     {                                                               \
         if ((!!(!(expr))))                                          \

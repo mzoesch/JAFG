@@ -2,6 +2,7 @@
 
 #include "WorldCore/Validation/ChunkValidationSubsystemCl.h"
 
+#include "Player/WorldPlayerController.h"
 #include "WorldCore/ChunkWorldSettings.h"
 #include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
 #include "WorldCore/Validation/ChunkValidationSubsystemDedSv.h"
@@ -41,15 +42,15 @@ void UChunkValidationSubsystemCl::OnWorldBeginPlay(UWorld& InWorld)
 
     if (this->GetWorld()->GetSubsystem<UChunkValidationSubsystemDedSv>() != nullptr)
     {
-        LOG_FATAL(LogChunkValidation, "Found other validation subsystem. Disallowed. Faulty subsystems: DedSv.")
+        LOG_FATAL(LogChunkValidation, "Found other validation subsystem. Disallowed. Faulty subsystem: DedSv.")
     }
     if (this->GetWorld()->GetSubsystem<UChunkValidationSubsystemLitSv>() != nullptr)
     {
-        LOG_FATAL(LogChunkValidation, "Found other validation subsystem. Disallowed. Faulty subsystems: LitSv.")
+        LOG_FATAL(LogChunkValidation, "Found other validation subsystem. Disallowed. Faulty subsystem: LitSv.")
     }
     if (this->GetWorld()->GetSubsystem<UChunkValidationSubsystemStandalone>() != nullptr)
     {
-        LOG_FATAL(LogChunkValidation, "Found other validation subsystem. Disallowed. Faulty subsystems: Standalone.")
+        LOG_FATAL(LogChunkValidation, "Found other validation subsystem. Disallowed. Faulty subsystem: Standalone.")
     }
 
     this->ChunkGenerationSubsystem = this->GetWorld()->GetSubsystem<UChunkGenerationSubsystem>();
@@ -62,10 +63,18 @@ void UChunkValidationSubsystemCl::MyTick(const float DeltaTime)
 {
     Super::MyTick(DeltaTime);
 
-    if (const APawn* LocalPlayerPawn = GEngine->GetFirstLocalPlayerController(this->GetWorld())->GetPawnOrSpectator(); LocalPlayerPawn)
+    if (this->GetLocalPlayerController<AWorldPlayerController>() == nullptr)
     {
-        this->LoadUnLoadChunks(LocalPlayerPawn->GetActorLocation());
+        return;
     }
+
+    FVector PredictedLocation;
+    if (this->GetLocalPlayerController<AWorldPlayerController>()->GetPredictedCharacterLocation(PredictedLocation) == false)
+    {
+        return;
+    }
+
+    this->LoadUnLoadChunks(PredictedLocation);
 
     return;
 }
@@ -114,5 +123,31 @@ void UChunkValidationSubsystemCl::LoadUnLoadChunks(const FVector& LocalPlayerLoc
     }
 #endif
 
+    AWorldPlayerController* PlayerController = this->GetLocalPlayerController<AWorldPlayerController>();
+
+    if (PlayerController->IsClientReadyForCharacterSpawn())
+    {
+        return;
+    }
+
+    FVector PredictedLocation;
+    if (PlayerController->GetPredictedCharacterLocation(PredictedLocation) == false)
+    {
+        return;
+    }
+
+    if (this->ChunkGenerationSubsystem->HasPersistentVerticalChunk(FChunkKey2(ChunkStatics::WorldToVerticalChunkKey(PredictedLocation))) == false)
+    {
+        return;
+    }
+
+    PlayerController->SetClientReadyForCharacterSpawn();
+
     return;
+}
+
+template<class T>
+T* UChunkValidationSubsystemCl::GetLocalPlayerController(void) const
+{
+    return Cast<T>(this->GetWorld()->GetFirstPlayerController());
 }

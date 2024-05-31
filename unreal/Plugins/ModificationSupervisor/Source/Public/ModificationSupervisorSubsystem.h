@@ -12,7 +12,7 @@
 DECLARE_MULTICAST_DELEGATE_OneParam(FInitializeOptionalVoxelsEventSignature, TArray<FVoxelMask>& /* VoxelMasks */)
 
 UCLASS(NotBlueprintable)
-class MODIFICATIONSUPERVISOR_API UModificationSupervisorSubsystem : public UGameInstanceSubsystem
+class MODIFICATIONSUPERVISOR_API UModificationSupervisorSubsystem final : public UGameInstanceSubsystem
 {
     GENERATED_BODY()
 
@@ -29,8 +29,4 @@ public:
     static void AddMod(const TSubclassOf<UExternalModificationSubsystem> ModSubsystem);
 
     FInitializeOptionalVoxelsEventSignature InitializeOptionalVoxelsEvent;
-
-private:
-
-    static void PrintMods(void);
 };

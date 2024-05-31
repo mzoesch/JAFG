@@ -10,6 +10,11 @@
 typedef FIntVector FJCoordinate;
 
 /**
+ * Uniquely defines a vertical coordinate in the j coordinate system.
+ */
+typedef FIntVector2 FJCoordinate2;
+
+/**
  * Uniquely defines a chunk.
  */
 typedef FIntVector FChunkKey;

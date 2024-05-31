@@ -197,6 +197,12 @@ void UServerCommandSubsystem::OnFlyCommand(SERVER_COMMAND_SIG) const
 {
     DECLARE_OWNER_AS_CHAR_TARGET
 
+    if (Target == nullptr)
+    {
+        LOG_WARNING(LogJAFGChat, "Target is invalid.")
+        return;
+    }
+
     Target->ToggleFly();
 
     OutReturnCode = ECommandReturnCodes::Success;
@@ -209,6 +215,12 @@ void UServerCommandSubsystem::OnFlyCommand(SERVER_COMMAND_SIG) const
 void UServerCommandSubsystem::OnAllowInputFlyCommand(SERVER_COMMAND_SIG) const
 {
     DECLARE_OWNER_AS_CHAR_TARGET
+
+    if (Target == nullptr)
+    {
+        LOG_WARNING(LogJAFGChat, "Target is invalid.")
+        return;
+    }
 
     Target->ToggleInputFly();
 

@@ -1,4 +1,5 @@
 ﻿// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright 2024 mzoesch. All rights reserved.
 
 #include "JAFGMod.h"
 
@@ -9,10 +10,8 @@
 
 void FJAFGModModule::StartupModule(void)
 {
-    UE_LOG(LogTemp, Warning, TEXT("JAFGMod Plugin Loaded!"))
-
-   UModificationSupervisorSubsystem::AddMod(UJAFGModSubsystem::StaticClass());
-
+    LOG_DISPLAY(LogModSubsystem, "JAFGMod Plugin loaded. Adding self to dependencies.")
+    UModificationSupervisorSubsystem::AddMod(UJAFGModSubsystem::StaticClass());
     return;
 }
 

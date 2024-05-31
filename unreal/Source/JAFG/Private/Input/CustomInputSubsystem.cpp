@@ -132,9 +132,9 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
     {
         FJAFGSingleInputAction Action;
         Action.Name      = InputActions::Sprint;
-        Action.Keys.KeyA = EKeys::LeftControl;
+        Action.Keys.KeyA = EKeys::E;
         Action.Keys.KeyB = EKeys::Invalid;
-        Action.Contexts.Add(InputContexts::Footlike);
+        Action.Contexts.Add(InputContexts::FootWalk);
         InputSubsystem->AddAction(Action);
     }
 

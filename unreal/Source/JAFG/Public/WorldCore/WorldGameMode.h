@@ -7,6 +7,8 @@
 
 #include "WorldGameMode.generated.h"
 
+class AWorldPlayerController;
+
 UCLASS(NotBlueprintable)
 class JAFG_API AWorldGameMode : public ACommonGameMode
 {
@@ -43,4 +45,6 @@ public:
     // Spawning the player's pawn
 
     // ~AGameModeBase implementation
+
+    void SpawnCharacterForPlayer(AWorldPlayerController* Target);
 };

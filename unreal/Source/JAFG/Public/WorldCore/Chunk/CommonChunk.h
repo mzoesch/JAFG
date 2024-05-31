@@ -18,7 +18,7 @@ class UVoxelSubsystem;
 class UProceduralMeshComponent;
 class UChunkGenerationSubsystem;
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FChunkStateChangeSignature, const EChunkState::Type /* NewChunkState */ )
+DECLARE_MULTICAST_DELEGATE_OneParam(FChunkStateChangeSignature, const EChunkState::Type /* NewChunkState */)
 
 UCLASS(Abstract, NotBlueprintable)
 class JAFG_API ACommonChunk : public AActor
@@ -47,6 +47,7 @@ protected:
      * Use as a last resort only.
      * Will delete without any pity this chunk from the UWorld.
      * No cleanup will be done.
+     * It will probably result in an application crash in the very near future.
      */
     virtual auto KillUncontrolled(void) -> void;
     virtual auto KillControlled(void) -> void;

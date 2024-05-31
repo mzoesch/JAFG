@@ -22,9 +22,9 @@ class UEscapeMenuResumeButton;
 class UMyHyperlaneComponent;
 
 DECLARE_MULTICAST_DELEGATE(FSlateVisibilityChangedOwnerVisSignature)
-DECLARE_MULTICAST_DELEGATE_OneParam(FSlateVisibilityChangedSignature, const bool /* bVisible */ )
+DECLARE_MULTICAST_DELEGATE_OneParam(FSlateVisibilityChangedSignature, const bool /* bVisible */)
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FChatHistoryLookupSignature, const bool /* bPrevious */ )
+DECLARE_MULTICAST_DELEGATE_OneParam(FChatHistoryLookupSignature, const bool /* bPrevious */)
 
 #define ADD_SLATE_VIS_DELG(Method)                                            \
     FSlateVisibilityChangedSignature::FDelegate::CreateUObject(this, &Method)
@@ -43,6 +43,10 @@ protected:
     // AActor implementation
     virtual void BeginPlay(void) override;
     // ~AActor implementation
+
+    // UObject implementation
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+    // ~UObject implementation
 
     UPROPERTY()
     TObjectPtr<UMyHyperlaneComponent> HyperlaneComponent;
@@ -134,13 +138,13 @@ public:
      * @return True if the player has reached their maximum strike count.
      *         They are going to be disconnected short after.
      */
-    bool SafelyIncreaseStrikeCount(void);
+    auto SafelyIncreaseStrikeCount(void) -> bool;
 
 protected:
 
-    void RemoveOutDatedStrikes(void);
-    bool IsStrikeOutDated(const FStrike& Strike) const;
-    int32 GetCurrentStrikeTime(void) const;
+    auto RemoveOutDatedStrikes(void) -> void;
+    auto IsStrikeOutDated(const FStrike& Strike) const -> bool;
+    auto GetCurrentStrikeTime(void) const -> int32;
 
     /** How long a strike is valid for. */
     const int32 StrikeDurationInSeconds = 60;
@@ -149,9 +153,36 @@ protected:
 
 #pragma endregion Strike
 
+#pragma region World Spawning
+
+public:
+
+    auto HasSuccessfullySpawnedCharacter(void) const -> bool;
+    auto IsServerReadyForCharacterSpawn(void) const -> bool;
+    auto SetServerReadyForCharacterSpawn(void) -> void;
+    auto IsClientReadyForCharacterSpawn(void) const -> bool;
+    auto SetClientReadyForCharacterSpawn(void) -> void;
+    auto SpawnCharacterToWorld(void) -> void;
+
+private:
+
+    UPROPERTY(Replicated)
+    bool bHasSuccessfullySpawnedCharacter = false;
+    /** If the server is ready for this client to be spawned. */
+    bool bServerReadyForCharacterSpawn    = false;
+    /** Evaluated by client and then send and set to server. */
+    bool bClientReadyForCharacterSpawn    = false;
+
+    UFUNCTION(Server, Reliable, WithValidation)
+    void TellServerThatClientIsReadyForCharacterSpawn_ServerRPC( /* void */ );
+
+#pragma endregion World Spawning
+
     //////////////////////////////////////////////////////////////////////////
     // Useful Internal Getters
     //////////////////////////////////////////////////////////////////////////
+
+protected:
 
     /** Server only. */
     FORCEINLINE auto GetWorldGameSession(void) const -> AWorldGameSession* { return Cast<AWorldGameSession>(this->GetWorld()->GetAuthGameMode()->GameSession); }
@@ -164,4 +195,7 @@ public:
 
     FORCEINLINE auto GetWorldPlayerState(void) const -> AWorldPlayerState* { return this->GetPlayerState<AWorldPlayerState>(); }
     FORCEINLINE auto GetDisplayName(void) const -> FString { return this->GetWorldPlayerState()->GetPlayerName(); }
+
+    /** @return True if OutLocation is meaningful. */
+    bool GetPredictedCharacterLocation(FVector& OutLocation) const;
 };

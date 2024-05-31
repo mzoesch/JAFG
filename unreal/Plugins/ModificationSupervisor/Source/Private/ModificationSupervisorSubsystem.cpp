@@ -4,13 +4,18 @@
 
 #include "JAFGLogDefs.h"
 
-UModificationSupervisorSubsystem::UModificationSupervisorSubsystem()
+UModificationSupervisorSubsystem::UModificationSupervisorSubsystem(void) : Super()
 {
+    return;
 }
 
 void UModificationSupervisorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
-    LOG_WARNING(LogModSubsystem, "Called. Initializing external mod subsystems." )
+#if !WITH_EDITOR
+    checkNoReentry()
+#endif /* !WITH_EDITOR */
+
+    LOG_DISPLAY(LogModSubsystem, "Called. Initializing external mod subsystems.")
 
     for (
           TSubclassOf<UExternalModificationSubsystem> ModSubsystem
@@ -20,7 +25,7 @@ void UModificationSupervisorSubsystem::Initialize(FSubsystemCollectionBase& Coll
         Collection.InitializeDependency(ModSubsystem);
     }
 
-    this->PrintMods();
+    LOG_DISPLAY(LogModSubsystem, "Finished initializing external mod subsystems. Found %d mods.", UModificationSupervisorSubsystem::ModSubsystems.Num())
 
     Super::Initialize(Collection);
 
@@ -31,16 +36,11 @@ void UModificationSupervisorSubsystem::AddMod(const TSubclassOf<UExternalModific
 {
     if (UModificationSupervisorSubsystem::ModSubsystems.Contains(ModSubsystem))
     {
-        LOG_FATAL(LogTemp, "Mod [%s] already exists.", *ModSubsystem->GetName())
+        LOG_FATAL(LogModSubsystem, "Mod [%s] already exists.", *ModSubsystem->GetName())
         return;
     }
 
     UModificationSupervisorSubsystem::ModSubsystems.Add(ModSubsystem);
 
     return;
-}
-
-void UModificationSupervisorSubsystem::PrintMods(void)
-{
-    UE_LOG(LogTemp, Warning, TEXT("Mods classes found: %d."), UModificationSupervisorSubsystem::ModSubsystems.Num())
 }

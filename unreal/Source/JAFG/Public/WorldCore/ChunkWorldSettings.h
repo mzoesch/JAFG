@@ -137,6 +137,9 @@ public:
     //////////////////////////////////////////////////////////////////////////
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player")
+    TSubclassOf<APawn> PendingPawn = nullptr;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player")
     TSubclassOf<AWorldCharacter> CharacterToUse = nullptr;
 
     //////////////////////////////////////////////////////////////////////////

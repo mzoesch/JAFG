@@ -10,7 +10,7 @@ void UJAFGModSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     Super::Initialize(Collection);
 
-    UE_LOG(LogTemp, Warning, TEXT("JAFGModSubsystem Initialized: the mod."))
+    LOG_DISPLAY(LogModSubsystem, "Called.")
 
     UModificationSupervisorSubsystem* ModSupervisor = this->GetGameInstance()->GetSubsystem<UModificationSupervisorSubsystem>();
 

@@ -46,7 +46,7 @@ FORCEINLINE auto WorldToChunkKey(const FVector& WorldLocation) -> FChunkKey
 }
 
 /** Transforms an unreal vector to a vertical chunk key. */
-FORCEINLINE auto WorldToVerticalChunkKey(const FVector& WorldLocation) -> FChunkKey2
+FORCEINLINE auto WorldToVerticalChunkKey(const FVector2D& WorldLocation) -> FChunkKey2
 {
     constexpr double Factor { WorldStatics::ChunkSize * WorldStatics::JToUScaleDouble };
 
@@ -71,6 +71,12 @@ FORCEINLINE auto WorldToVerticalChunkKey(const FVector& WorldLocation) -> FChunk
     }
 
     return ChunkKey;
+}
+
+/** Transforms an unreal vector to a vertical chunk key. */
+FORCEINLINE auto WorldToVerticalChunkKey(const FVector& WorldLocation) -> FChunkKey2
+{
+    return ChunkStatics::WorldToVerticalChunkKey(FVector2D(WorldLocation.X, WorldLocation.Y));
 }
 
 /** Transforms an unreal vector to a local voxel key. */
@@ -129,6 +135,29 @@ FORCEINLINE auto WorldToLocalVoxelLocation(const FVector& WorldLocation) -> FVox
     }
 
     return LocalVoxelLocation;
+}
+
+/** Transforms an unreal vector to a j coordinate. */
+FORCEINLINE auto WorldToJCoordinate(const FVector& WorldLocation) -> FJCoordinate
+{
+    return FJCoordinate(WorldLocation) * WorldStatics::UToJScale;
+}
+
+/** Transforms an unreal vector to a vertical j coordinate. */
+FORCEINLINE auto WorldToVerticalJCoordinate(const FVector2D& WorldLocation) -> FJCoordinate2
+{
+    return FJCoordinate2(WorldLocation.X, WorldLocation.Y) * WorldStatics::UToJScale;
+}
+
+/** Transforms an unreal vector to a vertical j coordinate. */
+FORCEINLINE auto WorldToVerticalJCoordinate(const FVector& WorldLocation) -> FJCoordinate2
+{
+    return FJCoordinate2(WorldLocation.X, WorldLocation.Y) * WorldStatics::UToJScale;
+}
+
+FORCEINLINE auto JCoordinateToWorldLocation(const FJCoordinate& JCoordinate) -> FVector
+{
+    return FVector(JCoordinate) * WorldStatics::JToUScale;
 }
 
 }

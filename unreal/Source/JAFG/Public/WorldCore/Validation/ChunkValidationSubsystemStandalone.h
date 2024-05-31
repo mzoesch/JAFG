@@ -14,7 +14,7 @@ class UChunkGenerationSubsystem;
 /**
  * Handles the validation of chunks.
  * Based on the local player position and chunk world generation distance.
- * The subsystem will therefore only be created if the game is running in a standalone mode. Note, that this includes
+ * The subsystem will therefore only be created if the game is running in a standalone mode. Note that this includes
  * the editor simulation mode as well.
  */
 UCLASS(NotBlueprintable)
@@ -35,7 +35,7 @@ public:
     // FTickableGameObject implementation
     FORCEINLINE virtual auto GetStatId(void) const -> TStatId override
     {
-        RETURN_QUICK_DECLARE_CYCLE_STAT(UChunkValidationSubsystem, STATGROUP_Tickables);
+        RETURN_QUICK_DECLARE_CYCLE_STAT(UChunkValidationSubsystem, STATGROUP_Tickables)
     }
     // ~FTickableGameObject implementation
 
@@ -50,4 +50,7 @@ private:
     TObjectPtr<UChunkGenerationSubsystem> ChunkGenerationSubsystem;
 
     void LoadUnloadChunks(const FVector& LocalPlayerLocation) const;
+
+    template<class T>
+    T* GetLocalPlayerController(void) const;
 };

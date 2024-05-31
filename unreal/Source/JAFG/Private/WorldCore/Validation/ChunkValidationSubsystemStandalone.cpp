@@ -2,6 +2,7 @@
 
 #include "WorldCore/Validation/ChunkValidationSubsystemStandalone.h"
 
+#include "Player/WorldPlayerController.h"
 #include "WorldCore/ChunkWorldSettings.h"
 #include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
 #include "WorldCore/Validation/ChunkValidationSubsystemCl.h"
@@ -50,15 +51,15 @@ void UChunkValidationSubsystemStandalone::OnWorldBeginPlay(UWorld& InWorld)
 
     if (this->GetWorld()->GetSubsystem<UChunkValidationSubsystemCl>() != nullptr)
     {
-        LOG_FATAL(LogChunkValidation, "Found other validation subsystem. Disallowed. Faulty subsystems: Cl.")
+        LOG_FATAL(LogChunkValidation, "Found other validation subsystem. Disallowed. Faulty subsystem: Cl.")
     }
     if (this->GetWorld()->GetSubsystem<UChunkValidationSubsystemDedSv>() != nullptr)
     {
-        LOG_FATAL(LogChunkValidation, "Found other validation subsystem. Disallowed. Faulty subsystems: DedSv.")
+        LOG_FATAL(LogChunkValidation, "Found other validation subsystem. Disallowed. Faulty subsystem: DedSv.")
     }
     if (this->GetWorld()->GetSubsystem<UChunkValidationSubsystemLitSv>() != nullptr)
     {
-        LOG_FATAL(LogChunkValidation, "Found other validation subsystem. Disallowed. Faulty subsystems: LitSv.")
+        LOG_FATAL(LogChunkValidation, "Found other validation subsystem. Disallowed. Faulty subsystem: LitSv.")
     }
 
     this->ChunkGenerationSubsystem = this->GetWorld()->GetSubsystem<UChunkGenerationSubsystem>();
@@ -71,23 +72,42 @@ void UChunkValidationSubsystemStandalone::MyTick(const float DeltaTime)
 {
     Super::MyTick(DeltaTime);
 
-    if (GEngine->GetFirstLocalPlayerController(this->GetWorld())->GetPawnOrSpectator() == nullptr)
+    AWorldPlayerController* LocalPlayerController = this->GetLocalPlayerController<AWorldPlayerController>();
+
+    FVector PredictedLocation;
+#if WITH_EDITOR
+    if (GEditor->IsSimulateInEditorInProgress())
+    {
+        PredictedLocation = GCurrentLevelEditingViewportClient->ViewTransformPerspective.GetLocation();
+    }
+#else /* WITH_EDITOR */
+    if (false)
+    {
+    }
+#endif /* !WITH_EDITOR */
+    else
+    {
+        check( LocalPlayerController )
+        if (LocalPlayerController->GetPredictedCharacterLocation(PredictedLocation) == false)
+        {
+            return;
+        }
+    }
+
+    this->LoadUnloadChunks(PredictedLocation);
+
+    if (LocalPlayerController == nullptr || LocalPlayerController->HasSuccessfullySpawnedCharacter())
     {
         return;
     }
 
-#if WITH_EDITOR
-    if (GEditor->IsSimulateInEditorInProgress())
+    if (this->ChunkGenerationSubsystem->HasPersistentVerticalChunk(FChunkKey2(ChunkStatics::WorldToVerticalChunkKey(PredictedLocation))) == false)
     {
-        this->LoadUnloadChunks(GCurrentLevelEditingViewportClient->ViewTransformPerspective.GetLocation());
+        return;
     }
-    else
-    {
-        this->LoadUnloadChunks(GEngine->GetFirstLocalPlayerController(this->GetWorld())->GetPawnOrSpectator()->GetActorLocation());
-    }
-#else /* WITH_EDITOR */
-    this->LoadUnloadChunks(GEngine->GetFirstLocalPlayerController(this->GetWorld())->GetPawnOrSpectator()->GetActorLocation());
-#endif /* !WITH_EDITOR */
+
+    LOG_DISPLAY(LogWorldGameMode, "Finished spawning minimum required presistent chunks at player start location. Spawning character.")
+    LocalPlayerController->SpawnCharacterToWorld();
 
     return;
 }
@@ -137,4 +157,10 @@ void UChunkValidationSubsystemStandalone::LoadUnloadChunks(const FVector& LocalP
 #endif
 
     return;
+}
+
+template<class T>
+T* UChunkValidationSubsystemStandalone::GetLocalPlayerController(void) const
+{
+    return Cast<T>(this->GetWorld()->GetFirstPlayerController());
 }

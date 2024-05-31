@@ -6,8 +6,16 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Input/CustomInputNames.h"
+#include "Net/UnrealNetwork.h"
 #include "Network/MyHyperlaneComponent.h"
 #include "SettingsData/JAFGInputSubsystem.h"
+#include "WorldCore/WorldCharacter.h"
+#include "WorldCore/WorldGameMode.h"
+#include "WorldCore/WorldPawn.h"
+#if WITH_EDITOR
+    #include "Editor.h"
+    #include "LevelEditorViewport.h"
+#endif /* WITH_EDITOR */
 
 #define ENHANCED_INPUT_SUBSYSTEM                                    \
     ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>( \
@@ -33,6 +41,22 @@ void AWorldPlayerController::BeginPlay(void)
 
     this->SetupCommonPlayerInput();
 
+    if (UNetStatics::IsSafeListenServer(this))
+    {
+        /*
+         * We are the client and server. If the server is ready, then everything is ready as the client and server
+         * will always share the same world and same generation subsystem.
+         */
+        this->bClientReadyForCharacterSpawn = true;
+    }
+
+    return;
+}
+
+void AWorldPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME(AWorldPlayerController, bHasSuccessfullySpawnedCharacter);
     return;
 }
 
@@ -322,6 +346,10 @@ void AWorldPlayerController::BindAction(
     return;
 }
 
+#pragma endregion Enhanced Input
+
+#pragma region Strike
+
 bool AWorldPlayerController::SafelyIncreaseStrikeCount(void)
 {
     if (UNetStatics::IsSafeClient(this))
@@ -381,6 +409,128 @@ int32 AWorldPlayerController::GetCurrentStrikeTime(void) const
     return this->GetGameTimeSinceCreation();
 }
 
-#pragma endregion Enhanced Input
+#pragma endregion Strike
+
+#pragma region World Spawning
+
+bool AWorldPlayerController::HasSuccessfullySpawnedCharacter(void) const
+{
+#if WITH_EDITOR
+    if (GEditor->IsSimulateInEditorInProgress())
+    {
+        return true;
+    }
+#endif /* WITH_EDITOR */
+
+    return this->bHasSuccessfullySpawnedCharacter;
+}
+
+bool AWorldPlayerController::IsServerReadyForCharacterSpawn(void) const
+{
+    return this->bServerReadyForCharacterSpawn;
+}
+
+void AWorldPlayerController::SetServerReadyForCharacterSpawn(void)
+{
+    if (UNetStatics::IsSafeClient(this))
+    {
+        LOG_FATAL(LogWorldController, "Disallowed call on client.")
+        return;
+    }
+
+    if (this->bServerReadyForCharacterSpawn)
+    {
+        LOG_WARNING(LogWorldController, "Server is already ready for character spawn.")
+        return;
+    }
+
+    this->bServerReadyForCharacterSpawn = true;
+
+    return;
+}
+
+bool AWorldPlayerController::IsClientReadyForCharacterSpawn(void) const
+{
+    return this->bClientReadyForCharacterSpawn;
+}
+
+void AWorldPlayerController::SetClientReadyForCharacterSpawn(void)
+{
+    if (UNetStatics::IsSafeClient(this) == false)
+    {
+        LOG_FATAL(LogWorldController, "Disallowed call on client.")
+        return;
+    }
+
+    if (this->bClientReadyForCharacterSpawn)
+    {
+        LOG_FATAL(LogWorldController, "Client is already ready for character spawn.")
+        return;
+    }
+
+    this->bClientReadyForCharacterSpawn = true;
+
+    this->TellServerThatClientIsReadyForCharacterSpawn_ServerRPC();
+
+    return;
+}
+
+void AWorldPlayerController::SpawnCharacterToWorld(void)
+{
+    if (this->bHasSuccessfullySpawnedCharacter)
+    {
+        LOG_FATAL(LogWorldController, "Character already spawned.")
+        return;
+    }
+
+    this->GetWorld()->GetAuthGameMode<AWorldGameMode>()->SpawnCharacterForPlayer(this);
+
+    this->bHasSuccessfullySpawnedCharacter = true;
+
+    return;
+}
+
+bool AWorldPlayerController::TellServerThatClientIsReadyForCharacterSpawn_ServerRPC_Validate(void)
+{
+    /* They may only send the request once. */
+    return this->bClientReadyForCharacterSpawn == false;
+}
+
+void AWorldPlayerController::TellServerThatClientIsReadyForCharacterSpawn_ServerRPC_Implementation(void)
+{
+    this->bClientReadyForCharacterSpawn = true;
+}
+
+#pragma endregion World Spawning
+
+bool AWorldPlayerController::GetPredictedCharacterLocation(FVector& OutLocation) const
+{
+    if (this->GetPawnOrSpectator() == nullptr)
+    {
+        return false;
+    }
+
+#if WITH_EDITOR
+    if (GEditor->IsSimulateInEditorInProgress())
+    {
+        OutLocation = GCurrentLevelEditingViewportClient->ViewTransformPerspective.GetLocation();
+        return true;
+    }
+#endif /* WITH_EDITOR */
+
+    if (this->GetPawnOrSpectator()->IsA(AWorldCharacter::StaticClass()))
+    {
+        OutLocation = this->GetPawn<AWorldCharacter>()->GetFeetLocation();
+        return true;
+    }
+
+    if (this->GetPawnOrSpectator()->IsA(AWorldPawn::StaticClass()))
+    {
+        OutLocation = FVector::ZeroVector;
+        return true;
+    }
+
+    return false;
+}
 
 #undef ENHANCED_INPUT_SUBSYSTEM

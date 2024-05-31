@@ -34,7 +34,7 @@ public:
     // FTickableGameObject implementation
     FORCEINLINE virtual auto GetStatId(void) const -> TStatId override
     {
-        RETURN_QUICK_DECLARE_CYCLE_STAT(UChunkValidationSubsystem, STATGROUP_Tickables);
+        RETURN_QUICK_DECLARE_CYCLE_STAT(UChunkValidationSubsystem, STATGROUP_Tickables)
     }
     // ~FTickableGameObject implementation
 
@@ -49,4 +49,7 @@ private:
     TObjectPtr<UChunkGenerationSubsystem> ChunkGenerationSubsystem;
 
     auto LoadUnLoadChunks(const FVector& LocalPlayerLocation) const -> void;
+
+    template<class T>
+    T* GetLocalPlayerController(void) const;
 };

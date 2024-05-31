@@ -39,7 +39,7 @@ public:
     // FTickableGameObject implementation
     FORCEINLINE virtual auto GetStatId(void) const -> TStatId override
     {
-        RETURN_QUICK_DECLARE_CYCLE_STAT(UChunkGenerationSubsystem, STATGROUP_Tickables);
+        RETURN_QUICK_DECLARE_CYCLE_STAT(UChunkGenerationSubsystem, STATGROUP_Tickables)
     }
     // ~FTickableGameObject implementation
 
@@ -68,8 +68,13 @@ public:
         return Out;
     }
 
-    [[nodiscard]]
-    FORCEINLINE auto FindChunkByKey(const FChunkKey& ChunkKey) const -> ACommonChunk*
+    [[nodiscard]] FORCEINLINE auto HasPersistentVerticalChunk(const FChunkKey2& ChunkKey) const -> bool
+    {
+        if (const TObjectPtr<ACommonChunk>* T = this->ChunkMap.Find(FChunkKey(ChunkKey.X, ChunkKey.Y, 0)); T)
+        { return (*T)->GetChunkPersistency() == EChunkPersistency::Persistent; } return false;
+    }
+
+    [[nodiscard]] FORCEINLINE auto FindChunkByKey(const FChunkKey& ChunkKey) const -> ACommonChunk*
     { if (const TObjectPtr<ACommonChunk>* T = this->ChunkMap.Find(ChunkKey); T) { return *T; } return nullptr; }
 
     FORCEINLINE auto AddClientChunk(const FClientChunk& ClientChunk) -> void { this->ClientQueue.Enqueue(ClientChunk); }
@@ -85,6 +90,11 @@ public:
         this->ChunkMap.Remove(ChunkKey);
         this->VerticalChunks.Remove(FChunkKey2(ChunkKey.X, ChunkKey.Y));
     }
+
+    /** @return True, if OutLocation is meaningful. */
+    auto FindAppropriateLocationForCharacterSpawn(const FVector2D& InApproximateLocation, FVector& OutLocation) const -> bool;
+    /** @return True, if OutLocation is meaningful. */
+    auto FindAppropriateLocationForCharacterSpawn(const FVector& InApproximateLocation, FVector& OutLocation) const -> bool;
 
 private:
 
@@ -128,4 +138,13 @@ private:
 
     /** Spawns a chunk in the EChunkState#PreSpawned state. */
     auto SpawnChunk(const FChunkKey& ChunkKey) const -> ACommonChunk*;
+
+    //////////////////////////////////////////////////////////////////////////
+    // Useful common getters.
+    //////////////////////////////////////////////////////////////////////////
+
+    /** @param Out Order is from bottom to top. */
+    auto GetAllChunksFromVerticalChunk(const FChunkKey2& ChunkKey, TArray<FChunkKey>& Out) const -> void;
+    /** @param Out Order is from top to bottom. */
+    auto GetAllChunksFromVerticalChunkReversed(const FChunkKey2& ChunkKey, TArray<FChunkKey>& Out) const -> void;
 };

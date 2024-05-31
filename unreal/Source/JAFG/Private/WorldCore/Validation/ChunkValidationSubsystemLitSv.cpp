@@ -2,6 +2,7 @@
 
 #include "WorldCore/Validation/ChunkValidationSubsystemLitSv.h"
 
+#include "Player/WorldPlayerController.h"
 #include "WorldCore/ChunkWorldSettings.h"
 #include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
 #include "WorldCore/Validation/ChunkValidationSubsystemCl.h"
@@ -45,15 +46,15 @@ void UChunkValidationSubsystemLitSv::OnWorldBeginPlay(UWorld& InWorld)
 
     if (this->GetWorld()->GetSubsystem<UChunkValidationSubsystemCl>() != nullptr)
     {
-        LOG_FATAL(LogChunkValidation, "Found other validation subsystem. Disallowed. Faulty subsystems: Cl.")
+        LOG_FATAL(LogChunkValidation, "Found other validation subsystem. Disallowed. Faulty subsystem: Cl.")
     }
     if (this->GetWorld()->GetSubsystem<UChunkValidationSubsystemDedSv>() != nullptr)
     {
-        LOG_FATAL(LogChunkValidation, "Found other validation subsystem. Disallowed. Faulty subsystems: DedSv.")
+        LOG_FATAL(LogChunkValidation, "Found other validation subsystem. Disallowed. Faulty subsystem: DedSv.")
     }
     if (this->GetWorld()->GetSubsystem<UChunkValidationSubsystemStandalone>() != nullptr)
     {
-        LOG_FATAL(LogChunkValidation, "Found other validation subsystem. Disallowed. Faulty subsystems: Standalone.")
+        LOG_FATAL(LogChunkValidation, "Found other validation subsystem. Disallowed. Faulty subsystem: Standalone.")
     }
 
     this->ChunkGenerationSubsystem = this->GetWorld()->GetSubsystem<UChunkGenerationSubsystem>();
@@ -80,9 +81,16 @@ void UChunkValidationSubsystemLitSv::LoadUnloadMyAndTheirChunks(void) const
     {
         for (; It; ++It)
         {
-            /* May be null if state of controller is still pending. */
-            const APawn* Pawn = It->Get()->GetPawnOrSpectator();
-            if (Pawn == nullptr)
+            const APlayerController* const UncastedPlayerController = It->Get();
+            if (UncastedPlayerController == nullptr)
+            {
+                continue;
+            }
+            const AWorldPlayerController* const PlayerController = Cast<AWorldPlayerController>(UncastedPlayerController);
+            jcheck( PlayerController )
+
+            FVector PredictedLocation;
+            if (PlayerController->GetPredictedCharacterLocation(PredictedLocation) == false)
             {
                 continue;
             }
@@ -90,7 +98,7 @@ void UChunkValidationSubsystemLitSv::LoadUnloadMyAndTheirChunks(void) const
             for (
                 FChunkKey2 Key
                 :
-                Validation::GetAllChunksInDistance(ChunkStatics::WorldToVerticalChunkKey(Pawn->GetActorLocation()), RenderDistance)
+                Validation::GetAllChunksInDistance(ChunkStatics::WorldToVerticalChunkKey(PredictedLocation), RenderDistance)
             )
             {
                 PreferredChunks.AddUnique(Key);
@@ -131,6 +139,53 @@ void UChunkValidationSubsystemLitSv::LoadUnloadMyAndTheirChunks(void) const
         LOG_VERY_VERBOSE(LogChunkValidation, "Decided to load %d and unload %d chunks.", NewChunksCounter, UnloadedChunksCounter)
     }
 #endif
+
+    if (FConstPlayerControllerIterator It = this->GetWorld()->GetPlayerControllerIterator(); It)
+    {
+        for (; It; ++It)
+        {
+            APlayerController* UncastedPlayerController = It->Get();
+            if (UncastedPlayerController == nullptr)
+            {
+                continue;
+            }
+            AWorldPlayerController* PlayerController = Cast<AWorldPlayerController>(UncastedPlayerController);
+            jcheck( PlayerController )
+
+            if (PlayerController->HasSuccessfullySpawnedCharacter())
+            {
+                continue;
+            }
+
+            if (PlayerController->IsServerReadyForCharacterSpawn() == false)
+            {
+                FVector PredictedLocation;
+                if (PlayerController->GetPredictedCharacterLocation(PredictedLocation) == false)
+                {
+                    continue;
+                }
+
+                if (this->ChunkGenerationSubsystem->HasPersistentVerticalChunk(FChunkKey2(ChunkStatics::WorldToVerticalChunkKey(PredictedLocation))) == false)
+                {
+                    return;
+                }
+                PlayerController->SetServerReadyForCharacterSpawn();
+            }
+
+            if (PlayerController->IsClientReadyForCharacterSpawn() == false)
+            {
+                continue;
+            }
+
+            LOG_DISPLAY(
+                LogWorldGameMode,
+                "Finished spawning minimum required presistent chunks at player start location (on client and server). Spawning their character."
+            )
+            PlayerController->SpawnCharacterToWorld();
+
+            continue;
+        }
+    }
 
     return;
 }
