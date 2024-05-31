@@ -2,6 +2,7 @@
 
 #include "UI/FrontEnd/HostSessionPanelWidget.h"
 
+#include "CommonHUD.h"
 #include "JAFGFocusableUserWidget.h"
 #include "Components/EditableText.h"
 #include "Components/ScrollBox.h"
@@ -164,6 +165,8 @@ void UHostSessionPanelWidget::HostSessionFromNewSave(void) const
         LOG_FATAL(LogCommonSlate, "Front end provided invalid input for hosting a new session.")
         return;
     }
+
+    GEngine->GetFirstLocalPlayerController(this->GetWorld())->GetHUD<ACommonHUD>()->CreateLoadingScreen();
 
     ULocalSessionSupervisorSubsystem* LSSSS = this->GetGameInstance()->GetSubsystem<ULocalSessionSupervisorSubsystem>();
     LSSSS->HostListenServer(this->NewSessionName, this->MaxPublicConnections, false);

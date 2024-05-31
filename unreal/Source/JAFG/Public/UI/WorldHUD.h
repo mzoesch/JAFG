@@ -9,8 +9,8 @@
 
 JAFG_VOID
 
-class UJAFGUserWidget;
 class UJAFGWidget;
+class UJAFGUserWidget;
 class UEditorWorldCommandsSimulation;
 
 UCLASS(NotBlueprintable)

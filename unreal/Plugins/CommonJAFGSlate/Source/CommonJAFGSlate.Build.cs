@@ -44,6 +44,7 @@ public class CommonJAFGSlate : ModuleRules
         PrivateDependencyModuleNames.AddRange(
         new string[]
         {
+            "JAFGExternalCore",
             "JAFGGlobalLogging",
         }
         );

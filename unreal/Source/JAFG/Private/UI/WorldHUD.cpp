@@ -97,6 +97,12 @@ void AWorldHUD::BeginPlay(void)
         this->EscapeMenu->SetVisibility(ESlateVisibility::Collapsed);
     }
 
+    // Loading Screen
+    //////////////////////////////////////////////////////////////////////////
+    {
+        this->CreateLoadingScreen();
+    }
+
     return;
 }
 

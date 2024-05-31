@@ -35,24 +35,24 @@ public:
 #endif WITH_EDITOR
     // ~UDeveloperSettings implementation
 
-    UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Slate")
+    UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Slate")
     TSubclassOf<UJAFGUserWidget> EscapeMenuWidgetClass;
 
-    UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Slate")
+    UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Slate")
     TSubclassOf<UJAFGUserWidget> CrosshairWidgetClass;
 
-    UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Slate")
+    UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Slate")
     TSubclassOf<UJAFGUserWidget> DebugScreenWidgetClass;
 
-    UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Slate")
+    UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Slate")
     TSubclassOf<UJAFGUserWidget> ChatMenuEntryWidgetClass;
 
-    UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Slate")
+    UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Slate")
     TSubclassOf<UJAFGUserWidget> ChatMenuWidgetClass;
 
-    UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Slate")
+    UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Slate")
     TSubclassOf<UJAFGUserWidget> QuickSessionPreviewWidgetClass;
 
-    UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "FrontEnd")
+    UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "FrontEnd")
     TSubclassOf<UJAFGUserWidget> FrontEndWidgetClass;
 };

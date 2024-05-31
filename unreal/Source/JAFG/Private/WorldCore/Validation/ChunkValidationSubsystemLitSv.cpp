@@ -76,6 +76,13 @@ void UChunkValidationSubsystemLitSv::LoadUnloadMyAndTheirChunks(void) const
 {
     constexpr int RenderDistance { 10 };
 
+    if (this->ChunkGenerationSubsystem->GetPendingKillVerticalChunkQueue().IsEmpty() == false)
+    {
+        LOG_ERROR(LogChunkValidation, "Pending kill vertical chunks is not empty.")
+    }
+
+    this->ChunkGenerationSubsystem->ClearVerticalChunkQueue();
+
     TArray<FChunkKey2> PreferredChunks = TArray<FChunkKey2>();
     if (FConstPlayerControllerIterator It = this->GetWorld()->GetPlayerControllerIterator(); It)
     {

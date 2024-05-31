@@ -5,6 +5,8 @@
 #include "CommonJAFGSlateDeveloperSettings.h"
 #include "PopUps/JAFGWarningPopUp.h"
 #include "PopUps/JAFGWarningPopUpYesNo.h"
+#include "PopUps/LoadingScreen.h"
+#include "JAFGMacros.h"
 
 ACommonHUD::ACommonHUD(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -53,4 +55,28 @@ void ACommonHUD::CreateWarningPopup(const FString& Message, const FString& Heade
 void ACommonHUD::CreateWarningPopup(const FString& Message, const TFunction<void(bool bAccepted)>& OnPopupClosedDelegate) const
 {
     this->CreateWarningPopup(Message, TEXT("Warning"), OnPopupClosedDelegate);
+}
+
+void ACommonHUD::CreateLoadingScreen(void)
+{
+    const UCommonJAFGSlateDeveloperSettings* Settings = GetDefault<UCommonJAFGSlateDeveloperSettings>();
+    jcheck( Settings )
+
+    jcheck( Settings->LoadingScreenWidgetClass )
+
+    this->LoadingScreen = CreateWidget<UJAFGUserWidget>(this->GetWorld(), Settings->LoadingScreenWidgetClass);
+    this->LoadingScreen->AddToViewport();
+
+    return;
+}
+
+void ACommonHUD::DestroyLoadingScreen(void)
+{
+    if (this->LoadingScreen)
+    {
+        this->LoadingScreen->RemoveFromParent();
+        this->LoadingScreen = nullptr;
+    }
+
+    return;
 }

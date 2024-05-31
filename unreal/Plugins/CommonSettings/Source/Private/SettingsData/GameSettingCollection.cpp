@@ -65,7 +65,7 @@ void ULazyGameSettingCollection::LazyInitialize(UCustomSettingsLocalPlayer* InOw
 {
     if (this->bLazyInitialized)
     {
-        LOG_WARNING(LogGameSettings, "Collection [%s] is already initialized.", *this->Identifier)
+        LOG_VERBOSE(LogGameSettings, "Collection [%s] is already initialized. Discarding initialization request.", *this->Identifier)
         return;
     }
 

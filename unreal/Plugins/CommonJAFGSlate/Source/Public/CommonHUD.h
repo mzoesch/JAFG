@@ -7,6 +7,8 @@
 
 #include "CommonHUD.generated.h"
 
+class UJAFGUserWidget;
+
 UCLASS(NotBlueprintable)
 class COMMONJAFGSLATE_API ACommonHUD : public AHUD
 {
@@ -19,4 +21,11 @@ public:
     auto CreateWarningPopup(const FString& Message, const FString& Header = TEXT("Warning")) const -> void;
     auto CreateWarningPopup(const FString& Message, const FString& Header, const TFunction<void(bool bAccepted)>& OnPopUpClosedDelegate) const -> void;
     auto CreateWarningPopup(const FString& Message, const TFunction<void(bool bAccepted)>& OnPopupClosedDelegate) const -> void;
+
+    auto CreateLoadingScreen(void) -> void;
+    auto DestroyLoadingScreen(void) -> void;
+
+private:
+
+    TObjectPtr<UJAFGUserWidget> LoadingScreen;
 };

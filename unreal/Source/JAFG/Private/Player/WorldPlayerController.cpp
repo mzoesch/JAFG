@@ -9,6 +9,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Network/MyHyperlaneComponent.h"
 #include "SettingsData/JAFGInputSubsystem.h"
+#include "UI/WorldHUD.h"
 #include "WorldCore/WorldCharacter.h"
 #include "WorldCore/WorldGameMode.h"
 #include "WorldCore/WorldPawn.h"
@@ -487,6 +488,37 @@ void AWorldPlayerController::SpawnCharacterToWorld(void)
 
     this->bHasSuccessfullySpawnedCharacter = true;
 
+    return;
+}
+
+void AWorldPlayerController::SetPawn(APawn* InPawn)
+{
+    Super::SetPawn(InPawn);
+
+    if (InPawn && InPawn->IsA<AWorldCharacter>() && InPawn->IsLocallyControlled())
+    {
+        this->DestroyLoadingScreen();
+    }
+
+    return;
+}
+
+void AWorldPlayerController::OnRep_Pawn(void)
+{
+    Super::OnRep_Pawn();
+
+    if (this->GetPawn() && this->GetPawn()->IsA<AWorldCharacter>() && this->IsLocalController())
+    {
+        this->DestroyLoadingScreen();
+    }
+
+    return;
+}
+
+void AWorldPlayerController::DestroyLoadingScreen(void) const
+{
+    jcheck( this->MyHUD ) jcheck( this->GetHUD<AWorldHUD>() )
+    this->GetHUD<AWorldHUD>()->DestroyLoadingScreen();
     return;
 }
 

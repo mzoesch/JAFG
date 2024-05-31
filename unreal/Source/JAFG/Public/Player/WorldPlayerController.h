@@ -164,6 +164,15 @@ public:
     auto SetClientReadyForCharacterSpawn(void) -> void;
     auto SpawnCharacterToWorld(void) -> void;
 
+    // AController implementation
+    virtual void SetPawn(APawn* InPawn) override;
+    virtual void OnRep_Pawn(void) override;
+    // ~AController implementation
+
+protected:
+
+    void DestroyLoadingScreen(void) const;
+
 private:
 
     UPROPERTY(Replicated)
