@@ -266,6 +266,19 @@ public:
      *                      will assume that the initial called chunk object acts as the pivot of the local voxel key.
      */
     void ModifySingleVoxel(const FVoxelKey& LocalVoxelKey, const voxel_t NewVoxel);
+
+    /**
+     * Client only.
+     *
+     * Will predict the voxel modification on the client side while waiting for the server to confirm the modification.
+     * This will prevent client side lag and will make the game feel more responsive when a high latency to the current
+     * host is present.
+     *
+     * @param LocalVoxelKey The local voxel key of within the chunk. Can be out of bounds of the chunk, but the method
+     *                      will assume that the initial called chunk object acts as the pivot of the local voxel key.
+     */
+    void PredictSingleVoxelModification(const FVoxelKey& LocalVoxelKey, const voxel_t NewVoxel);
+
     /**
      * Client only.
      *
@@ -290,11 +303,14 @@ public:
 
     void SetInitializationDataFromAuthority(voxel_t* Voxels);
 
-private:
-
 #pragma endregion Replication
 
 #pragma region Getters
+
+private:
+
+    /** Never call directly. Always use the public getter methods. */
+    auto GetChunkByNonZeroOrigin_Implementation(const FVoxelKey& LocalVoxelKey, FVoxelKey& OutTransformedLocalVoxelKey) -> ACommonChunk*;
 
 public:
 
@@ -343,7 +359,9 @@ public:
      * @param OutTransformedLocalVoxelKey The new local voxel position of the target chunk. Stays the same if the
      *                                    target chunk is the called chunk.
      */
-    auto GetChunkByNonZeroOrigin(const FVoxelKey& LocalVoxelKey, FVoxelKey& OutTransformedLocalVoxelKey) -> ACommonChunk*;
+    auto GetChunkByNonZeroOrigin_Auth(const FVoxelKey& LocalVoxelKey, FVoxelKey& OutTransformedLocalVoxelKey) -> ACommonChunk*;
+    /** Client implementation of the ACommonChunk#GetChunkByNonZeroOrigin_Auth. Only callable on a client. */
+    auto GetChunkByNonZeroOrigin_Client(const FVoxelKey& LocalVoxelKey, FVoxelKey& OutTransformedLocalVoxelKey) -> ACommonChunk*;
 
 #pragma endregion Getters
 

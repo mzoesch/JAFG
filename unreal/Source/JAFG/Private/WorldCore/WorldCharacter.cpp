@@ -110,6 +110,14 @@ void AWorldCharacter::Tick(const float DeltaSeconds)
     this->CurrentVelocity = this->GetVelocity();
     this->CurrentSpeed    = this->CurrentVelocity.Size();
 
+    if (this->IsLocallyControlled() == false)
+    {
+        if (this->CurrentlyMiningLocalVoxel.IsSet())
+        {
+            this->CurrentDurationSameVoxelIsMined += DeltaSeconds;
+        }
+    }
+
     return;
 }
 
@@ -312,7 +320,8 @@ void AWorldCharacter::BindAction(const FString& ActionName, UEnhancedInputCompon
 
     else if (ActionName == InputActions::Primary)
     {
-        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldCharacter::OnStartedPrimary);
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Triggered, &AWorldCharacter::OnTriggeredPrimary);
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Completed, &AWorldCharacter::OnCompletedPrimary);
     }
 
     else if (ActionName == InputActions::Secondary)
@@ -452,7 +461,7 @@ void AWorldCharacter::OnCompleteCrouch(const FInputActionValue& Value)
     Super::UnCrouch();
 }
 
-void AWorldCharacter::OnStartedPrimary(const FInputActionValue& Value)
+void AWorldCharacter::OnTriggeredPrimary(const FInputActionValue& Value)
 {
     ACommonChunk*             TargetedChunk;
     FVector                   WorldHitLocation;
@@ -466,21 +475,67 @@ void AWorldCharacter::OnStartedPrimary(const FInputActionValue& Value)
 
     if (TargetedChunk == nullptr)
     {
+        if (this->CurrentlyMiningLocalVoxel.IsSet())
+        {
+            this->OnCompletedVoxelMinded_ServerRPC(false);
+            this->CurrentlyMiningLocalVoxel.Reset();
+            this->CurrentDurationSameVoxelIsMined = 0.0f;
+        }
+
         return;
     }
 
-    if (const voxel_t HitVoxel = TargetedChunk->GetLocalVoxelOnly(LocalHitVoxelKey); HitVoxel < ECommonVoxels::Num)
+    if (this->CurrentlyMiningLocalVoxel.IsSet() == false)
     {
-        LOG_WARNING(LogWorldChar, "Cannot interact with common voxel type %d.", HitVoxel)
+        if (const voxel_t HitVoxel = TargetedChunk->GetLocalVoxelOnly(LocalHitVoxelKey); HitVoxel < ECommonVoxels::Num)
+        {
+            LOG_WARNING(LogWorldChar, "Cannot interact with common voxel type %d.", HitVoxel)
+            return;
+        }
+
+        this->OnStartedVoxelMinded_ServerRPC(TargetedChunk->GetChunkKey(), LocalHitVoxelKey);
+        this->CurrentlyMiningLocalVoxel       = LocalHitVoxelKey;
+        this->CurrentDurationSameVoxelIsMined = 0.0f;
+
         return;
     }
 
-    this->OnStartedPrimary_ServerRPC(Value);
+    if (this->CurrentlyMiningLocalVoxel.GetValue() != LocalHitVoxelKey)
+    {
+        this->OnStartedVoxelMinded_ServerRPC(TargetedChunk->GetChunkKey(), LocalHitVoxelKey);
+        this->CurrentlyMiningLocalVoxel       = LocalHitVoxelKey;
+        this->CurrentDurationSameVoxelIsMined = 0.0f;
+
+        return;
+    }
+
+    this->CurrentDurationSameVoxelIsMined += this->GetWorld()->GetDeltaSeconds();
+
+    if (this->CurrentDurationSameVoxelIsMined >= 0.5f)
+    {
+        this->OnCompletedVoxelMinded_ServerRPC(true);
+        this->CurrentlyMiningLocalVoxel.Reset();
+        this->CurrentDurationSameVoxelIsMined = 0.0f;
+
+        if (UNetStatics::IsSafeClient(this))
+        {
+            TargetedChunk->PredictSingleVoxelModification(LocalHitVoxelKey, ECommonVoxels::Air);
+        }
+    }
 
     return;
 }
 
-void AWorldCharacter::OnStartedPrimary_ServerRPC_Implementation(const FInputActionValue& Value)
+void AWorldCharacter::OnCompletedPrimary(const FInputActionValue& Value)
+{
+    this->OnCompletedVoxelMinded_ServerRPC(false);
+    this->CurrentlyMiningLocalVoxel.Reset();
+    this->CurrentDurationSameVoxelIsMined = 0.0f;
+
+    return;
+}
+
+void AWorldCharacter::OnStartedVoxelMinded_ServerRPC_Implementation(const FChunkKey& InTargetedChunk, const FVoxelKey& InLocalHitVoxelKey)
 {
     ACommonChunk*             TargetedChunk;
     FVector                   WorldHitLocation;
@@ -496,20 +551,83 @@ void AWorldCharacter::OnStartedPrimary_ServerRPC_Implementation(const FInputActi
     {
         LOG_WARNING(LogWorldChar, "Increased strike for %s. Reason: Cannot interact with invalid chunk.", *this->GetDisplayName())
         this->GetWorldPlayerController()->SafelyIncreaseStrikeCount();
+
+        this->CurrentlyMiningLocalVoxel.Reset();
+        this->CurrentDurationSameVoxelIsMined = 0.0f;
+
         return;
     }
 
-    // ReSharper disable once CppTooWideScopeInitStatement
-    const voxel_t HitVoxel = TargetedChunk->GetLocalVoxelOnly(LocalHitVoxelKey);
-
-    if (HitVoxel < ECommonVoxels::Num)
+    if (LocalHitVoxelKey != InLocalHitVoxelKey)
     {
-        LOG_WARNING(LogWorldChar, "Increased strike for %s. Reason: Cannot interact with common voxel type %d.", *this->GetDisplayName(), HitVoxel)
+        LOG_WARNING(
+            LogWorldChar,
+            "Increased strike for %s. Reason: Remote and host hits differ: CL %s != SV %s.",
+            *this->GetDisplayName(), *InLocalHitVoxelKey.ToString(), *LocalHitVoxelKey.ToString()
+        )
         this->GetWorldPlayerController()->SafelyIncreaseStrikeCount();
+
+        this->CurrentlyMiningLocalVoxel.Reset();
+        this->CurrentDurationSameVoxelIsMined = 0.0f;
+
+        return;
+    }
+
+    this->CurrentlyMiningLocalVoxel       = LocalHitVoxelKey;
+    this->CurrentDurationSameVoxelIsMined = 0.0f;
+
+    return;
+}
+
+void AWorldCharacter::OnCompletedVoxelMinded_ServerRPC_Implementation(const bool bClientBreak)
+{
+    if (bClientBreak == false)
+    {
+        this->CurrentlyMiningLocalVoxel.Reset();
+        this->CurrentDurationSameVoxelIsMined = 0.0f;
+        return;
+    }
+
+    ACommonChunk*             TargetedChunk;
+    FVector                   WorldHitLocation;
+    FVector_NetQuantizeNormal WorldNormalHitLocation;
+    FVoxelKey                 LocalHitVoxelKey;
+
+    this->GetPOVTargetedData(
+        TargetedChunk, WorldHitLocation, WorldNormalHitLocation, LocalHitVoxelKey,
+        this->IsLocallyControlled() == false, this->GetCharacterReach()
+    );
+
+    if (TargetedChunk == nullptr)
+    {
+        LOG_WARNING(LogWorldChar, "Increased strike for %s. Reason: Cannot interact with invalid chunk.", *this->GetDisplayName())
+        this->GetWorldPlayerController()->SafelyIncreaseStrikeCount();
+
+        this->CurrentlyMiningLocalVoxel.Reset();
+        this->CurrentDurationSameVoxelIsMined = 0.0f;
+
+        return;
+    }
+
+    if (this->CurrentDurationSameVoxelIsMined < 0.5f && FMath::IsNearlyEqual(this->CurrentDurationSameVoxelIsMined, .5f, .1f) == false)
+    {
+        LOG_WARNING(
+            LogWorldChar,
+            "Increased strike for %s. Reason: Voxel break was to short or to long.",
+            *this->GetDisplayName()
+        )
+        this->GetWorldPlayerController()->SafelyIncreaseStrikeCount();
+
+        this->CurrentlyMiningLocalVoxel.Reset();
+        this->CurrentDurationSameVoxelIsMined = 0.0f;
+
         return;
     }
 
     TargetedChunk->ModifySingleVoxel(LocalHitVoxelKey, ECommonVoxels::Air);
+
+    this->CurrentlyMiningLocalVoxel.Reset();
+    this->CurrentDurationSameVoxelIsMined = 0.0f;
 
     return;
 }

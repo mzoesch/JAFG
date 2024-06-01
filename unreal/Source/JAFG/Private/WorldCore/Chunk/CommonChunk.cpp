@@ -554,7 +554,7 @@ void ACommonChunk::ModifySingleVoxel(const FVoxelKey& LocalVoxelKey, const voxel
     }
 
     FVoxelKey TransformedLocalVoxelLocation = LocalVoxelKey;
-    ACommonChunk* TargetChunk = this->GetChunkByNonZeroOrigin(LocalVoxelKey, TransformedLocalVoxelLocation);
+    ACommonChunk* TargetChunk = this->GetChunkByNonZeroOrigin_Auth(LocalVoxelKey, TransformedLocalVoxelLocation);
 
     if (TargetChunk == nullptr)
     {
@@ -583,6 +583,49 @@ void ACommonChunk::ModifySingleVoxel(const FVoxelKey& LocalVoxelKey, const voxel
     return;
 }
 
+void ACommonChunk::PredictSingleVoxelModification(const FVoxelKey& LocalVoxelKey, const voxel_t NewVoxel)
+{
+    LOG_VERY_VERBOSE(
+        LogChunkManipulation,
+        "Predicting modification for single voxel at %s to %d in %s.",
+        *LocalVoxelKey.ToString(), NewVoxel, *this->ChunkKey.ToString()
+    )
+
+    if (UNetStatics::IsSafeClient(this) == false)
+    {
+        LOG_FATAL(LogChunkManipulation, "Only client-like instances can predict voxels manipulation outcomes.")
+        return;
+    }
+
+    FVoxelKey TransformedLocalVoxelLocation = LocalVoxelKey;
+    ACommonChunk* TargetChunk = this->GetChunkByNonZeroOrigin_Client(LocalVoxelKey, TransformedLocalVoxelLocation);
+
+    if (TargetChunk == nullptr)
+    {
+        LOG_ERROR(
+            LogChunkManipulation,
+            "Could not find chunk for local voxel key %s (pivot: %s). Modified to %s.",
+            *LocalVoxelKey.ToString(), *this->ChunkKey.ToString(), *TransformedLocalVoxelLocation.ToString()
+        )
+        return;
+    }
+
+    if (TargetChunk->GetRawVoxelData(TransformedLocalVoxelLocation) == NewVoxel)
+    {
+        LOG_WARNING(
+            LogChunkManipulation,
+            "Requested to predict modification of single voxel at %s to %d in %s, but value is the same. Ignoring.",
+            *TransformedLocalVoxelLocation.ToString(), NewVoxel, *TargetChunk->ChunkKey.ToString()
+        )
+        return;
+    }
+
+    TargetChunk->ModifyRawVoxelData(TransformedLocalVoxelLocation, NewVoxel);
+    TargetChunk->RegenerateProceduralMesh();
+
+    return;
+}
+
 void ACommonChunk::ModifySingleVoxelOnClient(const FVoxelKey& LocalVoxelKey, const voxel_t NewVoxel)
 {
     if (UNetStatics::IsSafeClient(this) == false)
@@ -593,7 +636,7 @@ void ACommonChunk::ModifySingleVoxelOnClient(const FVoxelKey& LocalVoxelKey, con
 
     if (this->GetRawVoxelData(LocalVoxelKey) == NewVoxel)
     {
-        LOG_WARNING(
+        LOG_VERY_VERBOSE(
             LogChunkManipulation,
             "Requested to modify single voxel at %s to %d in %s, but value is the same. Ignoring.",
             *LocalVoxelKey.ToString(), NewVoxel, *this->ChunkKey.ToString()
@@ -630,14 +673,8 @@ void ACommonChunk::SetInitializationDataFromAuthority(voxel_t* Voxels)
     return;
 }
 
-ACommonChunk* ACommonChunk::GetChunkByNonZeroOrigin(const FVoxelKey& LocalVoxelKey,  FVoxelKey& OutTransformedLocalVoxelKey)
+ACommonChunk* ACommonChunk::GetChunkByNonZeroOrigin_Implementation(const FVoxelKey& LocalVoxelKey, FVoxelKey& OutTransformedLocalVoxelKey)
 {
-    if (UNetStatics::IsSafeServer(this) == false)
-    {
-        LOG_FATAL(LogChunkManipulation, "Disallowed call on non server-like instance.")
-        return nullptr;
-    }
-
     FChunkKey TransformedChunkKey = this->ChunkKey;
     OutTransformedLocalVoxelKey   = LocalVoxelKey;
 
@@ -696,7 +733,29 @@ ACommonChunk* ACommonChunk::GetChunkByNonZeroOrigin(const FVoxelKey& LocalVoxelK
     }
 
     const FIntVector Temp = OutTransformedLocalVoxelKey;
-    return TargetChunk->GetChunkByNonZeroOrigin(Temp, OutTransformedLocalVoxelKey);
+    return TargetChunk->GetChunkByNonZeroOrigin_Implementation(Temp, OutTransformedLocalVoxelKey);
+}
+
+ACommonChunk* ACommonChunk::GetChunkByNonZeroOrigin_Auth(const FVoxelKey& LocalVoxelKey,  FVoxelKey& OutTransformedLocalVoxelKey)
+{
+    if (UNetStatics::IsSafeServer(this) == false)
+    {
+        LOG_FATAL(LogChunkManipulation, "Disallowed call on non server-like instance.")
+        return nullptr;
+    }
+
+    return this->GetChunkByNonZeroOrigin_Implementation(LocalVoxelKey, OutTransformedLocalVoxelKey);
+}
+
+ACommonChunk* ACommonChunk::GetChunkByNonZeroOrigin_Client(const FVoxelKey& LocalVoxelKey, FVoxelKey& OutTransformedLocalVoxelKey)
+{
+    if (UNetStatics::IsSafeClient(this) == false)
+    {
+        LOG_FATAL(LogChunkManipulation, "Disallowed call on non client-like instance.")
+        return nullptr;
+    }
+
+    return this->GetChunkByNonZeroOrigin_Implementation(LocalVoxelKey, OutTransformedLocalVoxelKey);
 }
 
 #pragma endregion Chunk World Generation

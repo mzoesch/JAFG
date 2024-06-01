@@ -126,12 +126,22 @@ protected:
     virtual auto OnCompletedSprint(const FInputActionValue& Value) -> void;
     virtual auto OnTriggerCrouch(const FInputActionValue& Value) -> void;
     virtual auto OnCompleteCrouch(const FInputActionValue& Value) -> void;
-    virtual auto OnStartedPrimary(const FInputActionValue& Value) -> void;
+
+    virtual auto OnTriggeredPrimary(const FInputActionValue& Value) -> void;
+    virtual auto OnCompletedPrimary(const FInputActionValue& Value) -> void;
     UFUNCTION(Server, Reliable)
-    virtual void OnStartedPrimary_ServerRPC(const FInputActionValue& Value);
+    void OnStartedVoxelMinded_ServerRPC(const FIntVector /* FChunkKey */& InTargetedChunk, const FIntVector /* FVoxelKey */& InLocalHitVoxelKey);
+    UFUNCTION(Server, Reliable)
+    void OnCompletedVoxelMinded_ServerRPC(const bool bClientBreak);
+
+    /** The *local* voxel key. */
+    TOptional<FVoxelKey> CurrentlyMiningLocalVoxel       = FVoxelKey::ZeroValue;
+    float                CurrentDurationSameVoxelIsMined = 0.0f;
+
     virtual auto OnStartedSecondary(const FInputActionValue& Value) -> void;
     UFUNCTION(Server, Reliable)
     virtual void OnStartedSecondary_ServerRPC(const FInputActionValue& Value);
+
     virtual auto OnTriggeredUpMaxFlySpeed(const FInputActionValue& Value) -> void;
     virtual auto OnTriggeredDownMaxFlySpeed(const FInputActionValue& Value) -> void;
 
