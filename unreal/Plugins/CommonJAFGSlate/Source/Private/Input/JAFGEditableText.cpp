@@ -2,6 +2,8 @@
 
 #include "Input/JAFGEditableText.h"
 
+#include "DefaultColorsSubsystem.h"
+
 void UJAFGEditableText::SetCustomEventToKeyDown(const FOnKeyDown& InOnKeyDownHandler) const
 {
     this->MyEditableText->SetOnKeyDownHandler(InOnKeyDownHandler);
@@ -19,6 +21,20 @@ void UJAFGEditableText::SetMaxSize(const int32 InMaxSize)
     }
 
     this->OnTextChanged.AddDynamic(this, &UJAFGEditableText::OnNativeTextChanged);
+
+    return;
+}
+
+void UJAFGEditableText::UpdateComponentWithTheirScheme(void)
+{
+    if (this->ColorScheme == EJAFGFontSize::DontCare)
+    {
+        return;
+    }
+
+    FSlateFontInfo Temp = this->GetFont();
+    Temp.Size = this->GetGameInstance()->GetSubsystem<UDefaultColorsSubsystem>()->GetFontSizeByScheme(this->ColorScheme);
+    this->SetFont(Temp);
 
     return;
 }

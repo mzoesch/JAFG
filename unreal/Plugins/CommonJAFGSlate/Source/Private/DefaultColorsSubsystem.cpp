@@ -47,3 +47,67 @@ FColor UDefaultColorsSubsystem::GetColorByScheme(const EJAFGColorScheme::Type In
     }
     }
 }
+
+float UDefaultColorsSubsystem::GetBlurStrengthByScheme(const EJAFGBlurriness::Type InScheme) const
+{
+    switch (InScheme)
+    {
+    case EJAFGBlurriness::Heavy:
+    {
+        return this->HeavyBlurStrength;
+    }
+    case EJAFGBlurriness::Medium:
+    {
+        return this->MediumBlurStrength;
+    }
+    case EJAFGBlurriness::Light:
+    {
+        return this->LightBlurStrength;
+    }
+    case EJAFGBlurriness::None:
+    {
+        return 0.0f;
+    }
+    default:
+    {
+        LOG_FATAL(LogCommonSlate, "Could not find blurriness scheme: %d.", InScheme)
+        return 0.0f;
+    }
+    }
+}
+
+int32 UDefaultColorsSubsystem::GetFontSizeByScheme(const EJAFGFontSize::Type InScheme) const
+{
+    switch (InScheme)
+    {
+    case EJAFGFontSize::GargantuanHeader:
+    {
+        return this->GargantuanHeaderFontSize;
+    }
+    case EJAFGFontSize::Header:
+    {
+        return this->HeaderFontSize;
+    }
+    case EJAFGFontSize::SubHeader:
+    {
+        return this->SubHeaderFontSize;
+    }
+    case EJAFGFontSize::Body:
+    {
+        return this->BodyFontSize;
+    }
+    case EJAFGFontSize::Small:
+    {
+        return this->SmallFontSize;
+    }
+    case EJAFGFontSize::Tiny:
+    {
+        return this->TinyFontSize;
+    }
+    default:
+    {
+        LOG_FATAL(LogCommonSlate, "Could not find font size scheme: %d.", InScheme)
+        return 0.0f;
+    }
+    }
+}

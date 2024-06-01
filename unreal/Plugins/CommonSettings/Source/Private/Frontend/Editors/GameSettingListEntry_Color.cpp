@@ -125,6 +125,9 @@ void UGameSettingListEntry_Color::OnResetToDefaultClicked(void) const
 
     this->Setting->ResetToDefault();
 
+    this->OwningPanel->ReleaseDisallowApply(this->Setting->GetIdentifier());
+    this->Border_Container->SetBrushColor(this->StandardContainerColor);
+
     this->SetEditableText(this->Setting->GetValue());
     this->Border_ColorPreview->SetBrushColor(this->Setting->GetValue());
 
@@ -137,6 +140,12 @@ void UGameSettingListEntry_Color::OnResetToDefaultClicked(void) const
 
 void UGameSettingListEntry_Color::UpdateResetToDefaultButton(void) const
 {
+    if (UGameSettingListEntry_Color::IsInTextAViableColor(this->EditableText_SettingValue->GetText()) == false)
+    {
+        this->Button_ResetToDefault->SetIsEnabled(true);
+        return;
+    }
+
     if (this->Setting->GetDefaultValue() == this->Setting->GetValue())
     {
         this->Button_ResetToDefault->SetIsEnabled(false);

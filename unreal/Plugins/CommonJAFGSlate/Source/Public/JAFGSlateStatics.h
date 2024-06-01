@@ -23,3 +23,39 @@ enum Type : uint8
 };
 
 }
+
+UENUM(BlueprintType)
+namespace EJAFGBlurriness
+{
+
+enum Type : uint8
+{
+    /** The component will be treated normal and will never be updated by the JAFG color subsystem. */
+    DontCare,
+
+    Heavy,
+    Medium,
+    Light,
+    None,
+};
+
+}
+
+UENUM(BlueprintType)
+namespace EJAFGFontSize
+{
+
+enum Type : uint8
+{
+    /** The component will be treated normal and will never be updated by the JAFG color subsystem. */
+    DontCare,
+
+    GargantuanHeader,
+    Header,
+    SubHeader,
+    Body,
+    Small,
+    Tiny,
+};
+
+}

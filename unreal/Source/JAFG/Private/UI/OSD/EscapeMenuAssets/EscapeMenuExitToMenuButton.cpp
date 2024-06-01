@@ -6,7 +6,8 @@
 
 UEscapeMenuExitToMenuButton::UEscapeMenuExitToMenuButton(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-    this->Message  = "Are you sure you want to exit to menu?";
+    this->Header   = TEXT("Confirm Exit");
+    this->Message  = TEXT("Are you sure you want to exit to menu?");
     this->bIsYesNo = true;
 
     return;

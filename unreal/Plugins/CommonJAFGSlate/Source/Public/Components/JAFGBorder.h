@@ -3,8 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UsesJAFGColorScheme.h"
 #include "Components/Border.h"
+#include "UsesJAFGColorScheme.h"
+#include "JAFGSlateStatics.h"
 
 #include "JAFGBorder.generated.h"
 
@@ -18,7 +19,7 @@ public:
 
     explicit UJAFGBorder(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
-    virtual void UpdateBrushWithSetColorScheme(void) override;
+    virtual void UpdateComponentWithTheirScheme(void) override;
 
 protected:
 

@@ -1,7 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "SettingsData/GameSettingDataSource.h"
-
 #include "JAFGLogDefs.h"
 #include "CustomSettingsLocalPlayer.h"
 
@@ -17,7 +16,7 @@ FGameSettingDataSource::FGameSettingDataSource(const TArray<FString>& InDynamicP
 
 bool FGameSettingDataSource::Resolve(UCustomSettingsLocalPlayer* InLocalPlayer) const
 {
-    return DynamicPath.Resolve(InLocalPlayer);
+    return this->DynamicPath.Resolve(InLocalPlayer);
 }
 
 FString FGameSettingDataSource::GetValueAsString(UCustomSettingsLocalPlayer* InLocalPlayer) const

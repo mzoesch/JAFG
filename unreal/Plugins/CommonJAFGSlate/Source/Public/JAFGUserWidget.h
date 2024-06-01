@@ -104,7 +104,7 @@ protected:
 public:
 
     /** Updates all children in the widget tree with their wanted colors. */
-    void UpdateTreeBrushes(void) const;
+    void UpdateTreeSchemes(void) const;
 
 private:
 

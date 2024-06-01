@@ -69,6 +69,17 @@ void UJAFGSettingsLocal::SmartUpdateUserInterfaceColors(void) const
     SMART_UPDATE_VALUE(PrimaryColorAlphaLess)
     SMART_UPDATE_VALUE(SecondaryColor)
 
+    SMART_UPDATE_VALUE(HeavyBlurStrength)
+    SMART_UPDATE_VALUE(MediumBlurStrength)
+    SMART_UPDATE_VALUE(LightBlurStrength)
+
+    SMART_UPDATE_VALUE(GargantuanHeaderFontSize)
+    SMART_UPDATE_VALUE(HeaderFontSize)
+    SMART_UPDATE_VALUE(SubHeaderFontSize)
+    SMART_UPDATE_VALUE(BodyFontSize)
+    SMART_UPDATE_VALUE(SmallFontSize)
+    SMART_UPDATE_VALUE(TinyFontSize)
+
     if (UpdatedValues <= 0)
     {
         LOG_VERBOSE(LogGameSettings, "No user interface colors were updated.")
@@ -81,15 +92,14 @@ void UJAFGSettingsLocal::SmartUpdateUserInterfaceColors(void) const
     {
         if (const UJAFGUserWidget* JAFGWidget = Cast<UJAFGUserWidget>(Widget); JAFGWidget)
         {
-            JAFGWidget->UpdateTreeBrushes();
+            JAFGWidget->UpdateTreeSchemes();
         }
     }
 
     LOG_DISPLAY(LogGameSettings, "Updated %d user interface colors on %d widgets.", UpdatedValues, Widgets.Num())
 
-#undef SMART_UPDATE_VALUE
-
     return;
+#undef SMART_UPDATE_VALUE
 }
 
 float UJAFGSettingsLocal::GetMasterVolume(void) const
@@ -192,4 +202,94 @@ FColor UJAFGSettingsLocal::GetSecondaryColor(void) const
 void UJAFGSettingsLocal::SetSecondaryColor(const FColor InSecondaryColor)
 {
     this->SecondaryColor = InSecondaryColor;
+}
+
+float UJAFGSettingsLocal::GetHeavyBlurStrength(void) const
+{
+    return this->HeavyBlurStrength;
+}
+
+void UJAFGSettingsLocal::SetHeavyBlurStrength(const float InHeavyBlurStrength)
+{
+    this->HeavyBlurStrength = InHeavyBlurStrength;
+}
+
+float UJAFGSettingsLocal::GetMediumBlurStrength(void) const
+{
+    return this->MediumBlurStrength;
+}
+
+void UJAFGSettingsLocal::SetMediumBlurStrength(const float InMediumBlurStrength)
+{
+    this->MediumBlurStrength = InMediumBlurStrength;
+}
+
+float UJAFGSettingsLocal::GetLightBlurStrength(void) const
+{
+    return this->LightBlurStrength;
+}
+
+void UJAFGSettingsLocal::SetLightBlurStrength(const float InLightBlurStrength)
+{
+    this->LightBlurStrength = InLightBlurStrength;
+}
+
+int32 UJAFGSettingsLocal::GetGargantuanHeaderFontSize(void) const
+{
+    return this->GargantuanHeaderFontSize;
+}
+
+void UJAFGSettingsLocal::SetGargantuanHeaderFontSize(const int32 InGargantuanHeaderFontSize)
+{
+    this->GargantuanHeaderFontSize = InGargantuanHeaderFontSize;
+}
+
+int32 UJAFGSettingsLocal::GetHeaderFontSize(void) const
+{
+    return this->HeaderFontSize;
+}
+
+void UJAFGSettingsLocal::SetHeaderFontSize(const int32 InHeaderFontSize)
+{
+    this->HeaderFontSize = InHeaderFontSize;
+}
+
+int32 UJAFGSettingsLocal::GetSubHeaderFontSize(void) const
+{
+    return this->SubHeaderFontSize;
+}
+
+void UJAFGSettingsLocal::SetSubHeaderFontSize(const int32 InSubHeaderFontSize)
+{
+    this->SubHeaderFontSize = InSubHeaderFontSize;
+}
+
+int32 UJAFGSettingsLocal::GetBodyFontSize(void) const
+{
+    return this->BodyFontSize;
+}
+
+void UJAFGSettingsLocal::SetBodyFontSize(const int32 InBodyFontSize)
+{
+    this->BodyFontSize = InBodyFontSize;
+}
+
+int32 UJAFGSettingsLocal::GetSmallFontSize(void) const
+{
+    return this->SmallFontSize;
+}
+
+void UJAFGSettingsLocal::SetSmallFontSize(const int32 InSmallFontSize)
+{
+    this->SmallFontSize = InSmallFontSize;
+}
+
+int32 UJAFGSettingsLocal::GetTinyFontSize(void) const
+{
+    return this->TinyFontSize;
+}
+
+void UJAFGSettingsLocal::SetTinyFontSize(const int32 InTinyFontSize)
+{
+    this->TinyFontSize = InTinyFontSize;
 }

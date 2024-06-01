@@ -37,7 +37,7 @@ private:
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true"))
     TObjectPtr<UJAFGButton> Button_Root;
 
-    UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true"))
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true", OptionalWidget = "true"))
     TObjectPtr<UJAFGTextBlock> Text_Content;
 
     UFUNCTION()

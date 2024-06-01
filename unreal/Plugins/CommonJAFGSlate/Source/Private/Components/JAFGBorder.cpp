@@ -10,7 +10,7 @@ UJAFGBorder::UJAFGBorder(const FObjectInitializer& ObjectInitializer) : Super(Ob
     return;
 }
 
-void UJAFGBorder::UpdateBrushWithSetColorScheme(void)
+void UJAFGBorder::UpdateComponentWithTheirScheme(void)
 {
     if (this->ColorScheme == EJAFGColorScheme::DontCare)
     {

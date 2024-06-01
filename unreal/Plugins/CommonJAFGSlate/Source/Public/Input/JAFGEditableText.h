@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "JAFGSlateStatics.h"
+#include "UsesJAFGColorScheme.h"
 #include "Components/EditableText.h"
 
 #include "JAFGEditableText.generated.h"
@@ -13,7 +15,7 @@
  * Instead, bind to the OnTrimmedTextChanged event.
  */
 UCLASS(Blueprintable)
-class COMMONJAFGSLATE_API UJAFGEditableText : public UEditableText
+class COMMONJAFGSLATE_API UJAFGEditableText : public UEditableText, public IUsesJAFGColorScheme
 {
     GENERATED_BODY()
 
@@ -26,6 +28,17 @@ public:
 
     /** @param InMaxSize The max size allowed. -1 for engine maximum. */
     void SetMaxSize(int32 InMaxSize);
+
+    // IUserJAFGColorScheme interface
+    virtual void UpdateComponentWithTheirScheme(void) override;
+    // ~IUserJAFGColorScheme interface
+
+    FORCEINLINE auto SetColorScheme(const EJAFGFontSize::Type InColorScheme) -> void { this->ColorScheme = InColorScheme; }
+
+protected:
+
+    UPROPERTY(EditInstanceOnly, BlueprintReadOnly)
+    TEnumAsByte<EJAFGFontSize::Type> ColorScheme = EJAFGFontSize::DontCare;
 
 private:
 

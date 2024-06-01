@@ -131,24 +131,106 @@ public:
     inline static constexpr FColor DefaultPrimaryColorAlphaMid  = FColor(  20,  20,  20, 170 );
     inline static constexpr FColor DefaultPrimaryColorAlphaLess = FColor(  20,  20,  20, 210 );
     inline static constexpr FColor DefaultSecondaryColor        = FColor(  60,  60,  60, 255 );
-    inline static constexpr FColor DefaultAddedSubMenuColor     = FColor(   0,   0,   0,  25 );
+
+    UFUNCTION()
+    float GetHeavyBlurStrength( /* void */ ) const;
+    UFUNCTION()
+    void SetHeavyBlurStrength(const float InHeavyBlurStrength);
+
+    UFUNCTION()
+    float GetMediumBlurStrength( /* void */ ) const;
+    UFUNCTION()
+    void SetMediumBlurStrength(const float InMediumBlurStrength);
+
+    UFUNCTION()
+    float GetLightBlurStrength( /* void */ ) const;
+    UFUNCTION()
+    void SetLightBlurStrength(const float InLightBlurStrength);
+
+    inline static constexpr float DefaultHeavyBlurStrength  = 4.0f;
+    inline static constexpr float DefaultMediumBlurStrength = 2.5f;
+    inline static constexpr float DefaultLightBlurStrength  = 1.0f;
+
+    UFUNCTION()
+    int32 GetGargantuanHeaderFontSize( /* void */ ) const;
+    UFUNCTION()
+    void SetGargantuanHeaderFontSize(const int32 InGargantuanHeaderFontSize);
+
+    UFUNCTION()
+    int32 GetHeaderFontSize( /* void */ ) const;
+    UFUNCTION()
+    void SetHeaderFontSize(const int32 InHeaderFontSize);
+
+    UFUNCTION()
+    int32 GetSubHeaderFontSize( /* void */ ) const;
+    UFUNCTION()
+    void SetSubHeaderFontSize(const int32 InSubHeaderFontSize);
+
+    UFUNCTION()
+    int32 GetBodyFontSize( /* void */ ) const;
+    UFUNCTION()
+    void SetBodyFontSize(const int32 InBodyFontSize);
+
+    UFUNCTION()
+    int32 GetSmallFontSize( /* void */ ) const;
+    UFUNCTION()
+    void SetSmallFontSize(const int32 InSmallFontSize);
+
+    UFUNCTION()
+    int32 GetTinyFontSize( /* void */ ) const;
+    UFUNCTION()
+    void SetTinyFontSize(const int32 InTinyFontSize);
+
+    inline static constexpr int32 DefaultGargantuanHeaderFontSize = 48;
+    inline static constexpr int32 DefaultHeaderFontSize           = 36;
+    inline static constexpr int32 DefaultSubHeaderFontSize        = 24;
+    inline static constexpr int32 DefaultBodyFontSize             = 16;
+    inline static constexpr int32 DefaultSmallFontSize            = 12;
+    inline static constexpr int32 DefaultTinyFontSize             =  8;
 
 private:
 
     UPROPERTY(Config)
-    FColor PrimaryColor          = UJAFGSettingsLocal::DefaultPrimaryColor;
+    FColor PrimaryColor            = UJAFGSettingsLocal::DefaultPrimaryColor;
 
     UPROPERTY(Config)
-    FColor PrimaryColorAlphaMax  = UJAFGSettingsLocal::DefaultPrimaryColorAlphaMax;
+    FColor PrimaryColorAlphaMax    = UJAFGSettingsLocal::DefaultPrimaryColorAlphaMax;
 
     UPROPERTY(Config)
-    FColor PrimaryColorAlphaMid  = UJAFGSettingsLocal::DefaultPrimaryColorAlphaMid;
+    FColor PrimaryColorAlphaMid    = UJAFGSettingsLocal::DefaultPrimaryColorAlphaMid;
 
     UPROPERTY(Config)
-    FColor PrimaryColorAlphaLess = UJAFGSettingsLocal::DefaultPrimaryColorAlphaLess;
+    FColor PrimaryColorAlphaLess   = UJAFGSettingsLocal::DefaultPrimaryColorAlphaLess;
 
     UPROPERTY(Config)
-    FColor SecondaryColor        = UJAFGSettingsLocal::DefaultSecondaryColor;
+    FColor SecondaryColor          = UJAFGSettingsLocal::DefaultSecondaryColor;
+
+    UPROPERTY(Config)
+    float HeavyBlurStrength        = UJAFGSettingsLocal::DefaultHeavyBlurStrength;
+
+    UPROPERTY(Config)
+    float MediumBlurStrength       = UJAFGSettingsLocal::DefaultMediumBlurStrength;
+
+    UPROPERTY(Config)
+    float LightBlurStrength        = UJAFGSettingsLocal::DefaultLightBlurStrength;
+
+    UPROPERTY(Config)
+    int32 GargantuanHeaderFontSize = UJAFGSettingsLocal::DefaultGargantuanHeaderFontSize;
+
+    UPROPERTY(Config)
+    int32 HeaderFontSize           = UJAFGSettingsLocal::DefaultHeaderFontSize;
+
+    UPROPERTY(Config)
+    int32 SubHeaderFontSize        = UJAFGSettingsLocal::DefaultSubHeaderFontSize;
+
+    UPROPERTY(Config)
+    int32 BodyFontSize             = UJAFGSettingsLocal::DefaultBodyFontSize;
+
+    UPROPERTY(Config)
+    int32 SmallFontSize            = UJAFGSettingsLocal::DefaultSmallFontSize;
+
+    UPROPERTY(Config)
+    int32 TinyFontSize             = UJAFGSettingsLocal::DefaultTinyFontSize;
 
     /**
      * From the CommonJAFGSlate plugin. All JAFG slate widgets will use this class to get their colors.

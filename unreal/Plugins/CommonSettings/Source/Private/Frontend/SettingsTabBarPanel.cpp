@@ -64,7 +64,11 @@ void USettingsTabBarPanel::OnApplyableSettingChanged(void)
 
 void USettingsTabBarPanel::DisallowApply(const FString& ChildIdentifier)
 {
-    this->ChildrenThatDisallowApply.Add(ChildIdentifier);
+    if (this->ChildrenThatDisallowApply.Contains(ChildIdentifier) == false)
+    {
+        this->ChildrenThatDisallowApply.Add(ChildIdentifier);
+    }
+
     this->UpdateApplyButtonState();
 
     return;
@@ -123,6 +127,7 @@ void USettingsTabBarPanel::CreateCollectionSubPage(const UGameSettingCollection*
 
     UJAFGTextBlock* CollectionHeader = this->WidgetTree->ConstructWidget<UJAFGTextBlock>();
     CollectionHeader->SetText(InCollection->GetDisplayName());
+    CollectionHeader->SetColorScheme(EJAFGFontSize::Header);
     VBox->AddChild(CollectionHeader);
 
     for (UGameSetting* Setting : InCollection->GetChildSettings())

@@ -7,6 +7,7 @@
 
 #include "GameSettingListEntry_Scalar.generated.h"
 
+class UJAFGEnhancedButton;
 class UGameSettingValueScalar;
 class UJAFGSlider;
 class UJAFGTextBlock;
@@ -43,17 +44,21 @@ protected:
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
     TObjectPtr<UJAFGTextBlock> Text_SettingValue;
 
+    UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
+    TObjectPtr<UJAFGEnhancedButton> Button_ResetToDefault;
+
     UFUNCTION()
     void OnSliderValueChanged(const float Value);
 
     UFUNCTION(BlueprintImplementableEvent)
-    void OnValueChanged(const float Value);
+    void OnValueChanged(const float Value, const float NormalizedValue);
 
-    UFUNCTION(BlueprintImplementableEvent)
-    void OnDefaultValueChanged(const float DefaultValue);
+    UFUNCTION()
+    void OnResetToDefaultClicked( /* void */ );
+    void UpdateResetToDefaultButton(void) const;
 
 private:
 
     UPROPERTY()
-    TObjectPtr<UGameSettingValueScalar> Setting;
+    TObjectPtr<UGameSettingValueScalar> Setting = nullptr;
 };

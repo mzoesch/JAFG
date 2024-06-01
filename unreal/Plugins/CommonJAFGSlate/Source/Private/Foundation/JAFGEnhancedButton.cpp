@@ -16,12 +16,21 @@ void UJAFGEnhancedButton::NativeConstruct(void)
 
 void UJAFGEnhancedButton::SetContent(const FText& InContent) const
 {
-    this->Text_Content->SetText(InContent);
+    if (this->Text_Content)
+    {
+        this->Text_Content->SetText(InContent);
+    }
 }
 
 FText UJAFGEnhancedButton::GetContent(void) const
 {
-    return this->Text_Content->GetText();
+    if (this->Text_Content)
+    {
+        return this->Text_Content->GetText();
+    }
+
+    LOG_WARNING(LogCommonSlate, "Tried to access non-existent optional text block in enhanced button.")
+    return FText();
 }
 
 /* Do NOT convert to const method, as this is a Rider IDEA false positive error. */

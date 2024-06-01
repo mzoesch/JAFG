@@ -6,6 +6,7 @@
 #include "SettingsData/GameSettingCollections.h"
 #include "SettingsData/GameSettingValueScalar.h"
 
+// ReSharper disable once CppMemberFunctionMayBeStatic
 UGameSettingCollection* UJAFGGameSettingRegistry::InitializeAudioSettings(UJAFGLocalPlayer* InOwningPlayer)
 {
     UGameSettingCollection* Screen = NewObject<UGameSettingCollection>();

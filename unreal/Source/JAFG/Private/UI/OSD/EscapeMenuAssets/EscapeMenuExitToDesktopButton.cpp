@@ -6,7 +6,8 @@
 
 UEscapeMenuExitToDesktopButton::UEscapeMenuExitToDesktopButton(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-    this->Message  = "Are you sure you want to exit to desktop?";
+    this->Header   = TEXT("Confirm Exit");
+    this->Message  = TEXT("Are you sure you want to exit to desktop?");
     this->bIsYesNo = true;
 
     return;

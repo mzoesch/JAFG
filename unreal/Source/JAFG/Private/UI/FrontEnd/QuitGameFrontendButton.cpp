@@ -6,7 +6,8 @@
 
 UQuitGameFrontendButton::UQuitGameFrontendButton(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-    this->Message  = TEXT("Are you sure you want to quit the game?");
+    this->Header   = TEXT("Confirm Exit");
+    this->Message  = TEXT("Are you sure you want to quit?");
     this->bIsYesNo = true;
 
     return;

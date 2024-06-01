@@ -13,11 +13,11 @@ UJAFGUserWidget::UJAFGUserWidget(const FObjectInitializer& ObjectInitializer) : 
 void UJAFGUserWidget::NativeConstruct(void)
 {
     Super::NativeConstruct();
-    this->UpdateTreeBrushes();
+    this->UpdateTreeSchemes();
     return;
 }
 
-void UJAFGUserWidget::UpdateTreeBrushes(void) const
+void UJAFGUserWidget::UpdateTreeSchemes(void) const
 {
     TArray<UWidget*> Children; this->WidgetTree->GetChildWidgets(this->WidgetTree->RootWidget, Children);
 
@@ -25,7 +25,7 @@ void UJAFGUserWidget::UpdateTreeBrushes(void) const
     {
         if (IUsesJAFGColorScheme* ColorSchemeUser = Cast<IUsesJAFGColorScheme>(Child); ColorSchemeUser)
         {
-            ColorSchemeUser->UpdateBrushWithSetColorScheme();
+            ColorSchemeUser->UpdateComponentWithTheirScheme();
         }
     }
 

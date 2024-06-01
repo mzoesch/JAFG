@@ -4,7 +4,9 @@
 
 #include "Components/JAFGSlider.h"
 #include "Components/JAFGTextBlock.h"
+#include "Foundation/JAFGEnhancedButton.h"
 #include "SettingsData/GameSettingValueScalar.h"
+#include "Frontend/SettingsTabBarPanel.h"
 
 UGameSettingListEntry_Scalar::UGameSettingListEntry_Scalar(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -17,6 +19,8 @@ void UGameSettingListEntry_Scalar::NativeConstruct(void)
 
     this->Slider_SettingValue->OnValueChanged.AddDynamic(this, &UGameSettingListEntry_Scalar::OnSliderValueChanged);
 
+    this->Button_ResetToDefault->OnClicked().AddUObject(this, &UGameSettingListEntry_Scalar::OnResetToDefaultClicked);
+
     return;
 }
 
@@ -24,7 +28,7 @@ void UGameSettingListEntry_Scalar::PassDataToWidget(const FWidgetPassData& Uncas
 {
     Super::PassDataToWidget(UncastedData);
 
-    CAST_PASSED_DATA(FGameSettingListEntryPassData_Scalar)
+    CAST_PASSED_DATA_YESNO(FGameSettingListEntryPassData_Scalar, false)
     {
         this->Setting = Data->Scalar;
     }
@@ -33,8 +37,10 @@ void UGameSettingListEntry_Scalar::PassDataToWidget(const FWidgetPassData& Uncas
     {
         this->Slider_SettingValue->SetValue(this->Setting->GetDefaultValue().GetValue());
         this->Text_SettingValue->SetText(this->Setting->GetFormattedText());
-        this->OnValueChanged(this->Setting->GetDefaultValue().GetValue());
+        this->OnValueChanged(this->Setting->GetDefaultValue().GetValue(), this->Setting->GetValueNormalized());
     }
+
+    this->UpdateResetToDefaultButton();
 
     return;
 }
@@ -47,11 +53,46 @@ void UGameSettingListEntry_Scalar::OnSliderValueChanged(const float Value)
         return;
     }
 
-    this->Setting->SetValue(Value, EGameSettingChangeReason::Change);
+    this->Setting->SetValue(this->Setting->TransformRangeToValue(Value), EGameSettingChangeReason::Change);
 
     this->Text_SettingValue->SetText(this->Setting->GetFormattedText());
 
-    this->OnValueChanged(Value); //this->Setting->GetValue());
+    this->OwningPanel->OnApplyableSettingChanged();
 
+    this->UpdateResetToDefaultButton();
+    this->OnValueChanged(this->Setting->GetValue(), this->Setting->GetValueNormalized());
+
+    return;
+}
+
+void UGameSettingListEntry_Scalar::OnResetToDefaultClicked(void)
+{
+    LOG_DISPLAY(
+        LogGameSettings,
+        "Resetting [%s] scalar setting to default [%f].",
+        *this->Setting->GetIdentifier(), this->Setting->GetDefaultValue().GetValue()
+    )
+
+    this->Setting->ResetToDefault();
+
+    this->Text_SettingValue->SetText(this->Setting->GetFormattedText());
+
+    this->OwningPanel->OnApplyableSettingChanged();
+
+    this->UpdateResetToDefaultButton();
+    this->OnValueChanged(this->Setting->GetValue(), this->Setting->GetValueNormalized());
+
+    return;
+}
+
+void UGameSettingListEntry_Scalar::UpdateResetToDefaultButton(void) const
+{
+    if (this->Setting->GetDefaultValue().IsSet() == false)
+    {
+        this->Button_ResetToDefault->SetIsEnabled(false);
+        return;
+    }
+
+    this->Button_ResetToDefault->SetIsEnabled(this->Setting->GetValue() != this->Setting->GetDefaultValue().GetValue());
     return;
 }

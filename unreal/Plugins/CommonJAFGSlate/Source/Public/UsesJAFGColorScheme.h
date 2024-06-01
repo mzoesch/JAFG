@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "JAFGSlateStatics.h"
 #include "UObject/Interface.h"
 
 #include "UsesJAFGColorScheme.generated.h"
@@ -24,5 +23,5 @@ class COMMONJAFGSLATE_API IUsesJAFGColorScheme
 
 public:
 
-    virtual void UpdateBrushWithSetColorScheme(void) PURE_VIRTUAL(IUsesJAFGColorScheme::UpdateBrushWithSetColorScheme)
+    virtual void UpdateComponentWithTheirScheme(void) PURE_VIRTUAL(IUsesJAFGColorScheme::UpdateComponentWithTheirScheme)
 };
