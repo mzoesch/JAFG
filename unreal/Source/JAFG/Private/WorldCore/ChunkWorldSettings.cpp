@@ -2,6 +2,8 @@
 
 #include "WorldCore/ChunkWorldSettings.h"
 
+#include "Player/WorldPlayerController.h"
+
 ULocalChunkWorldSettings::ULocalChunkWorldSettings(void) : Super()
 {
     this->LocalChunkType = EChunkType::Greedy;
@@ -22,6 +24,64 @@ bool ULocalChunkWorldSettings::ShouldCreateSubsystem(UObject* Outer) const
     }
 
     return true;
+}
+
+UServerWorldSettingsReplicationComponent::UServerWorldSettingsReplicationComponent(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+{
+    return;
+}
+
+void UServerWorldSettingsReplicationComponent::BeginPlay(void)
+{
+    Super::BeginPlay();
+
+    if (UNetStatics::IsSafeClient(this))
+    {
+        LOG_DISPLAY(LogChunkMisc, "Requesting server world settings to generate world.")
+        this->RequestRepData_ServerRPC();
+    }
+
+    return;
+}
+
+void UServerWorldSettingsReplicationComponent::RequestRepData_ServerRPC_Implementation(void)
+{
+    this->Rep_Settings(this->GetWorld()->GetSubsystem<UServerChunkWorldSettings>());
+}
+
+void UServerWorldSettingsReplicationComponent::Rep_Settings(const UServerChunkWorldSettings* ServerChunkWorldSettings)
+{
+    if (UNetStatics::IsSafeClient(this))
+    {
+        LOG_FATAL(LogChunkMisc, "Client cannot be replicating server world settings.")
+        return;
+    }
+
+    jcheck( ServerChunkWorldSettings )
+
+    FReplicatedServerWorldSettings ReplicatedServerWorldSettings;
+    ReplicatedServerWorldSettings.ChunksAboveZero = ServerChunkWorldSettings->ChunksAboveZero;
+
+    this->RepSettings_ClientRPC(ReplicatedServerWorldSettings);
+
+    LOG_VERBOSE(LogChunkMisc, "Replicated server world settings to client %s.", *Cast<AWorldPlayerController>(this->GetOwner())->GetDisplayName())
+
+    return;
+}
+
+void UServerWorldSettingsReplicationComponent::RepSettings_ClientRPC_Implementation(const FReplicatedServerWorldSettings& ReplicatedServerWorldSettings)
+{
+    LOG_DISPLAY(LogChunkMisc, "Received server world settings replication. Chunk generation may start shortly.")
+
+    ULocalChunkWorldSettings* LocalChunkWorldSettings = this->GetWorld()->GetSubsystem<ULocalChunkWorldSettings>();
+    jcheck( LocalChunkWorldSettings )
+
+    LocalChunkWorldSettings->ReplicatedChunksAboveZero = ReplicatedServerWorldSettings.ChunksAboveZero;
+    LOG_VERBOSE(LogChunkMisc, "Chunks above zero: %d", LocalChunkWorldSettings->ReplicatedChunksAboveZero)
+
+    this->bHasReplicatedSettings = true;
+
+    return;
 }
 
 UServerChunkWorldSettings::UServerChunkWorldSettings(void) : Super()

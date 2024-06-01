@@ -25,6 +25,8 @@ public:
     virtual auto Exit(void) -> void   override;
     // ~FRunnable interface
 
+    FORCEINLINE auto IsConnectedAndReady(void) const -> bool { return this->bSendValidation; }
+
 private:
 
     // FRunnable members
@@ -58,6 +60,7 @@ private:
      * Transmitter who we are.
      */
     auto SendValidation(void) const -> bool;
+    bool bSendValidation = false;
     auto Emit(const TArray<uint8>& InBytes) const -> bool;
 
     auto IsConnected(void) const -> bool;
@@ -65,7 +68,7 @@ private:
     FTCPHyperlaneWorkerEventSignature   OnConnectedDelegate;
     FTCPHyperlaneWorkerEventSignature   OnDisconnectedDelegate;
     FTCPHyperlaneWorkerMessageSignature OnBytesReceivedDelegate;
-    auto OnConnectedDelegateHandler(void) const -> void;
+    auto OnConnectedDelegateHandler(void) -> void;
     auto OnDisconnectedDelegateHandler(void) -> void;
     /** @note This method will sequentially cut down the bytes. Copy the in-array if still needed after this method. */
     auto OnBytesReceivedDelegateHandler(TArray<uint8>& InBytes) const -> void;

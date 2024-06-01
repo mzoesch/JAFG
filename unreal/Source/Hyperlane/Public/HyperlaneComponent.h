@@ -34,6 +34,8 @@ public:
 
     FORCEINLINE auto IsLocalController(void) const -> bool { return Cast<APlayerController>(this->GetOwner())->IsLocalController(); }
 
+    auto IsConnectedAndReady(void) const -> bool;
+
     /** Called on the server if a Hyperlane Worker was found that matches this UHyperlaneComponent#HyperlaneIdentifier. */
     auto SetHyperlaneWorkerAddress(const FClientAddress& InAddress) -> void;
     auto GetHyperlaneWorkerAddress(void) const -> FClientAddress;

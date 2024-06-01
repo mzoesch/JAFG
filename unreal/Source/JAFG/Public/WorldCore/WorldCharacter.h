@@ -35,6 +35,7 @@ protected:
 
     // AActor implementation
     virtual void BeginPlay(void) override;
+    virtual void Tick(const float DeltaSeconds) override;
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
     // ~AActor implementation
 
@@ -77,11 +78,17 @@ protected:
     float ZoomedFieldOfView           = 60.0f;
     float DefaultOrthoWidth           = 8192.0f;
 
+    FVector CurrentVelocity           = FVector::ZeroVector;
+    float   CurrentSpeed              = 0.0f;
+
+public:
+
+    FORCEINLINE auto GetCurrentVelocity(void) const -> FVector { return this->CurrentVelocity; }
+    FORCEINLINE auto GetCurrentSpeed(void) const -> float { return this->CurrentSpeed; }
+
 #pragma endregion Member Variables
 
 #pragma region Enhanced Input
-
-public:
 
     //////////////////////////////////////////////////////////////////////////
     // Enhanced Input Extern Events

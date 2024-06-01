@@ -333,7 +333,7 @@ bool FHyperlaneWorker::IsConnected(void) const
     return this->Socket != nullptr && this->Socket->GetConnectionState() == ESocketConnectionState::SCS_Connected;
 }
 
-void FHyperlaneWorker::OnConnectedDelegateHandler(void) const
+void FHyperlaneWorker::OnConnectedDelegateHandler(void)
 {
     WorkerStatics::RunLambdaOnBackGroundThread( [this] (void)
     {
@@ -342,6 +342,7 @@ void FHyperlaneWorker::OnConnectedDelegateHandler(void) const
         {
             if (this->SendValidation())
             {
+                this->bSendValidation = true;
                 return;
             }
 

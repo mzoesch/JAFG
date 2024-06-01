@@ -11,8 +11,19 @@
 
 JAFG_VOID
 
+class UServerWorldSettingsReplicationComponent;
+class UServerChunkWorldSettings;
 class AWorldCharacter;
 class AEditorChunkWorldSettings;
+
+USTRUCT()
+struct FReplicatedServerWorldSettings
+{
+    GENERATED_BODY()
+
+    UPROPERTY( /* Replicated */ )
+    int32 ChunksAboveZero = -1;
+};
 
 /**
  * Contains general settings for the chunk world that only apply to the local player.
@@ -34,8 +45,41 @@ public:
     EChunkType::Type LocalChunkType;
     FORCEINLINE auto GetLocalChunkType(void) const -> EChunkType::Type { return this->LocalChunkType; }
 
-    // TODO Ofc make the replication for this.
-    int ReplicatedChunksAboveZero = 4;
+    FORCEINLINE auto GetReplicatedChunksAboveZero(void) const -> int32 { return this->ReplicatedChunksAboveZero; }
+
+private:
+
+    friend UServerWorldSettingsReplicationComponent;
+
+    int32 ReplicatedChunksAboveZero = -1;
+};
+
+UCLASS(NotBlueprintable)
+class UServerWorldSettingsReplicationComponent : public UActorComponent
+{
+    GENERATED_BODY()
+
+public:
+
+    explicit UServerWorldSettingsReplicationComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+    // UActorComponent implementation
+    virtual void BeginPlay(void) override;
+    // ~UActorComponent implementation
+
+    UFUNCTION(Server, Reliable)
+    void RequestRepData_ServerRPC( /* void */ );
+    UFUNCTION(Client, Reliable)
+    void RepSettings_ClientRPC(const FReplicatedServerWorldSettings& ReplicatedServerWorldSettings);
+    /** Call from authority to share specific world configs that clients must know. */
+    void Rep_Settings(const UServerChunkWorldSettings* ServerChunkWorldSettings);
+
+    bool HasReplicatedSettings(void) const { return this->bHasReplicatedSettings; }
+
+private:
+
+    /** Only meaningful on a client. */
+    bool bHasReplicatedSettings = false;
 };
 
 /**
@@ -62,7 +106,7 @@ public:
 
     // General
     //////////////////////////////////////////////////////////////////////////
-    EWorldGenerationType::Type WorldGenerationType  = EWorldGenerationType::Superflat;
+    EWorldGenerationType::Type WorldGenerationType  = EWorldGenerationType::Default;
     int                        ChunksAboveZero      = 4;
     float                      FakeHeightMultiplier = 0.6f;
     uint64                     Seed                 = 0;
@@ -129,8 +173,8 @@ class JAFG_API AEditorChunkWorldSettings : public AWorldSettings
     GENERATED_BODY()
 
 public:
-
     explicit AEditorChunkWorldSettings(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
 
     //////////////////////////////////////////////////////////////////////////
     // Settings - Player

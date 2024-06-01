@@ -33,13 +33,16 @@ void UChunkGenerationSubsystem::OnWorldBeginPlay(UWorld& InWorld)
     if (UNetStatics::IsSafeDedicatedServer(&InWorld) == false)
     {
         this->LocalChunkWorldSettings = InWorld.GetSubsystem<ULocalChunkWorldSettings>();
-        check( this->LocalChunkWorldSettings )
+        jcheck( this->LocalChunkWorldSettings )
     }
 
     if (UNetStatics::IsSafeServer(&InWorld))
     {
         this->ServerChunkWorldSettings = InWorld.GetSubsystem<UServerChunkWorldSettings>();
-        check( this->ServerChunkWorldSettings )
+        jcheck( this->ServerChunkWorldSettings )
+
+        this->bHasReceivedReplicatedServerChunkWorldSettings = true;
+        this->CopiedChunksAboveZero = this->ServerChunkWorldSettings->ChunksAboveZero;
     }
 
     if (UNetStatics::IsSafeClient(&InWorld))
@@ -47,10 +50,15 @@ void UChunkGenerationSubsystem::OnWorldBeginPlay(UWorld& InWorld)
         this->bInClientMode = true;
     }
 
-    this->CopiedChunksAboveZero =
-        this->LocalChunkWorldSettings
-            ? this->LocalChunkWorldSettings->ReplicatedChunksAboveZero
-            : this->ServerChunkWorldSettings->ChunksAboveZero;
+#if WITH_EDITOR
+    if (GEditor->IsSimulateInEditorInProgress())
+    {
+        this->bHasReceivedReplicatedServerChunkWorldSettings = true;
+
+        check( this->ServerChunkWorldSettings )
+        this->CopiedChunksAboveZero = this->ServerChunkWorldSettings->ChunksAboveZero;
+    }
+#endif /* WITH_EDITOR */
 
     return;
 }
@@ -58,6 +66,32 @@ void UChunkGenerationSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 void UChunkGenerationSubsystem::MyTick(const float DeltaTime)
 {
     Super::MyTick(DeltaTime);
+
+    if (this->bHasReceivedReplicatedServerChunkWorldSettings == false)
+    {
+        if (
+            UServerWorldSettingsReplicationComponent* Component =
+            GEngine->GetFirstLocalPlayerController(this->GetWorld())->GetComponentByClass<UServerWorldSettingsReplicationComponent>();
+            Component == nullptr || Component->HasReplicatedSettings() == false
+        )
+        {
+            return;
+        }
+
+        jcheck( this->LocalChunkWorldSettings )
+
+        this->CopiedChunksAboveZero = this->LocalChunkWorldSettings->GetReplicatedChunksAboveZero();
+        jcheck( this->CopiedChunksAboveZero > 0 )
+
+        this->bHasReceivedReplicatedServerChunkWorldSettings = true;
+
+        LOG_DISPLAY(
+            LogChunkGeneration,
+            "Received server world settings replication. Chunk generation is now ready. Waiting for validation subsystem."
+        )
+    }
+
+    checkSlow( this->CopiedChunksAboveZero > 0 )
 
     // Unloading
     //////////////////////////////////////////////////////////////////////////
@@ -207,7 +241,7 @@ void UChunkGenerationSubsystem::SafeLoadClientVerticalChunkAsync(const TArray<FC
 #if WITH_EDITOR
     if (UNetStatics::IsSafeClient(this) == false)
     {
-        LOG_FATAL(LogChunkGeneration, "Called on a client instance. Dissallowed.")
+        LOG_FATAL(LogChunkGeneration, "Called on a non client instance. Dissallowed.")
         return;
     }
 #endif /* WITH_EDITOR */

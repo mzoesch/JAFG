@@ -11,6 +11,7 @@
 
 #include "WorldPlayerController.generated.h"
 
+class UServerWorldSettingsReplicationComponent;
 JAFG_VOID
 
 /** The time in seconds after this AActor creation, when this strike was marked. */
@@ -49,10 +50,13 @@ protected:
     // ~UObject implementation
 
     UPROPERTY()
-    TObjectPtr<UMyHyperlaneComponent> HyperlaneComponent;
+    TObjectPtr<UMyHyperlaneComponent> HyperlaneComponent = nullptr;
 
     UPROPERTY()
-    TObjectPtr<UChatComponent> ChatComponent;
+    TObjectPtr<UChatComponent> ChatComponent = nullptr;
+
+    UPROPERTY()
+    TObjectPtr<UServerWorldSettingsReplicationComponent> ServerWorldSettingsReplicationComponent = nullptr;
 
 #pragma region Enhanced Input
 
@@ -201,6 +205,8 @@ public:
     //////////////////////////////////////////////////////////////////////////
     // Public Getters
     //////////////////////////////////////////////////////////////////////////
+
+    auto HasReceivedServerWorldSettings(void) const -> bool;
 
     FORCEINLINE auto GetWorldPlayerState(void) const -> AWorldPlayerState* { return this->GetPlayerState<AWorldPlayerState>(); }
     FORCEINLINE auto GetDisplayName(void) const -> FString { return this->GetWorldPlayerState()->GetPlayerName(); }

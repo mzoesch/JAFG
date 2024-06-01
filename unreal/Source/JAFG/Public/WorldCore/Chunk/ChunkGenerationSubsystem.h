@@ -47,6 +47,8 @@ public:
     virtual auto MyTick(const float DeltaTime) -> void override;
     // ~UJAFGTickableWorldSubsystem implementation
 
+    FORCEINLINE auto IsReady(void) const -> bool { return this->bHasReceivedReplicatedServerChunkWorldSettings; }
+
     FORCEINLINE auto GenerateVerticalChunkAsync(const FChunkKey2& ChunkKey) -> void { this->VerticalChunkQueue.Enqueue(ChunkKey); }
     FORCEINLINE auto GetVerticalChunkQueue(void) -> const TQueue<FChunkKey2>& { return this->VerticalChunkQueue; }
     FORCEINLINE auto ClearVerticalChunkQueue(void) -> void { this->VerticalChunkQueue.Empty(); }
@@ -103,8 +105,9 @@ private:
     /** True if this subsystem was spawned in a client UWorld. */
           bool  bInClientMode                      = false;
 
+    bool bHasReceivedReplicatedServerChunkWorldSettings = false;
     /** Copied so we do not have to deal with checking the local and server config every time. */
-    int CopiedChunksAboveZero = 0;
+    int CopiedChunksAboveZero = -1;
 
     /** Copied for faster access. */
     UPROPERTY()

@@ -10,6 +10,7 @@
 #include "Network/MyHyperlaneComponent.h"
 #include "SettingsData/JAFGInputSubsystem.h"
 #include "UI/WorldHUD.h"
+#include "WorldCore/ChunkWorldSettings.h"
 #include "WorldCore/WorldCharacter.h"
 #include "WorldCore/WorldGameMode.h"
 #include "WorldCore/WorldPawn.h"
@@ -25,8 +26,12 @@
 
 AWorldPlayerController::AWorldPlayerController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-    this->HyperlaneComponent = CreateDefaultSubobject<UMyHyperlaneComponent>(TEXT("HyperlaneComponent"));
-    this->ChatComponent      = CreateDefaultSubobject<UChatComponent>(TEXT("ChatComponent"));
+    this->HyperlaneComponent                      =
+        CreateDefaultSubobject<UMyHyperlaneComponent>(TEXT("HyperlaneComponent"));
+    this->ChatComponent                           =
+        CreateDefaultSubobject<UChatComponent>(TEXT("ChatComponent"));
+    this->ServerWorldSettingsReplicationComponent =
+        CreateDefaultSubobject<UServerWorldSettingsReplicationComponent>(TEXT("ServerWorldSettingsReplicationComponent"));
 
     return;
 }
@@ -534,6 +539,11 @@ void AWorldPlayerController::TellServerThatClientIsReadyForCharacterSpawn_Server
 }
 
 #pragma endregion World Spawning
+
+bool AWorldPlayerController::HasReceivedServerWorldSettings(void) const
+{
+    return this->ServerWorldSettingsReplicationComponent->HasReplicatedSettings();
+}
 
 bool AWorldPlayerController::GetPredictedCharacterLocation(FVector& OutLocation) const
 {

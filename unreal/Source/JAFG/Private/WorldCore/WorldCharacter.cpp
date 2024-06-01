@@ -26,7 +26,7 @@
 AWorldCharacter::AWorldCharacter(const FObjectInitializer& ObjectInitializer) :
 Super(ObjectInitializer.SetDefaultSubobjectClass<UMyCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
-    this->PrimaryActorTick.bCanEverTick = false;
+    this->PrimaryActorTick.bCanEverTick = true;
 
     this->GetCapsuleComponent()->InitCapsuleSize(40.0f, 90.0f);
 
@@ -99,6 +99,16 @@ void AWorldCharacter::BeginPlay(void)
 
     /* Let components set the current defaults for the active camera. */
     this->OnCameraChangedEvent.Broadcast();
+
+    return;
+}
+
+void AWorldCharacter::Tick(const float DeltaSeconds)
+{
+    Super::Tick(DeltaSeconds);
+
+    this->CurrentVelocity = this->GetVelocity();
+    this->CurrentSpeed    = this->CurrentVelocity.Size();
 
     return;
 }

@@ -182,6 +182,52 @@ FString UDebugScreen::GetSectionClientCharacterLocation(void) const
     return FString::Printf(TEXT("XYZ: N/A [REASON: Unknown]"));
 }
 
+FString UDebugScreen::GetSectionClientCharacterVelocity(void) const
+{
+    bool bMeaningful = false;
+    FVector Velocity = FVector::ZeroVector;
+
+    if (const AWorldCharacter* Character = OWNING_CHARACTER)
+    {
+        Velocity = Character->GetCurrentVelocity();
+        bMeaningful = true;
+    }
+
+#if WITH_EDITOR
+    static FVector LastTickEditorViewportSimulationVelocity = FVector::ZeroVector;
+
+    checkSlow( GEditor )
+    if (GEditor->IsSimulateInEditorInProgress())
+    {
+        checkSlow(GCurrentLevelEditingViewportClient)
+        Velocity = GCurrentLevelEditingViewportClient->ViewTransformPerspective.GetLocation() - LastTickEditorViewportSimulationVelocity;
+        LastTickEditorViewportSimulationVelocity = GCurrentLevelEditingViewportClient->ViewTransformPerspective.GetLocation();
+        bMeaningful = true;
+    }
+#endif /* WITH_EDITOR */
+
+    if (bMeaningful == false)
+    {
+        return FString::Printf(TEXT("Velocity: N/A [REASON: Unknown]"));
+    }
+
+    FString X =
+        SANITIZED_FLT(Velocity.X * WorldStatics::UToJScale, 3)
+        FORMAT_SANITIZED_FLT(X, 3)
+    FString Y =
+        SANITIZED_FLT(Velocity.Y * WorldStatics::UToJScale, 3)
+        FORMAT_SANITIZED_FLT(Y, 3)
+    FString Z =
+        SANITIZED_FLT(Velocity.Z * WorldStatics::UToJScale, 3)
+        FORMAT_SANITIZED_FLT(Z, 3)
+
+    FString Speed =
+        SANITIZED_FLT(Velocity.Size() * WorldStatics::UToJScale, 2)
+        FORMAT_SANITIZED_FLT(Speed, 2)
+
+    return FString::Printf(TEXT("Vel: %s (%s / %s / %s)"), *Speed, *X, *Y, *Z);
+}
+
 FString UDebugScreen::GetSectionClientCharacterChunkLocation(void) const
 {
     FVector Location = FVector::ZeroVector;

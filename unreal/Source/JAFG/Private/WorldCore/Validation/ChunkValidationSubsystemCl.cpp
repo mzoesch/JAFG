@@ -2,6 +2,7 @@
 
 #include "WorldCore/Validation/ChunkValidationSubsystemCl.h"
 
+#include "Network/MyHyperlaneComponent.h"
 #include "Player/WorldPlayerController.h"
 #include "WorldCore/ChunkWorldSettings.h"
 #include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
@@ -63,13 +64,20 @@ void UChunkValidationSubsystemCl::MyTick(const float DeltaTime)
 {
     Super::MyTick(DeltaTime);
 
-    if (this->GetLocalPlayerController<AWorldPlayerController>() == nullptr)
+    const AWorldPlayerController* LocalController = this->GetLocalPlayerController<AWorldPlayerController>();
+
+    if (LocalController == nullptr)
+    {
+        return;
+    }
+
+    if (LocalController->GetComponentByClass<UMyHyperlaneComponent>()->IsConnectedAndReady() == false)
     {
         return;
     }
 
     FVector PredictedLocation;
-    if (this->GetLocalPlayerController<AWorldPlayerController>()->GetPredictedCharacterLocation(PredictedLocation) == false)
+    if (LocalController->GetPredictedCharacterLocation(PredictedLocation) == false)
     {
         return;
     }
@@ -82,6 +90,11 @@ void UChunkValidationSubsystemCl::MyTick(const float DeltaTime)
 void UChunkValidationSubsystemCl::LoadUnLoadChunks(const FVector& LocalPlayerLocation) const
 {
     constexpr int RenderDistance { 1 };
+
+    if (this->ChunkGenerationSubsystem->IsReady() == false)
+    {
+        return;
+    }
 
     if (this->ChunkGenerationSubsystem->GetPendingKillVerticalChunkQueue().IsEmpty() == false)
     {

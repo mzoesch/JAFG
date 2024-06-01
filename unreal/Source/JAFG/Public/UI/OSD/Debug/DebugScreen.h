@@ -66,6 +66,9 @@ protected:
     FString GetSectionClientCharacterLocation( /* void */ ) const;
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "JAFG|DebugScreen")
+    FString GetSectionClientCharacterVelocity( /* void */ ) const;
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "JAFG|DebugScreen")
     FString GetSectionClientCharacterChunkLocation( /* void */ ) const;
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "JAFG|DebugScreen")

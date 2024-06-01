@@ -57,6 +57,11 @@ void UHyperlaneComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
     return;
 }
 
+bool UHyperlaneComponent::IsConnectedAndReady(void) const
+{
+    return this->HyperlaneWorker->IsConnectedAndReady();
+}
+
 void UHyperlaneComponent::SetHyperlaneWorkerAddress(const FClientAddress& InAddress)
 {
     if (UNetStatics::IsServer(this) == false)
