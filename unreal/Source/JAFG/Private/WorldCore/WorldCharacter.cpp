@@ -12,6 +12,7 @@
 #include "Input/CustomInputNames.h"
 #include "SettingsData/JAFGInputSubsystem.h"
 #include "Player/WorldPlayerController.h"
+#include "WorldCore/Character/CharacterReach.h"
 #include "WorldCore/Chunk/CommonChunk.h"
 
 #define ENHANCED_INPUT_SUBSYSTEM                                       \
@@ -78,6 +79,10 @@ void AWorldCharacter::BeginPlay(void)
         return;
     }
 
+    this->CharacterReach = this->GetWorld()->SpawnActor<ACharacterReach>(ACharacterReach::StaticClass(), FTransform(), FActorSpawnParameters());
+    jcheck( this->CharacterReach )
+    this->CharacterReach->AttachToComponent(this->GetCapsuleComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+
     AWorldPlayerController* WorldPlayerController = Cast<AWorldPlayerController>(this->GetController());
 
     if (WorldPlayerController == nullptr)
@@ -116,6 +121,27 @@ void AWorldCharacter::Tick(const float DeltaSeconds)
         {
             this->CurrentDurationSameVoxelIsMined += DeltaSeconds;
         }
+
+        return;
+    }
+
+    ACommonChunk*             TargetedChunk;
+    FVector                   WorldHitLocation;
+    FVector_NetQuantizeNormal WorldNormalHitLocation;
+    FVoxelKey                 LocalHitVoxelKey;
+
+    this->GetPOVTargetedData(
+        TargetedChunk, WorldHitLocation, WorldNormalHitLocation, LocalHitVoxelKey,
+        false, this->GetCharacterReach()
+    );
+
+    if (TargetedChunk == nullptr)
+    {
+        this->CharacterReach->Update(false);
+    }
+    else
+    {
+        this->CharacterReach->Update(WorldHitLocation);
     }
 
     return;
@@ -511,6 +537,8 @@ void AWorldCharacter::OnTriggeredPrimary(const FInputActionValue& Value)
 
     this->CurrentDurationSameVoxelIsMined += this->GetWorld()->GetDeltaSeconds();
 
+    this->CharacterReach->Update(this->CurrentDurationSameVoxelIsMined / 0.5f);
+
     if (this->CurrentDurationSameVoxelIsMined >= 0.5f)
     {
         this->OnCompletedVoxelMinded_ServerRPC(true);
@@ -531,6 +559,7 @@ void AWorldCharacter::OnCompletedPrimary(const FInputActionValue& Value)
     this->OnCompletedVoxelMinded_ServerRPC(false);
     this->CurrentlyMiningLocalVoxel.Reset();
     this->CurrentDurationSameVoxelIsMined = 0.0f;
+    this->CharacterReach->Update(0.0f);
 
     return;
 }

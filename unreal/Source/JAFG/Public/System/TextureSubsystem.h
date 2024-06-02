@@ -11,6 +11,43 @@ JAFG_VOID
 
 class UVoxelSubsystem;
 
+namespace ESubNameSpacePaths
+{
+
+enum Type : uint8
+{
+    Invalid     = 0,
+    Voxels      = 1,
+    Blends      = 2,
+    Destruction = 3,
+};
+
+}
+
+FORCEINLINE FString LexToString(const ESubNameSpacePaths::Type InType)
+{
+    switch (InType)
+    {
+    case ESubNameSpacePaths::Voxels:
+    {
+        return TEXT("Voxels");
+    }
+    case ESubNameSpacePaths::Blends:
+    {
+        return TEXT("Blends");
+    }
+    case ESubNameSpacePaths::Destruction:
+    {
+        return TEXT("Destruction");
+    }
+    default:
+    {
+        LOG_FATAL(LogTextureSubsystem, "Invalid type was provided: %d.", static_cast<int32>(InType))
+        return TEXT("Invalid");
+    }
+    }
+}
+
 UCLASS(NotBlueprintable)
 class JAFG_API UTextureSubsystem : public UJAFGGameInstanceSubsystem
 {
@@ -32,20 +69,23 @@ public:
     // Common paths.
     //////////////////////////////////////////////////////////////////////////
 
-    FString GeneratedAssetsDirectoryRelative = "";
-    FString GeneratedAssetsDirectoryAbsolute = "";
+    FString GeneratedAssetsDirectoryRelative    = L"";
+    FString GeneratedAssetsDirectoryAbsolute    = L"";
 
-    FString RootAssetsDirectoryRelative      = "";
-    FString RootAssetsDirectoryAbsolute      = "";
+    FString RootAssetsDirectoryRelative         = L"";
+    FString RootAssetsDirectoryAbsolute         = L"";
 
-    FString RootTextureDirectoryRelative     = "";
-    FString RootTextureDirectoryAbsolute     = "";
+    FString RootTextureDirectoryRelative        = L"";
+    FString RootTextureDirectoryAbsolute        = L"";
 
-    FString VoxelTextureDirectoryRelative    = "";
-    FString VoxelTextureDirectoryAbsolute    = "";
+    FString VoxelTextureDirectoryRelative       = L"";
+    FString VoxelTextureDirectoryAbsolute       = L"";
 
-    FString BlendTextureDirectoryRelative    = "";
-    FString BlendTextureDirectoryAbsolute    = "";
+    FString BlendTextureDirectoryRelative       = L"";
+    FString BlendTextureDirectoryAbsolute       = L"";
+
+    auto CreatePath(const FString& InNameSpace, const ESubNameSpacePaths::Type InType) const -> FString;
+    auto CreatePathFile(const FString& InNameSpace, const ESubNameSpacePaths::Type InType, const FString& InName) const -> FString;
 
     //////////////////////////////////////////////////////////////////////////
     // Specific Textures.
@@ -72,24 +112,15 @@ public:
      * Will not load the actual textures or cache them.
      */
     auto LoadAllBlendTextureNames(void) const -> TArray<FString>;
+    auto LoadAllDestructionTextureNames(const FString& NameSpace) const -> TArray<FString>;
 
     /**
      * @return The texture associated with the blend name. If the texture is not found or failed to load, a placeholder
      *         texture failure will be returned. If the platform blocks the loading of the texture, nullptr will be
      *         returned.
      */
-                auto GetBlendTexture2D(const FString& BlendName) -> UTexture2D*;
-    FORCEINLINE auto GetSafeBlendTexture2D(const FString& BlendName) -> UTexture2D*
-    {
-        UTexture2D* Texture = this->GetBlendTexture2D(BlendName);
-        if (Texture == nullptr)
-        {
-            LOG_FATAL(LogTextureSubsystem, "Failed to load blend texture: %s", *BlendName)
-            return nullptr;
-        }
-
-        return Texture;
-    }
+    auto GetBlendTexture2D(const FString& BlendName) -> UTexture2D*;
+    auto GetSafeBlendTexture2D(const FString& BlendName) -> UTexture2D*;
 
     /** Will load all texture names for the given name space into memory. */
     auto LoadTextureNamesForNamespace(const FString& NameSpace) -> void;
@@ -106,6 +137,9 @@ public:
      *         nullptr will be returned.
      */
     UTexture2D* GetWorldTexture2D(const FString& NameSpace, const FString& TextureName);
+
+    UTexture2D* GetWorldDestructionTexture2D(const FString& NameSpace, const FString& TextureName);
+    UTexture2D* GetSafeWorldDestructionTexture2D(const FString& NameSpace, const FString& TextureName);
 
     //////////////////////////////////////////////////////////////////////////
     // MISC.

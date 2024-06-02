@@ -33,6 +33,9 @@ public:
     UPROPERTY()
     TArray<TObjectPtr<UMaterialInstanceDynamic>> MDynamicGroups;
 
+    UPROPERTY()
+    TObjectPtr<UMaterialInstanceDynamic> MDynamicDestruction;
+
 private:
 
     /**
@@ -61,6 +64,7 @@ private:
      *     A blend extension must always come after the normal extension if both are present.
      */
     void InitializeMaterials(void);
+    void InitializeDestructionMaterial(void);
 
     /**
      * All the blend texture names that where found at application boot-up.

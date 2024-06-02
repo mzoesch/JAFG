@@ -34,4 +34,7 @@ public:
 
     UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Material")
     const TSoftObjectPtr<UMaterialInterface> MOpaqueBlend;
+
+    UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Material")
+    const TSoftObjectPtr<UMaterialInterface> MDestruction;
 };

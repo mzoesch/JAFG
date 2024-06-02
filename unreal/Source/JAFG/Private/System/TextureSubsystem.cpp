@@ -68,6 +68,16 @@ void UTextureSubsystem::Deinitialize(void)
     return;
 }
 
+FString UTextureSubsystem::CreatePath(const FString& InNameSpace, const ESubNameSpacePaths::Type InType) const
+{
+    return this->RootTextureDirectoryAbsolute / InNameSpace / LexToString(InType);
+}
+
+FString UTextureSubsystem::CreatePathFile(const FString& InNameSpace, const ESubNameSpacePaths::Type InType, const FString& InName) const
+{
+    return FString::Printf(TEXT("%s.png"), *(this->CreatePath(InNameSpace, InType) / InName));
+}
+
 UTexture2D* UTextureSubsystem::GetTexture2D(const FAccumulated& Accumulated)
 {
     check( this->VoxelSubsystem )
@@ -141,6 +151,30 @@ TArray<FString> UTextureSubsystem::LoadAllBlendTextureNames(void) const
     return BlendTextureNames;
 }
 
+TArray<FString> UTextureSubsystem::LoadAllDestructionTextureNames(const FString& NameSpace) const
+{
+    TArray<FString> Out = TArray<FString>();
+
+    if (IFileManager& FileManager = IFileManager::Get(); FileManager.DirectoryExists(*this->CreatePath(NameSpace, ESubNameSpacePaths::Destruction)))
+    {
+        FileManager.FindFiles(Out, *this->CreatePath(NameSpace, ESubNameSpacePaths::Destruction), TEXT("png"));
+    }
+    else
+    {
+        LOG_FATAL(LogTextureSubsystem, "Failed to find destruction texture directory [%s].", *this->CreatePath(NameSpace, ESubNameSpacePaths::Destruction))
+        return TArray<FString>();
+    }
+
+    for (FString& DestructionTextureName : Out)
+    {
+        DestructionTextureName.RemoveFromEnd(TEXT(".png"));
+    }
+
+    LOG_VERBOSE(LogTextureSubsystem, "Found [%d] destruction textures for namespace [%s].", Out.Num(), *NameSpace)
+
+    return Out;
+}
+
 UTexture2D* UTextureSubsystem::GetBlendTexture2D(const FString& BlendName)
 {
     const FString Key = FString::Printf(TEXT("%s_%s"), *this->BlendTextureCachePrefix, *BlendName);
@@ -181,6 +215,18 @@ UTexture2D* UTextureSubsystem::GetBlendTexture2D(const FString& BlendName)
     LOG_ERROR(LogTextureSubsystem, "Failed to load blend texture [%s] and failed to load the placeholder texture.", *BlendName)
 
     return nullptr;
+}
+
+auto UTextureSubsystem::GetSafeBlendTexture2D(const FString& BlendName) -> UTexture2D*
+{
+    UTexture2D* Texture = this->GetBlendTexture2D(BlendName);
+    if (Texture == nullptr)
+    {
+        LOG_FATAL(LogTextureSubsystem, "Failed to load blend texture: %s", *BlendName)
+        return nullptr;
+    }
+
+    return Texture;
 }
 
 void UTextureSubsystem::LoadTextureNamesForNamespace(const FString& NameSpace)
@@ -286,6 +332,55 @@ UTexture2D* UTextureSubsystem::GetWorldTexture2D(const FString& NameSpace, const
     LOG_ERROR(LogTextureSubsystem, "Failed to load world texture [%s::%s] and failed to load the placeholder texture.", *NameSpace, *TextureName)
 
     return nullptr;
+}
+
+UTexture2D* UTextureSubsystem::GetWorldDestructionTexture2D(const FString& NameSpace, const FString& TextureName)
+{
+    const FString Key = FString::Printf(TEXT("%s_%s::%s"), *this->WorldTextureCachePrefix, *NameSpace, *TextureName);
+
+    if (this->Cached2DTextures.Contains(Key))
+    {
+        return this->Cached2DTextures[Key];
+    }
+
+    if (UTexture2D* Tex = UTextureSubsystem::LoadTexture2DFromDisk(
+        this->CreatePathFile(NameSpace, ESubNameSpacePaths::Destruction, TextureName)
+    ))
+    {
+        this->Cached2DTextures.Add(Key, Tex);
+        /* Safety net. If everything worked accordingly. */
+        return this->GetWorldDestructionTexture2D(NameSpace, TextureName);
+    }
+
+    /* Failed to find texture. Returning a placeholder to not immediately crash the game. */
+
+    if (this->Cached2DTextures.Contains(this->TextureFailureTextureCacheKey))
+    {
+        return this->Cached2DTextures[this->TextureFailureTextureCacheKey];
+    }
+
+    if (UTexture2D* Tex = UTextureSubsystem::LoadTexture2DFromDisk(this->TextureFailureTextureFilePathAbsolute))
+    {
+        this->Cached2DTextures.Add(this->TextureFailureTextureCacheKey, Tex);
+        /* Safety net. If everything worked accordingly. */
+        return this->GetWorldDestructionTexture2D(NameSpace, TextureName);
+    }
+
+    LOG_ERROR(LogTextureSubsystem, "Failed to load world texture [%s::%s] and failed to load the placeholder texture.", *NameSpace, *TextureName)
+
+    return nullptr;
+}
+
+UTexture2D* UTextureSubsystem::GetSafeWorldDestructionTexture2D(const FString& NameSpace, const FString& TextureName)
+{
+    UTexture2D* Texture = this->GetWorldDestructionTexture2D(NameSpace, TextureName);
+    if (Texture == nullptr)
+    {
+        LOG_FATAL(LogTextureSubsystem, "Failed to load world destruction texture: %s::%s", *NameSpace, *TextureName)
+        return nullptr;
+    }
+
+    return Texture;
 }
 
 int64 UTextureSubsystem::GetBytesPerPixel(const ERawImageFormat::Type Format)

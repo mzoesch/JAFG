@@ -11,6 +11,7 @@
 
 #include "WorldCharacter.generated.h"
 
+class ACharacterReach;
 JAFG_VOID
 
 class UJAFGInputSubsystem;
@@ -64,6 +65,12 @@ protected:
     TObjectPtr<USpringArmComponent> ThirdPersonFrontSpringArmComponent;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UCameraComponent> ThirdPersonFrontCameraComponent;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    TObjectPtr<ACharacterReach> CharacterReach;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    TObjectPtr<UStaticMesh> CharacterReachMesh;
+    friend ACharacterReach;
 
 #pragma region Member Methods
 
@@ -119,11 +126,16 @@ protected:
 
     virtual auto OnTriggeredMove(const FInputActionValue& Value) -> void;
     virtual auto OnTriggeredLook(const FInputActionValue& Value) -> void;
+
     virtual auto OnStartedJump(const FInputActionValue& Value) -> void;
     virtual auto OnTriggerJump(const FInputActionValue& Value) -> void;
     virtual auto OnCompleteJump(const FInputActionValue& Value) -> void;
+    float LastJumpStarted = 0.0f;
+    static constexpr float JumpFlyModeDeactivationTime = 0.25f;
+
     virtual auto OnStartedSprint(const FInputActionValue& Value) -> void;
     virtual auto OnCompletedSprint(const FInputActionValue& Value) -> void;
+
     virtual auto OnTriggerCrouch(const FInputActionValue& Value) -> void;
     virtual auto OnCompleteCrouch(const FInputActionValue& Value) -> void;
 
@@ -133,7 +145,6 @@ protected:
     void OnStartedVoxelMinded_ServerRPC(const FIntVector /* FChunkKey */& InTargetedChunk, const FIntVector /* FVoxelKey */& InLocalHitVoxelKey);
     UFUNCTION(Server, Reliable)
     void OnCompletedVoxelMinded_ServerRPC(const bool bClientBreak);
-
     /** The *local* voxel key. */
     TOptional<FVoxelKey> CurrentlyMiningLocalVoxel       = FVoxelKey::ZeroValue;
     float                CurrentDurationSameVoxelIsMined = 0.0f;
@@ -148,11 +159,8 @@ protected:
     virtual auto OnToggleCameras(const FInputActionValue& Value) -> void;
     virtual auto OnTriggerZoomCameras(const FInputActionValue& Value) -> void;
     virtual auto OnCompleteZoomCameras(const FInputActionValue& Value) -> void;
-    bool bZooming = false;
     virtual auto OnTogglePerspective(const FInputActionValue& Value) -> void;
-
-    float LastJumpStarted = 0.0f;
-    static constexpr float JumpFlyModeDeactivationTime = 0.25f;
+    bool bZooming = false;
 
 private:
 

@@ -34,6 +34,7 @@ void UMaterialSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     this->MDynamicGroups.Empty();
 
     this->InitializeMaterials();
+    this->InitializeDestructionMaterial();
 
     return;
 }
@@ -393,7 +394,7 @@ void UMaterialSubsystem::InitializeMaterials(void)
 
     // Apply texture arrays to materials
     //////////////////////////////////////////////////////////////////////////
-    check( this->MDynamicGroups.IsEmpty() )
+    jcheck( this->MDynamicGroups.IsEmpty() )
 
     this->MDynamicGroups.Add(UMaterialInstanceDynamic::Create(MaterialSettings->MOpaque.LoadSynchronous(), this));
     this->MDynamicGroups[0]->SetTextureParameterValue("TexArr", TexArr);
@@ -409,6 +410,121 @@ void UMaterialSubsystem::InitializeMaterials(void)
 
         continue;
     }
+
+    return;
+}
+
+void UMaterialSubsystem::InitializeDestructionMaterial(void)
+{
+    const UJAFGGameInstance*     MyGameInstance   = Cast<UJAFGGameInstance>(this->GetWorld()->GetGameInstance());
+
+    if (MyGameInstance == nullptr)
+    {
+        LOG_FATAL(LogMaterialSubsystem, "Game instance is not of type UJAFGGameInstance.")
+        return;
+    }
+
+    UTextureSubsystem*           TextureSubsystem = MyGameInstance->GetSubsystem<UTextureSubsystem>();
+    const UJAFGMaterialSettings* MaterialSettings = GetDefault<UJAFGMaterialSettings>();
+
+    if (TextureSubsystem == nullptr)
+    {
+        LOG_FATAL(LogMaterialSubsystem, "Texture subsystem is invalid.")
+        return;
+    }
+
+    if (MaterialSettings == nullptr)
+    {
+        LOG_FATAL(LogMaterialSubsystem, "Material settings are invalid.")
+        return;
+    }
+
+    const TArray<FString> DestructionNames = TextureSubsystem->LoadAllDestructionTextureNames(TEXT("JAFG"));
+    LOG_VERBOSE(LogMaterialSubsystem, "Using %d destruction textures found in namespace %s.", DestructionNames.Num(), *FString("JAFG"))
+
+    // Create the dynamically generated material
+    //////////////////////////////////////////////////////////////////////////
+    UTexture2DArray* TexArr = UTexture2DArray::CreateTransient(
+        UMaterialSubsystem::TexArrWidthHorizontal,
+        UMaterialSubsystem::TexArrWidthVertical,
+        DestructionNames.Num(),
+        EPixelFormat::PF_B8G8R8A8
+    );
+    TexArr->Filter              = TextureFilter::TF_Nearest;
+    TexArr->SRGB                = true;
+    TexArr->CompressionSettings = TextureCompressionSettings::TC_Default;
+
+    /*
+     * Note that we are using here the pixel format of FColor. But we are actually reading the pixel format of
+     * BGRA8. Currently, this is the same number of bits, but we probably should do a proper approach to this value
+     * later. Maybe even with checking the files directly to allow for more formats.
+     * Same for the width and height of the texture array. We should not hard-code that here.
+     */
+    const uint32 SinglePixelSize = UTextureSubsystem::GetBytesPerPixel(ERawImageFormat::BGRA8);
+    const uint32 SliceSize       =
+        UMaterialSubsystem::TexArrWidthHorizontal *
+        UMaterialSubsystem::TexArrWidthVertical   *
+        SinglePixelSize;
+
+    // Texture Texture-Array
+    //////////////////////////////////////////////////////////////////////////
+    void* TexArrMipDataPtr          = TexArr->GetPlatformData()->Mips[0].BulkData.Lock( LOCK_READ_WRITE );
+    if (TexArrMipDataPtr == nullptr)
+    {
+        LOG_FATAL(LogMaterialSubsystem, "Failed to acquire read write lock for texture array.")
+        return;
+    }
+    int64 CurrentTexArrMemoryOffset = 0;
+
+    for (const FString& DestructionName : DestructionNames)
+    {
+        void* DestinationSliceMipDataPtr = static_cast<uint8*>(TexArrMipDataPtr) + CurrentTexArrMemoryOffset;
+
+        UTexture2D* CurrentSlicePtr = TextureSubsystem->GetWorldDestructionTexture2D("JAFG", DestructionName);
+        if (CurrentSlicePtr == nullptr)
+        {
+            LOG_FATAL(
+                LogMaterialSubsystem,
+                "Missing source texture while making destruction array. Faulty tex %s::%s.",
+                *FString("JAFG"), *DestructionName
+            )
+            return;
+        }
+
+        const void* CurrentSliceMipDataPtr = CurrentSlicePtr->GetPlatformMips()[0].BulkData.LockReadOnly();
+        if (CurrentSliceMipDataPtr == nullptr)
+        {
+            LOG_FATAL(
+                LogMaterialSubsystem,
+                "Failed to aquire read only lock for source texture while making destruction array. Faulty tex %s::%s.",
+                *FString("JAFG"), *DestructionName
+            )
+            return;
+        }
+
+        FMemory::Memcpy(DestinationSliceMipDataPtr, CurrentSliceMipDataPtr, SliceSize);
+
+#if PERFORM_R_AND_B_CHANNEL_FLIP
+        LOG_FATAL(LogMaterialSubsystem, "R and B channel flip is not implemented for destruction textures.")
+#endif /* PERFORM_R_AND_B_CHANNEL_FLIP */
+
+        if (CurrentSlicePtr->GetPlatformData()->Mips[0].BulkData.IsLocked())
+        {
+            CurrentSlicePtr->GetPlatformData()->Mips[0].BulkData.Unlock();
+        }
+
+        CurrentTexArrMemoryOffset += SliceSize;
+
+        continue;
+    }
+    TexArr->GetPlatformData()->Mips[0].BulkData.Unlock();
+
+    TexArr->UpdateResource();
+
+    // Apply destruction arrays to materials
+    //////////////////////////////////////////////////////////////////////////
+    this->MDynamicDestruction = UMaterialInstanceDynamic::Create(MaterialSettings->MDestruction.LoadSynchronous(), this);
+    this->MDynamicDestruction->SetTextureParameterValue("TexArr", TexArr);
 
     return;
 }

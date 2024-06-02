@@ -140,7 +140,41 @@ FORCEINLINE auto WorldToLocalVoxelLocation(const FVector& WorldLocation) -> FVox
 /** Transforms an unreal vector to a j coordinate. */
 FORCEINLINE auto WorldToJCoordinate(const FVector& WorldLocation) -> FJCoordinate
 {
-    return FJCoordinate(WorldLocation) * WorldStatics::UToJScale;
+    FJCoordinate JCoordinate;
+
+    if (WorldLocation.X < 0)
+    {
+        JCoordinate.X = static_cast<int>(WorldLocation.X / WorldStatics::JToUScaleDouble) - 1;
+    }
+    else
+    {
+        JCoordinate.X = static_cast<int>(WorldLocation.X / WorldStatics::JToUScaleDouble);
+    }
+
+    if (WorldLocation.Y < 0)
+    {
+        JCoordinate.Y = static_cast<int>(WorldLocation.Y / WorldStatics::JToUScaleDouble) - 1;
+    }
+    else
+    {
+        JCoordinate.Y = static_cast<int>(WorldLocation.Y / WorldStatics::JToUScaleDouble);
+    }
+
+    if (WorldLocation.Z < 0)
+    {
+        JCoordinate.Z = static_cast<int>(WorldLocation.Z / WorldStatics::JToUScaleDouble) - 1;
+    }
+    else
+    {
+        JCoordinate.Z = static_cast<int>(WorldLocation.Z / WorldStatics::JToUScaleDouble);
+    }
+
+    return JCoordinate;
+}
+
+FORCEINLINE FVector WorldToGrid(const FVector& WorldLocation)
+{
+    return FVector(ChunkStatics::WorldToJCoordinate(WorldLocation)) * WorldStatics::JToUScale;
 }
 
 /** Transforms an unreal vector to a vertical j coordinate. */
