@@ -797,11 +797,11 @@ void AWorldCharacter::OnToggleCameras(const FInputActionValue& Value)
 
 void AWorldCharacter::OnTriggerZoomCameras(const FInputActionValue& Value)
 {
-    if (this->FirstPersonCameraComponent->FieldOfView == this->DefaultFieldOfView)
+    if (this->bZooming == false)
     {
-        this->FirstPersonCameraComponent->SetFieldOfView(this->ZoomedFieldOfView * this->GetMyCharacterMovement()->IsSprinting() ? this->SprintFieldOfViewMultiplier : 1.0f);
-        this->ThirdPersonCameraComponent->SetFieldOfView(this->ZoomedFieldOfView * this->GetMyCharacterMovement()->IsSprinting() ? this->SprintFieldOfViewMultiplier : 1.0f);
-        this->ThirdPersonFrontCameraComponent->SetFieldOfView(this->ZoomedFieldOfView * this->GetMyCharacterMovement()->IsSprinting() ? this->SprintFieldOfViewMultiplier : 1.0f);
+        this->FirstPersonCameraComponent->SetFieldOfView(this->ZoomedFieldOfView * (this->GetMyCharacterMovement()->IsSprinting() ? this->SprintFieldOfViewMultiplier : 1.0f));
+        this->ThirdPersonCameraComponent->SetFieldOfView(this->ZoomedFieldOfView * (this->GetMyCharacterMovement()->IsSprinting() ? this->SprintFieldOfViewMultiplier : 1.0f));
+        this->ThirdPersonFrontCameraComponent->SetFieldOfView(this->ZoomedFieldOfView * (this->GetMyCharacterMovement()->IsSprinting() ? this->SprintFieldOfViewMultiplier : 1.0f));
 
         this->bZooming = true;
     }
@@ -811,9 +811,9 @@ void AWorldCharacter::OnTriggerZoomCameras(const FInputActionValue& Value)
 
 void AWorldCharacter::OnCompleteZoomCameras(const FInputActionValue& Value)
 {
-    this->FirstPersonCameraComponent->SetFieldOfView(this->DefaultFieldOfView * this->GetMyCharacterMovement()->IsSprinting() ? this->SprintFieldOfViewMultiplier : 1.0f);
-    this->ThirdPersonCameraComponent->SetFieldOfView(this->DefaultFieldOfView * this->GetMyCharacterMovement()->IsSprinting() ? this->SprintFieldOfViewMultiplier : 1.0f);
-    this->ThirdPersonFrontCameraComponent->SetFieldOfView(this->DefaultFieldOfView * this->GetMyCharacterMovement()->IsSprinting() ? this->SprintFieldOfViewMultiplier : 1.0f);
+    this->FirstPersonCameraComponent->SetFieldOfView(this->DefaultFieldOfView * (this->GetMyCharacterMovement()->IsSprinting() ? this->SprintFieldOfViewMultiplier : 1.0f));
+    this->ThirdPersonCameraComponent->SetFieldOfView(this->DefaultFieldOfView * (this->GetMyCharacterMovement()->IsSprinting() ? this->SprintFieldOfViewMultiplier : 1.0f));
+    this->ThirdPersonFrontCameraComponent->SetFieldOfView(this->DefaultFieldOfView * (this->GetMyCharacterMovement()->IsSprinting() ? this->SprintFieldOfViewMultiplier : 1.0f));
 
     this->bZooming = false;
 

@@ -11,9 +11,9 @@
 
 #include "WorldCharacter.generated.h"
 
-class ACharacterReach;
 JAFG_VOID
 
+class ACharacterReach;
 class UJAFGInputSubsystem;
 class UInputMappingContext;
 class ACommonChunk;
