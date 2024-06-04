@@ -60,6 +60,32 @@ void AWorldHUD::BeginPlay(void)
         this->QuickSessionPreview->SetVisibility(ESlateVisibility::Collapsed);
     }
 
+    // Hotbar
+    //////////////////////////////////////////////////////////////////////////
+    {
+        if (SlateSettings->Hotbar == nullptr)
+        {
+            LOG_FATAL(LogCommonSlate, "Hotbar Widget Class is not set in project settings.")
+            return;
+        }
+        OwningWorldController->OnWorldCharacterChange.AddLambda( [this] (AWorldCharacter* StrongOldCharacter, AWorldCharacter* NewCharacter)
+        {
+            if (this->Hotbar)
+            {
+                this->Hotbar->RemoveFromParent();
+                this->Hotbar = nullptr;
+            }
+
+            if (NewCharacter)
+            {
+                this->Hotbar = CreateWidget<UJAFGUserWidget>(this->GetWorld(), GetDefault<UJAFGSlateSettings>()->Hotbar);
+                this->Hotbar->AddToViewport();
+            }
+
+            return;
+        });
+    }
+
     // Chat Menu
     //////////////////////////////////////////////////////////////////////////
     {

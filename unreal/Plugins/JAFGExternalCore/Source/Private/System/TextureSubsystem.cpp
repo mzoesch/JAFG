@@ -76,12 +76,79 @@ void UTextureSubsystem::Deinitialize(void)
 
 FString UTextureSubsystem::CreatePath(const FString& InNameSpace, const ESubNameSpacePaths::Type InType) const
 {
+    if (InType == ESubNameSpacePaths::Generated)
+    {
+        return this->GeneratedAssetsDirectoryAbsolute;
+    }
+
     return this->RootTextureDirectoryAbsolute / InNameSpace / LexToString(InType);
 }
 
 FString UTextureSubsystem::CreatePathFile(const FString& InNameSpace, const ESubNameSpacePaths::Type InType, const FString& InName) const
 {
     return FString::Printf(TEXT("%s.%s"), *(this->CreatePath(InNameSpace, InType) / InName), *this->FileExtension);
+}
+
+UTexture2D* UTextureSubsystem::GetAndCacheTexture2D(const FString& CacheKey, const FString& FallbackAbsoluteFilePath)
+{
+    if (this->Cached2DTextures.Contains(CacheKey))
+    {
+        return this->Cached2DTextures[CacheKey];
+    }
+
+    if (UTexture2D* Tex = UTextureSubsystem::LoadTexture2DFromDisk(FallbackAbsoluteFilePath))
+    {
+        this->Cached2DTextures.Add(CacheKey, Tex);
+        /* Safety net. If everything worked accordingly. */
+        return this->GetAndCacheTexture2D(CacheKey, FallbackAbsoluteFilePath);
+    }
+
+    if (this->Cached2DTextures.Contains(this->TextureFailureTextureCacheKey))
+    {
+        return this->Cached2DTextures[this->TextureFailureTextureCacheKey];
+    }
+
+    if (UTexture2D* Tex = UTextureSubsystem::LoadTexture2DFromDisk(this->TextureFailureTextureFilePathAbsolute))
+    {
+        this->Cached2DTextures.Add(this->TextureFailureTextureCacheKey, Tex);
+        /* Safety net. If everything worked accordingly. */
+        return this->GetAndCacheTexture2D(CacheKey, FallbackAbsoluteFilePath);
+    }
+
+    LOG_ERROR(LogTextureSubsystem, "Failed to load and cache texture for [%s] and failed to load the placeholder texture.", *CacheKey)
+
+    return nullptr;
+}
+
+UTexture2D* UTextureSubsystem::GetGUITexture2D(const FString& TextureName)
+{
+    return this->GetAndCacheTexture2D(TextureName, this->CreatePathFile("JAFG", ESubNameSpacePaths::GUI, TextureName));
+}
+
+UTexture2D* UTextureSubsystem::GetSafeGUITexture2D(const FString& TextureName)
+{
+    if (UTexture2D* Texture = this->GetGUITexture2D(TextureName))
+    {
+        return Texture;
+    }
+
+    LOG_FATAL(LogTextureSubsystem, "Failed to load GUI texture: %s.", *TextureName);
+
+    return nullptr;
+}
+
+UTexture2D* UTextureSubsystem::GetPreviewTexture2D(const voxel_t AccumulatedIndex)
+{
+    if (AccumulatedIndex < this->VoxelSubsystem->GetCommonVoxelNum())
+    {
+        return nullptr;
+    }
+
+    const FString& VoxelName = this->VoxelSubsystem->GetVoxelName(AccumulatedIndex);
+
+    return this->GetAndCacheTexture2D(
+        VoxelName, this->CreatePathFile("JAFG", ESubNameSpacePaths::Generated, VoxelName)
+    );
 }
 
 UTexture2D* UTextureSubsystem::GetTexture2D(const voxel_t AccumulatedIndex)

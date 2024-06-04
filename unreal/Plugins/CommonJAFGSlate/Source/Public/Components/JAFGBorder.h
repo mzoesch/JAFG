@@ -28,6 +28,8 @@ public:
     /** This widget must not have the value EJAFGColorScheme::DontCare set to work. */
     void ResetToColorScheme(void);
 
+    FORCEINLINE void SetColorScheme(const EJAFGColorScheme::Type NewColorScheme) { this->ColorScheme = NewColorScheme; }
+
 protected:
 
     UPROPERTY(EditInstanceOnly, BlueprintReadOnly)

@@ -56,6 +56,7 @@ private:
     TObjectPtr<UJAFGUserWidget> ChatMenu;
     TObjectPtr<UJAFGUserWidget> DebugScreen;
     TObjectPtr<UJAFGUserWidget> EscapeMenu;
+    TObjectPtr<UJAFGUserWidget> Hotbar;
 
     FDelegateHandle ContainerVisibleDelegateHandle;
     FDelegateHandle ContainerLostVisibilityDelegateHandle;

@@ -59,4 +59,7 @@ public:
 
     UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "FrontEnd")
     TSubclassOf<UJAFGContainer> PlayerInventoryWidgetClass;
+
+    UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "FrontEnd")
+    TSubclassOf<UJAFGUserWidget> Hotbar;
 };

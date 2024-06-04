@@ -114,6 +114,8 @@ void AWorldCharacter::BeginPlay(void)
 
     this->Container.Init(FSlot(Accumulated::Null), 10);
     this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel()));
+    this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 1, 10));
+    this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 2, 99));
 
     return;
 }

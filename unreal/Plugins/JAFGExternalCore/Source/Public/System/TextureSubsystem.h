@@ -21,6 +21,9 @@ enum Type : uint8
     Voxels      = 1,
     Blends      = 2,
     Destruction = 3,
+    GUI         = 4,
+
+    Generated   = 0xFF,
 };
 
 }
@@ -41,12 +44,26 @@ FORCEINLINE FString LexToString(const ESubNameSpacePaths::Type InType)
     {
         return TEXT("Destruction");
     }
+    case ESubNameSpacePaths::GUI:
+    {
+        return TEXT("GUI");
+    }
     default:
     {
         LOG_FATAL(LogTextureSubsystem, "Invalid type was provided: %d.", static_cast<int32>(InType))
         return TEXT("Invalid");
     }
     }
+}
+
+#define DECLARE_NAMED_TEXTURE(Name) \
+    static const FString Name = TEXT(#Name);
+
+namespace NamedTextures
+{
+
+DECLARE_NAMED_TEXTURE(GeneralContainerSlot)
+
 }
 
 UCLASS(NotBlueprintable)
@@ -102,6 +119,13 @@ public:
     //////////////////////////////////////////////////////////////////////////
     // Interface.
     //////////////////////////////////////////////////////////////////////////
+
+    auto GetAndCacheTexture2D(const FString& CacheKey, const FString& FallbackAbsoluteFilePath) -> UTexture2D*;
+
+    auto GetGUITexture2D(const FString& TextureName) -> UTexture2D*;
+    auto GetSafeGUITexture2D(const FString& TextureName) -> UTexture2D*;
+
+    UTexture2D* GetPreviewTexture2D(const voxel_t AccumulatedIndex);
 
     auto GetTexture2D(const voxel_t AccumulatedIndex) -> UTexture2D*;
     auto GetSafeTexture2D(const voxel_t AccumulatedIndex) -> UTexture2D*;
