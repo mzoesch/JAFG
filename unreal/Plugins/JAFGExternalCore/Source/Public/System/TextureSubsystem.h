@@ -18,10 +18,11 @@ namespace ESubNameSpacePaths
 enum Type : uint8
 {
     Invalid     = 0,
-    Voxels      = 1,
-    Blends      = 2,
-    Destruction = 3,
-    GUI         = 4,
+
+    Destruction,
+    GUI,
+    Voxels,
+    Blends,
 
     Generated   = 0xFF,
 };
@@ -32,14 +33,6 @@ FORCEINLINE FString LexToString(const ESubNameSpacePaths::Type InType)
 {
     switch (InType)
     {
-    case ESubNameSpacePaths::Voxels:
-    {
-        return TEXT("Voxels");
-    }
-    case ESubNameSpacePaths::Blends:
-    {
-        return TEXT("Blends");
-    }
     case ESubNameSpacePaths::Destruction:
     {
         return TEXT("Destruction");
@@ -47,6 +40,14 @@ FORCEINLINE FString LexToString(const ESubNameSpacePaths::Type InType)
     case ESubNameSpacePaths::GUI:
     {
         return TEXT("GUI");
+    }
+    case ESubNameSpacePaths::Voxels:
+    {
+        return TEXT("Voxels");
+    }
+    case ESubNameSpacePaths::Blends:
+    {
+        return TEXT("VoxelsAlpha");
     }
     default:
     {
@@ -80,89 +81,70 @@ public:
     virtual void Deinitialize(void) override;
     // ~Subsystem implementation
 
-    FString TexSectionDivider     = L"";
     TCHAR   TexSectionDividerChar = '_';
+    FString TexSectionDivider     = TCHAR_TO_UTF8(&TexSectionDividerChar);
 
-    FString FileExtension         = L"";
+    FString FileExtension         = TEXT("png");
 
     //////////////////////////////////////////////////////////////////////////
     // Common paths.
     //////////////////////////////////////////////////////////////////////////
 
-    FString GeneratedAssetsDirectoryRelative    = L"";
-    FString GeneratedAssetsDirectoryAbsolute    = L"";
+    FString GeneratedAssetsDirectoryRelative    = TEXT("");
+    FString GeneratedAssetsDirectoryAbsolute    = TEXT("");
 
-    FString RootAssetsDirectoryRelative         = L"";
-    FString RootAssetsDirectoryAbsolute         = L"";
-
-    FString RootTextureDirectoryRelative        = L"";
-    FString RootTextureDirectoryAbsolute        = L"";
-
-    FString VoxelTextureDirectoryRelative       = L"";
-    FString VoxelTextureDirectoryAbsolute       = L"";
-
-    FString BlendTextureDirectoryRelative       = L"";
-    FString BlendTextureDirectoryAbsolute       = L"";
-
-    auto CreatePath(const FString& InNameSpace, const ESubNameSpacePaths::Type InType) const -> FString;
-    auto CreatePathFile(const FString& InNameSpace, const ESubNameSpacePaths::Type InType, const FString& InName) const -> FString;
+    FString RootTextureDirectoryRelative        = TEXT("");
+    FString RootTextureDirectoryAbsolute        = TEXT("");
 
     //////////////////////////////////////////////////////////////////////////
     // Specific Textures.
     //////////////////////////////////////////////////////////////////////////
 
-    FString TextureFailureTextureFileName                = "";
-    FString TextureFailureTextureFilePathAbsolute        = "";
-    FString TextureFailureHighResTextureFileName         = "";
-    FString TextureFailureHighResTextureFilePathAbsolute = "";
+    FString TextureFailureTextureFileName                = TEXT("TextureFailure.png");
+    FString TextureFailureTextureFilePathAbsolute        = TEXT("");
+    FString TextureFailureHighResTextureFileName         = TEXT("TextureFailureHighRes.png");
+    FString TextureFailureHighResTextureFilePathAbsolute = TEXT("");
 
     //////////////////////////////////////////////////////////////////////////
     // Interface.
     //////////////////////////////////////////////////////////////////////////
 
-    auto GetAndCacheTexture2D(const FString& CacheKey, const FString& FallbackAbsoluteFilePath) -> UTexture2D*;
+    /**
+     * Create an absolute path to a specific texture file in a namespace.
+     * @return True if the file exists.
+     */
+    bool CreatePathToFile(const FString& InNamespace, const ESubNameSpacePaths::Type InType, const FString& InFileName, FString& OutAbsolutePath) const;
+    /**
+     * Create an absolute path to a specific texture based on the user preferences for currently loaded namespaces.
+     * @return True, if the file exists and the absolute path is meaningful.
+     */
+    bool CreatePathToFile(const ESubNameSpacePaths::Type InType, const FString& InFileName, FString& OutAbsolutePath) const;
+    FString GetFirstNamespaceForFile(const ESubNameSpacePaths::Type InType, const FString& InFileName) const;
+    /** @return True, if the directory exists. */
+    bool CreatePathToDirectory(const FString& InNamespace, const ESubNameSpacePaths::Type InType, FString& OutAbsolutePath) const;
 
-    auto GetGUITexture2D(const FString& TextureName) -> UTexture2D*;
-    auto GetSafeGUITexture2D(const FString& TextureName) -> UTexture2D*;
+    const TArray<FString>& GetUsedTextureNamespaces(void) const { return this->UsedTextureNamespaces; }
 
+    UTexture2D* GetGUITexture2D(const FString& TextureName);
+    UTexture2D* GetSafeGUITexture2D(const FString& TextureName);
+
+    const FString PreviewCachePrefix = TEXT("PR_");
     UTexture2D* GetPreviewTexture2D(const voxel_t AccumulatedIndex);
+    UTexture2D* GetSafePreviewTexture2D(const voxel_t AccumulatedIndex);
 
-    auto GetTexture2D(const voxel_t AccumulatedIndex) -> UTexture2D*;
-    auto GetSafeTexture2D(const voxel_t AccumulatedIndex) -> UTexture2D*;
+    UTexture2D* GetVoxelTexture2D(const FString& TextureName);
+    UTexture2D* GetSafeVoxelTexture2D(const FString& TextureName);
 
-    /**
-     * Checks all files in the blend texture directory and returns the names of all textures found.
-     * Will not load the actual textures or cache them.
-     */
-    auto LoadAllBlendTextureNames(void) const -> TArray<FString>;
-    auto LoadAllDestructionTextureNames(const FString& NameSpace) const -> TArray<FString>;
+    TArray<FString> LoadAllBlendTextureNames(void) const;
+    UTexture2D* GetBlendTexture2D(const FString& BlendName);
+    UTexture2D* GetSafeBlendTexture2D(const FString& BlendName);
 
-    /**
-     * @return The texture associated with the blend name. If the texture is not found or failed to load, a placeholder
-     *         texture failure will be returned. If the platform blocks the loading of the texture, nullptr will be
-     *         returned.
-     */
-    auto GetBlendTexture2D(const FString& BlendName) -> UTexture2D*;
-    auto GetSafeBlendTexture2D(const FString& BlendName) -> UTexture2D*;
+    TArray<FString> LoadAllDestructionTextureNames(void) const;
+    UTexture2D* GetDestructionTexture2D(const FString& TextureName);
+    UTexture2D* GetSafeDestructionTexture2D(const FString& TextureName);
 
-    /** Will load all texture names for the given name space into memory. */
-    auto LoadTextureNamesForNamespace(const FString& NameSpace) -> void;
-    /** @return The number of textures found for the given name space. */
-    auto GetWorldTexture2DCount(const FString& NameSpace) -> int32;
-    /** @return The texture name at the given index for the given name space. Sorted in alphabetical order. */
-    auto GetWorldTexture2DNameByIndex(const FString& NameSpace, const int32 Index) -> const FString&;
-    /** @return The texture names for the given name space. */
-    auto GetWorldTextureNamesForNamespace(const FString& InNameSpace) -> const TArray<FString>&;
-
-    /**
-     * @return The texture associated with the given name space and texture name. If the texture is not or failed to
-     *         load, a placeholder texture failure will be returned. If the platform blocks the loading of the texture,
-     *         nullptr will be returned.
-     */
-    UTexture2D* GetWorldTexture2D(const FString& NameSpace, const FString& TextureName);
-
-    UTexture2D* GetWorldDestructionTexture2D(const FString& NameSpace, const FString& TextureName);
-    UTexture2D* GetSafeWorldDestructionTexture2D(const FString& NameSpace, const FString& TextureName);
+    TArray<FString> LoadAllVoxelTextureNamesForNamespace(const FString& Namespace) const;
+    TArray<FString> SplitVoxelTextureName(const FString& TextureName) const;
 
     //////////////////////////////////////////////////////////////////////////
     // MISC.
@@ -170,51 +152,23 @@ public:
 
     static auto GetBytesPerPixel(const ERawImageFormat::Type Format) -> int64;
 
-    /**
-     * Given any valid texture name, it will split the name up into their respective parts.
-     * UTextureSubsystem#TexSectionDivider is used to split the name.
-     * See MaterialSubsystem.h for more information about how to properly name textures.
-     */
-    auto SplitTextureName(const FString& TextureName) const -> TArray<FString>;
-
 private:
 
     /** For faster access. Cannot change during a session as the Voxel Subsystem is a game instance subsystem. */
     UPROPERTY()
     TObjectPtr<UVoxelSubsystem> VoxelSubsystem = nullptr;
 
-    /** Maps a name space to all the texture names found in the appropriate directory for that name space. */
-    struct FPrivateTexNames
-    {
-        FString         NameSpace;
-        TArray<FString> TextureNames;
-    };
-    /** The world texture names that where found when first interacted with the given name space. */
-    TArray<FPrivateTexNames> WorldTextureNames;
-    /** Kinda sketchy solution. But works. See the implementation of UTextureSubsystem#GetWorldTextureNamesForNamespace. */
-    const TArray<FString>    EmptyStringArray;
-    /** @return True if the given name space's texture names have already been loaded into memory. */
-    FORCEINLINE bool HasLoadedTextureNamesForNameSpace(const FString& InNameSpace) const
-    {
-        for (const auto& [NameSpace, TextureNames] : this->WorldTextureNames)
-        {
-            if (NameSpace == InNameSpace)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
+    /**
+     * Currently used texture namespaces. Defined by the user.
+     * In order of priority (Highest to lowest).
+     */
+    TArray<FString> UsedTextureNamespaces;
 
     UPROPERTY()
     TMap<FString, UTexture2D*> Cached2DTextures;
-    FString TextureFailureTextureCacheKey        = "";
-    FString TextureFailureHighResTextureCacheKey = "";
-    FString WorldTextureCachePrefix              = "";
-    FString BlendTextureCachePrefix              = "";
     FORCEINLINE auto ClearCached2DTextures(void) -> void { this->Cached2DTextures.Empty(); }
 
+    UTexture2D* GetAndCacheTexture2D(const FString& CacheKey, const FString& FallbackAbsoluteFilePath);
     /**
      * Loads any file from disk, tries to parse the file as a texture and returns the texture.
      * No caching or other optimizations are done here.

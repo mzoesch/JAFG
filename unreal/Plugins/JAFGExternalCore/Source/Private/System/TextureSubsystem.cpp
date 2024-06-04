@@ -5,6 +5,11 @@
 #include "ImageUtils.h"
 #include "System/VoxelSubsystem.h"
 
+#define MAKE_CACHE_KEY(Prefix, Name) \
+    FString::Printf(TEXT("%s%s"), *Prefix, *Name)
+#define DECLARE_CACHE_KEY(Prefix, Name) \
+    const FString CacheKey = MAKE_CACHE_KEY(Prefix, Name);
+
 UTextureSubsystem::UTextureSubsystem(void) : Super()
 {
 #if WITH_EDITOR
@@ -25,41 +30,18 @@ void UTextureSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     this->ClearCached2DTextures();
 #endif /* WITH_EDITOR */
 
-    this->TexSectionDivider = TCHAR_TO_UTF8(&this->TexSectionDividerChar);
 
-    this->FileExtension     = "png";
-
-    // Common paths.
-    //////////////////////////////////////////////////////////////////////////
-    this->GeneratedAssetsDirectoryRelative             = FPaths::ProjectSavedDir() / TEXT("Gen/");
+    this->GeneratedAssetsDirectoryRelative             = FPaths::ProjectSavedDir() / TEXT("gen/");
     this->GeneratedAssetsDirectoryAbsolute             = FPaths::ConvertRelativePathToFull(this->GeneratedAssetsDirectoryRelative);
-
-    this->RootAssetsDirectoryRelative                  = FPaths::ProjectContentDir() / "Assets/";
-    this->RootAssetsDirectoryAbsolute                  = FPaths::ConvertRelativePathToFull(this->RootAssetsDirectoryRelative);
-
-    this->RootTextureDirectoryRelative                 = this->RootAssetsDirectoryRelative / "Textures/";
-    this->RootTextureDirectoryAbsolute                 = this->RootAssetsDirectoryAbsolute / "Textures/";
-
-    this->VoxelTextureDirectoryRelative                = this->RootTextureDirectoryRelative / "Voxels/";
-    this->VoxelTextureDirectoryAbsolute                = this->RootTextureDirectoryAbsolute / "Voxels/";
-
-    this->BlendTextureDirectoryRelative                = this->VoxelTextureDirectoryRelative / "Alpha/";
-    this->BlendTextureDirectoryAbsolute                = this->VoxelTextureDirectoryAbsolute / "Alpha/";
-
-    // MISC
-    //////////////////////////////////////////////////////////////////////////
-    this->TextureFailureTextureFileName                = "TextureFailure.png";
+    this->RootTextureDirectoryRelative                 = FPaths::ProjectContentDir() / "Assets/" / "Textures/";
+    this->RootTextureDirectoryAbsolute                 = FPaths::ConvertRelativePathToFull(this->RootTextureDirectoryRelative);
     this->TextureFailureTextureFilePathAbsolute        = this->RootTextureDirectoryAbsolute / this->TextureFailureTextureFileName;
-    this->TextureFailureHighResTextureFileName         = "TextureFailureHighRes.png";
     this->TextureFailureHighResTextureFilePathAbsolute = this->RootTextureDirectoryAbsolute / this->TextureFailureHighResTextureFileName;
 
-    this->VoxelSubsystem = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>();
-    check( this->VoxelSubsystem )
+    this->VoxelSubsystem = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>(); jcheck( this->VoxelSubsystem )
 
-    this->TextureFailureTextureCacheKey                = "TFT";
-    this->TextureFailureHighResTextureCacheKey         = "TFTHR";
-    this->WorldTextureCachePrefix                      = "WTC";
-    this->BlendTextureCachePrefix                      = "BTC";
+    this->UsedTextureNamespaces.Empty();
+    this->UsedTextureNamespaces.Add("JAFG");
 
     return;
 }
@@ -74,55 +56,68 @@ void UTextureSubsystem::Deinitialize(void)
     return;
 }
 
-FString UTextureSubsystem::CreatePath(const FString& InNameSpace, const ESubNameSpacePaths::Type InType) const
+bool UTextureSubsystem::CreatePathToFile(const FString& InNamespace, const ESubNameSpacePaths::Type InType, const FString& InFileName, FString& OutAbsolutePath) const
+{
+    OutAbsolutePath =
+        FString::Printf(TEXT("%s.%s"),
+        * ( this->RootTextureDirectoryAbsolute / InNamespace / LexToString(InType) / InFileName ),
+        * this->FileExtension
+    );
+
+    return IFileManager::Get().FileExists(*OutAbsolutePath);
+}
+
+bool UTextureSubsystem::CreatePathToFile(const ESubNameSpacePaths::Type InType, const FString& InFileName, FString& OutAbsolutePath) const
 {
     if (InType == ESubNameSpacePaths::Generated)
     {
-        return this->GeneratedAssetsDirectoryAbsolute;
+        OutAbsolutePath = FString::Printf(TEXT("%s.%s"), *(this->GeneratedAssetsDirectoryAbsolute / InFileName), *this->FileExtension);
+        return IFileManager::Get().FileExists(*OutAbsolutePath);
     }
 
-    return this->RootTextureDirectoryAbsolute / InNameSpace / LexToString(InType);
+    for (const FString& NameSpace : this->UsedTextureNamespaces)
+    {
+        if (this->CreatePathToFile(NameSpace, InType, InFileName, OutAbsolutePath))
+        {
+            return true;
+        }
+
+        continue;
+    }
+
+    return false;
 }
 
-FString UTextureSubsystem::CreatePathFile(const FString& InNameSpace, const ESubNameSpacePaths::Type InType, const FString& InName) const
+FString UTextureSubsystem::GetFirstNamespaceForFile(const ESubNameSpacePaths::Type InType, const FString& InFileName) const
 {
-    return FString::Printf(TEXT("%s.%s"), *(this->CreatePath(InNameSpace, InType) / InName), *this->FileExtension);
+    for (const FString& NameSpace : this->UsedTextureNamespaces)
+    {
+        if (FString Path; this->CreatePathToFile(NameSpace, InType, InFileName, Path))
+        {
+            return NameSpace;
+        }
+
+        continue;
+    }
+
+    return TEXT("???");
 }
 
-UTexture2D* UTextureSubsystem::GetAndCacheTexture2D(const FString& CacheKey, const FString& FallbackAbsoluteFilePath)
+bool UTextureSubsystem::CreatePathToDirectory(const FString& InNamespace, const ESubNameSpacePaths::Type InType, FString& OutAbsolutePath) const
 {
-    if (this->Cached2DTextures.Contains(CacheKey))
-    {
-        return this->Cached2DTextures[CacheKey];
-    }
-
-    if (UTexture2D* Tex = UTextureSubsystem::LoadTexture2DFromDisk(FallbackAbsoluteFilePath))
-    {
-        this->Cached2DTextures.Add(CacheKey, Tex);
-        /* Safety net. If everything worked accordingly. */
-        return this->GetAndCacheTexture2D(CacheKey, FallbackAbsoluteFilePath);
-    }
-
-    if (this->Cached2DTextures.Contains(this->TextureFailureTextureCacheKey))
-    {
-        return this->Cached2DTextures[this->TextureFailureTextureCacheKey];
-    }
-
-    if (UTexture2D* Tex = UTextureSubsystem::LoadTexture2DFromDisk(this->TextureFailureTextureFilePathAbsolute))
-    {
-        this->Cached2DTextures.Add(this->TextureFailureTextureCacheKey, Tex);
-        /* Safety net. If everything worked accordingly. */
-        return this->GetAndCacheTexture2D(CacheKey, FallbackAbsoluteFilePath);
-    }
-
-    LOG_ERROR(LogTextureSubsystem, "Failed to load and cache texture for [%s] and failed to load the placeholder texture.", *CacheKey)
-
-    return nullptr;
+    OutAbsolutePath = this->RootTextureDirectoryAbsolute / InNamespace / LexToString(InType);
+    return IFileManager::Get().DirectoryExists(*OutAbsolutePath);
 }
 
 UTexture2D* UTextureSubsystem::GetGUITexture2D(const FString& TextureName)
 {
-    return this->GetAndCacheTexture2D(TextureName, this->CreatePathFile("JAFG", ESubNameSpacePaths::GUI, TextureName));
+    FString Path;
+    if (this->CreatePathToFile(ESubNameSpacePaths::GUI, TextureName, Path) == false)
+    {
+        return nullptr;
+    }
+
+    return this->GetAndCacheTexture2D(TextureName, Path);
 }
 
 UTexture2D* UTextureSubsystem::GetSafeGUITexture2D(const FString& TextureName)
@@ -139,100 +134,93 @@ UTexture2D* UTextureSubsystem::GetSafeGUITexture2D(const FString& TextureName)
 
 UTexture2D* UTextureSubsystem::GetPreviewTexture2D(const voxel_t AccumulatedIndex)
 {
-    if (AccumulatedIndex < this->VoxelSubsystem->GetCommonVoxelNum())
+    if (AccumulatedIndex < ECommonVoxels::Num)
     {
         return nullptr;
     }
 
-    const FString& VoxelName = this->VoxelSubsystem->GetVoxelName(AccumulatedIndex);
-
-    return this->GetAndCacheTexture2D(
-        VoxelName, this->CreatePathFile("JAFG", ESubNameSpacePaths::Generated, VoxelName)
-    );
-}
-
-UTexture2D* UTextureSubsystem::GetTexture2D(const voxel_t AccumulatedIndex)
-{
-    check( this->VoxelSubsystem )
-
-    const FString VoxelName = this->VoxelSubsystem->GetVoxelName(AccumulatedIndex);
-
-#if WITH_EDITOR
-    if (AccumulatedIndex < this->VoxelSubsystem->GetCommonVoxelNum())
+    DECLARE_CACHE_KEY(this->PreviewCachePrefix, this->VoxelSubsystem->GetVoxelName(AccumulatedIndex))
+    if (UTexture2D* CachedTexture = this->Cached2DTextures.FindRef(CacheKey); CachedTexture != nullptr)
     {
-        LOG_FATAL(
+        return CachedTexture;
+    }
+
+    FString Path;
+    if (this->CreatePathToFile(ESubNameSpacePaths::Generated, this->VoxelSubsystem->GetVoxelName(AccumulatedIndex), Path) == false)
+    {
+        LOG_WARNING(
             LogTextureSubsystem,
-            "Texture requested for a common voxel. This is disallowed. Requested Accumulated: %s.",
-            *VoxelName
+            "Failed to load preview texture for accumulated: %s. Expected path: %s",
+            *this->VoxelSubsystem->GetVoxelName(AccumulatedIndex), *Path
         )
-        return nullptr;
-    }
-#endif /* WITH_EDITOR */
-
-    if (this->Cached2DTextures.Contains(VoxelName))
-    {
-        return this->Cached2DTextures[VoxelName];
+        return this->GetAndCacheTexture2D(this->TextureFailureTextureFileName, this->TextureFailureTextureFilePathAbsolute);
     }
 
-    if (UTexture2D* Tex = UTextureSubsystem::LoadTexture2DFromDisk(
-        FString::Printf(
-            TEXT("%s.%s"),
-            *( this->GeneratedAssetsDirectoryAbsolute / VoxelName ), *this->FileExtension
-        )
-    ))
-    {
-        this->Cached2DTextures.Add(this->VoxelSubsystem->GetVoxelName(AccumulatedIndex), Tex);
-        /* Safety net. If everything worked accordingly. */
-        return this->GetTexture2D(AccumulatedIndex);
-    }
-
-    /* Failed to find texture. Returning a placeholder to not immediately crash the game. */
-
-    if (this->Cached2DTextures.Contains(this->TextureFailureTextureCacheKey))
-    {
-        return this->Cached2DTextures[this->TextureFailureTextureCacheKey];
-    }
-
-    if (UTexture2D* Tex = UTextureSubsystem::LoadTexture2DFromDisk(this->TextureFailureTextureFilePathAbsolute))
-    {
-        this->Cached2DTextures.Add(this->TextureFailureTextureCacheKey, Tex);
-        /* Safety net. If everything worked accordingly. */
-        return this->GetTexture2D(AccumulatedIndex);
-    }
-
-    LOG_ERROR(LogTextureSubsystem, "Failed to load texture for accumulated %s and failed to load the placeholder texture.", *VoxelName)
-
-    return nullptr;
+    return this->GetAndCacheTexture2D(CacheKey, Path);
 }
 
-UTexture2D* UTextureSubsystem::GetSafeTexture2D(const voxel_t AccumulatedIndex)
+UTexture2D* UTextureSubsystem::GetSafePreviewTexture2D(const voxel_t AccumulatedIndex)
 {
-    if (UTexture2D* Texture = this->GetTexture2D(AccumulatedIndex))
+    if (UTexture2D* Texture = this->GetPreviewTexture2D(AccumulatedIndex))
     {
         return Texture;
     }
 
-    LOG_FATAL(LogTextureSubsystem, "Failed to load texture for accumulated: %s.", *this->VoxelSubsystem->GetVoxelName(AccumulatedIndex))
+    LOG_FATAL(LogTextureSubsystem, "Failed to load preview texture for accumulated: %s.", *this->VoxelSubsystem->GetVoxelName(AccumulatedIndex))
+
+    return nullptr;
+}
+
+UTexture2D* UTextureSubsystem::GetVoxelTexture2D(const FString& TextureName)
+{
+    if (UTexture2D* CachedTexture = this->Cached2DTextures.FindRef(TextureName); CachedTexture != nullptr)
+    {
+        return CachedTexture;
+    }
+
+    FString Path;
+    if (this->CreatePathToFile(ESubNameSpacePaths::Voxels, TextureName, Path) == false)
+    {
+        return nullptr;
+    }
+
+    return this->GetAndCacheTexture2D(TextureName, Path);
+}
+
+UTexture2D* UTextureSubsystem::GetSafeVoxelTexture2D(const FString& TextureName)
+{
+    if (UTexture2D* Texture = this->GetVoxelTexture2D(TextureName))
+    {
+        return Texture;
+    }
+
+    LOG_FATAL(LogTextureSubsystem, "Failed to load voxel texture: %s.", *TextureName)
 
     return nullptr;
 }
 
 TArray<FString> UTextureSubsystem::LoadAllBlendTextureNames(void) const
 {
-    TArray<FString> BlendTextureNames;
+    TArray<FString> BlendTextureNames = TArray<FString>();
 
-    if (IFileManager& FileManager = IFileManager::Get(); FileManager.DirectoryExists(*this->BlendTextureDirectoryAbsolute))
+    for (const FString& Namespace : this->UsedTextureNamespaces)
     {
-        FileManager.FindFiles(BlendTextureNames, *this->BlendTextureDirectoryAbsolute, TEXT("png"));
-    }
-    else
-    {
-        LOG_FATAL(LogTextureSubsystem, "Failed to find blend texture directory [%s].", *this->BlendTextureDirectoryAbsolute)
-    }
+        FString Path;
+        if (this->CreatePathToDirectory(Namespace, ESubNameSpacePaths::Blends, Path) == false)
+        {
+            continue;
+        }
 
-    for (FString& BlendTextureName : BlendTextureNames)
-    {
-        BlendTextureName.RemoveFromEnd(TEXT(".png"));
+        TArray<FString> CurrentBlendTextureNames = TArray<FString>();
+        IFileManager::Get().FindFiles(CurrentBlendTextureNames, *Path, *this->FileExtension);
+
+        for (FString& BlendTextureName : CurrentBlendTextureNames)
+        {
+            BlendTextureName.RemoveFromEnd(FString::Printf(TEXT(".%s"), *this->FileExtension));
+            BlendTextureNames.AddUnique(BlendTextureName);
+        }
+
+        continue;
     }
 
     LOG_VERBOSE(LogTextureSubsystem, "Found [%d] blend textures.", BlendTextureNames.Num())
@@ -240,236 +228,131 @@ TArray<FString> UTextureSubsystem::LoadAllBlendTextureNames(void) const
     return BlendTextureNames;
 }
 
-TArray<FString> UTextureSubsystem::LoadAllDestructionTextureNames(const FString& NameSpace) const
+UTexture2D* UTextureSubsystem::GetBlendTexture2D(const FString& BlendName)
+{
+    FString Path;
+    if (this->CreatePathToFile(ESubNameSpacePaths::Blends, BlendName, Path) == false)
+    {
+        return nullptr;
+    }
+
+    return this->GetAndCacheTexture2D(BlendName, Path);
+}
+
+UTexture2D* UTextureSubsystem::GetSafeBlendTexture2D(const FString& BlendName)
+{
+    if (UTexture2D* Texture = this->GetBlendTexture2D(BlendName))
+    {
+        return Texture;
+    }
+
+    LOG_FATAL(LogTextureSubsystem, "Failed to load blend texture: %s.", *BlendName)
+
+    return nullptr;
+}
+
+TArray<FString> UTextureSubsystem::LoadAllDestructionTextureNames(void) const
 {
     TArray<FString> Out = TArray<FString>();
 
-    if (IFileManager& FileManager = IFileManager::Get(); FileManager.DirectoryExists(*this->CreatePath(NameSpace, ESubNameSpacePaths::Destruction)))
+    for (const FString& Namespace : this->UsedTextureNamespaces)
     {
-        FileManager.FindFiles(Out, *this->CreatePath(NameSpace, ESubNameSpacePaths::Destruction), TEXT("png"));
-    }
-    else
-    {
-        LOG_FATAL(LogTextureSubsystem, "Failed to find destruction texture directory [%s].", *this->CreatePath(NameSpace, ESubNameSpacePaths::Destruction))
-        return TArray<FString>();
+        FString Path;
+        if (this->CreatePathToDirectory(Namespace, ESubNameSpacePaths::Destruction, Path) == false)
+        {
+            continue;
+        }
+
+        IFileManager::Get().FindFiles(Out, *Path, *this->FileExtension);
+
+        for (FString& DestructionTextureName : Out)
+        {
+            DestructionTextureName.RemoveFromEnd(FString::Printf(TEXT(".%s"), *this->FileExtension));
+        }
+
+        if (Out.Num() > 0)
+        {
+            break;
+        }
+
+        continue;
     }
 
-    for (FString& DestructionTextureName : Out)
-    {
-        DestructionTextureName.RemoveFromEnd(TEXT(".png"));
-    }
-
-    LOG_VERBOSE(LogTextureSubsystem, "Found [%d] destruction textures for namespace [%s].", Out.Num(), *NameSpace)
+    LOG_VERBOSE(LogTextureSubsystem, "Found [%d] destruction textures.", Out.Num())
 
     return Out;
 }
 
-UTexture2D* UTextureSubsystem::GetBlendTexture2D(const FString& BlendName)
+UTexture2D* UTextureSubsystem::GetDestructionTexture2D(const FString& TextureName)
 {
-    const FString Key = FString::Printf(TEXT("%s_%s"), *this->BlendTextureCachePrefix, *BlendName);
-
-    if (this->Cached2DTextures.Contains(Key))
+    FString Path;
+    if (this->CreatePathToFile(ESubNameSpacePaths::Destruction, TextureName, Path) == false)
     {
-        return this->Cached2DTextures[Key];
-    }
-
-    if (UTexture2D* Tex =
-        UTextureSubsystem::LoadTexture2DFromDisk(
-            FString::Printf(
-                TEXT("%s.png"),
-                * (this->BlendTextureDirectoryAbsolute / BlendName)
-            )
-        )
-    )
-    {
-        this->Cached2DTextures.Add(Key, Tex);
-        /* Safety net. If everything worked accordingly. */
-        return this->GetBlendTexture2D(BlendName);
-    }
-
-    /* Failed to find texture. Returning a placeholder to not immediately crash the game. */
-
-    if (this->Cached2DTextures.Contains(this->TextureFailureTextureCacheKey))
-    {
-        return this->Cached2DTextures[this->TextureFailureTextureCacheKey];
-    }
-
-    if (UTexture2D* Tex = UTextureSubsystem::LoadTexture2DFromDisk(this->TextureFailureTextureFilePathAbsolute))
-    {
-        this->Cached2DTextures.Add(this->TextureFailureTextureCacheKey, Tex);
-        /* Safety net. If everything worked accordingly. */
-        return this->GetBlendTexture2D(BlendName);
-    }
-
-    LOG_ERROR(LogTextureSubsystem, "Failed to load blend texture [%s] and failed to load the placeholder texture.", *BlendName)
-
-    return nullptr;
-}
-
-auto UTextureSubsystem::GetSafeBlendTexture2D(const FString& BlendName) -> UTexture2D*
-{
-    UTexture2D* Texture = this->GetBlendTexture2D(BlendName);
-    if (Texture == nullptr)
-    {
-        LOG_FATAL(LogTextureSubsystem, "Failed to load blend texture: %s", *BlendName)
         return nullptr;
     }
 
-    return Texture;
+    return this->GetAndCacheTexture2D(TextureName, Path);
 }
 
-void UTextureSubsystem::LoadTextureNamesForNamespace(const FString& NameSpace)
+UTexture2D* UTextureSubsystem::GetSafeDestructionTexture2D(const FString& TextureName)
 {
-    if (this->HasLoadedTextureNamesForNameSpace(NameSpace))
+    if (UTexture2D* Texture = this->GetDestructionTexture2D(TextureName))
     {
-        LOG_WARNING(LogTextureSubsystem, "World texture names already contains the namespace [%s].", *NameSpace)
-        return;
+        return Texture;
     }
 
-    if (IFileManager& FileManager = IFileManager::Get(); FileManager.DirectoryExists(*(this->VoxelTextureDirectoryAbsolute / NameSpace)))
-    {
-        TArray<FString> TextureNames;
-        FileManager.FindFiles(TextureNames, * (this->VoxelTextureDirectoryAbsolute / NameSpace), TEXT("png"));
-
-        for (FString& TextureName : TextureNames)
-        {
-            TextureName.RemoveFromEnd(TEXT(".png"));
-        }
-
-        this->WorldTextureNames.Add(FPrivateTexNames{NameSpace, TextureNames});
-
-        return;
-    }
-
-    LOG_WARNING(LogTextureSubsystem, "Failed to find world texture directory [%s].", *(this->VoxelTextureDirectoryAbsolute / NameSpace))
-
-    return;
-}
-
-int32 UTextureSubsystem::GetWorldTexture2DCount(const FString& NameSpace)
-{
-    if (this->HasLoadedTextureNamesForNameSpace(NameSpace))
-    {
-        return this->GetWorldTextureNamesForNamespace(NameSpace).Num();
-    }
-
-    this->LoadTextureNamesForNamespace(NameSpace);
-
-    return this->GetWorldTexture2DCount(NameSpace);
-}
-
-const FString& UTextureSubsystem::GetWorldTexture2DNameByIndex(const FString& NameSpace, const int32 Index)
-{
-    return this->GetWorldTextureNamesForNamespace(NameSpace)[Index];
-}
-
-const TArray<FString>& UTextureSubsystem::GetWorldTextureNamesForNamespace(const FString& InNameSpace)
-{
-    if (this->HasLoadedTextureNamesForNameSpace(InNameSpace) == false)
-    {
-        this->LoadTextureNamesForNamespace(InNameSpace);
-    }
-
-    for (const auto& [NameSpace, TextureNames] : this->WorldTextureNames)
-    {
-        if (NameSpace == InNameSpace)
-        {
-            return TextureNames;
-        }
-    }
-
-    return this->EmptyStringArray;
-}
-
-UTexture2D* UTextureSubsystem::GetWorldTexture2D(const FString& NameSpace, const FString& TextureName)
-{
-    const FString Key = FString::Printf(TEXT("%s_%s::%s"), *this->WorldTextureCachePrefix, *NameSpace, *TextureName);
-
-    if (this->Cached2DTextures.Contains(Key))
-    {
-        return this->Cached2DTextures[Key];
-    }
-
-    if (UTexture2D* Tex =
-        UTextureSubsystem::LoadTexture2DFromDisk(
-            FString::Printf(
-                TEXT("%s.png"),
-                * (this->VoxelTextureDirectoryAbsolute / NameSpace / TextureName)
-            )
-        )
-    )
-    {
-        this->Cached2DTextures.Add(Key, Tex);
-        /* Safety net. If everything worked accordingly. */
-        return this->GetWorldTexture2D(NameSpace, TextureName);
-    }
-
-    /* Failed to find texture. Returning a placeholder to not immediately crash the game. */
-
-    if (this->Cached2DTextures.Contains(this->TextureFailureTextureCacheKey))
-    {
-        return this->Cached2DTextures[this->TextureFailureTextureCacheKey];
-    }
-
-    if (UTexture2D* Tex = UTextureSubsystem::LoadTexture2DFromDisk(this->TextureFailureTextureFilePathAbsolute))
-    {
-        this->Cached2DTextures.Add(this->TextureFailureTextureCacheKey, Tex);
-        /* Safety net. If everything worked accordingly. */
-        return this->GetWorldTexture2D(NameSpace, TextureName);
-    }
-
-    LOG_ERROR(LogTextureSubsystem, "Failed to load world texture [%s::%s] and failed to load the placeholder texture.", *NameSpace, *TextureName)
+    LOG_FATAL(LogTextureSubsystem, "Failed to load destruction texture: %s.", *TextureName)
 
     return nullptr;
 }
 
-UTexture2D* UTextureSubsystem::GetWorldDestructionTexture2D(const FString& NameSpace, const FString& TextureName)
+TArray<FString> UTextureSubsystem::LoadAllVoxelTextureNamesForNamespace(const FString& Namespace) const
 {
-    const FString Key = FString::Printf(TEXT("%s_%s::%s"), *this->WorldTextureCachePrefix, *NameSpace, *TextureName);
-
-    if (this->Cached2DTextures.Contains(Key))
+    FString AbsolutePath;
+    if (this->CreatePathToDirectory(Namespace, ESubNameSpacePaths::Voxels, AbsolutePath) == false)
     {
-        return this->Cached2DTextures[Key];
+        return TArray<FString>();
     }
 
-    if (UTexture2D* Tex = UTextureSubsystem::LoadTexture2DFromDisk(
-        this->CreatePathFile(NameSpace, ESubNameSpacePaths::Destruction, TextureName)
-    ))
+    IFileManager& FileManager = IFileManager::Get();
+    TArray<FString> Out = TArray<FString>();
+
+    FileManager.FindFiles(Out, *AbsolutePath, *this->FileExtension);
+
+    for (FString& VoxelTextureName : Out)
     {
-        this->Cached2DTextures.Add(Key, Tex);
-        /* Safety net. If everything worked accordingly. */
-        return this->GetWorldDestructionTexture2D(NameSpace, TextureName);
+        VoxelTextureName.RemoveFromEnd(FString::Printf(TEXT(".%s"), *this->FileExtension));
     }
 
-    /* Failed to find texture. Returning a placeholder to not immediately crash the game. */
-
-    if (this->Cached2DTextures.Contains(this->TextureFailureTextureCacheKey))
-    {
-        return this->Cached2DTextures[this->TextureFailureTextureCacheKey];
-    }
-
-    if (UTexture2D* Tex = UTextureSubsystem::LoadTexture2DFromDisk(this->TextureFailureTextureFilePathAbsolute))
-    {
-        this->Cached2DTextures.Add(this->TextureFailureTextureCacheKey, Tex);
-        /* Safety net. If everything worked accordingly. */
-        return this->GetWorldDestructionTexture2D(NameSpace, TextureName);
-    }
-
-    LOG_ERROR(LogTextureSubsystem, "Failed to load world texture [%s::%s] and failed to load the placeholder texture.", *NameSpace, *TextureName)
-
-    return nullptr;
+    return Out;
 }
 
-UTexture2D* UTextureSubsystem::GetSafeWorldDestructionTexture2D(const FString& NameSpace, const FString& TextureName)
+TArray<FString> UTextureSubsystem::SplitVoxelTextureName(const FString& TextureName) const
 {
-    UTexture2D* Texture = this->GetWorldDestructionTexture2D(NameSpace, TextureName);
-    if (Texture == nullptr)
+    TArray<FString> Out;
+
+    FString Current = "";
+    for (const TCHAR& Char : TextureName)
     {
-        LOG_FATAL(LogTextureSubsystem, "Failed to load world destruction texture: %s::%s", *NameSpace, *TextureName)
-        return nullptr;
+        if (Char == this->TexSectionDividerChar)
+        {
+            Out.Add(Current);
+            Current = "";
+        }
+        else
+        {
+            Current.AppendChar(Char);
+        }
+
+        continue;
     }
 
-    return Texture;
+    if (Current.Len() > 0)
+    {
+        Out.Add(Current);
+    }
+
+    return Out;
 }
 
 int64 UTextureSubsystem::GetBytesPerPixel(const ERawImageFormat::Type Format)
@@ -535,30 +418,33 @@ int64 UTextureSubsystem::GetBytesPerPixel(const ERawImageFormat::Type Format)
     return OutBytesPerPixel;
 }
 
-TArray<FString> UTextureSubsystem::SplitTextureName(const FString& TextureName) const
+UTexture2D* UTextureSubsystem::GetAndCacheTexture2D(const FString& CacheKey, const FString& FallbackAbsoluteFilePath)
 {
-    TArray<FString> Out;
-
-    FString Current = "";
-    for (const TCHAR& Char : TextureName)
+    if (UTexture2D* CachedTexture = this->Cached2DTextures.FindRef(CacheKey); CachedTexture != nullptr)
     {
-        if (Char == this->TexSectionDividerChar)
-        {
-            Out.Add(Current);
-            Current = "";
-        }
-        else
-        {
-            Current.AppendChar(Char);
-        }
+        return CachedTexture;
     }
 
-    if (Current.Len() > 0)
+    if (UTexture2D* Tex = UTextureSubsystem::LoadTexture2DFromDisk(FallbackAbsoluteFilePath))
     {
-        Out.Add(Current);
+        this->Cached2DTextures.Add(CacheKey, Tex);
+        return Tex;
     }
 
-    return Out;
+    if (this->Cached2DTextures.Contains(this->TextureFailureTextureFileName))
+    {
+        return this->Cached2DTextures[this->TextureFailureTextureFileName];
+    }
+
+    if (UTexture2D* Tex = UTextureSubsystem::LoadTexture2DFromDisk(this->TextureFailureTextureFilePathAbsolute))
+    {
+        this->Cached2DTextures.Add(this->TextureFailureTextureFileName, Tex);
+        return Tex;
+    }
+
+    LOG_FATAL(LogTextureSubsystem, "Failed to load and cache texture for [%s] and failed to load the placeholder texture.", *CacheKey)
+
+    return nullptr;
 }
 
 UTexture2D* UTextureSubsystem::LoadTexture2DFromDisk(const FString& AbsolutePath)

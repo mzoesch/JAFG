@@ -97,7 +97,7 @@ void UJAFGContainerSlot::RenderSlot(void) const
 
         this->Image_Preview->SetBrushFromTexture(
             this->GetGameInstance()->GetSubsystem<UTextureSubsystem>()
-                ->GetSafeTexture2D(this->SlotData->GetSlotValue().AccumulatedIndex
+                ->GetPreviewTexture2D(this->SlotData->GetSlotValue().AccumulatedIndex
             )
         );
         this->Image_Preview->SetColorAndOpacity(FLinearColor::White);

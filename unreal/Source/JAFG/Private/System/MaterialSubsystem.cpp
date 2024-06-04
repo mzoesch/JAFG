@@ -33,6 +33,36 @@ void UMaterialSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
     this->MDynamicGroups.Empty();
 
+    this->GameInstance = Cast<UJAFGGameInstance>(this->GetWorld()->GetGameInstance());
+
+    if (this->GameInstance == nullptr)
+    {
+        LOG_FATAL(LogMaterialSubsystem, "Game instance is not of type UJAFGGameInstance.")
+        return;
+    }
+
+    this->VoxelSubsystem   = this->GameInstance->GetSubsystem<UVoxelSubsystem>();
+    this->TextureSubsystem = this->GameInstance->GetSubsystem<UTextureSubsystem>();
+    this->MaterialSettings = GetDefault<UJAFGMaterialSettings>();
+
+    if (this->VoxelSubsystem == nullptr)
+    {
+        LOG_FATAL(LogMaterialSubsystem, "Voxel subsystem is invalid.")
+        return;
+    }
+
+    if (this->TextureSubsystem == nullptr)
+    {
+        LOG_FATAL(LogMaterialSubsystem, "Texture subsystem is invalid.")
+        return;
+    }
+
+    if (this->MaterialSettings == nullptr)
+    {
+        LOG_FATAL(LogMaterialSubsystem, "Material settings are invalid.")
+        return;
+    }
+
     this->InitializeMaterials();
     this->InitializeDestructionMaterial();
 
@@ -46,56 +76,24 @@ void UMaterialSubsystem::Deinitialize(void)
 
 void UMaterialSubsystem::InitializeMaterials(void)
 {
-    const UJAFGGameInstance*     MyGameInstance   = Cast<UJAFGGameInstance>(this->GetWorld()->GetGameInstance());
-
-    if (MyGameInstance == nullptr)
-    {
-        LOG_FATAL(LogMaterialSubsystem, "Game instance is not of type UJAFGGameInstance.")
-        return;
-    }
-
-    UVoxelSubsystem*             VoxelSubsystem   = MyGameInstance->GetSubsystem<UVoxelSubsystem>();
-    UTextureSubsystem*           TextureSubsystem = MyGameInstance->GetSubsystem<UTextureSubsystem>();
-    const UJAFGMaterialSettings* MaterialSettings = GetDefault<UJAFGMaterialSettings>();
-
-    if (VoxelSubsystem == nullptr)
-    {
-        LOG_FATAL(LogMaterialSubsystem, "Voxel subsystem is invalid.")
-        return;
-    }
-
-    if (TextureSubsystem == nullptr)
-    {
-        LOG_FATAL(LogMaterialSubsystem, "Texture subsystem is invalid.")
-        return;
-    }
-
-    if (MaterialSettings == nullptr)
-    {
-        LOG_FATAL(LogMaterialSubsystem, "Material settings are invalid.")
-        return;
-    }
-
     // Load alpha masks
     //////////////////////////////////////////////////////////////////////////
     this->Blends = TextureSubsystem->LoadAllBlendTextureNames();
-#if !UE_BUILD_SHIPPING
     if (this->Blends.Num() == 0)
     {
-        LOG_ERROR(LogMaterialSubsystem, "No blend textures found. Was this intentional?")
+        LOG_WARNING(LogMaterialSubsystem, "No blend textures found. Was this intentional?")
     }
-#endif /* !UE_BUILD_SHIPPING */
 
     // Create the dynamically generated materials
     //////////////////////////////////////////////////////////////////////////
-    TextureSubsystem->LoadTextureNamesForNamespace("JAFG");
-    const int32 NamespaceTexCount = TextureSubsystem->GetWorldTexture2DCount("JAFG");
-    LOG_VERBOSE(LogMaterialSubsystem, "For namespace %s, there were %d textures found.", *FString("JAFG"), NamespaceTexCount)
+    const TArray<FString> ImportantTextures = this->FindAllImportantTextures();
+
+    LOG_VERBOSE(LogMaterialSubsystem, "Found %d important textures.", ImportantTextures.Num())
 
     UTexture2DArray* TexArr = UTexture2DArray::CreateTransient(
         UMaterialSubsystem::TexArrWidthHorizontal,
         UMaterialSubsystem::TexArrWidthVertical,
-        NamespaceTexCount,
+        ImportantTextures.Num(),
         /* The old pixel format. Look at Tex Channel flips for more information. */
         /* EPixelFormat::PF_R8G8B8A8, */
         EPixelFormat::PF_B8G8R8A8
@@ -119,8 +117,6 @@ void UMaterialSubsystem::InitializeMaterials(void)
          * as they will use a different arr instance as a parent.
          */
         this->Blends.Num(),
-        /* The old pixel format. Look at Tex Channel flips for more information. */
-        /* EPixelFormat::PF_R8G8B8A8, */
         EPixelFormat::PF_B8G8R8A8
     );
     BlendTexArr->Filter              = TextureFilter::TF_Nearest;
@@ -149,53 +145,58 @@ void UMaterialSubsystem::InitializeMaterials(void)
     }
     int64 CurrentTexArrMemoryOffset = 0;
 
-    for (int32 SourceTexIndex = 0; SourceTexIndex < NamespaceTexCount; ++SourceTexIndex)
+    int32 SourceTextureIndex = -1;
+    for (const FString TexName : ImportantTextures)
     {
-        const FString& CurrentTexName    = TextureSubsystem->GetWorldTexture2DNameByIndex("JAFG", SourceTexIndex);
+        ++SourceTextureIndex;
 
         /*
-         * TexNameParts is of type: VoxelName, <VoxelNormal>, <VoxelBlend> (While <> means optional)
+         * TexNameParts is of type: VoxelName, <VoxelNormal>, <VoxelBlend> (While <> means optional).
          * See this method's documentation for more information.
          */
-        const TArray<FString> CurrentTexSplits = TextureSubsystem->SplitTextureName(CurrentTexName);
-        check( CurrentTexSplits.Num() > 0 && CurrentTexSplits.Num() < 4 )
+        const TArray<FString> CurrentTexSplits = TextureSubsystem->SplitVoxelTextureName(TexName);
+        jcheck( CurrentTexSplits.Num() > 0 && CurrentTexSplits.Num() < 4 )
 
         const FString CurrentVoxelName = CurrentTexSplits[0];
 
-        const voxel_t CurrentVoxelIndex = VoxelSubsystem->GetVoxelIndex("JAFG", CurrentVoxelName);
+        const voxel_t CurrentVoxelIndex = this->VoxelSubsystem->GetVoxelIndex(CurrentVoxelName);
         if (CurrentVoxelIndex == ECommonVoxels::Null)
         {
-            LOG_FATAL(LogMaterialSubsystem, "Voxel index is invalid for voxel [%s::%s]." , *FString("JAFG"), *CurrentVoxelName)
+            LOG_FATAL(
+                LogMaterialSubsystem,
+                "Voxel index is invalid for voxel [%s::%s]." ,
+                *this->TextureSubsystem->GetFirstNamespaceForFile(ESubNameSpacePaths::Voxels, TexName), *CurrentVoxelName
+            )
             return;
         }
 
         /* If true, we have something like: StoneVoxel. */
         if (CurrentTexSplits.Num() == 1)
         {
-            VoxelSubsystem->VoxelMasks[CurrentVoxelIndex].AddTextureGroup(ENormalLookup::Default, ETextureGroup::Opaque);
-            VoxelSubsystem->VoxelMasks[CurrentVoxelIndex].AddTextureIndex(ENormalLookup::Default, SourceTexIndex);
+            this->VoxelSubsystem->VoxelMasks[CurrentVoxelIndex].AddTextureGroup(ENormalLookup::Default, ETextureGroup::Opaque);
+            this->VoxelSubsystem->VoxelMasks[CurrentVoxelIndex].AddTextureIndex(ENormalLookup::Default, SourceTextureIndex);
         }
 
         /* If true, we have something like: GrassVoxel_Top_Full. */
         else if (CurrentTexSplits.Num() == 3)
         {
-            const FString NormalAsText = CurrentTexSplits[1];            check( NormalAsText.IsEmpty() == false )
-            const FString BlendAsText  = CurrentTexSplits[2];            check( BlendAsText.IsEmpty()  == false )
+            const FString NormalAsText = CurrentTexSplits[1];            jcheck( NormalAsText.IsEmpty() == false )
+            const FString BlendAsText  = CurrentTexSplits[2];            jcheck( BlendAsText.IsEmpty()  == false )
 
-            const int32   Blend        = this->Blends.Find(BlendAsText); check( Blend != this->NoBlend )
+            const int32   Blend        = this->Blends.Find(BlendAsText); jcheck( Blend != this->NoBlend )
 
             if (ENormalLookup::IsValid(NormalAsText) == false)
             {
                 LOG_FATAL(
                     LogMaterialSubsystem,
                     "Invalid normal lookup for voxel [%s::%s]. Faulty texture: %s.",
-                    *FString("JAFG"), *CurrentVoxelName, *CurrentTexName
+                    *this->TextureSubsystem->GetFirstNamespaceForFile(ESubNameSpacePaths::Voxels, TexName), *CurrentVoxelName, *TexName
                 )
                 return;
             }
 
-            VoxelSubsystem->VoxelMasks[CurrentVoxelIndex].AddSafeTextureGroup(ENormalLookup::FromString(NormalAsText), ETextureGroup::FromBlendArrIdx(Blend));
-            VoxelSubsystem->VoxelMasks[CurrentVoxelIndex].AddSafeTextureIndex(ENormalLookup::FromString(NormalAsText), SourceTexIndex);
+            this->VoxelSubsystem->VoxelMasks[CurrentVoxelIndex].AddSafeTextureGroup(ENormalLookup::FromString(NormalAsText), ETextureGroup::FromBlendArrIdx(Blend));
+            this->VoxelSubsystem->VoxelMasks[CurrentVoxelIndex].AddSafeTextureIndex(ENormalLookup::FromString(NormalAsText), SourceTextureIndex);
         }
 
         /* If true, we have something like: MyVoxel_<SUFFIX>. */
@@ -206,15 +207,15 @@ void UMaterialSubsystem::InitializeMaterials(void)
             {
                 const int32 Blend = this->Blends.Find(CurrentTexSplits[1]); check( Blend != this->NoBlend )
 
-                VoxelSubsystem->VoxelMasks[CurrentVoxelIndex].AddTextureGroup(ENormalLookup::Default, ETextureGroup::FromBlendArrIdx(Blend));
-                VoxelSubsystem->VoxelMasks[CurrentVoxelIndex].AddTextureIndex(ENormalLookup::Default, SourceTexIndex);
+                this->VoxelSubsystem->VoxelMasks[CurrentVoxelIndex].AddTextureGroup(ENormalLookup::Default, ETextureGroup::FromBlendArrIdx(Blend));
+                this->VoxelSubsystem->VoxelMasks[CurrentVoxelIndex].AddTextureIndex(ENormalLookup::Default, SourceTextureIndex);
             }
 
             /* If true, we have something like: GrassVoxel_Bot. */
             else if (ENormalLookup::IsValid(CurrentTexSplits[1]))
             {
-                VoxelSubsystem->VoxelMasks[CurrentVoxelIndex].AddSafeTextureGroup(ENormalLookup::FromString(CurrentTexSplits[1]), ETextureGroup::Opaque);
-                VoxelSubsystem->VoxelMasks[CurrentVoxelIndex].AddSafeTextureIndex(ENormalLookup::FromString(CurrentTexSplits[1]), SourceTexIndex);
+                this->VoxelSubsystem->VoxelMasks[CurrentVoxelIndex].AddSafeTextureGroup(ENormalLookup::FromString(CurrentTexSplits[1]), ETextureGroup::Opaque);
+                this->VoxelSubsystem->VoxelMasks[CurrentVoxelIndex].AddSafeTextureIndex(ENormalLookup::FromString(CurrentTexSplits[1]), SourceTextureIndex);
             }
 
             else
@@ -222,7 +223,7 @@ void UMaterialSubsystem::InitializeMaterials(void)
                 LOG_FATAL(
                     LogMaterialSubsystem,
                     "Invalid normal lookup for voxel [%s::%s]. Faulty texture: %s.",
-                    *FString("JAFG"), *CurrentVoxelName, *CurrentTexName
+                    *this->TextureSubsystem->GetFirstNamespaceForFile(ESubNameSpacePaths::Voxels, TexName), *CurrentVoxelName, *TexName
                 )
                 return;
             }
@@ -233,20 +234,20 @@ void UMaterialSubsystem::InitializeMaterials(void)
             LOG_FATAL(
                 LogMaterialSubsystem,
                 "Invalid texture name parts for voxel [%s::%s]. Faulty texture: %s.",
-                *FString("JAFG"), *CurrentVoxelName, *CurrentTexName
+                *this->TextureSubsystem->GetFirstNamespaceForFile(ESubNameSpacePaths::Voxels, TexName), *CurrentVoxelName, *TexName
             )
             return;
         }
 
         void* DestinationSliceMipDataPtr = static_cast<uint8*>(TexArrMipDataPtr) + CurrentTexArrMemoryOffset;
 
-        UTexture2D* CurrentSlicePtr = TextureSubsystem->GetWorldTexture2D("JAFG", CurrentTexName);
+        UTexture2D* CurrentSlicePtr = this->TextureSubsystem->GetVoxelTexture2D(TexName);
         if (CurrentSlicePtr == nullptr)
         {
             LOG_FATAL(
                 LogMaterialSubsystem,
                 "Missing source texture while making texture array, element: %d. For %s::%s.",
-                SourceTexIndex, *FString("JAFG"), *CurrentTexName
+                SourceTextureIndex, *this->TextureSubsystem->GetFirstNamespaceForFile(ESubNameSpacePaths::Voxels, TexName), *TexName
             )
             return;
         }
@@ -257,14 +258,14 @@ void UMaterialSubsystem::InitializeMaterials(void)
             LOG_FATAL(
                 LogMaterialSubsystem,
                 "Failed to aquire read only lock for source texture while making texture array, element: %d. For %s::%s.",
-                SourceTexIndex, *FString("JAFG"), *CurrentTexName
+                SourceTextureIndex, *this->TextureSubsystem->GetFirstNamespaceForFile(ESubNameSpacePaths::Voxels, TexName), *TexName
             )
             return;
         }
 
+#if !PERFORM_R_AND_B_CHANNEL_FLIP
         FMemory::Memcpy(DestinationSliceMipDataPtr, CurrentSliceMipDataPtr, SliceSize);
-
-#if PERFORM_R_AND_B_CHANNEL_FLIP
+#else /* !PERFORM_R_AND_B_CHANNEL_FLIP */
 #define CHANNEL_COUNT 4 /* RGBA */
 
         //
@@ -414,33 +415,45 @@ void UMaterialSubsystem::InitializeMaterials(void)
     return;
 }
 
+TArray<FString> UMaterialSubsystem::FindAllImportantTextures(void) const
+{
+    TArray<FString> Out = TArray<FString>();
+
+    for (const FString& Namespace : this->TextureSubsystem->GetUsedTextureNamespaces())
+    {
+        TArray<FString> CurrentTextures = this->TextureSubsystem->LoadAllVoxelTextureNamesForNamespace(Namespace);
+
+        if (CurrentTextures.IsEmpty())
+        {
+            LOG_WARNING(LogMaterialSubsystem, "No textures found for namespace %s.", *Namespace)
+            continue;
+        }
+
+        for (const FString& Texture : CurrentTextures)
+        {
+            Out.AddUnique(Texture);
+        }
+
+        continue;
+    }
+
+    if (Out.IsEmpty())
+    {
+        LOG_FATAL(LogMaterialSubsystem, "No textures found in any namespace.")
+        return Out;
+    }
+
+    /*
+     * TODO Check if the textures are valid and if not remove them from the list.
+     */
+
+    return Out;
+}
+
 void UMaterialSubsystem::InitializeDestructionMaterial(void)
 {
-    const UJAFGGameInstance*     MyGameInstance   = Cast<UJAFGGameInstance>(this->GetWorld()->GetGameInstance());
-
-    if (MyGameInstance == nullptr)
-    {
-        LOG_FATAL(LogMaterialSubsystem, "Game instance is not of type UJAFGGameInstance.")
-        return;
-    }
-
-    UTextureSubsystem*           TextureSubsystem = MyGameInstance->GetSubsystem<UTextureSubsystem>();
-    const UJAFGMaterialSettings* MaterialSettings = GetDefault<UJAFGMaterialSettings>();
-
-    if (TextureSubsystem == nullptr)
-    {
-        LOG_FATAL(LogMaterialSubsystem, "Texture subsystem is invalid.")
-        return;
-    }
-
-    if (MaterialSettings == nullptr)
-    {
-        LOG_FATAL(LogMaterialSubsystem, "Material settings are invalid.")
-        return;
-    }
-
-    const TArray<FString> DestructionNames = TextureSubsystem->LoadAllDestructionTextureNames(TEXT("JAFG"));
-    LOG_VERBOSE(LogMaterialSubsystem, "Using %d destruction textures found in namespace %s.", DestructionNames.Num(), *FString("JAFG"))
+    const TArray<FString> DestructionNames = this->TextureSubsystem->LoadAllDestructionTextureNames();
+    LOG_VERBOSE(LogMaterialSubsystem, "Using %d destruction textures.", DestructionNames.Num())
 
     // Create the dynamically generated material
     //////////////////////////////////////////////////////////////////////////
@@ -480,13 +493,13 @@ void UMaterialSubsystem::InitializeDestructionMaterial(void)
     {
         void* DestinationSliceMipDataPtr = static_cast<uint8*>(TexArrMipDataPtr) + CurrentTexArrMemoryOffset;
 
-        UTexture2D* CurrentSlicePtr = TextureSubsystem->GetWorldDestructionTexture2D("JAFG", DestructionName);
+        UTexture2D* CurrentSlicePtr = this->TextureSubsystem->GetDestructionTexture2D(DestructionName);
         if (CurrentSlicePtr == nullptr)
         {
             LOG_FATAL(
                 LogMaterialSubsystem,
-                "Missing source texture while making destruction array. Faulty tex %s::%s.",
-                *FString("JAFG"), *DestructionName
+                "Missing source texture while making destruction array. Faulty tex %s.",
+                *DestructionName
             )
             return;
         }
@@ -496,15 +509,15 @@ void UMaterialSubsystem::InitializeDestructionMaterial(void)
         {
             LOG_FATAL(
                 LogMaterialSubsystem,
-                "Failed to aquire read only lock for source texture while making destruction array. Faulty tex %s::%s.",
-                *FString("JAFG"), *DestructionName
+                "Failed to aquire read only lock for source texture while making destruction array. Faulty tex %s.",
+                *DestructionName
             )
             return;
         }
 
+#if !PERFORM_R_AND_B_CHANNEL_FLIP
         FMemory::Memcpy(DestinationSliceMipDataPtr, CurrentSliceMipDataPtr, SliceSize);
-
-#if PERFORM_R_AND_B_CHANNEL_FLIP
+#else /* !PERFORM_R_AND_B_CHANNEL_FLIP */
         LOG_FATAL(LogMaterialSubsystem, "R and B channel flip is not implemented for destruction textures.")
 #endif /* PERFORM_R_AND_B_CHANNEL_FLIP */
 
@@ -523,7 +536,7 @@ void UMaterialSubsystem::InitializeDestructionMaterial(void)
 
     // Apply destruction arrays to materials
     //////////////////////////////////////////////////////////////////////////
-    this->MDynamicDestruction = UMaterialInstanceDynamic::Create(MaterialSettings->MDestruction.LoadSynchronous(), this);
+    this->MDynamicDestruction = UMaterialInstanceDynamic::Create(this->MaterialSettings->MDestruction.LoadSynchronous(), this);
     this->MDynamicDestruction->SetTextureParameterValue("TexArr", TexArr);
 
     return;

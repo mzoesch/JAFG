@@ -31,6 +31,19 @@ void UVoxelSubsystem::Deinitialize(void)
     Super::Deinitialize();
 }
 
+voxel_t UVoxelSubsystem::GetVoxelIndex(const FString& Name) const
+{
+    for (voxel_t_signed i = 0; i < this->VoxelMasks.Num(); ++i)
+    {
+        if (this->VoxelMasks[i].Name == Name)
+        {
+            return i;
+        }
+    }
+
+    return ECommonVoxels::Null;
+}
+
 auto UVoxelSubsystem::GetVoxelIndex(const FString& NameSpace, const FString& Name) const -> uint32
 {
     for (voxel_t_signed i = 0; i < this->VoxelMasks.Num(); ++i)

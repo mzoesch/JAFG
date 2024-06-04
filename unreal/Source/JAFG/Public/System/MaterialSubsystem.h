@@ -7,6 +7,10 @@
 
 #include "MaterialSubsystem.generated.h"
 
+class UJAFGMaterialSettings;
+class UTextureSubsystem;
+class UJAFGGameInstance;
+class UVoxelSubsystem;
 JAFG_VOID
 
 UCLASS(NotBlueprintable)
@@ -64,6 +68,11 @@ private:
      *     A blend extension must always come after the normal extension if both are present.
      */
     void InitializeMaterials(void);
+
+    /** @return The names of the textures, not paths. */
+    TArray<FString> FindAllImportantTextures(void) const;
+
+
     void InitializeDestructionMaterial(void);
 
     /**
@@ -72,4 +81,16 @@ private:
      */
     TArray<FString> Blends;
     const int32     NoBlend = -1;
+
+    UPROPERTY()
+    TObjectPtr<UJAFGGameInstance> GameInstance = nullptr;
+
+    UPROPERTY()
+    TObjectPtr<UVoxelSubsystem> VoxelSubsystem = nullptr;
+
+    UPROPERTY()
+    TObjectPtr<UTextureSubsystem> TextureSubsystem = nullptr;
+
+    UPROPERTY()
+    const UJAFGMaterialSettings* MaterialSettings = nullptr;
 };

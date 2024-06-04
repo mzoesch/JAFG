@@ -40,7 +40,7 @@ void UContainerValueCursor::NativeConstruct(void)
     );
 
     this->Image_Preview->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
-    this->Image_Preview->SetBrushFromTexture(this->GetGameInstance()->GetSubsystem<UTextureSubsystem>()->GetSafeTexture2D(ContainerOwner->CursorValue.AccumulatedIndex));
+    this->Image_Preview->SetBrushFromTexture(this->GetGameInstance()->GetSubsystem<UTextureSubsystem>()->GetPreviewTexture2D(ContainerOwner->CursorValue.AccumulatedIndex));
 
     this->Canvas_WrapperSlot = Cast<UCanvasPanelSlot>(this->SizeBox_Wrapper->Slot);
 
