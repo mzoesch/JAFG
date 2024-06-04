@@ -86,6 +86,14 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
         InputSubsystem->AddContext(Context);
     }
 
+    // Container Context
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGInputContext Context;
+        Context.Name = InputContexts::Container;
+        InputSubsystem->AddContext(Context);
+    }
+
     /*----------------------------------------------------------------------------
         Actions
     ----------------------------------------------------------------------------*/
@@ -104,6 +112,7 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
         Action.EastKeys.KeyA  = EKeys::D;
         Action.EastKeys.KeyB  = EKeys::Invalid;
         Action.Contexts.Add(InputContexts::Footlike);
+        Action.Contexts.Add(InputContexts::Container);
         InputSubsystem->AddAction(Action);
     }
 
@@ -202,6 +211,18 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
         Action.Keys.KeyB = EKeys::Invalid;
         Action.Contexts.Add(InputContexts::Escape);
         Action.Contexts.Add(InputContexts::Footlike);
+        InputSubsystem->AddAction(Action);
+    }
+
+    // Toggle Container Action
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGDualInputAction Action;
+        Action.Name      = InputActions::ToggleContainer;
+        Action.Keys.Add( { EKeys::F, EKeys::Invalid } );
+        Action.Keys.Add( { EKeys::F, EKeys::Escape } );
+        Action.Contexts.Add( { InputContexts::Footlike } );
+        Action.Contexts.Add( { InputContexts::Container } );
         InputSubsystem->AddAction(Action);
     }
 

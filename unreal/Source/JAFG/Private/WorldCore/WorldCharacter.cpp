@@ -1,9 +1,9 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
-#include "JAFG/Public/WorldCore/WorldCharacter.h"
-
+#include "WorldCore/WorldCharacter.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "JAFGSlateSettings.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -12,6 +12,8 @@
 #include "Input/CustomInputNames.h"
 #include "SettingsData/JAFGInputSubsystem.h"
 #include "Player/WorldPlayerController.h"
+#include "UI/WorldHUD.h"
+#include "UI/OSD/PlayerInventory.h"
 #include "WorldCore/Character/CharacterReach.h"
 #include "WorldCore/Chunk/CommonChunk.h"
 
@@ -102,8 +104,16 @@ void AWorldCharacter::BeginPlay(void)
         this->UpdateFOVBasedOnSprintState();
     });
 
+    WorldPlayerController->GetHUD<AWorldHUD>()->RegisterContainer(UPlayerInventory::Identifier, [] (void) -> TSubclassOf<UJAFGContainer>
+    {
+        return GetDefault<UJAFGSlateSettings>()->PlayerInventoryWidgetClass;
+    });
+
     /* Let components set the current defaults for the active camera. */
     this->OnCameraChangedEvent.Broadcast();
+
+    this->Container.Init(FSlot(Accumulated::Null), 10);
+    this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel()));
 
     return;
 }
@@ -208,6 +218,26 @@ void AWorldCharacter::UpdateFOVBasedOnSprintState(void) const
 }
 
 #pragma region Enhanced Input
+
+FDelegateHandle AWorldCharacter::SubscribeToContainerVisibleEvent(const FOnContainerVisibleSignature::FDelegate& Delegate)
+{
+    return this->OnContainerVisibleEvent.Add(Delegate);
+}
+
+bool AWorldCharacter::UnSubscribeToContainerVisibleEvent(const FDelegateHandle& Handle)
+{
+    return this->OnContainerVisibleEvent.Remove(Handle);
+}
+
+FDelegateHandle AWorldCharacter::SubscribeToContainerLostVisibilityEvent(const FOnContainerLostVisibilitySignature::FDelegate& Delegate)
+{
+    return this->OnContainerLostVisibilityEvent.Add(Delegate);
+}
+
+bool AWorldCharacter::UnSubscribeToContainerLostVisibilityEvent(const FDelegateHandle& Handle)
+{
+    return this->OnContainerLostVisibilityEvent.Remove(Handle);
+}
 
 void AWorldCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -353,6 +383,11 @@ void AWorldCharacter::BindAction(const FString& ActionName, UEnhancedInputCompon
     else if (ActionName == InputActions::Secondary)
     {
         this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldCharacter::OnStartedSecondary);
+    }
+
+    else if (ActionName == InputActions::ToggleContainer)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldCharacter::OnStartedToggleContainer);
     }
 
     else if (ActionName == InputActions::ToggleCameras)
@@ -837,6 +872,35 @@ void AWorldCharacter::OnTogglePerspective(const FInputActionValue& Value)
     return;
 }
 
+void AWorldCharacter::OnStartedToggleContainer(const FInputActionValue& Value)
+{
+    UEnhancedInputLocalPlayerSubsystem* Subsystem     = ENHANCED_INPUT_SUBSYSTEM; jcheck(     Subsystem )
+    UJAFGInputSubsystem*                JAFGSubsystem = JAFG_INPUT_SUBSYSTEM;     jcheck( JAFGSubsystem )
+
+    if (Subsystem->HasMappingContext(JAFGSubsystem->GetSafeContextValue(InputContexts::Container)))
+    {
+        Subsystem->ClearAllMappings();
+        this->SetFootContextBasedOnCharacterState();
+
+        this->OnContainerLostVisibilityEvent.Broadcast();
+
+        return;
+    }
+
+    Subsystem->ClearAllMappings();
+    Subsystem->AddMappingContext(JAFGSubsystem->GetSafeContextValue(InputContexts::Container), 0);
+
+    if (this->OnContainerVisibleEvent.IsBound() == false)
+    {
+        LOG_FATAL(LogWorldChar, "On Container Visible Event is not bound.")
+        return;
+    }
+
+    this->OnContainerVisibleEvent.Broadcast(UPlayerInventory::Identifier);
+
+    return;
+}
+
 void AWorldCharacter::BindAction(
     const FString& ActionName,
     UEnhancedInputComponent* EnhancedInputComponent,
@@ -855,10 +919,8 @@ void AWorldCharacter::BindAction(
 
 void AWorldCharacter::OnEscapeMenuVisibilityChanged(const bool bVisible)
 {
-    UEnhancedInputLocalPlayerSubsystem* Subsystem     = ENHANCED_INPUT_SUBSYSTEM;
-    UJAFGInputSubsystem*                JAFGSubsystem = JAFG_INPUT_SUBSYSTEM;
-    check(     Subsystem )
-    check( JAFGSubsystem )
+    UEnhancedInputLocalPlayerSubsystem* Subsystem     = ENHANCED_INPUT_SUBSYSTEM; jcheck(     Subsystem )
+    UJAFGInputSubsystem*                JAFGSubsystem = JAFG_INPUT_SUBSYSTEM;     jcheck( JAFGSubsystem )
 
     Subsystem->ClearAllMappings();
 

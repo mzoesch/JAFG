@@ -63,6 +63,14 @@ public class Chat : ModuleRules
         }
         );
 
+        /* Plugins */
+        PrivateDependencyModuleNames.AddRange(
+        new string[]
+        {
+            "JAFGExternalCore",
+        }
+        );
+
         PrivateDependencyModuleNames.AddRange(
         new string[]
         {

@@ -25,6 +25,7 @@ public class JAFGExternalCore : ModuleRules
         new string[]
         {
             "Core",
+            "DeveloperSettings",
         }
         );
 

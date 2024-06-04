@@ -2,7 +2,7 @@
 
 #include "System/VoxelSubsystem.h"
 #include "Accumulated.h"
-#include "ModificationSupervisorSubsystem.h"
+#include "System/PreInternalInitializationSubsystemRequirements.h"
 
 UVoxelSubsystem::UVoxelSubsystem(void) : Super()
 {
@@ -13,7 +13,7 @@ void UVoxelSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     Super::Initialize(Collection);
 
-    LOG_VERBOSE(LogVoxelSubsystem, "Called." )
+    LOG_VERBOSE(LogVoxelSubsystem, "Called.")
 
     this->InitializeCommonVoxels();
     this->InitializeOptionalVoxels();
@@ -81,9 +81,23 @@ void UVoxelSubsystem::InitializeCommonVoxels(void)
 
 void UVoxelSubsystem::InitializeOptionalVoxels(void)
 {
-    this->GetGameInstance()
-        ->GetSubsystem<UModificationSupervisorSubsystem>()
-            ->InitializeOptionalVoxelsEvent.Broadcast(this->VoxelMasks);
+    TArray<UGameInstanceSubsystem*> Arr =
+        this->GetGameInstance()->GetSubsystemArray<UGameInstanceSubsystem>();
+
+    for (UGameInstanceSubsystem* Subsystem : Arr)
+    {
+        IPreInternalInitializationSubsystemRequirements* SubsystemInterface =
+            Cast<IPreInternalInitializationSubsystemRequirements>(Subsystem);
+
+        if (SubsystemInterface)
+        {
+            SubsystemInterface->InitializeOptionalVoxels(this->VoxelMasks);
+            return;
+        }
+
+    }
+
+    LOG_FATAL(LogVoxelSubsystem, "No subsystem found that implements the IPreInternalInitializationSubsystemRequirements interface.")
 
     return;
 }

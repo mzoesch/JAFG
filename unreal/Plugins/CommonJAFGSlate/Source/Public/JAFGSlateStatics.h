@@ -20,6 +20,7 @@ enum Type : uint8
     PrimaryAlphaMid,
     PrimaryAlphaLess,
     Secondary,
+    InGameOSD,
 };
 
 }

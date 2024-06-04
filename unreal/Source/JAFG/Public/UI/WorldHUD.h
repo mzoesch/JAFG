@@ -9,6 +9,7 @@
 
 JAFG_VOID
 
+class UJAFGContainer;
 class UJAFGWidget;
 class UJAFGUserWidget;
 class UEditorWorldCommandsSimulation;
@@ -28,6 +29,12 @@ protected:
 
     virtual void BeginPlay(void) override;
 
+public:
+
+    auto RegisterContainer(const FString& Identifier, const TFunction<TSubclassOf<UJAFGContainer>(void)>& ContainerClassGetter) -> bool;
+
+protected:
+
 #if WITH_EDITOR
     /**
      * If the PIE is running in simulation mode, many HUD elements are not needed or cannot even be constructed.
@@ -36,6 +43,12 @@ protected:
     virtual void CreateSimulationHUD(void);
 #endif /* WITH_EDITOR */
 
+    void OnContainerVisible(const FString& Identifier);
+    void OnContainerLostVisibility(void);
+    /** Maps identifiers to a UClass of containers. */
+    TMap<FString, TFunction<TSubclassOf<UJAFGContainer>(void)>> ContainerClassMap;
+    TObjectPtr<UJAFGContainer> CurrentContainer;
+
 private:
 
     TObjectPtr<UJAFGUserWidget> Crosshair;
@@ -43,4 +56,7 @@ private:
     TObjectPtr<UJAFGUserWidget> ChatMenu;
     TObjectPtr<UJAFGUserWidget> DebugScreen;
     TObjectPtr<UJAFGUserWidget> EscapeMenu;
+
+    FDelegateHandle ContainerVisibleDelegateHandle;
+    FDelegateHandle ContainerLostVisibilityDelegateHandle;
 };

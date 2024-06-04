@@ -4,7 +4,7 @@
 
 #include "Player/WorldPlayerController.h"
 #include "JAFGSlateSettings.h"
-#include "UI/OSD/Debug/DebugScreen.h"
+#include "WorldCore/WorldCharacter.h"
 
 AWorldHUD::AWorldHUD(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -15,7 +15,9 @@ void AWorldHUD::BeginPlay(void)
 {
     Super::BeginPlay();
 
-    if (Cast<AWorldPlayerController>(this->GetOwningPlayerController()) == nullptr)
+    AWorldPlayerController* OwningWorldController = Cast<AWorldPlayerController>(this->GetOwningPlayerController());
+
+    if (OwningWorldController == nullptr)
     {
 #if WITH_EDITOR
         if (GEditor && GEditor->IsSimulateInEditorInProgress())
@@ -103,7 +105,58 @@ void AWorldHUD::BeginPlay(void)
         this->CreateLoadingScreen();
     }
 
+    // Container Screen
+    //////////////////////////////////////////////////////////////////////////
+    OwningWorldController->OnWorldCharacterChange.AddLambda( [this] (AWorldCharacter* StrongOldCharacter, AWorldCharacter* NewCharacter)
+    {
+        if (StrongOldCharacter && this->ContainerVisibleDelegateHandle.IsValid())
+        {
+            if (StrongOldCharacter->UnSubscribeToContainerVisibleEvent(this->ContainerVisibleDelegateHandle) == false)
+            {
+                LOG_WARNING(LogCommonSlate, "Failed to unsubscribe from container visible event. Faulty character: %s.", *StrongOldCharacter->GetName())
+            }
+            this->ContainerVisibleDelegateHandle.Reset();
+        }
+        if (StrongOldCharacter && this->ContainerLostVisibilityDelegateHandle.IsValid())
+        {
+            if (StrongOldCharacter->UnSubscribeToContainerLostVisibilityEvent(this->ContainerLostVisibilityDelegateHandle) == false)
+            {
+                LOG_WARNING(LogCommonSlate, "Failed to unsubscribe from container lost visibility event. Faulty character: %s.", *StrongOldCharacter->GetName())
+            }
+            this->ContainerLostVisibilityDelegateHandle.Reset();
+        }
+
+        if (NewCharacter)
+        {
+            this->ContainerVisibleDelegateHandle =
+                NewCharacter->SubscribeToContainerVisibleEvent(FOnContainerVisibleSignature::FDelegate::CreateLambda(
+                    [this] (const FString& Identifier) { this->OnContainerVisible(Identifier); }
+                )); jcheck( this->ContainerVisibleDelegateHandle.IsValid() )
+            this->ContainerLostVisibilityDelegateHandle =
+                NewCharacter->SubscribeToContainerLostVisibilityEvent(FOnContainerLostVisibilitySignature::FDelegate::CreateLambda(
+                    [this] (void) { this->OnContainerLostVisibility(); }
+                )); jcheck( this->ContainerLostVisibilityDelegateHandle.IsValid() )
+        }
+
+        return;
+    });
+
     return;
+}
+
+bool AWorldHUD::RegisterContainer(const FString& Identifier, const TFunction<TSubclassOf<UJAFGContainer>()>& ContainerClassGetter)
+{
+    if (this->ContainerClassMap.Contains(Identifier))
+    {
+        LOG_WARNING(LogCommonSlate, "Container with identifier %s is already registered.", *Identifier)
+        return false;
+    }
+
+    this->ContainerClassMap.Add(Identifier, ContainerClassGetter);
+
+    LOG_VERBOSE(LogCommonSlate, "Container with identifier %s is now registered.", *Identifier)
+
+    return true;
 }
 
 #if WITH_EDITOR
@@ -128,3 +181,34 @@ void AWorldHUD::CreateSimulationHUD(void)
     return;
 }
 #endif /* WITH_EDITOR */
+
+void AWorldHUD::OnContainerVisible(const FString& Identifier)
+{
+    if (this->ContainerClassMap.Contains(Identifier) == false)
+    {
+        LOG_FATAL(LogCommonSlate, "Container with identifier %s is not registered in the container class map.", *Identifier)
+        return;
+    }
+
+    this->CurrentContainer = CreateWidget<UJAFGContainer>(this->GetWorld(), this->ContainerClassMap[Identifier]());
+    jcheck( this->CurrentContainer )
+    this->CurrentContainer->AddToViewport();
+
+    Cast<ACommonPlayerController>(this->GetOwningPlayerController())->ShowMouseCursor(true);
+
+    LOG_VERBOSE(LogCommonSlate, "Container with identifier %s is now visible.", *Identifier)
+
+    return;
+}
+
+void AWorldHUD::OnContainerLostVisibility(void)
+{
+    LOG_VERBOSE(LogCommonSlate, "Current container lost visibility.")
+
+    this->CurrentContainer->RemoveFromParent();
+    this->CurrentContainer = nullptr;
+
+    Cast<ACommonPlayerController>(this->GetOwningPlayerController())->ShowMouseCursor(false);
+
+    return;
+}

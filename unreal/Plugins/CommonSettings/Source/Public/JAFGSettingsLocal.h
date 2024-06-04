@@ -126,11 +126,17 @@ public:
     UFUNCTION()
     void SetSecondaryColor(const FColor InSecondaryColor);
 
+    UFUNCTION()
+    FColor GetInGameOSDColor( /* void */ ) const;
+    UFUNCTION()
+    void SetInGameOSDColor(const FColor InInGameOSDColor);
+
     inline static constexpr FColor DefaultPrimaryColor          = FColor(  20,  20,  20, 255 );
     inline static constexpr FColor DefaultPrimaryColorAlphaMax  = FColor(  20,  20,  20, 127 );
     inline static constexpr FColor DefaultPrimaryColorAlphaMid  = FColor(  20,  20,  20, 170 );
     inline static constexpr FColor DefaultPrimaryColorAlphaLess = FColor(  20,  20,  20, 210 );
     inline static constexpr FColor DefaultSecondaryColor        = FColor(  60,  60,  60, 255 );
+    inline static constexpr FColor DefaultInGameOSDColor        = FColor( 140, 140, 140, 255 );
 
     UFUNCTION()
     float GetHeavyBlurStrength( /* void */ ) const;
@@ -147,9 +153,9 @@ public:
     UFUNCTION()
     void SetLightBlurStrength(const float InLightBlurStrength);
 
-    inline static constexpr float DefaultHeavyBlurStrength  = 4.0f;
-    inline static constexpr float DefaultMediumBlurStrength = 2.5f;
-    inline static constexpr float DefaultLightBlurStrength  = 1.0f;
+    inline static constexpr float DefaultHeavyBlurStrength  = 10.0f;
+    inline static constexpr float DefaultMediumBlurStrength =  4.0f;
+    inline static constexpr float DefaultLightBlurStrength  =  2.0f;
 
     UFUNCTION()
     int32 GetGargantuanHeaderFontSize( /* void */ ) const;
@@ -201,6 +207,9 @@ private:
 
     UPROPERTY(Config)
     FColor PrimaryColorAlphaLess   = UJAFGSettingsLocal::DefaultPrimaryColorAlphaLess;
+
+    UPROPERTY(Config)
+    FColor InGameOSDColor          = UJAFGSettingsLocal::DefaultInGameOSDColor;
 
     UPROPERTY(Config)
     FColor SecondaryColor          = UJAFGSettingsLocal::DefaultSecondaryColor;

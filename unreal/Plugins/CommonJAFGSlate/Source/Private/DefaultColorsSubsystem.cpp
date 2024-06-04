@@ -40,6 +40,10 @@ FColor UDefaultColorsSubsystem::GetColorByScheme(const EJAFGColorScheme::Type In
     {
         return this->SecondaryColor;
     }
+    case EJAFGColorScheme::InGameOSD:
+    {
+        return this->InGameOSDColor;
+    }
     default:
     {
         LOG_FATAL(LogCommonSlate, "Could not find color scheme: %d.", InScheme)

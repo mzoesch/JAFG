@@ -2,10 +2,12 @@
 
 #pragma once
 
+#include "Container.h"
 #include "MyCore.h"
 #include "GameFramework/Character.h"
 #include "InputTriggers.h"
 #include "Camera/CameraComponent.h"
+#include "Foundation/JAFGContainer.h"
 #include "Player/WorldPlayerController.h"
 #include "WorldCore/Character/MyCharacterMovementComponent.h"
 
@@ -24,7 +26,7 @@ struct FInputActionValue;
 DECLARE_MULTICAST_DELEGATE(FOnCamerChangedEventSignature)
 
 UCLASS(Abstract)
-class JAFG_API AWorldCharacter : public ACharacter
+class JAFG_API AWorldCharacter : public ACharacter, public IContainer, public IContainerOwner
 {
     GENERATED_BODY()
 
@@ -95,18 +97,37 @@ public:
 
 #pragma endregion Member Variables
 
+#pragma region Container
+
+protected:
+
+    const int InventorySize = 30;
+
+    FOnContainerChangedSignature OnCharacterInventoryLikeChangedEvent;
+
+#pragma endregion Container
+
 #pragma region Enhanced Input
 
     //////////////////////////////////////////////////////////////////////////
     // Enhanced Input Extern Events
     //////////////////////////////////////////////////////////////////////////
 
+public:
+
     FORCEINLINE auto IsFlying(void) const -> bool { return this->GetMyCharacterMovement()->IsFlying(); }
     FORCEINLINE auto IsInputFlyEnabled(void) const -> bool { return this->GetMyCharacterMovement()->bAllowInputFly; }
+
+    auto SubscribeToContainerVisibleEvent(const FOnContainerVisibleSignature::FDelegate& Delegate) -> FDelegateHandle;
+    auto UnSubscribeToContainerVisibleEvent(const FDelegateHandle& Handle) -> bool;
+    auto SubscribeToContainerLostVisibilityEvent(const FOnContainerLostVisibilitySignature::FDelegate& Delegate) -> FDelegateHandle;
+    auto UnSubscribeToContainerLostVisibilityEvent(const FDelegateHandle& Handle) -> bool;
 
 private:
 
     FOnCamerChangedEventSignature OnCameraChangedEvent;
+    FOnContainerVisibleSignature OnContainerVisibleEvent;
+    FOnContainerLostVisibilitySignature OnContainerLostVisibilityEvent;
 
 protected:
 
@@ -161,6 +182,8 @@ protected:
     virtual auto OnCompleteZoomCameras(const FInputActionValue& Value) -> void;
     virtual auto OnTogglePerspective(const FInputActionValue& Value) -> void;
     bool bZooming = false;
+
+    virtual auto OnStartedToggleContainer(const FInputActionValue& Value) -> void;
 
 private:
 

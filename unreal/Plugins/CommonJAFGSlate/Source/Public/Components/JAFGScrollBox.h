@@ -4,13 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "Components/ScrollBox.h"
+
 #include "JAFGScrollBox.generated.h"
 
-/**
- *
- */
 UCLASS(Blueprintable)
 class COMMONJAFGSLATE_API UJAFGScrollBox : public UScrollBox
 {
     GENERATED_BODY()
+
+public:
+
+    explicit UJAFGScrollBox(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 };

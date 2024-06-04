@@ -19,7 +19,14 @@ public:
 
     explicit UJAFGBorder(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
+    // IUsesJAFGColorScheme implementation
     virtual void UpdateComponentWithTheirScheme(void) override;
+    // ~IUsesJAFGColorScheme implementation
+
+    /** Add a temporary color on top of the current color inside the brush. */
+    void AddTemporarilyColor(const FColor Color);
+    /** This widget must not have the value EJAFGColorScheme::DontCare set to work. */
+    void ResetToColorScheme(void);
 
 protected:
 

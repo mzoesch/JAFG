@@ -52,4 +52,5 @@ private:
     auto OnShowOnlinePlayersCommand(SERVER_COMMAND_SIG) const -> void;
     auto OnKickCommand(SERVER_COMMAND_SIG) const -> void;
     auto OnChangeDisplayNameCommand(SERVER_COMMAND_SIG) const -> void;
+    auto OnGiveAccumulatedCommand(SERVER_COMMAND_SIG) const -> void;
 };

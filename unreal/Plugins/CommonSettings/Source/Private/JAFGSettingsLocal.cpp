@@ -68,6 +68,7 @@ void UJAFGSettingsLocal::SmartUpdateUserInterfaceColors(void) const
     SMART_UPDATE_VALUE(PrimaryColorAlphaMid)
     SMART_UPDATE_VALUE(PrimaryColorAlphaLess)
     SMART_UPDATE_VALUE(SecondaryColor)
+    SMART_UPDATE_VALUE(InGameOSDColor)
 
     SMART_UPDATE_VALUE(HeavyBlurStrength)
     SMART_UPDATE_VALUE(MediumBlurStrength)
@@ -202,6 +203,16 @@ FColor UJAFGSettingsLocal::GetSecondaryColor(void) const
 void UJAFGSettingsLocal::SetSecondaryColor(const FColor InSecondaryColor)
 {
     this->SecondaryColor = InSecondaryColor;
+}
+
+FColor UJAFGSettingsLocal::GetInGameOSDColor(void) const
+{
+    return this->InGameOSDColor;
+}
+
+void UJAFGSettingsLocal::SetInGameOSDColor(const FColor InInGameOSDColor)
+{
+    this->InGameOSDColor = InInGameOSDColor;
 }
 
 float UJAFGSettingsLocal::GetHeavyBlurStrength(void) const

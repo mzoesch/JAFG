@@ -7,8 +7,10 @@
 
 UTextureSubsystem::UTextureSubsystem(void) : Super()
 {
+#if WITH_EDITOR
     /* PIE may not always clean up properly, so we need to do it ourselves. */
     this->ClearCached2DTextures();
+#endif /* WITH_EDITOR */
 
     return;
 }
@@ -18,10 +20,14 @@ void UTextureSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     Collection.InitializeDependency<UVoxelSubsystem>();
     Super::Initialize(Collection);
 
+#if WITH_EDITOR
     /* PIE may not always clean up properly, so we need to do it ourselves. */
     this->ClearCached2DTextures();
+#endif /* WITH_EDITOR */
 
     this->TexSectionDivider = TCHAR_TO_UTF8(&this->TexSectionDividerChar);
+
+    this->FileExtension     = "png";
 
     // Common paths.
     //////////////////////////////////////////////////////////////////////////
@@ -75,38 +81,42 @@ FString UTextureSubsystem::CreatePath(const FString& InNameSpace, const ESubName
 
 FString UTextureSubsystem::CreatePathFile(const FString& InNameSpace, const ESubNameSpacePaths::Type InType, const FString& InName) const
 {
-    return FString::Printf(TEXT("%s.png"), *(this->CreatePath(InNameSpace, InType) / InName));
+    return FString::Printf(TEXT("%s.%s"), *(this->CreatePath(InNameSpace, InType) / InName), *this->FileExtension);
 }
 
-UTexture2D* UTextureSubsystem::GetTexture2D(const FAccumulated& Accumulated)
+UTexture2D* UTextureSubsystem::GetTexture2D(const voxel_t AccumulatedIndex)
 {
     check( this->VoxelSubsystem )
 
+    const FString VoxelName = this->VoxelSubsystem->GetVoxelName(AccumulatedIndex);
+
 #if WITH_EDITOR
-if (Accumulated.AccumulatedIndex < this->VoxelSubsystem->GetCommonVoxelNum())
-{
-    LOG_FATAL(LogTextureSubsystem, "Texture requested for a common voxel. This is disallowed. Requested Accumulated: %s.", *Accumulated.ToString())
-    return nullptr;
-}
+    if (AccumulatedIndex < this->VoxelSubsystem->GetCommonVoxelNum())
+    {
+        LOG_FATAL(
+            LogTextureSubsystem,
+            "Texture requested for a common voxel. This is disallowed. Requested Accumulated: %s.",
+            *VoxelName
+        )
+        return nullptr;
+    }
 #endif /* WITH_EDITOR */
 
-    if (this->Cached2DTextures.Contains(this->VoxelSubsystem->GetVoxelName(Accumulated.AccumulatedIndex)))
+    if (this->Cached2DTextures.Contains(VoxelName))
     {
-        return this->Cached2DTextures[this->VoxelSubsystem->GetVoxelName(Accumulated.AccumulatedIndex)];
+        return this->Cached2DTextures[VoxelName];
     }
 
-    if (UTexture2D* Tex =
-        UTextureSubsystem::LoadTexture2DFromDisk(
-            FString::Printf(
-                TEXT("%s.png"),
-                * ( this->GeneratedAssetsDirectoryAbsolute / this->VoxelSubsystem->GetVoxelName(Accumulated.AccumulatedIndex) )
-            )
+    if (UTexture2D* Tex = UTextureSubsystem::LoadTexture2DFromDisk(
+        FString::Printf(
+            TEXT("%s.%s"),
+            *( this->GeneratedAssetsDirectoryAbsolute / VoxelName ), *this->FileExtension
         )
-    )
+    ))
     {
-        this->Cached2DTextures.Add(this->VoxelSubsystem->GetVoxelName(Accumulated.AccumulatedIndex), Tex);
+        this->Cached2DTextures.Add(this->VoxelSubsystem->GetVoxelName(AccumulatedIndex), Tex);
         /* Safety net. If everything worked accordingly. */
-        return this->GetTexture2D(Accumulated);
+        return this->GetTexture2D(AccumulatedIndex);
     }
 
     /* Failed to find texture. Returning a placeholder to not immediately crash the game. */
@@ -120,10 +130,22 @@ if (Accumulated.AccumulatedIndex < this->VoxelSubsystem->GetCommonVoxelNum())
     {
         this->Cached2DTextures.Add(this->TextureFailureTextureCacheKey, Tex);
         /* Safety net. If everything worked accordingly. */
-        return this->GetTexture2D(Accumulated);
+        return this->GetTexture2D(AccumulatedIndex);
     }
 
-    LOG_ERROR(LogTextureSubsystem, "Failed to load texture for accumulated %s and failed to load the placeholder texture.", *Accumulated.ToString())
+    LOG_ERROR(LogTextureSubsystem, "Failed to load texture for accumulated %s and failed to load the placeholder texture.", *VoxelName)
+
+    return nullptr;
+}
+
+UTexture2D* UTextureSubsystem::GetSafeTexture2D(const voxel_t AccumulatedIndex)
+{
+    if (UTexture2D* Texture = this->GetTexture2D(AccumulatedIndex))
+    {
+        return Texture;
+    }
+
+    LOG_FATAL(LogTextureSubsystem, "Failed to load texture for accumulated: %s.", *this->VoxelSubsystem->GetVoxelName(AccumulatedIndex))
 
     return nullptr;
 }

@@ -11,12 +11,13 @@
 
 #include "WorldPlayerController.generated.h"
 
-class UServerWorldSettingsReplicationComponent;
 JAFG_VOID
 
 /** The time in seconds after this AActor creation, when this strike was marked. */
 typedef int32 FStrike;
 
+class AWorldCharacter;
+class UServerWorldSettingsReplicationComponent;
 class UChatMenu;
 class UChatComponent;
 class UEscapeMenuResumeButton;
@@ -26,6 +27,12 @@ DECLARE_MULTICAST_DELEGATE(FSlateVisibilityChangedOwnerVisSignature)
 DECLARE_MULTICAST_DELEGATE_OneParam(FSlateVisibilityChangedSignature, const bool /* bVisible */)
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FChatHistoryLookupSignature, const bool /* bPrevious */)
+
+/**
+ * Only called on the owing local connection.
+ * @note Both values can be null.
+ */
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnWorldCharacterChangeSignature, AWorldCharacter* StrongOldCharacter, AWorldCharacter* NewCharater)
 
 #define ADD_SLATE_VIS_DELG(Method)                                            \
     FSlateVisibilityChangedSignature::FDelegate::CreateUObject(this, &Method)
@@ -173,6 +180,8 @@ public:
     virtual void OnRep_Pawn(void) override;
     // ~AController implementation
 
+    FOnWorldCharacterChangeSignature OnWorldCharacterChange;
+
 protected:
 
     void DestroyLoadingScreen(void) const;
@@ -188,6 +197,9 @@ private:
 
     UFUNCTION(Server, Reliable, WithValidation)
     void TellServerThatClientIsReadyForCharacterSpawn_ServerRPC( /* void */ );
+
+    UFUNCTION()
+    void PrivateOnPossessedPawnChangeListener(APawn* InOldPawn, APawn* InNewPawn);
 
 #pragma endregion World Spawning
 

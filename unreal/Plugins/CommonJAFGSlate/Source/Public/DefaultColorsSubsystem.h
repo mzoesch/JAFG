@@ -36,6 +36,7 @@ public:
     FColor PrimaryColorAlphaMid  = FColor(0, 0, 0, 0);
     FColor PrimaryColorAlphaLess = FColor(0, 0, 0, 0);
     FColor SecondaryColor        = FColor(0, 0, 0, 0);
+    FColor InGameOSDColor        = FColor(0, 0, 0, 0);
 
     float  HeavyBlurStrength     = 0.0f;
     float  MediumBlurStrength    = 0.0f;

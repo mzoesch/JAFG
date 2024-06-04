@@ -11,7 +11,7 @@
 #if DO_CHECK
     // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
     #define jcheck(expr) check(expr)
-#else
+#else /* DO_CHECK */
     // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
     #define jcheck(expr)                                            \
     {                                                               \
@@ -20,4 +20,4 @@
             LOG_FATAL(LogSystem, "jcheck failed with [%s].", #expr) \
         }                                                           \
     }
-#endif
+#endif /* !DO_CHECK */

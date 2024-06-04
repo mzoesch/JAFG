@@ -4,15 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "System/PreInternalInitializationSubsystemRequirements.h"
 
-#include "JAFGGameInstanceSubsystem.generated.h"
+#include "PreInternalInitializationSubsystem.generated.h"
+
+struct FVoxelMask;
 
 /**
  * Makes sure to initialize mods first, so that they can hook into some game instance subsystems and change their
  * initialization behavior.
  */
-UCLASS(Abstract)
-class JAFG_API UJAFGGameInstanceSubsystem : public UGameInstanceSubsystem
+UCLASS(NotBlueprintable)
+class JAFG_API UPreInternalInitializationSubsystem : public UGameInstanceSubsystem, public IPreInternalInitializationSubsystemRequirements
 {
     GENERATED_BODY()
 
@@ -27,4 +30,8 @@ public:
     {
         return Cast<T>(Super::GetGameInstance());
     }
+
+    // IPreInternalInitializationSubsystemRequirements interface
+    virtual void InitializeOptionalVoxels(TArray<FVoxelMask>& VoxelMasks) override;
+    // ~IPreInternalInitializationSubsystemRequirements interface
 };

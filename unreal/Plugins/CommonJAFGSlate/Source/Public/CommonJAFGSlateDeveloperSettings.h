@@ -7,6 +7,7 @@
 
 #include "CommonJAFGSlateDeveloperSettings.generated.h"
 
+class UJAFGUserWidget;
 class ULoadingScreen;
 class UJAFGWarningPopUpYesNo;
 class UJAFGWarningPopUp;
@@ -36,4 +37,7 @@ public:
 
     UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "PopUp")
     TSubclassOf<ULoadingScreen> LoadingScreenWidgetClass;
+
+    UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "PopUp")
+    TSubclassOf<UJAFGUserWidget> ContainerValueCursorWidgetClass;
 };

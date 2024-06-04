@@ -1,11 +1,11 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
-#include "System/JAFGGameInstanceSubsystem.h"
+#include "System/PreInternalInitializationSubsystem.h"
 
-#include "ModificationSupervisorSubsystem.h"
 #include "System/JAFGGameInstance.h"
+#include "ModificationSupervisorSubsystem.h"
 
-void UJAFGGameInstanceSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+void UPreInternalInitializationSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     if (this->GetTemplateGameInstance<UJAFGGameInstance>()->bInitializedExternalMods)
     {
@@ -19,4 +19,9 @@ void UJAFGGameInstanceSubsystem::Initialize(FSubsystemCollectionBase& Collection
     Super::Initialize(Collection);
 
     return;
+}
+
+void UPreInternalInitializationSubsystem::InitializeOptionalVoxels(TArray<FVoxelMask>& VoxelMasks)
+{
+    this->GetGameInstance()->GetSubsystem<UModificationSupervisorSubsystem>()->InitializeOptionalVoxelsEvent.Broadcast(VoxelMasks);
 }

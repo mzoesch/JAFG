@@ -2,17 +2,17 @@
 
 #pragma once
 
-#include "MyCore.h"
-#include "JAFGGameInstanceSubsystem.h"
+#include "CoreMinimal.h"
+#include "ExternalSubsystem.h"
+#include "JAFGTypeDefs.h"
+#include "VoxelMask.h"
 
 #include "VoxelSubsystem.generated.h"
-
-JAFG_VOID
 
 class UMaterialSubsystem;
 
 UCLASS(NotBlueprintable)
-class JAFG_API UVoxelSubsystem : public UJAFGGameInstanceSubsystem
+class JAFGEXTERNALCORE_API UVoxelSubsystem : public UExternalSubsystem
 {
     GENERATED_BODY()
 

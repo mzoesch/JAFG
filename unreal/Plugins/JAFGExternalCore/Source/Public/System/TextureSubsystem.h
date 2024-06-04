@@ -2,14 +2,15 @@
 
 #pragma once
 
-#include "MyCore.h"
-#include "JAFGGameInstanceSubsystem.h"
+#include "CoreMinimal.h"
+#include "ExternalSubsystem.h"
+#include "JAFGLogDefs.h"
+#include "JAFGTypeDefs.h"
 
 #include "TextureSubsystem.generated.h"
 
-JAFG_VOID
-
 class UVoxelSubsystem;
+struct FAccumulated;
 
 namespace ESubNameSpacePaths
 {
@@ -49,7 +50,7 @@ FORCEINLINE FString LexToString(const ESubNameSpacePaths::Type InType)
 }
 
 UCLASS(NotBlueprintable)
-class JAFG_API UTextureSubsystem : public UJAFGGameInstanceSubsystem
+class JAFGEXTERNALCORE_API UTextureSubsystem : public UExternalSubsystem
 {
     GENERATED_BODY()
 
@@ -62,8 +63,10 @@ public:
     virtual void Deinitialize(void) override;
     // ~Subsystem implementation
 
-    FString TexSectionDivider     = "";
+    FString TexSectionDivider     = L"";
     TCHAR   TexSectionDividerChar = '_';
+
+    FString FileExtension         = L"";
 
     //////////////////////////////////////////////////////////////////////////
     // Common paths.
@@ -100,12 +103,8 @@ public:
     // Interface.
     //////////////////////////////////////////////////////////////////////////
 
-    /**
-     * @return The texture associated with the given accumulated data. If the texture is not found or failed to load,
-     *         a placeholder texture failure will be returned. If the platform blocks the loading of the texture,
-     *         nullptr will be returned.
-     */
-    auto GetTexture2D(const FAccumulated& Accumulated) -> UTexture2D*;
+    auto GetTexture2D(const voxel_t AccumulatedIndex) -> UTexture2D*;
+    auto GetSafeTexture2D(const voxel_t AccumulatedIndex) -> UTexture2D*;
 
     /**
      * Checks all files in the blend texture directory and returns the names of all textures found.

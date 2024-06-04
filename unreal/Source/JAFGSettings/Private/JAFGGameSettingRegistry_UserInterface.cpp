@@ -81,6 +81,18 @@ UGameSettingCollection* UJAFGGameSettingRegistry::InitializeUserInterfaceSetting
         }
 
         {
+            UGameSettingValueColor* ConcreteSetting = NewObject<UGameSettingValueColor>();
+            ConcreteSetting->SetIdentifier("InGameOSDColorScheme");
+            ConcreteSetting->SetDisplayName("In Game OSD Color");
+
+            ConcreteSetting->SetValueGetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(GetInGameOSDColor));
+            ConcreteSetting->SetValueSetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(SetInGameOSDColor));
+            ConcreteSetting->SetDefaultValue(UJAFGSettingsLocal::DefaultInGameOSDColor);
+
+            Subsection->AddSetting(ConcreteSetting);
+        }
+
+        {
             UGameSettingValueScalar* ConcreteSetting = NewObject<UGameSettingValueScalar>();
             ConcreteSetting->SetIdentifier("HeavyBlurStrengthScheme");
             ConcreteSetting->SetDisplayName("Heavy Blur Strength");
@@ -90,7 +102,7 @@ UGameSettingCollection* UJAFGGameSettingRegistry::InitializeUserInterfaceSetting
             ConcreteSetting->SetDefaultValue(UJAFGSettingsLocal::DefaultHeavyBlurStrength);
 
             ConcreteSetting->SetUserMinimum(0.0f);
-            ConcreteSetting->SetUserMaximum(5.0f);
+            ConcreteSetting->SetUserMaximum(20.0f);
             ConcreteSetting->SetValueStep(0.1f);
             ConcreteSetting->SetDisplayFormat(UGameSettingValueScalar::Raw);
 
@@ -107,7 +119,7 @@ UGameSettingCollection* UJAFGGameSettingRegistry::InitializeUserInterfaceSetting
             ConcreteSetting->SetDefaultValue(UJAFGSettingsLocal::DefaultMediumBlurStrength);
 
             ConcreteSetting->SetUserMinimum(0.0f);
-            ConcreteSetting->SetUserMaximum(5.0f);
+            ConcreteSetting->SetUserMaximum(20.0f);
             ConcreteSetting->SetValueStep(0.1f);
             ConcreteSetting->SetDisplayFormat(UGameSettingValueScalar::Raw);
 
@@ -124,7 +136,7 @@ UGameSettingCollection* UJAFGGameSettingRegistry::InitializeUserInterfaceSetting
             ConcreteSetting->SetDefaultValue(UJAFGSettingsLocal::DefaultLightBlurStrength);
 
             ConcreteSetting->SetUserMinimum(0.0f);
-            ConcreteSetting->SetUserMaximum(5.0f);
+            ConcreteSetting->SetUserMaximum(20.0f);
             ConcreteSetting->SetValueStep(0.1f);
             ConcreteSetting->SetDisplayFormat(UGameSettingValueScalar::Raw);
 

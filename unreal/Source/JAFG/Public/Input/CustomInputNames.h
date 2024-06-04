@@ -13,11 +13,21 @@ JAFG_VOID
 namespace InputContexts
 {
 
+//////////////////////////////////////////////////////////////////////////
+// Upper contexts
+//////////////////////////////////////////////////////////////////////////
+
 static const FString Footlike = TEXT("Footlike");
-static const FString FootWalk = TEXT("FootWalk");
-static const FString FootFly  = TEXT("FootFly");
-static const FString Escape   = TEXT("Escape");
-static const FString Chat     = TEXT("Chat");
+
+//////////////////////////////////////////////////////////////////////////
+// Lower contexts
+//////////////////////////////////////////////////////////////////////////
+
+static const FString FootWalk  = TEXT("FootWalk");
+static const FString FootFly   = TEXT("FootFly");
+static const FString Escape    = TEXT("Escape");
+static const FString Chat      = TEXT("Chat");
+static const FString Container = TEXT("Container");
 
 }
 
@@ -34,6 +44,7 @@ static const FString FlyDown                   = TEXT("FlyDown");
 static const FString Primary                   = TEXT("Primary");
 static const FString Secondary                 = TEXT("Secondary");
 static const FString ToggleEscapeMenu          = TEXT("ToggleEscapeMenu");
+static const FString ToggleContainer           = TEXT("ToggleContainer");
 static const FString ToggleDebugScreen         = TEXT("ToggleDebugScreen");
 static const FString ToggleChat                = TEXT("ToggleChat");
 static const FString ToggleQuickSessionPreview = TEXT("ToggleQuickSessionPreview");

@@ -16,7 +16,7 @@ struct COMMONSETTINGS_API FGameSettingListEntryPassData : public FWidgetPassData
     USettingsTabBarPanel* OwningPanel;
 };
 
-UCLASS(Transient, NotBlueprintable)
+UCLASS(Abstract, Transient, NotBlueprintable)
 class COMMONSETTINGS_API UGameSettingListEntry : public UJAFGUserWidget
 {
     GENERATED_BODY()

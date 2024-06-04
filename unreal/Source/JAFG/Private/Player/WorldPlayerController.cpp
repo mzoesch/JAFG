@@ -1,7 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "Player/WorldPlayerController.h"
-
 #include "ChatComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -55,6 +54,8 @@ void AWorldPlayerController::BeginPlay(void)
          */
         this->bClientReadyForCharacterSpawn = true;
     }
+
+    this->OnPossessedPawnChanged.AddDynamic(this, &AWorldPlayerController::PrivateOnPossessedPawnChangeListener);
 
     return;
 }
@@ -536,6 +537,18 @@ bool AWorldPlayerController::TellServerThatClientIsReadyForCharacterSpawn_Server
 void AWorldPlayerController::TellServerThatClientIsReadyForCharacterSpawn_ServerRPC_Implementation(void)
 {
     this->bClientReadyForCharacterSpawn = true;
+}
+
+/* Do NOT convert to const method, as this is a Rider IDEA false positive error. */
+// ReSharper disable once CppMemberFunctionMayBeConst
+void AWorldPlayerController::PrivateOnPossessedPawnChangeListener(APawn* InOldPawn, APawn* InNewPawn)
+{
+    if (this->IsLocalController())
+    {
+        this->OnWorldCharacterChange.Broadcast(Cast<AWorldCharacter>(InOldPawn), Cast<AWorldCharacter>(InNewPawn));
+    }
+
+    return;
 }
 
 #pragma endregion World Spawning

@@ -59,12 +59,12 @@ struct JAFGEXTERNALCORE_API FAccumulated
     }
 
     UPROPERTY( /* Replicated */ )
-    uint32  AccumulatedIndex; /* voxel_t */
+    uint32 /* voxel_t */ AccumulatedIndex;
     UPROPERTY( /* Replicated */ )
-    uint16 Amount; /* accamount_t */
+    uint16 /* accamount_t */ Amount;
 
     /** Checks for overflow, underflow and if post add amount is zero, the Null Accumulated is set. */
-    FORCEINLINE void SafeAddAmount(const voxel_t InAmount, bool& bCouldProcess)
+    FORCEINLINE void SafeAddAmount(const accamount_t InAmount, bool& bCouldProcess)
     {
         if (InAmount == 0)
         {

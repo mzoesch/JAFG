@@ -5,6 +5,7 @@
 #include "ChatComponent.h"
 #include "CommonNetworkStatics.h"
 #include "JAFGLogDefs.h"
+#include "System/VoxelSubsystem.h"
 #include "WorldCore/WorldCharacter.h"
 
 #define OWNING_SESSION                                                          \
@@ -123,6 +124,7 @@ void UServerCommandSubsystem::InitializeAllCommands(void)
     DECLARE_SERVER_COMMAND( "players",   OnShowOnlinePlayersCommand )
     DECLARE_SERVER_COMMAND( "kick" ,     OnKickCommand              )
     DECLARE_SERVER_COMMAND( "name",      OnChangeDisplayNameCommand )
+    DECLARE_SERVER_COMMAND( "give",      OnGiveAccumulatedCommand   )
 
     return;
 }
@@ -311,6 +313,48 @@ void UServerCommandSubsystem::OnChangeDisplayNameCommand(SERVER_COMMAND_SIG) con
 
     OutReturnCode = ECommandReturnCodes::SuccessBroadcastWithAuthority;
     OutResponse   = FString::Printf(TEXT("[%s] is now known as [%s]."), *OldName, *InArgs[0]);
+
+    return;
+}
+
+void UServerCommandSubsystem::OnGiveAccumulatedCommand(SERVER_COMMAND_SIG) const
+{
+    const UChatComponent* Target = this->GetTargetBasedOnArgs(InArgs, OutReturnCode);
+
+    if (OutReturnCode == ECommandReturnCodes::MissingArgs || InArgs.Num() < 2)
+    {
+        OutResponse   = TEXT("At least two arguments are required.");
+        return;
+    }
+
+    if (Target == nullptr)
+    {
+        OutReturnCode = ECommandReturnCodes::Failure;
+        OutResponse   = FString::Printf(TEXT("Target [%s] not found."), *InArgs[0]);
+        return;
+    }
+
+    IContainer* TargetContainer = Cast<IContainer>(Target->GetPredictedOwner()->GetPawn());
+
+    if (TargetContainer == nullptr)
+    {
+        OutReturnCode = ECommandReturnCodes::Failure;
+        OutResponse   = FString::Printf(TEXT("Target [%s] is not a container."), *InArgs[0]);
+        return;
+    }
+
+    FString AccumulatedName = InArgs[1];
+
+    voxel_t AccumulatedIndex = this->GetWorld()->GetGameInstance()->GetSubsystem<UVoxelSubsystem>()->GetVoxelIndex("JAFG", AccumulatedName);
+
+    if (AccumulatedIndex < ECommonVoxels::Num)
+    {
+        OutReturnCode = ECommandReturnCodes::Failure;
+        OutResponse   = FString::Printf(TEXT("Accumulated [%s] not found or is not obtainable."), *AccumulatedName);
+        return;
+    }
+
+    TargetContainer->AddToContainer(FAccumulated(AccumulatedIndex));
 
     return;
 }

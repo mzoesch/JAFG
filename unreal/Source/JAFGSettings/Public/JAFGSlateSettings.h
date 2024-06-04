@@ -7,6 +7,7 @@
 
 #include "JAFGSlateSettings.generated.h"
 
+class UJAFGContainer;
 class UJAFGUserWidget;
 class UJAFGWidget;
 class UWarningPopUp;
@@ -55,4 +56,7 @@ public:
 
     UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "FrontEnd")
     TSubclassOf<UJAFGUserWidget> FrontEndWidgetClass;
+
+    UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "FrontEnd")
+    TSubclassOf<UJAFGContainer> PlayerInventoryWidgetClass;
 };
