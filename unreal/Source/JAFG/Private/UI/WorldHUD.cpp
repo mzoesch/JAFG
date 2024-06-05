@@ -4,6 +4,7 @@
 
 #include "Player/WorldPlayerController.h"
 #include "JAFGSlateSettings.h"
+#include "Foundation/Hotbar.h"
 #include "WorldCore/WorldCharacter.h"
 
 AWorldHUD::AWorldHUD(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -78,7 +79,7 @@ void AWorldHUD::BeginPlay(void)
 
             if (NewCharacter)
             {
-                this->Hotbar = CreateWidget<UJAFGUserWidget>(this->GetWorld(), GetDefault<UJAFGSlateSettings>()->Hotbar);
+                this->Hotbar = CreateWidget<UHotbar>(this->GetWorld(), GetDefault<UJAFGSlateSettings>()->Hotbar);
                 this->Hotbar->AddToViewport();
             }
 

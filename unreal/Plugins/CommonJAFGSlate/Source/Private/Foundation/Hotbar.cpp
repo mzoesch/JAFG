@@ -32,19 +32,26 @@ void UHotbar::OnRefresh(void)
 
 void UHotbar::RenderHotbar(void)
 {
-    this->HBox_HotbarContainer->ClearChildren();
+    this->Overlay_Hotbar->ClearChildren();
+    this->CanvasSlot_Selector  = nullptr;
+    this->OverlaySlot_Selector = nullptr;
 
-    IContainer* Container = Cast<IContainer>(this->GetOwningPlayerPawn());
+    const IContainer* Container = Cast<IContainer>(this->GetOwningPlayerPawn());
     check( Container )
 
     UTextureSubsystem* TextureSubsystem = this->GetGameInstance()->GetSubsystem<UTextureSubsystem>();
     jcheck( TextureSubsystem )
 
+    UHorizontalBox* HBox_HotbarContainer = NewObject<UHorizontalBox>(this);
+    UOverlaySlot* HotbarContainerSlot = this->Overlay_Hotbar->AddChildToOverlay(HBox_HotbarContainer);
+    HotbarContainerSlot->SetHorizontalAlignment(EHorizontalAlignment::HAlign_Center);
+    HotbarContainerSlot->SetVerticalAlignment(EVerticalAlignment::VAlign_Bottom);
+
     for (int32 i = 0; i < 10; ++i)
     {
         USizeBox* SizeBox = NewObject<USizeBox>(this);
-        SizeBox->SetWidthOverride(50.0f);
-        SizeBox->SetHeightOverride(50.0f);
+        SizeBox->SetWidthOverride(UHotbar::SlotSize);
+        SizeBox->SetHeightOverride(UHotbar::SlotSize);
 
         UOverlay* Overlay = NewObject<UOverlay>(this);
         SizeBox->AddChild(Overlay);
@@ -71,14 +78,57 @@ void UHotbar::RenderHotbar(void)
 
         UJAFGTextBlock* Text_Amount = NewObject<UJAFGTextBlock>(this);
         Text_Amount->SetColorScheme(EJAFGFontSize::Small);
-        Text_Amount->SetText(FText::FromString(FString::FromInt(i)));
+        Text_Amount->SetText(Container->GetContainerValue(i).Amount == 1
+            ? FText()
+            : FText::FromString(FString::FromInt(Container->GetContainerValue(i).Amount))
+        );
         UOverlaySlot* TextSlot = Overlay->AddChildToOverlay(Text_Amount);
         TextSlot->SetHorizontalAlignment(EHorizontalAlignment::HAlign_Right);
         TextSlot->SetVerticalAlignment(EVerticalAlignment::VAlign_Bottom);
         Text_Amount->UpdateComponentWithTheirScheme();
 
-        this->HBox_HotbarContainer->AddChild(SizeBox);
+        HBox_HotbarContainer->AddChild(SizeBox);
     }
+
+    this->CanvasSlot_Selector = NewObject<USizeBox>(this);
+    this->CanvasSlot_Selector->SetWidthOverride(UHotbar::SelectorSize);
+    this->CanvasSlot_Selector->SetHeightOverride(UHotbar::SelectorSize);
+    UJAFGBorder* Border_Selector = NewObject<UJAFGBorder>(this);
+    Border_Selector->SetColorScheme(EJAFGColorScheme::InGameOSD);
+    Border_Selector->UpdateComponentWithTheirScheme();
+    FSlateBrush Brush_Selector = FSlateBrush();
+    Brush_Selector.SetResourceObject(TextureSubsystem->GetSafeGUITexture2D(NamedTextures::HotbarSelector));
+    Brush_Selector.SetImageSize(FVector2D(32.0f));
+    Brush_Selector.DrawAs = ESlateBrushDrawType::Image;
+    Border_Selector->SetBrush(Brush_Selector);
+    this->CanvasSlot_Selector->AddChild(Border_Selector);
+    this->OverlaySlot_Selector = this->Overlay_Hotbar->AddChildToOverlay(this->CanvasSlot_Selector);
+    this->OverlaySlot_Selector->SetHorizontalAlignment(EHorizontalAlignment::HAlign_Center);
+    this->OverlaySlot_Selector->SetVerticalAlignment(EVerticalAlignment::VAlign_Bottom);
+
+    this->MoveSelectorToSlot(0);
+
+    return;
+}
+
+void UHotbar::MoveSelectorToSlot(const int32 SlotIndex)
+{
+    if (SlotIndex < 0 || SlotIndex > 9)
+    {
+        LOG_WARNING(LogCommonSlate, "Invalid slot index provided: %d.", SlotIndex)
+        return;
+    }
+
+    if (this->OverlaySlot_Selector == nullptr)
+    {
+        LOG_WARNING(LogCommonSlate, "Selector slot is invalid. Regenrating hotbar.")
+        this->RenderHotbar();
+        jcheck( this->OverlaySlot_Selector )
+    }
+
+    constexpr float Min { -226.0f };
+
+    this->OverlaySlot_Selector->SetPadding(FMargin(Min + (SlotIndex * UHotbar::SlotSize), 0.0f, 0.0f, -4.0f));
 
     return;
 }

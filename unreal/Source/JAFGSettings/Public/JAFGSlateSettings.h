@@ -7,6 +7,7 @@
 
 #include "JAFGSlateSettings.generated.h"
 
+class UHotbar;
 class UJAFGContainer;
 class UJAFGUserWidget;
 class UJAFGWidget;
@@ -61,5 +62,5 @@ public:
     TSubclassOf<UJAFGContainer> PlayerInventoryWidgetClass;
 
     UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "FrontEnd")
-    TSubclassOf<UJAFGUserWidget> Hotbar;
+    TSubclassOf<UHotbar> Hotbar;
 };

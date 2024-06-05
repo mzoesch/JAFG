@@ -64,6 +64,7 @@ namespace NamedTextures
 {
 
 DECLARE_NAMED_TEXTURE(GeneralContainerSlot)
+DECLARE_NAMED_TEXTURE(HotbarSelector)
 
 }
 

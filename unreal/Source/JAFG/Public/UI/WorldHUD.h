@@ -7,6 +7,7 @@
 
 #include "WorldHUD.generated.h"
 
+class UHotbar;
 JAFG_VOID
 
 class UJAFGContainer;
@@ -49,14 +50,16 @@ protected:
     TMap<FString, TFunction<TSubclassOf<UJAFGContainer>(void)>> ContainerClassMap;
     TObjectPtr<UJAFGContainer> CurrentContainer;
 
-private:
+public:
 
     TObjectPtr<UJAFGUserWidget> Crosshair;
     TObjectPtr<UJAFGUserWidget> QuickSessionPreview;
     TObjectPtr<UJAFGUserWidget> ChatMenu;
     TObjectPtr<UJAFGUserWidget> DebugScreen;
     TObjectPtr<UJAFGUserWidget> EscapeMenu;
-    TObjectPtr<UJAFGUserWidget> Hotbar;
+    TObjectPtr<UHotbar> Hotbar;
+
+private:
 
     FDelegateHandle ContainerVisibleDelegateHandle;
     FDelegateHandle ContainerLostVisibilityDelegateHandle;

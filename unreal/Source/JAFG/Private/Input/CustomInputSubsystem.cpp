@@ -345,5 +345,126 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
         InputSubsystem->AddAction(Action);
     }
 
+    // Quick Switch Zero Action
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::QuickSlotZero;
+        Action.Keys.KeyA = EKeys::One;
+        Action.Keys.KeyB = EKeys::Invalid;
+        Action.Contexts.Add(InputContexts::Footlike);
+        InputSubsystem->AddAction(Action);
+    }
+
+    // Quick Switch One Action
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::QuickSlotOne;
+        Action.Keys.KeyA = EKeys::Two;
+        Action.Keys.KeyB = EKeys::Invalid;
+        Action.Contexts.Add(InputContexts::Footlike);
+        InputSubsystem->AddAction(Action);
+    }
+
+    // Quick Switch Two Action
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::QuickSlotTwo;
+        Action.Keys.KeyA = EKeys::Three;
+        Action.Keys.KeyB = EKeys::Invalid;
+        Action.Contexts.Add(InputContexts::Footlike);
+        InputSubsystem->AddAction(Action);
+    }
+
+    // Quick Switch Three Action
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::QuickSlotThree;
+        Action.Keys.KeyA = EKeys::Four;
+        Action.Keys.KeyB = EKeys::Invalid;
+        Action.Contexts.Add(InputContexts::Footlike);
+        InputSubsystem->AddAction(Action);
+    }
+
+    // Quick Switch Four Action
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::QuickSlotFour;
+        Action.Keys.KeyA = EKeys::Five;
+        Action.Keys.KeyB = EKeys::Invalid;
+        Action.Contexts.Add(InputContexts::Footlike);
+        InputSubsystem->AddAction(Action);
+    }
+
+    // Quick Switch Five Action
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::QuickSlotFive;
+        Action.Keys.KeyA = EKeys::Six;
+        Action.Keys.KeyB = EKeys::Invalid;
+        Action.Contexts.Add(InputContexts::Footlike);
+        InputSubsystem->AddAction(Action);
+    }
+
+    // Quick Switch Six Action
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::QuickSlotSix;
+        Action.Keys.KeyA = EKeys::Seven;
+        Action.Keys.KeyB = EKeys::Invalid;
+        Action.Contexts.Add(InputContexts::Footlike);
+        InputSubsystem->AddAction(Action);
+    }
+
+    // Quick Switch Seven Action
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::QuickSlotSeven;
+        Action.Keys.KeyA = EKeys::Eight;
+        Action.Keys.KeyB = EKeys::Invalid;
+        Action.Contexts.Add(InputContexts::Footlike);
+        InputSubsystem->AddAction(Action);
+    }
+
+    // Quick Switch Eight Action
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::QuickSlotEight;
+        Action.Keys.KeyA = EKeys::Nine;
+        Action.Keys.KeyB = EKeys::Invalid;
+        Action.Contexts.Add(InputContexts::Footlike);
+        InputSubsystem->AddAction(Action);
+    }
+
+    // Quick Switch Nine Action
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::QuickSlotNine;
+        Action.Keys.KeyA = EKeys::Zero;
+        Action.Keys.KeyB = EKeys::Invalid;
+        Action.Contexts.Add(InputContexts::Footlike);
+        InputSubsystem->AddAction(Action);
+    }
+
+    // Quick Switch Bitwise Action
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGOneDimensionalInputAction Action;
+        Action.Name      = InputActions::QuickSlotBitwise;
+        Action.NorthKeys = { EKeys::MouseScrollDown, EKeys::Invalid };
+        Action.SouthKeys = { EKeys::MouseScrollUp,   EKeys::Invalid };
+        Action.Contexts.Add(InputContexts::Footlike);
+        InputSubsystem->AddAction(Action);
+    }
+
     return;
 }

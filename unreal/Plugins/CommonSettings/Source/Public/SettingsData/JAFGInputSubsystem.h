@@ -47,6 +47,15 @@ struct COMMONSETTINGS_API FJAFGDualInputAction
     TArray<TArray<FString>>  Contexts;
 };
 
+struct COMMONSETTINGS_API FJAFGOneDimensionalInputAction
+{
+    FString          Name;
+    FMappableKeyPair NorthKeys;
+    FMappableKeyPair SouthKeys;
+    TArray<FString>  Contexts;
+};
+
+
 struct COMMONSETTINGS_API FJAFGTwoDimensionalInputAction
 {
     FString          Name;
@@ -86,6 +95,7 @@ enum COMMONSETTINGS_API Type
     Invalid,
     Single,
     Dual,
+    OneDimensional,
     TwoDimensional,
     TwoDimensionalMouse
 };
@@ -154,6 +164,7 @@ public:
 
     auto AddAction(const FJAFGSingleInputAction& InAction) -> void;
     auto AddAction(const FJAFGDualInputAction& InAction) -> void;
+    auto AddAction(const FJAFGOneDimensionalInputAction& InAction) -> void;
     auto AddAction(const FJAFGTwoDimensionalInputAction& InAction) -> void;
     auto AddAction(const FJAFGTwoDimensionalMouseInputAction& InAction) -> void;
 

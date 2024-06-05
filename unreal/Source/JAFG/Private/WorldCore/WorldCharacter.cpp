@@ -7,9 +7,11 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Foundation/Hotbar.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Input/CustomInputNames.h"
+#include "Net/UnrealNetwork.h"
 #include "SettingsData/JAFGInputSubsystem.h"
 #include "Player/WorldPlayerController.h"
 #include "UI/WorldHUD.h"
@@ -181,6 +183,11 @@ void AWorldCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
     }
 
     return;
+}
+
+void AWorldCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 }
 
 void AWorldCharacter::ListenForCameraChangedEventWithNonFPMeshWrapper(void)
@@ -416,6 +423,61 @@ void AWorldCharacter::BindAction(const FString& ActionName, UEnhancedInputCompon
     else if (ActionName == InputActions::DownMaxFlySpeed)
     {
         this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Triggered, &AWorldCharacter::OnTriggeredDownMaxFlySpeed);
+    }
+
+    else if (ActionName == InputActions::QuickSlotZero)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldCharacter::OnQuickSlotZero);
+    }
+
+    else if (ActionName == InputActions::QuickSlotOne)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldCharacter::OnQuickSlotOne);
+    }
+
+    else if (ActionName == InputActions::QuickSlotTwo)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldCharacter::OnQuickSlotTwo);
+    }
+
+    else if (ActionName == InputActions::QuickSlotThree)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldCharacter::OnQuickSlotThree);
+    }
+
+    else if (ActionName == InputActions::QuickSlotFour)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldCharacter::OnQuickSlotFour);
+    }
+
+    else if (ActionName == InputActions::QuickSlotFive)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldCharacter::OnQuickSlotFive);
+    }
+
+    else if (ActionName == InputActions::QuickSlotSix)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldCharacter::OnQuickSlotSix);
+    }
+
+    else if (ActionName == InputActions::QuickSlotSeven)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldCharacter::OnQuickSlotSeven);
+    }
+
+    else if (ActionName == InputActions::QuickSlotEight)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldCharacter::OnQuickSlotEight);
+    }
+
+    else if (ActionName == InputActions::QuickSlotNine)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldCharacter::OnQuickSlotNine);
+    }
+
+    else if (ActionName == InputActions::QuickSlotBitwise)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Triggered, &AWorldCharacter::OnQuickSlotBitwise);
     }
 
     return;
@@ -700,6 +762,11 @@ void AWorldCharacter::OnCompletedVoxelMinded_ServerRPC_Implementation(const bool
 
 void AWorldCharacter::OnStartedSecondary(const FInputActionValue& Value)
 {
+    if (this->GetContainerValue(this->SelectedQuickSlotIndex) == Accumulated::Null)
+    {
+        return;
+    }
+
     ACommonChunk*             TargetedChunk;
     FVector                   WorldHitLocation;
     FVector_NetQuantizeNormal WorldNormalHitLocation;
@@ -734,6 +801,7 @@ void AWorldCharacter::OnStartedSecondary(const FInputActionValue& Value)
         return;
     }
 
+    this->OnQuickSlot_ReliableServerRPC(this->SelectedQuickSlotIndex);
     this->OnStartedSecondary_ServerRPC(Value);
 
     return;
@@ -741,6 +809,13 @@ void AWorldCharacter::OnStartedSecondary(const FInputActionValue& Value)
 
 void AWorldCharacter::OnStartedSecondary_ServerRPC_Implementation(const FInputActionValue& Value)
 {
+    if (this->GetContainerValue(this->SelectedQuickSlotIndex) == Accumulated::Null)
+    {
+        LOG_WARNING(LogWorldChar, "Increased strike for %s. Reason: Cannot secondary interact with invalid voxel.", *this->GetDisplayName())
+        this->GetWorldPlayerController()->SafelyIncreaseStrikeCount();
+        return;
+    }
+
     ACommonChunk*             TargetedChunk;
     FVector                   WorldHitLocation;
     FVector_NetQuantizeNormal WorldNormalHitLocation;
@@ -902,6 +977,140 @@ void AWorldCharacter::OnStartedToggleContainer(const FInputActionValue& Value)
 
     return;
 }
+
+#define QUICK_SLOT_0    0
+#define QUICK_SLOT_1    1
+#define QUICK_SLOT_2    2
+#define QUICK_SLOT_3    3
+#define QUICK_SLOT_4    4
+#define QUICK_SLOT_5    5
+#define QUICK_SLOT_6    6
+#define QUICK_SLOT_7    7
+#define QUICK_SLOT_8    8
+#define QUICK_SLOT_9    9
+#define QUICK_SLOT_MIN  0
+#define QUICK_SLOT_MAX  9
+
+void AWorldCharacter::OnQuickSlotZero(const FInputActionValue& Value)
+{
+    this->OnQuickSlot(QUICK_SLOT_0);
+    return;
+}
+
+void AWorldCharacter::OnQuickSlotOne(const FInputActionValue& Value)
+{
+    this->OnQuickSlot(QUICK_SLOT_1);
+    return;
+}
+
+void AWorldCharacter::OnQuickSlotTwo(const FInputActionValue& Value)
+{
+    this->OnQuickSlot(QUICK_SLOT_2);
+    return;
+}
+
+void AWorldCharacter::OnQuickSlotThree(const FInputActionValue& Value)
+{
+    this->OnQuickSlot(QUICK_SLOT_3);
+    return;
+}
+
+void AWorldCharacter::OnQuickSlotFour(const FInputActionValue& Value)
+{
+    this->OnQuickSlot(QUICK_SLOT_4);
+    return;
+}
+
+void AWorldCharacter::OnQuickSlotFive(const FInputActionValue& Value)
+{
+    this->OnQuickSlot(QUICK_SLOT_5);
+    return;
+}
+
+void AWorldCharacter::OnQuickSlotSix(const FInputActionValue& Value)
+{
+    this->OnQuickSlot(QUICK_SLOT_6);
+    return;
+}
+
+void AWorldCharacter::OnQuickSlotSeven(const FInputActionValue& Value)
+{
+    this->OnQuickSlot(QUICK_SLOT_7);
+    return;
+}
+
+void AWorldCharacter::OnQuickSlotEight(const FInputActionValue& Value)
+{
+    this->OnQuickSlot(QUICK_SLOT_8);
+    return;
+}
+
+void AWorldCharacter::OnQuickSlotNine(const FInputActionValue& Value)
+{
+    this->OnQuickSlot(QUICK_SLOT_9);
+    return;
+}
+
+void AWorldCharacter::OnQuickSlotBitwise(const FInputActionValue& Value)
+{
+    if (FMath::IsNearlyZero(Value.Get<FVector2D>().X))
+    {
+        return;
+    }
+
+    if (Value.Get<FVector2D>().X < 0.0f)
+    {
+        this->OnQuickSlot((this->SelectedQuickSlotIndex + 1) % (QUICK_SLOT_MAX + 1));
+        return;
+    }
+
+    this->OnQuickSlot(this->SelectedQuickSlotIndex - 1 < QUICK_SLOT_MIN ? QUICK_SLOT_MAX : this->SelectedQuickSlotIndex - 1);
+
+    return;
+}
+
+void AWorldCharacter::OnQuickSlot(const int32 Slot)
+{
+    this->SelectedQuickSlotIndex = Slot;
+    this->GetWorldPlayerController()->GetHUD<AWorldHUD>()->Hotbar->MoveSelectorToSlot(Slot);
+
+    this->OnQuickSlot_ServerRPC(Slot);
+
+    return;
+}
+
+bool AWorldCharacter::OnQuickSlot_ServerRPC_Validate(const int32 Slot)
+{
+    return Slot >= QUICK_SLOT_MIN && Slot <= QUICK_SLOT_MAX;
+}
+
+void AWorldCharacter::OnQuickSlot_ServerRPC_Implementation(const int32 Slot)
+{
+    this->SelectedQuickSlotIndex = Slot;
+}
+
+bool AWorldCharacter::OnQuickSlot_ReliableServerRPC_Validate(const int32 Slot)
+{
+    return Slot >= QUICK_SLOT_MIN && Slot <= QUICK_SLOT_MAX;
+}
+
+void AWorldCharacter::OnQuickSlot_ReliableServerRPC_Implementation(const int32 Slot)
+{
+    this->SelectedQuickSlotIndex = Slot;
+}
+
+#undef QUICK_SLOT_0
+#undef QUICK_SLOT_1
+#undef QUICK_SLOT_2
+#undef QUICK_SLOT_3
+#undef QUICK_SLOT_4
+#undef QUICK_SLOT_5
+#undef QUICK_SLOT_6
+#undef QUICK_SLOT_7
+#undef QUICK_SLOT_8
+#undef QUICK_SLOT_9
+#undef QUICK_SLOT_MIN
+#undef QUICK_SLOT_MAX
 
 void AWorldCharacter::BindAction(
     const FString& ActionName,

@@ -264,6 +264,77 @@ void UJAFGInputSubsystem::AddAction(const FJAFGDualInputAction& InAction)
     return;
 }
 
+void UJAFGInputSubsystem::AddAction(const FJAFGOneDimensionalInputAction& InAction)
+{
+    if (this->DoesActionExist(InAction.Name))
+    {
+#if WITH_EDITOR
+        LOG_ERROR(LogGameSettings, "Action already exists: %s. Discarding implementation.", *InAction.Name)
+#else /* WITH_EDITOR */
+        LOG_FATAL(LogGameSettings, "Action already exists: %s.", *InAction.Name)
+#endif /* !WITH_EDITOR */
+        return;
+    }
+
+    UInputAction* Action = NewObject<UInputAction>();
+
+    FLoadedInputAction OutAction = this->CreateEmptyAction(InAction.Name, InAction.Contexts);
+    OutAction.Type = EJAFGInputActionType::OneDimensional;
+
+    OutAction.NorthDefaultKeyA = InAction.NorthKeys.KeyA;
+    OutAction.NorthDefaultKeyB = InAction.NorthKeys.KeyB;
+    OutAction.SouthDefaultKeyA = InAction.SouthKeys.KeyA;
+    OutAction.SouthDefaultKeyB = InAction.SouthKeys.KeyB;
+
+    OutAction.Action = Action;
+
+    OutAction.Action->ValueType = EInputActionValueType::Axis1D;
+
+    if (InAction.Contexts.IsEmpty())
+    {
+        LOG_FATAL(LogGameSettings, "Action has no contexts: %s.", *InAction.Name)
+    }
+
+    for (const FString& ContextName : InAction.Contexts)
+    {
+        if (const FLoadedContext* Context = this->GetContext(ContextName); Context)
+        {
+            FEnhancedActionKeyMapping& MappingNorthA = Context->Context->MapKey(Action, OutAction.NorthDefaultKeyA);
+            MappingNorthA.Modifiers.Add(NewObject<UInputModifierNegate>());
+            FEnhancedActionKeyMapping& MappingNorthB = Context->Context->MapKey(Action, OutAction.NorthDefaultKeyB);
+            MappingNorthB.Modifiers.Add(NewObject<UInputModifierNegate>());
+
+                                                       Context->Context->MapKey(Action, OutAction.SouthDefaultKeyA);
+                                                       Context->Context->MapKey(Action, OutAction.SouthDefaultKeyB);
+
+            continue;
+        }
+
+        for (const FString& Redirection : this->GetSafeUpperContext(ContextName)->InputContextRedirections)
+        {
+            const FLoadedContext* Context = this->GetSafeContext(Redirection);
+
+            FEnhancedActionKeyMapping& MappingNorthA = Context->Context->MapKey(Action, OutAction.NorthDefaultKeyA);
+            MappingNorthA.Modifiers.Add(NewObject<UInputModifierNegate>());
+            FEnhancedActionKeyMapping& MappingNorthB = Context->Context->MapKey(Action, OutAction.NorthDefaultKeyB);
+            MappingNorthB.Modifiers.Add(NewObject<UInputModifierNegate>());
+
+                                                       Context->Context->MapKey(Action, OutAction.SouthDefaultKeyA);
+                                                       Context->Context->MapKey(Action, OutAction.SouthDefaultKeyB);
+
+            continue;
+        }
+
+        continue;
+    }
+
+    this->Actions.Add(OutAction);
+
+    LOG_VERBOSE(LogGameSettings, "Added action: %s.", *InAction.Name)
+
+    return;
+}
+
 void UJAFGInputSubsystem::AddAction(const FJAFGTwoDimensionalInputAction& InAction)
 {
     if (this->DoesActionExist(InAction.Name))
@@ -347,8 +418,8 @@ void UJAFGInputSubsystem::AddAction(const FJAFGTwoDimensionalInputAction& InActi
             FEnhancedActionKeyMapping& MappingWestB = Context->Context->MapKey(Action, OutAction.WestDefaultKeyB);
             MappingWestB.Modifiers.Add(NewObject<UInputModifierNegate>());
 
-            Context->Context->MapKey(Action, OutAction.EastDefaultKeyA);
-            Context->Context->MapKey(Action, OutAction.EastDefaultKeyB);
+                                                      Context->Context->MapKey(Action, OutAction.EastDefaultKeyA);
+                                                      Context->Context->MapKey(Action, OutAction.EastDefaultKeyB);
 
             continue;
         }

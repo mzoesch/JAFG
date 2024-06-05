@@ -38,9 +38,11 @@ protected:
 
     // AActor implementation
     virtual void BeginPlay(void) override;
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     virtual void Tick(const float DeltaSeconds) override;
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
     // ~AActor implementation
+
 
     //////////////////////////////////////////////////////////////////////////
     // AActor Components
@@ -136,32 +138,31 @@ protected:
 
     virtual auto SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) -> void override;
 
-    virtual auto SetFootContextBasedOnCharacterState(const bool bClearOldMappings = true, const int32 Priority = 0) -> void;
-    virtual auto GetFootContextBasedOnCharacterState(void) const -> UInputMappingContext*;
-    virtual auto GetSafeFootContextBasedOnCharacterState(void) const -> UInputMappingContext*;
-    virtual auto GetFootContextBasedOnCharacterState(UJAFGInputSubsystem* JAFGInputSubsystem) const -> UInputMappingContext*;
-    virtual auto GetSafeFootContextBasedOnCharacterState(UJAFGInputSubsystem* JAFGInputSubsystem) const -> UInputMappingContext*;
+    auto SetFootContextBasedOnCharacterState(const bool bClearOldMappings = true, const int32 Priority = 0) -> void;
+    auto GetFootContextBasedOnCharacterState(void) const -> UInputMappingContext*;
+    auto GetSafeFootContextBasedOnCharacterState(void) const -> UInputMappingContext*;
+    auto GetFootContextBasedOnCharacterState(UJAFGInputSubsystem* JAFGInputSubsystem) const -> UInputMappingContext*;
+    auto GetSafeFootContextBasedOnCharacterState(UJAFGInputSubsystem* JAFGInputSubsystem) const -> UInputMappingContext*;
 
-    /** Override this method to add custom key bindings in derived classes. */
-    virtual auto BindAction(const FString& ActionName, UEnhancedInputComponent* EnhancedInputComponent) -> void;
+    auto BindAction(const FString& ActionName, UEnhancedInputComponent* EnhancedInputComponent) -> void;
 
-    virtual auto OnTriggeredMove(const FInputActionValue& Value) -> void;
-    virtual auto OnTriggeredLook(const FInputActionValue& Value) -> void;
+    auto OnTriggeredMove(const FInputActionValue& Value) -> void;
+    auto OnTriggeredLook(const FInputActionValue& Value) -> void;
 
-    virtual auto OnStartedJump(const FInputActionValue& Value) -> void;
-    virtual auto OnTriggerJump(const FInputActionValue& Value) -> void;
-    virtual auto OnCompleteJump(const FInputActionValue& Value) -> void;
+    auto OnStartedJump(const FInputActionValue& Value) -> void;
+    auto OnTriggerJump(const FInputActionValue& Value) -> void;
+    auto OnCompleteJump(const FInputActionValue& Value) -> void;
     float LastJumpStarted = 0.0f;
     static constexpr float JumpFlyModeDeactivationTime = 0.25f;
 
-    virtual auto OnStartedSprint(const FInputActionValue& Value) -> void;
-    virtual auto OnCompletedSprint(const FInputActionValue& Value) -> void;
+    auto OnStartedSprint(const FInputActionValue& Value) -> void;
+    auto OnCompletedSprint(const FInputActionValue& Value) -> void;
 
-    virtual auto OnTriggerCrouch(const FInputActionValue& Value) -> void;
-    virtual auto OnCompleteCrouch(const FInputActionValue& Value) -> void;
+    auto OnTriggerCrouch(const FInputActionValue& Value) -> void;
+    auto OnCompleteCrouch(const FInputActionValue& Value) -> void;
 
-    virtual auto OnTriggeredPrimary(const FInputActionValue& Value) -> void;
-    virtual auto OnCompletedPrimary(const FInputActionValue& Value) -> void;
+    auto OnTriggeredPrimary(const FInputActionValue& Value) -> void;
+    auto OnCompletedPrimary(const FInputActionValue& Value) -> void;
     UFUNCTION(Server, Reliable)
     void OnStartedVoxelMinded_ServerRPC(const FIntVector /* FChunkKey */& InTargetedChunk, const FIntVector /* FVoxelKey */& InLocalHitVoxelKey);
     UFUNCTION(Server, Reliable)
@@ -170,20 +171,38 @@ protected:
     TOptional<FVoxelKey> CurrentlyMiningLocalVoxel       = FVoxelKey::ZeroValue;
     float                CurrentDurationSameVoxelIsMined = 0.0f;
 
-    virtual auto OnStartedSecondary(const FInputActionValue& Value) -> void;
+    auto OnStartedSecondary(const FInputActionValue& Value) -> void;
     UFUNCTION(Server, Reliable)
-    virtual void OnStartedSecondary_ServerRPC(const FInputActionValue& Value);
+    void OnStartedSecondary_ServerRPC(const FInputActionValue& Value);
 
-    virtual auto OnTriggeredUpMaxFlySpeed(const FInputActionValue& Value) -> void;
-    virtual auto OnTriggeredDownMaxFlySpeed(const FInputActionValue& Value) -> void;
+    auto OnTriggeredUpMaxFlySpeed(const FInputActionValue& Value) -> void;
+    auto OnTriggeredDownMaxFlySpeed(const FInputActionValue& Value) -> void;
 
-    virtual auto OnToggleCameras(const FInputActionValue& Value) -> void;
-    virtual auto OnTriggerZoomCameras(const FInputActionValue& Value) -> void;
-    virtual auto OnCompleteZoomCameras(const FInputActionValue& Value) -> void;
-    virtual auto OnTogglePerspective(const FInputActionValue& Value) -> void;
+    auto OnToggleCameras(const FInputActionValue& Value) -> void;
+    auto OnTriggerZoomCameras(const FInputActionValue& Value) -> void;
+    auto OnCompleteZoomCameras(const FInputActionValue& Value) -> void;
+    auto OnTogglePerspective(const FInputActionValue& Value) -> void;
     bool bZooming = false;
 
-    virtual auto OnStartedToggleContainer(const FInputActionValue& Value) -> void;
+    auto OnStartedToggleContainer(const FInputActionValue& Value) -> void;
+
+    auto OnQuickSlotZero(const FInputActionValue& Value) -> void;
+    auto OnQuickSlotOne(const FInputActionValue& Value) -> void;
+    auto OnQuickSlotTwo(const FInputActionValue& Value) -> void;
+    auto OnQuickSlotThree(const FInputActionValue& Value) -> void;
+    auto OnQuickSlotFour(const FInputActionValue& Value) -> void;
+    auto OnQuickSlotFive(const FInputActionValue& Value) -> void;
+    auto OnQuickSlotSix(const FInputActionValue& Value) -> void;
+    auto OnQuickSlotSeven(const FInputActionValue& Value) -> void;
+    auto OnQuickSlotEight(const FInputActionValue& Value) -> void;
+    auto OnQuickSlotNine(const FInputActionValue& Value) -> void;
+    auto OnQuickSlotBitwise(const FInputActionValue& Value) -> void;
+    auto OnQuickSlot(const int32 Slot) -> void;
+    int32 SelectedQuickSlotIndex = 0;
+    UFUNCTION(Server, Unreliable, WithValidation)
+    void OnQuickSlot_ServerRPC(const int32 Slot);
+    UFUNCTION(Server, Reliable, WithValidation)
+    void OnQuickSlot_ReliableServerRPC(const int32 Slot);
 
 private:
 
