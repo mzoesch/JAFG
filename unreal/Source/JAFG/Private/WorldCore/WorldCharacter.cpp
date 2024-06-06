@@ -16,6 +16,7 @@
 #include "Player/WorldPlayerController.h"
 #include "UI/WorldHUD.h"
 #include "UI/OSD/PlayerInventory.h"
+#include "WorldCore/Cuboid.h"
 #include "WorldCore/Character/CharacterReach.h"
 #include "WorldCore/Chunk/CommonChunk.h"
 
@@ -86,6 +87,11 @@ void AWorldCharacter::BeginPlay(void)
     this->CharacterReach = this->GetWorld()->SpawnActor<ACharacterReach>(ACharacterReach::StaticClass(), FTransform(), FActorSpawnParameters());
     jcheck( this->CharacterReach )
     this->CharacterReach->AttachToComponent(this->GetCapsuleComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+
+    this->AccumulatedPreview = this->GetWorld()->SpawnActor<ACuboid>(ACuboid::StaticClass(), FTransform(), FActorSpawnParameters());
+    jcheck( this->AccumulatedPreview )
+    this->AccumulatedPreview->AttachToComponent(this->FirstPersonCameraComponent, FAttachmentTransformRules::KeepRelativeTransform);
+    this->AccumulatedPreview->GenerateMesh(ECommonVoxels::GetBaseVoxel() + 2);
 
     AWorldPlayerController* WorldPlayerController = Cast<AWorldPlayerController>(this->GetController());
 

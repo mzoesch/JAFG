@@ -364,15 +364,17 @@ FChunkKey ACommonChunk::GetChunkKeyOnTheFly(void) const
 
 void ACommonChunk::ApplyProceduralMesh(void)
 {
-    if (MaterialSubsystem == nullptr)
+#if WITH_EDITOR
+    if (this->MaterialSubsystem == nullptr)
     {
         LOG_FATAL(LogChunkMisc, "Could not get Material Subsystem.")
         return;
     }
+#endif /* WITH_EDITOR */
 
     for (int i = 0; i < this->MeshData.Num(); ++i)
     {
-        this->ProceduralMeshComponent->SetMaterial(i, MaterialSubsystem->MDynamicGroups[i]);
+        this->ProceduralMeshComponent->SetMaterial(i, this->MaterialSubsystem->MDynamicGroups[i]);
         this->ProceduralMeshComponent->CreateMeshSection(
             i,
             this->MeshData[i].Vertices,

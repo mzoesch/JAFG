@@ -13,6 +13,7 @@
 
 #include "WorldCharacter.generated.h"
 
+class ACuboid;
 JAFG_VOID
 
 class ACharacterReach;
@@ -75,6 +76,9 @@ protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UStaticMesh> CharacterReachMesh;
     friend ACharacterReach;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    TObjectPtr<ACuboid> AccumulatedPreview;
 
 #pragma region Member Methods
 
