@@ -9,7 +9,7 @@
 
 class IContainerOwner;
 
-USTRUCT(NotBlueprintType)
+USTRUCT(NotBlueprintable, NotBlueprintType)
 struct JAFGEXTERNALCORE_API FSlot
 {
     GENERATED_BODY()
@@ -17,6 +17,7 @@ struct JAFGEXTERNALCORE_API FSlot
     FSlot(void) = default;
     explicit FSlot(const FAccumulated& Accumulated) : Content(Accumulated) { }
 
+    UPROPERTY( /* Replicated */ )
     FAccumulated Content;
 
     /** @return If data was changed. */
@@ -25,4 +26,7 @@ struct JAFGEXTERNALCORE_API FSlot
     bool OnSecondaryClicked(IContainerOwner* Owner);
 
     static bool AddToFirstSuitableSlot(TArray<FSlot>& Container, const FAccumulated& Value);
+
+    FORCEINLINE        bool operator==(const FSlot& O) const { return this->Content == O.Content; }
+    FORCEINLINE static bool Equals(const FSlot& A, const FSlot& B) { return A == B; }
 };

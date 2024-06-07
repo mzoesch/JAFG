@@ -355,6 +355,7 @@ void UServerCommandSubsystem::OnGiveAccumulatedCommand(SERVER_COMMAND_SIG) const
     }
 
     TargetContainer->AddToContainer(FAccumulated(AccumulatedIndex));
+    TargetContainer->PushContainerUpdatesToClient();
 
     return;
 }

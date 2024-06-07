@@ -11,10 +11,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Input/CustomInputNames.h"
-#include "Net/UnrealNetwork.h"
 #include "SettingsData/JAFGInputSubsystem.h"
 #include "Player/WorldPlayerController.h"
-#include "UI/WorldHUD.h"
 #include "UI/OSD/PlayerInventory.h"
 #include "WorldCore/Cuboid.h"
 #include "WorldCore/Character/CharacterReach.h"
@@ -79,51 +77,57 @@ void AWorldCharacter::BeginPlay(void)
 {
     Super::BeginPlay();
 
-    if (this->IsLocallyControlled() == false)
+    if (this->IsLocallyControlled())
     {
-        return;
+        this->CharacterReach = this->GetWorld()->SpawnActor<ACharacterReach>(ACharacterReach::StaticClass(), FTransform(), FActorSpawnParameters());
+        jcheck( this->CharacterReach )
+        this->CharacterReach->AttachToComponent(this->GetCapsuleComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+
+        this->AccumulatedPreview = this->GetWorld()->SpawnActor<ACuboid>(ACuboid::StaticClass(), FTransform(), FActorSpawnParameters());
+        jcheck( this->AccumulatedPreview )
+        this->AccumulatedPreview->AttachToComponent(this->FirstPersonCameraComponent, FAttachmentTransformRules::KeepRelativeTransform);
+
+        AWorldPlayerController* WorldPlayerController = Cast<AWorldPlayerController>(this->GetController());
+
+        if (WorldPlayerController == nullptr)
+        {
+            LOG_ERROR(LogWorldChar, "Owning World PlayerController is invalid. Cannot bind to events.")
+            return;
+        }
+
+        this->EscapeMenuVisibilityChangedHandle =
+            WorldPlayerController->SubscribeToEscapeMenuVisibilityChanged(
+                ADD_SLATE_VIS_DELG(AWorldCharacter::OnEscapeMenuVisibilityChanged)
+            );
+
+        this->ListenForCameraChangedEventWithNonFPMeshWrapper();
+        this->GetMyCharacterMovement()->OnSprintStateChangedDelegate.AddLambda( [this] (const bool bSprinting)
+        {
+            this->UpdateFOVBasedOnSprintState();
+        });
+
+        WorldPlayerController->GetHUD<AWorldHUD>()->RegisterContainer(UPlayerInventory::Identifier, [] (void) -> TSubclassOf<UJAFGContainer>
+        {
+            return GetDefault<UJAFGSlateSettings>()->PlayerInventoryWidgetClass;
+        });
+
+        /* Let components set the current defaults for the active camera. */
+        this->OnCameraChangedEvent.Broadcast();
     }
 
-    this->CharacterReach = this->GetWorld()->SpawnActor<ACharacterReach>(ACharacterReach::StaticClass(), FTransform(), FActorSpawnParameters());
-    jcheck( this->CharacterReach )
-    this->CharacterReach->AttachToComponent(this->GetCapsuleComponent(), FAttachmentTransformRules::KeepRelativeTransform);
-
-    this->AccumulatedPreview = this->GetWorld()->SpawnActor<ACuboid>(ACuboid::StaticClass(), FTransform(), FActorSpawnParameters());
-    jcheck( this->AccumulatedPreview )
-    this->AccumulatedPreview->AttachToComponent(this->FirstPersonCameraComponent, FAttachmentTransformRules::KeepRelativeTransform);
-    this->AccumulatedPreview->GenerateMesh(ECommonVoxels::GetBaseVoxel() + 2);
-
-    AWorldPlayerController* WorldPlayerController = Cast<AWorldPlayerController>(this->GetController());
-
-    if (WorldPlayerController == nullptr)
+    if (UNetStatics::IsSafeServer(this))
     {
-        LOG_ERROR(LogWorldChar, "Owning World PlayerController is invalid. Cannot bind to events.")
-        return;
+        LOG_VERY_VERBOSE(LogWorldChar, "Initializing container on server.")
+
+        this->Container.Init(FSlot(Accumulated::Null), 10);
+        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel()));
+        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 1, 10));
+        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 2, 99));
+
+        LOG_VERY_VERBOSE(LogWorldChar, "Container initialized with %d slots.", this->Container.Num())
+
+        this->PushContainerUpdatesToClient();
     }
-
-    this->EscapeMenuVisibilityChangedHandle =
-        WorldPlayerController->SubscribeToEscapeMenuVisibilityChanged(
-            ADD_SLATE_VIS_DELG(AWorldCharacter::OnEscapeMenuVisibilityChanged)
-        );
-
-    this->ListenForCameraChangedEventWithNonFPMeshWrapper();
-    this->GetMyCharacterMovement()->OnSprintStateChangedDelegate.AddLambda( [this] (const bool bSprinting)
-    {
-        this->UpdateFOVBasedOnSprintState();
-    });
-
-    WorldPlayerController->GetHUD<AWorldHUD>()->RegisterContainer(UPlayerInventory::Identifier, [] (void) -> TSubclassOf<UJAFGContainer>
-    {
-        return GetDefault<UJAFGSlateSettings>()->PlayerInventoryWidgetClass;
-    });
-
-    /* Let components set the current defaults for the active camera. */
-    this->OnCameraChangedEvent.Broadcast();
-
-    this->Container.Init(FSlot(Accumulated::Null), 10);
-    this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel()));
-    this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 1, 10));
-    this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 2, 99));
 
     return;
 }
@@ -231,6 +235,66 @@ void AWorldCharacter::UpdateFOVBasedOnSprintState(void) const
 
     return;
 }
+
+#pragma region Camera
+
+void AWorldCharacter::UpdateAccumulatedPreview(void) const
+{
+    this->AccumulatedPreview->SetActorRelativeTransform(this->GetAccumulatedPreviewRelativeTransformNoBob());
+
+    this->AccumulatedPreview->GenerateMesh(this->GetContainerValue(this->SelectedQuickSlotIndex).AccumulatedIndex);
+
+    return;
+}
+
+FTransform AWorldCharacter::GetAccumulatedPreviewRelativeTransformNoBob(void) const
+{
+    return FTransform(
+        FRotator(0.0f, 14.0f, 0.0f),
+        FVector(20.0f, 16.0f, -17.0f),
+        FVector::One()
+    );
+}
+
+#pragma endregion Camera
+
+#pragma region Container
+
+void AWorldCharacter::ChangeContainerSlot(const int32 Index, const accamount_t_signed Delta)
+{
+    if (UNetStatics::IsSafeClient(this))
+    {
+        LOG_FATAL(LogWorldChar, "Cannot change container slot on client.")
+        return;
+    }
+
+    this->GetContainerValueRef(Index).SafeAddAmount(Delta);
+
+    this->PushContainerUpdatesToClient();
+
+    return;
+}
+
+void AWorldCharacter::PushContainerUpdatesToClient_ClientRPC_Implementation(const TArray<FSlot>& InContainer)
+{
+    LOG_VERY_VERBOSE(LogWorldChar, "Updating container on client. New slots: %d.", InContainer.Num())
+    this->Container = InContainer;
+
+    this->GetWorldHUD()->Hotbar->MarkAsDirty();
+    this->UpdateAccumulatedPreview();
+
+    return;
+}
+
+void AWorldCharacter::PushContainerUpdatesToClient(void)
+{
+    LOG_VERY_VERBOSE(LogWorldChar, "Pusing container updates to client with %d slots.", this->Container.Num())
+    this->PushContainerUpdatesToClient_ClientRPC(this->Container);
+
+    return;
+}
+
+#pragma endregion Container
 
 #pragma region Enhanced Input
 
@@ -862,7 +926,8 @@ void AWorldCharacter::OnStartedSecondary_ServerRPC_Implementation(const FInputAc
         return;
     }
 
-    TargetedChunk->ModifySingleVoxel(LocalTargetVoxelKey, ECommonVoxels::Num);
+    TargetedChunk->ModifySingleVoxel(LocalTargetVoxelKey, this->GetContainerValue(this->SelectedQuickSlotIndex).AccumulatedIndex);
+    this->ChangeContainerSlot(this->SelectedQuickSlotIndex, -1);
 
     return;
 }
@@ -1078,9 +1143,11 @@ void AWorldCharacter::OnQuickSlotBitwise(const FInputActionValue& Value)
 void AWorldCharacter::OnQuickSlot(const int32 Slot)
 {
     this->SelectedQuickSlotIndex = Slot;
-    this->GetWorldPlayerController()->GetHUD<AWorldHUD>()->Hotbar->MoveSelectorToSlot(Slot);
+    this->GetWorldHUD()->Hotbar->MoveSelectorToSlot(Slot);
 
     this->OnQuickSlot_ServerRPC(Slot);
+
+    this->UpdateAccumulatedPreview();
 
     return;
 }

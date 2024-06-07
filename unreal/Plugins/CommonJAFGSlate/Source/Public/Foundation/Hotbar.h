@@ -32,6 +32,7 @@ protected:
     // ~UJAFGDirtyUserWidget implementation
 
     void RenderHotbar(void);
+    void RenderHotbar(const int32 SlotIndex);
 
 public:
 
@@ -46,8 +47,15 @@ protected:
     TObjectPtr<UOverlay> Overlay_Hotbar;
 
     UPROPERTY()
+    TObjectPtr<UHorizontalBox> HBox_HotbarContainer;
+
+    UPROPERTY()
     TObjectPtr<USizeBox> CanvasSlot_Selector;
 
     UPROPERTY()
     TObjectPtr<UOverlaySlot> OverlaySlot_Selector;
+
+private:
+
+    inline static constexpr float MinLeftSelectorPadding { -226.0f };
 };

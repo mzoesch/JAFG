@@ -29,9 +29,9 @@ protected:
 
 public:
 
-    int32 CuboidX = 5;
-    int32 CuboidY = 5;
-    int32 CuboidZ = 5;
+    int32 CuboidX = 8;
+    int32 CuboidY = 8;
+    int32 CuboidZ = 8;
 
     int32 TexX = 10;
     int32 TexY = 10;
@@ -66,5 +66,14 @@ protected:
     TArray<FColor>           Colors;
 
     void ApplyMesh(void) const;
+    /**
+     * Adds a quadrilateral to the mesh for the next render sweep.
+     *
+     * @param V1      Top    Right Vertex
+     * @param V2      Bottom Right Vertex
+     * @param V3      Top    Left  Vertex
+     * @param V4      Bottom Left  Vertex
+     * @param Tangent Face Tangent
+     */
     void CreateQuadrilateral(const FVector& V1, const FVector& V2, const FVector& V3, const FVector& V4, const FProcMeshTangent& Tangent);
 };

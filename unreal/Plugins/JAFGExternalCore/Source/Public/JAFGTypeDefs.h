@@ -52,3 +52,9 @@ typedef int64 voxel_t_signed;
  */
 // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
 typedef uint16 accamount_t;
+
+/**
+ * Defines the number of accumulated items that can be at most stored with the ability to be negative.
+ */
+// ReSharper disable once CppUE4CodingStandardNamingViolationWarning
+typedef int32 accamount_t_signed;

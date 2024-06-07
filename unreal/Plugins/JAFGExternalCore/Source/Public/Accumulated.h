@@ -29,7 +29,7 @@ extern JAFGEXTERNALCORE_API voxel_t GAccumulatedItemIndexStart;
  */
 #define ACCUMULATED_MAX_AMT 0xFFFF
 
-USTRUCT()
+USTRUCT(NotBlueprintable, NotBlueprintType)
 struct JAFGEXTERNALCORE_API FAccumulated
 {
     GENERATED_BODY()
@@ -64,7 +64,7 @@ struct JAFGEXTERNALCORE_API FAccumulated
     uint16 /* accamount_t */ Amount;
 
     /** Checks for overflow, underflow and if post add amount is zero, the Null Accumulated is set. */
-    FORCEINLINE void SafeAddAmount(const accamount_t InAmount, bool& bCouldProcess)
+    FORCEINLINE void SafeAddAmount(const accamount_t_signed InAmount, bool& bCouldProcess)
     {
         if (InAmount == 0)
         {
@@ -100,6 +100,23 @@ struct JAFGEXTERNALCORE_API FAccumulated
 
         this->Amount    += InAmount;
         bCouldProcess    = true;
+
+        return;
+    }
+
+    FORCEINLINE void SafeAddAmount(const accamount_t_signed InAmount)
+    {
+        bool bCouldProcess = false;
+        this->SafeAddAmount(InAmount, bCouldProcess);
+
+        if (bCouldProcess == false)
+        {
+            LOG_FATAL(
+                LogContainerStuff,
+                "Detected an %s error while adding [%d] amount to [%s].",
+                InAmount < 0 ? TEXT("underflow") : TEXT("overflow"), InAmount, *this->ToString()
+            )
+        }
 
         return;
     }

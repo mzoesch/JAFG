@@ -9,13 +9,14 @@
 #include "Camera/CameraComponent.h"
 #include "Foundation/JAFGContainer.h"
 #include "Player/WorldPlayerController.h"
+#include "UI/WorldHUD.h"
 #include "WorldCore/Character/MyCharacterMovementComponent.h"
 
 #include "WorldCharacter.generated.h"
 
-class ACuboid;
 JAFG_VOID
 
+class ACuboid;
 class ACharacterReach;
 class UJAFGInputSubsystem;
 class UInputMappingContext;
@@ -43,7 +44,6 @@ protected:
     virtual void Tick(const float DeltaSeconds) override;
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
     // ~AActor implementation
-
 
     //////////////////////////////////////////////////////////////////////////
     // AActor Components
@@ -80,18 +80,14 @@ protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<ACuboid> AccumulatedPreview;
 
-#pragma region Member Methods
+    FORCEINLINE auto GetPlayerController(void) const -> APlayerController* { return Cast<APlayerController>(this->GetController()); }
+    template<class T>
+    FORCEINLINE auto GetPlayerController(void) const -> T* { return Cast<T>(this->GetController()); }
+    FORCEINLINE auto GetWorldPlayerController(void) const -> AWorldPlayerController* { return this->GetController<AWorldPlayerController>(); }
 
-    FORCEINLINE AWorldPlayerController* GetWorldPlayerController(void) const { return this->GetController<AWorldPlayerController>(); }
-
-#pragma endregion Member Methods
-
-#pragma region Member Variables
-
-    float DefaultFieldOfView          = 120.0f;
-    float SprintFieldOfViewMultiplier = 1.1f;
-    float ZoomedFieldOfView           = 60.0f;
-    float DefaultOrthoWidth           = 8192.0f;
+    template<class T>
+    FORCEINLINE auto GetHUD(void) const -> T* { return Cast<T>(this->GetPlayerController()->GetHUD()); }
+    FORCEINLINE auto GetWorldHUD(void) const -> AWorldHUD* { return this->GetWorldPlayerController()->GetHUD<AWorldHUD>(); }
 
     FVector CurrentVelocity           = FVector::ZeroVector;
     float   CurrentSpeed              = 0.0f;
@@ -101,15 +97,41 @@ public:
     FORCEINLINE auto GetCurrentVelocity(void) const -> FVector { return this->CurrentVelocity; }
     FORCEINLINE auto GetCurrentSpeed(void) const -> float { return this->CurrentSpeed; }
 
-#pragma endregion Member Variables
+#pragma region Camera
 
-#pragma region Container
+    FORCEINLINE auto GetFPSCamera(void) const -> UCameraComponent* { return this->FirstPersonCameraComponent; }
 
 protected:
+
+    float DefaultFieldOfView          = 120.0f;
+    float SprintFieldOfViewMultiplier = 1.1f;
+    float ZoomedFieldOfView           = 60.0f;
+    float DefaultOrthoWidth           = 8192.0f;
+
+    void UpdateAccumulatedPreview(void) const;
+    FTransform GetAccumulatedPreviewRelativeTransformNoBob(void) const;
+
+#pragma endregion Camera
+
+#pragma region Container
 
     const int InventorySize = 30;
 
     FOnContainerChangedSignature OnCharacterInventoryLikeChangedEvent;
+
+    /**
+     * Server only.
+     *
+     * Fully replicated method that always calls all delegates that may want to update after change.
+     */
+    void ChangeContainerSlot(const int32 Index, const accamount_t_signed Delta);
+
+    UFUNCTION(Client, Reliable)
+    void PushContainerUpdatesToClient_ClientRPC(const TArray<FSlot>& InContainer);
+
+    // IContainer interface
+    virtual void PushContainerUpdatesToClient(void) override;
+    // ~IContainer interface
 
 #pragma endregion Container
 
@@ -243,7 +265,6 @@ public:
 
 #pragma region World Interaction
 
-    FORCEINLINE auto GetFPSCamera(void) const -> UCameraComponent* { return this->FirstPersonCameraComponent; }
     FORCEINLINE auto GetDisplayName(void) const -> FString { return this->GetWorldPlayerController()->GetDisplayName(); }
 
     //////////////////////////////////////////////////////////////////////////
