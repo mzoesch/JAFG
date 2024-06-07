@@ -72,12 +72,15 @@ protected:
     TObjectPtr<UCameraComponent> ThirdPersonFrontCameraComponent;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    TObjectPtr<USceneComponent> RightHandComponent;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<ACharacterReach> CharacterReach;
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UStaticMesh> CharacterReachMesh;
     friend ACharacterReach;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<ACuboid> AccumulatedPreview;
 
     FORCEINLINE auto GetPlayerController(void) const -> APlayerController* { return Cast<APlayerController>(this->GetController()); }
@@ -89,6 +92,11 @@ protected:
     FORCEINLINE auto GetHUD(void) const -> T* { return Cast<T>(this->GetPlayerController()->GetHUD()); }
     FORCEINLINE auto GetWorldHUD(void) const -> AWorldHUD* { return this->GetWorldPlayerController()->GetHUD<AWorldHUD>(); }
 
+    /** Only works on server or locally controlled characters. */
+    FORCEINLINE auto GetDisplayName(void) const -> FString { return this->GetWorldPlayerController()->GetDisplayName(); }
+    /** For remote connections. */
+    FORCEINLINE auto GetRemoteDisplayName(void) const -> FString { return this->GetPlayerState<AWorldPlayerState>()->GetPlayerName(); }
+
     FVector CurrentVelocity           = FVector::ZeroVector;
     float   CurrentSpeed              = 0.0f;
 
@@ -97,7 +105,7 @@ public:
     FORCEINLINE auto GetCurrentVelocity(void) const -> FVector { return this->CurrentVelocity; }
     FORCEINLINE auto GetCurrentSpeed(void) const -> float { return this->CurrentSpeed; }
 
-#pragma region Camera
+#pragma region Camera Stuff
 
     FORCEINLINE auto GetFPSCamera(void) const -> UCameraComponent* { return this->FirstPersonCameraComponent; }
 
@@ -108,10 +116,11 @@ protected:
     float ZoomedFieldOfView           = 60.0f;
     float DefaultOrthoWidth           = 8192.0f;
 
-    void UpdateAccumulatedPreview(void) const;
+    void ReattachAccumulatedPreview(void) const;
+    void UpdateAccumulatedPreview(const bool bReattach = false) const;
     FTransform GetAccumulatedPreviewRelativeTransformNoBob(void) const;
 
-#pragma endregion Camera
+#pragma endregion Camera Stuff
 
 #pragma region Container
 
@@ -223,12 +232,16 @@ protected:
     auto OnQuickSlotEight(const FInputActionValue& Value) -> void;
     auto OnQuickSlotNine(const FInputActionValue& Value) -> void;
     auto OnQuickSlotBitwise(const FInputActionValue& Value) -> void;
-    auto OnQuickSlot(const int32 Slot) -> void;
-    int32 SelectedQuickSlotIndex = 0;
+    auto OnQuickSlot(const int8 Slot) -> void;
+    int8 SelectedQuickSlotIndex = 0;
+    UPROPERTY(ReplicatedUsing=OnRep_RemoteSelectedAccumulatedPreview)
+    uint32 /* voxel_t */ RemoteSelectedAccumulatedPreview = 0;
+    UFUNCTION()
+    void OnRep_RemoteSelectedAccumulatedPreview( /* void */ ) const;
     UFUNCTION(Server, Unreliable, WithValidation)
-    void OnQuickSlot_ServerRPC(const int32 Slot);
+    void OnQuickSlot_ServerRPC(const int8 Slot);
     UFUNCTION(Server, Reliable, WithValidation)
-    void OnQuickSlot_ReliableServerRPC(const int32 Slot);
+    void OnQuickSlot_ReliableServerRPC(const int8 Slot);
 
 private:
 
@@ -264,8 +277,6 @@ public:
 #pragma endregion Command Interface
 
 #pragma region World Interaction
-
-    FORCEINLINE auto GetDisplayName(void) const -> FString { return this->GetWorldPlayerController()->GetDisplayName(); }
 
     //////////////////////////////////////////////////////////////////////////
     // World Locations And Rotations

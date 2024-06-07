@@ -3,7 +3,6 @@
 #include "WorldCore/WorldPlayerState.h"
 
 #include "Net/UnrealNetwork.h"
-#include "Net/Core/PushModel/PushModel.h"
 
 AWorldPlayerState::AWorldPlayerState(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -13,11 +12,6 @@ AWorldPlayerState::AWorldPlayerState(const FObjectInitializer& ObjectInitializer
 void AWorldPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-    // FDoRepLifetimeParams SharedParams;
-    // SharedParams.bIsPushBased = true;
-
-    return;
 }
 
 void AWorldPlayerState::SetPlayerName(const FString& S)

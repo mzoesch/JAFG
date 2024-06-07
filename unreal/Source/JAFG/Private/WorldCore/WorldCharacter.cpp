@@ -11,6 +11,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Input/CustomInputNames.h"
+#include "Net/UnrealNetwork.h"
 #include "SettingsData/JAFGInputSubsystem.h"
 #include "Player/WorldPlayerController.h"
 #include "UI/OSD/PlayerInventory.h"
@@ -34,41 +35,44 @@ Super(ObjectInitializer.SetDefaultSubobjectClass<UMyCharacterMovementComponent>(
 
     this->GetCapsuleComponent()->InitCapsuleSize(40.0f, 90.0f);
 
-    this->NonFPMeshWrapper = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("NonFPMeshWrapper"));
+    this->NonFPMeshWrapper = ObjectInitializer.CreateDefaultSubobject<UStaticMeshComponent>(this, TEXT("NonFPMeshWrapper"));
     this->NonFPMeshWrapper->SetupAttachment(this->GetCapsuleComponent());
     this->NonFPMeshWrapper->SetOwnerNoSee(true);
 
-    this->FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
+    this->FirstPersonCameraComponent = ObjectInitializer.CreateDefaultSubobject<UCameraComponent>(this, TEXT("FirstPersonCamera"));
     this->FirstPersonCameraComponent->SetupAttachment(this->GetCapsuleComponent());
     this->FirstPersonCameraComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 60.0f));
     this->FirstPersonCameraComponent->bUsePawnControlRotation = true;
     this->FirstPersonCameraComponent->SetFieldOfView(this->DefaultFieldOfView);
     this->FirstPersonCameraComponent->OrthoWidth = this->DefaultOrthoWidth;
 
-    this->ThirdPersonSpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("ThirdPersonSpringArm"));
+    this->ThirdPersonSpringArmComponent = ObjectInitializer.CreateDefaultSubobject<USpringArmComponent>(this, TEXT("ThirdPersonSpringArm"));
     this->ThirdPersonSpringArmComponent->SetupAttachment(this->GetCapsuleComponent());
     this->ThirdPersonSpringArmComponent->SocketOffset            = FVector(0.0f, 0.0f, 60.0f);
     this->ThirdPersonSpringArmComponent->bUsePawnControlRotation = true;
     this->ThirdPersonSpringArmComponent->TargetArmLength         = 256.0f;
 
-    this->ThirdPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("ThirdPersonCamera"));
+    this->ThirdPersonCameraComponent = ObjectInitializer.CreateDefaultSubobject<UCameraComponent>(this, TEXT("ThirdPersonCamera"));
     this->ThirdPersonCameraComponent->SetupAttachment(this->ThirdPersonSpringArmComponent);
     this->ThirdPersonCameraComponent->SetFieldOfView(this->DefaultFieldOfView);
     this->ThirdPersonCameraComponent->OrthoWidth = this->DefaultOrthoWidth;
     this->ThirdPersonCameraComponent->Deactivate();
 
-    this->ThirdPersonFrontSpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("ThirdPersonFrontSpringArm"));
+    this->ThirdPersonFrontSpringArmComponent = ObjectInitializer.CreateDefaultSubobject<USpringArmComponent>(this, TEXT("ThirdPersonFrontSpringArm"));
     this->ThirdPersonFrontSpringArmComponent->SetupAttachment(this->GetCapsuleComponent());
     this->ThirdPersonFrontSpringArmComponent->SocketOffset            = FVector(0.0f, 0.0f, 60.0f);
     this->ThirdPersonFrontSpringArmComponent->bUsePawnControlRotation = true;
     this->ThirdPersonFrontSpringArmComponent->TargetArmLength         = -256.0f;
 
-    this->ThirdPersonFrontCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("ThirdPersonFrontCamera"));
+    this->ThirdPersonFrontCameraComponent = ObjectInitializer.CreateDefaultSubobject<UCameraComponent>(this, TEXT("ThirdPersonFrontCamera"));
     this->ThirdPersonFrontCameraComponent->SetupAttachment(this->ThirdPersonFrontSpringArmComponent);
     this->ThirdPersonFrontCameraComponent->SetFieldOfView(this->DefaultFieldOfView);
     this->ThirdPersonFrontCameraComponent->SetRelativeRotation(FRotator(0.0f, 180.0f, 0.0f));
     this->ThirdPersonFrontCameraComponent->OrthoWidth = this->DefaultOrthoWidth;
     this->ThirdPersonFrontCameraComponent->Deactivate();
+
+    this->RightHandComponent = ObjectInitializer.CreateDefaultSubobject<USceneComponent>(this, TEXT("RightHand"));
+    this->RightHandComponent->SetupAttachment(this->RootComponent);
 
     return;
 }
@@ -77,15 +81,15 @@ void AWorldCharacter::BeginPlay(void)
 {
     Super::BeginPlay();
 
+    this->AccumulatedPreview = this->GetWorld()->SpawnActor<ACuboid>(ACuboid::StaticClass(), FTransform(), FActorSpawnParameters());
+    jcheck( this->AccumulatedPreview )
+    this->ReattachAccumulatedPreview();
+
     if (this->IsLocallyControlled())
     {
         this->CharacterReach = this->GetWorld()->SpawnActor<ACharacterReach>(ACharacterReach::StaticClass(), FTransform(), FActorSpawnParameters());
         jcheck( this->CharacterReach )
         this->CharacterReach->AttachToComponent(this->GetCapsuleComponent(), FAttachmentTransformRules::KeepRelativeTransform);
-
-        this->AccumulatedPreview = this->GetWorld()->SpawnActor<ACuboid>(ACuboid::StaticClass(), FTransform(), FActorSpawnParameters());
-        jcheck( this->AccumulatedPreview )
-        this->AccumulatedPreview->AttachToComponent(this->FirstPersonCameraComponent, FAttachmentTransformRules::KeepRelativeTransform);
 
         AWorldPlayerController* WorldPlayerController = Cast<AWorldPlayerController>(this->GetController());
 
@@ -128,6 +132,15 @@ void AWorldCharacter::BeginPlay(void)
 
         this->PushContainerUpdatesToClient();
     }
+
+    return;
+}
+
+void AWorldCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(AWorldCharacter, RemoteSelectedAccumulatedPreview)
 
     return;
 }
@@ -195,11 +208,6 @@ void AWorldCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
     return;
 }
 
-void AWorldCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-}
-
 void AWorldCharacter::ListenForCameraChangedEventWithNonFPMeshWrapper(void)
 {
     this->OnCameraChangedEvent.AddLambda( [this] (void)
@@ -215,6 +223,8 @@ void AWorldCharacter::ListenForCameraChangedEventWithNonFPMeshWrapper(void)
                 Primitive->SetOwnerNoSee(this->FirstPersonCameraComponent->IsActive());
             }
         }
+
+        this->ReattachAccumulatedPreview();
 
         return;
     });
@@ -236,27 +246,62 @@ void AWorldCharacter::UpdateFOVBasedOnSprintState(void) const
     return;
 }
 
-#pragma region Camera
+#pragma region Camera Stuff
 
-void AWorldCharacter::UpdateAccumulatedPreview(void) const
+void AWorldCharacter::ReattachAccumulatedPreview(void) const
 {
-    this->AccumulatedPreview->SetActorRelativeTransform(this->GetAccumulatedPreviewRelativeTransformNoBob());
+    if (this->IsLocallyControlled() && this->FirstPersonCameraComponent->IsActive())
+    {
+        this->AccumulatedPreview->AttachToComponent(this->FirstPersonCameraComponent, FAttachmentTransformRules::KeepRelativeTransform);
+    }
+    else
+    {
+        this->AccumulatedPreview->AttachToComponent(this->RightHandComponent, FAttachmentTransformRules::KeepRelativeTransform);
+    }
 
-    this->AccumulatedPreview->GenerateMesh(this->GetContainerValue(this->SelectedQuickSlotIndex).AccumulatedIndex);
+    return;
+}
+
+void AWorldCharacter::UpdateAccumulatedPreview(const bool bReattach /* = false */) const
+{
+    if (bReattach)
+    {
+        this->ReattachAccumulatedPreview();
+    }
+
+    if (this->AccumulatedPreview)
+    {
+        this->AccumulatedPreview->SetActorRelativeTransform(this->GetAccumulatedPreviewRelativeTransformNoBob());
+
+        if (this->IsLocallyControlled())
+        {
+            this->AccumulatedPreview->GenerateMesh(this->GetContainerValue(this->SelectedQuickSlotIndex).AccumulatedIndex);
+        }
+        else
+        {
+            this->AccumulatedPreview->GenerateMesh(this->RemoteSelectedAccumulatedPreview);
+        }
+    }
 
     return;
 }
 
 FTransform AWorldCharacter::GetAccumulatedPreviewRelativeTransformNoBob(void) const
 {
-    return FTransform(
-        FRotator(0.0f, 14.0f, 0.0f),
-        FVector(20.0f, 16.0f, -17.0f),
-        FVector::One()
-    );
+    return this->FirstPersonCameraComponent->IsActive() ?
+        FTransform(
+            FRotator(0.0f, 14.0f, 0.0f),
+            FVector(20.0f, 16.0f, -17.0f),
+            FVector::One()
+        ) :
+        FTransform(
+            FRotator::ZeroRotator,
+            FVector::ZeroVector,
+            FVector::One()
+        );
 }
 
-#pragma endregion Camera
+#pragma endregion Camera Stuff
 
 #pragma region Container
 
@@ -280,7 +325,11 @@ void AWorldCharacter::PushContainerUpdatesToClient_ClientRPC_Implementation(cons
     LOG_VERY_VERBOSE(LogWorldChar, "Updating container on client. New slots: %d.", InContainer.Num())
     this->Container = InContainer;
 
-    this->GetWorldHUD()->Hotbar->MarkAsDirty();
+    if (this->GetWorldHUD() && this->GetWorldHUD()->Hotbar)
+    {
+        this->GetWorldHUD()->Hotbar->MarkAsDirty();
+    }
+
     this->UpdateAccumulatedPreview();
 
     return;
@@ -1140,7 +1189,7 @@ void AWorldCharacter::OnQuickSlotBitwise(const FInputActionValue& Value)
     return;
 }
 
-void AWorldCharacter::OnQuickSlot(const int32 Slot)
+void AWorldCharacter::OnQuickSlot(const int8 Slot)
 {
     this->SelectedQuickSlotIndex = Slot;
     this->GetWorldHUD()->Hotbar->MoveSelectorToSlot(Slot);
@@ -1152,24 +1201,55 @@ void AWorldCharacter::OnQuickSlot(const int32 Slot)
     return;
 }
 
-bool AWorldCharacter::OnQuickSlot_ServerRPC_Validate(const int32 Slot)
+void AWorldCharacter::OnRep_RemoteSelectedAccumulatedPreview(void) const
+{
+    /* We ignore server requests as they might be "hanging" behind the client that is controlling this character. */
+    if (this->IsLocallyControlled())
+    {
+        return;
+    }
+
+    this->UpdateAccumulatedPreview();
+
+    return;
+}
+
+bool AWorldCharacter::OnQuickSlot_ServerRPC_Validate(const int8 Slot)
 {
     return Slot >= QUICK_SLOT_MIN && Slot <= QUICK_SLOT_MAX;
 }
 
-void AWorldCharacter::OnQuickSlot_ServerRPC_Implementation(const int32 Slot)
+void AWorldCharacter::OnQuickSlot_ServerRPC_Implementation(const int8 Slot)
 {
-    this->SelectedQuickSlotIndex = Slot;
+    this->SelectedQuickSlotIndex           = Slot;
+    this->RemoteSelectedAccumulatedPreview = this->GetContainerValue(Slot).AccumulatedIndex;
+
+    /* We have to call manually, as we would not receive auto updates on the server when a client calls this RPC. */
+    if (UNetStatics::IsSafeServer(this))
+    {
+        this->OnRep_RemoteSelectedAccumulatedPreview();
+    }
+
+    return;
 }
 
-bool AWorldCharacter::OnQuickSlot_ReliableServerRPC_Validate(const int32 Slot)
+bool AWorldCharacter::OnQuickSlot_ReliableServerRPC_Validate(const int8 Slot)
 {
     return Slot >= QUICK_SLOT_MIN && Slot <= QUICK_SLOT_MAX;
 }
 
-void AWorldCharacter::OnQuickSlot_ReliableServerRPC_Implementation(const int32 Slot)
+void AWorldCharacter::OnQuickSlot_ReliableServerRPC_Implementation(const int8 Slot)
 {
-    this->SelectedQuickSlotIndex = Slot;
+    this->SelectedQuickSlotIndex           = Slot;
+    this->RemoteSelectedAccumulatedPreview = this->GetContainerValue(Slot).AccumulatedIndex;
+
+    /* We have to call manually, as we would not receive auto updates on the server when a client calls this RPC. */
+    if (UNetStatics::IsSafeServer(this))
+    {
+        this->OnRep_RemoteSelectedAccumulatedPreview();
+    }
+
+    return;
 }
 
 #undef QUICK_SLOT_0
