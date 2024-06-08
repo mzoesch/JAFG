@@ -128,6 +128,16 @@ protected:
 
     FOnContainerChangedSignature OnCharacterInventoryLikeChangedEvent;
 
+public:
+
+    /**
+     * Just call this method on the server, and it will handle the rest (e.g., replication,
+     * hud updates, previews, etc.).
+     */
+    bool EasyAddToContainer(const FAccumulated& Value);
+
+protected:
+
     /**
      * Server only.
      *

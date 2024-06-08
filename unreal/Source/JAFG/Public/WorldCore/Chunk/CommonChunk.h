@@ -323,6 +323,7 @@ public:
      * Does not check for out of bounds. The callee must ensure that the
      * LocalVoxelPosition is within the bounds of the chunk.
      */
+    [[nodiscard]]
     FORCEINLINE voxel_t GetLocalVoxelOnly(const FVoxelKey& LocalVoxelPosition) const
     {
         /*

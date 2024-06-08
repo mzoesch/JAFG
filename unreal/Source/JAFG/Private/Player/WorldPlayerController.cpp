@@ -374,6 +374,9 @@ bool AWorldPlayerController::SafelyIncreaseStrikeCount(void)
     this->RemoveOutDatedStrikes();
 
     this->Strikes.Add(this->GetCurrentStrikeTime());
+
+#if WITH_STRIKE_SUBSYSTEM
+
     LOG_WARNING(LogStrikeSystem, "Added strike for client [%s]. Timestamp: %d.", *this->GetDisplayName(), this->GetCurrentStrikeTime())
 
     if (this->Strikes.Num() >= this->MaxStrikeCount)
@@ -386,6 +389,7 @@ bool AWorldPlayerController::SafelyIncreaseStrikeCount(void)
 
         return true;
     }
+#endif /* WITH_STRIKE_SUBSYSTEM */
 
     return false;
 }

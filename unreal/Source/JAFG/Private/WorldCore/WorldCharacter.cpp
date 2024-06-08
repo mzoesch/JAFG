@@ -15,9 +15,10 @@
 #include "SettingsData/JAFGInputSubsystem.h"
 #include "Player/WorldPlayerController.h"
 #include "UI/OSD/PlayerInventory.h"
-#include "WorldCore/Cuboid.h"
+#include "WorldCore/Entity/Cuboid.h"
 #include "WorldCore/Character/CharacterReach.h"
 #include "WorldCore/Chunk/CommonChunk.h"
+#include "WorldCore/Entity/EntitySubsystem.h"
 
 #define ENHANCED_INPUT_SUBSYSTEM                                       \
     ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(    \
@@ -305,6 +306,23 @@ FTransform AWorldCharacter::GetAccumulatedPreviewRelativeTransformNoBob(void) co
 
 #pragma region Container
 
+bool AWorldCharacter::EasyAddToContainer(const FAccumulated& Value)
+{
+    if (UNetStatics::IsSafeClient(this))
+    {
+        LOG_FATAL(LogWorldChar, "Cannot add to container on client.")
+        return false;
+    }
+
+    if (this->AddToContainer(Value))
+    {
+        this->PushContainerUpdatesToClient();
+        return true;
+    }
+
+    return false;
+}
+
 void AWorldCharacter::ChangeContainerSlot(const int32 Index, const accamount_t_signed Delta)
 {
     if (UNetStatics::IsSafeClient(this))
@@ -322,7 +340,7 @@ void AWorldCharacter::ChangeContainerSlot(const int32 Index, const accamount_t_s
 
 void AWorldCharacter::PushContainerUpdatesToClient_ClientRPC_Implementation(const TArray<FSlot>& InContainer)
 {
-    LOG_VERY_VERBOSE(LogWorldChar, "Updating container on client. New slots: %d.", InContainer.Num())
+    LOG_VERY_VERBOSE(LogWorldChar, "Updating container on client with authority data.", InContainer.Num())
     this->Container = InContainer;
 
     if (this->GetWorldHUD() && this->GetWorldHUD()->Hotbar)
@@ -796,7 +814,13 @@ void AWorldCharacter::OnStartedVoxelMinded_ServerRPC_Implementation(const FChunk
 
     if (TargetedChunk == nullptr)
     {
-        LOG_WARNING(LogWorldChar, "Increased strike for %s. Reason: Cannot interact with invalid chunk.", *this->GetDisplayName())
+#if WITH_STRIKE_SUBSYSTEM
+        LOG_WARNING(
+            LogWorldChar,
+            "Increased strike for %s. Reason: Cannot interact with invalid chunk.",
+            *this->GetDisplayName()
+        )
+#endif /* WITH_STRIKE_SUBSYSTEM */
         this->GetWorldPlayerController()->SafelyIncreaseStrikeCount();
 
         this->CurrentlyMiningLocalVoxel.Reset();
@@ -807,11 +831,13 @@ void AWorldCharacter::OnStartedVoxelMinded_ServerRPC_Implementation(const FChunk
 
     if (LocalHitVoxelKey != InLocalHitVoxelKey)
     {
+#if WITH_STRIKE_SUBSYSTEM
         LOG_WARNING(
             LogWorldChar,
             "Increased strike for %s. Reason: Remote and host hits differ: CL %s != SV %s.",
             *this->GetDisplayName(), *InLocalHitVoxelKey.ToString(), *LocalHitVoxelKey.ToString()
         )
+#endif /* WITH_STRIKE_SUBSYSTEM */
         this->GetWorldPlayerController()->SafelyIncreaseStrikeCount();
 
         this->CurrentlyMiningLocalVoxel.Reset();
@@ -847,7 +873,13 @@ void AWorldCharacter::OnCompletedVoxelMinded_ServerRPC_Implementation(const bool
 
     if (TargetedChunk == nullptr)
     {
-        LOG_WARNING(LogWorldChar, "Increased strike for %s. Reason: Cannot interact with invalid chunk.", *this->GetDisplayName())
+#if WITH_STRIKE_SUBSYSTEM
+        LOG_WARNING(
+            LogWorldChar,
+            "Increased strike for %s. Reason: Cannot interact with invalid chunk.",
+            *this->GetDisplayName()
+        )
+#endif /* WITH_STRIKE_SUBSYSTEM */
         this->GetWorldPlayerController()->SafelyIncreaseStrikeCount();
 
         this->CurrentlyMiningLocalVoxel.Reset();
@@ -858,11 +890,13 @@ void AWorldCharacter::OnCompletedVoxelMinded_ServerRPC_Implementation(const bool
 
     if (this->CurrentDurationSameVoxelIsMined < 0.5f && FMath::IsNearlyEqual(this->CurrentDurationSameVoxelIsMined, .5f, .1f) == false)
     {
+#if WITH_STRIKE_SUBSYSTEM
         LOG_WARNING(
             LogWorldChar,
             "Increased strike for %s. Reason: Voxel break was to short or to long.",
             *this->GetDisplayName()
         )
+#endif /* WITH_STRIKE_SUBSYSTEM */
         this->GetWorldPlayerController()->SafelyIncreaseStrikeCount();
 
         this->CurrentlyMiningLocalVoxel.Reset();
@@ -871,10 +905,33 @@ void AWorldCharacter::OnCompletedVoxelMinded_ServerRPC_Implementation(const bool
         return;
     }
 
+    const voxel_t HitVoxel = TargetedChunk->GetLocalVoxelOnly(LocalHitVoxelKey);
+
     TargetedChunk->ModifySingleVoxel(LocalHitVoxelKey, ECommonVoxels::Air);
 
     this->CurrentlyMiningLocalVoxel.Reset();
     this->CurrentDurationSameVoxelIsMined = 0.0f;
+
+    if (HitVoxel < ECommonVoxels::Num)
+    {
+#if WITH_STRIKE_SUBSYSTEM
+        LOG_WARNING(
+            LogWorldChar,
+            "Increased strike for %s. Reason: Cannot interact with common voxel type %d.",
+            *this->GetDisplayName(), HitVoxel
+        )
+#endif /* WITH_STRIKE_SUBSYSTEM */
+        this->GetWorldPlayerController()->SafelyIncreaseStrikeCount();
+        return;
+    }
+
+    UEntitySubsystem* EntitySubsystem = this->GetWorld()->GetSubsystem<UEntitySubsystem>(); check( EntitySubsystem )
+    EntitySubsystem->CreateDrop(
+        FAccumulated(HitVoxel),
+        WorldHitLocation + WorldNormalHitLocation,
+        UEntitySubsystem::GetRandomUpwardForceVector(),
+        FMath::FRandRange(1000.0f, 150000.0f)
+    );
 
     return;
 }
@@ -930,7 +987,13 @@ void AWorldCharacter::OnStartedSecondary_ServerRPC_Implementation(const FInputAc
 {
     if (this->GetContainerValue(this->SelectedQuickSlotIndex) == Accumulated::Null)
     {
-        LOG_WARNING(LogWorldChar, "Increased strike for %s. Reason: Cannot secondary interact with invalid voxel.", *this->GetDisplayName())
+#if WITH_STRIKE_SUBSYSTEM
+        LOG_WARNING(
+            LogWorldChar,
+            "Increased strike for %s. Reason: Cannot secondary interact with invalid voxel.",
+            *this->GetDisplayName()
+        )
+#endif /* WITH_STRIKE_SUBSYSTEM */
         this->GetWorldPlayerController()->SafelyIncreaseStrikeCount();
         return;
     }
@@ -947,7 +1010,13 @@ void AWorldCharacter::OnStartedSecondary_ServerRPC_Implementation(const FInputAc
 
     if (TargetedChunk == nullptr)
     {
-        LOG_WARNING(LogWorldChar, "Increased strike for %s. Reason: Cannot interact with invalid chunk.", *this->GetDisplayName())
+#if WITH_STRIKE_SUBSYSTEM
+        LOG_WARNING(
+            LogWorldChar,
+            "Increased strike for %s. Reason: Cannot interact with invalid chunk.",
+            *this->GetDisplayName()
+        )
+#endif /* WITH_STRIKE_SUBSYSTEM */
         this->GetWorldPlayerController()->SafelyIncreaseStrikeCount();
         return;
     }
@@ -970,7 +1039,13 @@ void AWorldCharacter::OnStartedSecondary_ServerRPC_Implementation(const FInputAc
     /* Only checking ourselves currently maybe we want to do some more checks before sending the RPC. */
     if (FVector::Dist(this->GetTorsoLocation(), WorldTargetVoxelLocation) < 100.0f)
     {
-        LOG_WARNING(LogWorldChar, "Increased strike for %s. Reason: Cannot interact with voxel too close to self.", *this->GetDisplayName())
+#if WITH_STRIKE_SUBSYSTEM
+        LOG_WARNING(
+            LogWorldChar,
+            "Increased strike for %s. Reason: Cannot interact with voxel too close to self.",
+            *this->GetDisplayName()
+        )
+#endif /* WITH_STRIKE_SUBSYSTEM */
         this->GetWorldPlayerController()->SafelyIncreaseStrikeCount();
         return;
     }

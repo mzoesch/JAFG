@@ -8,7 +8,6 @@
 
 #include "Cuboid.generated.h"
 
-
 JAFG_VOID
 
 class UVoxelSubsystem;
@@ -33,9 +32,9 @@ public:
     int32 CuboidY = 8;
     int32 CuboidZ = 8;
 
-    int32 TexX = 10;
-    int32 TexY = 10;
-    int32 TexZ = 10;
+    int32 TexX = 8;
+    int32 TexY = 8;
+    int32 TexZ = 8;
 
 protected:
 
@@ -50,11 +49,16 @@ protected:
 
 public:
 
-    void GenerateMesh(const voxel_t InAccumulated);
+    virtual void GenerateMesh(const voxel_t InAccumulated);
 
 protected:
 
+    /**
+     * Variable is only used as a placeholder. The getter can be safely overriden in a derived class without
+     * any struggle or side effects.
+     */
     voxel_t CurrentAccumulated = Accumulated::Null.AccumulatedIndex;
+    virtual auto GetCurrentAccumulatedIndex(void) const -> voxel_t { return this->CurrentAccumulated; }
 
     int32 TriangleIndexCounter = 0;
 

@@ -1,6 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
-#include "WorldCore/Cuboid.h"
+#include "WorldCore/Entity/Cuboid.h"
 
 #include "ProceduralMeshComponent.h"
 #include "System/MaterialSubsystem.h"
@@ -40,7 +40,7 @@ void ACuboid::GenerateMesh(const voxel_t InAccumulated)
     this->UVs.Reset();
     this->Colors.Reset();
 
-    if (this->CurrentAccumulated == ECommonVoxels::Null)
+    if (this->GetCurrentAccumulatedIndex() == ECommonVoxels::Null)
     {
         this->ApplyMesh();
         return;
@@ -112,7 +112,7 @@ void ACuboid::CreateQuadrilateral(const FVector& V1, const FVector& V2, const FV
     {
         this->Normals.Add(Normal);
         this->Tangents.Add(Tangent);
-        this->Colors.Add(FColor(0, 0, 0, this->VoxelSubsystem->GetTextureIndex(this->CurrentAccumulated, Normal)));
+        this->Colors.Add(FColor(0, 0, 0, this->VoxelSubsystem->GetTextureIndex(this->GetCurrentAccumulatedIndex(), Normal)));
 
         continue;
     }
