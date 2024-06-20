@@ -246,10 +246,14 @@ void AWorldCharacter::UpdateFOVBasedOnSprintState(void) const
     if (this->GetMyCharacterMovement()->IsSprinting())
     {
         this->FirstPersonCameraComponent->SetFieldOfView(this->FirstPersonCameraComponent->FieldOfView * this->SprintFieldOfViewMultiplier);
+        this->ThirdPersonCameraComponent->SetFieldOfView(this->ThirdPersonCameraComponent->FieldOfView * this->SprintFieldOfViewMultiplier);
+        this->ThirdPersonFrontCameraComponent->SetFieldOfView(this->ThirdPersonFrontCameraComponent->FieldOfView * this->SprintFieldOfViewMultiplier);
     }
     else
     {
         this->FirstPersonCameraComponent->SetFieldOfView(this->bZooming ? this->ZoomedFieldOfView : this->DefaultFieldOfView);
+        this->ThirdPersonCameraComponent->SetFieldOfView(this->bZooming ? this->ZoomedFieldOfView : this->DefaultFieldOfView);
+        this->ThirdPersonFrontCameraComponent->SetFieldOfView(this->bZooming ? this->ZoomedFieldOfView : this->DefaultFieldOfView);
     }
 
     return;
@@ -424,7 +428,7 @@ void AWorldCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
     }
 }
 
-void AWorldCharacter::SetFootContextBasedOnCharacterState(const bool bClearOldMappings /* = true */, const int32 Priority /* = 0 */)
+void AWorldCharacter::SetFootContextBasedOnCharacterState(const bool bClearOldMappings /* = true */, const int32 Priority /* = 0 */) const
 {
     UEnhancedInputLocalPlayerSubsystem* Subsystem = ENHANCED_INPUT_SUBSYSTEM;
 
@@ -701,11 +705,15 @@ void AWorldCharacter::OnCompleteJump(const FInputActionValue& Value)
     Super::StopJumping();
 }
 
+/* Do NOT convert to const method, as this is a Rider IDEA false positive error. */
+// ReSharper disable once CppMemberFunctionMayBeConst
 void AWorldCharacter::OnStartedSprint(const FInputActionValue& Value)
 {
     this->GetMyCharacterMovement()->SetWantsToSprint(true);
 }
 
+/* Do NOT convert to const method, as this is a Rider IDEA false positive error. */
+// ReSharper disable once CppMemberFunctionMayBeConst
 void AWorldCharacter::OnCompletedSprint(const FInputActionValue& Value)
 {
     this->GetMyCharacterMovement()->SetWantsToSprint(false);
@@ -1064,6 +1072,8 @@ void AWorldCharacter::OnStartedSecondary_ServerRPC_Implementation(const FInputAc
     return;
 }
 
+/* Do NOT convert to const method, as this is a Rider IDEA false positive error. */
+// ReSharper disable once CppMemberFunctionMayBeConst
 void AWorldCharacter::OnTriggeredUpMaxFlySpeed(const FInputActionValue& Value)
 {
     if (this->GetCharacterMovement()->MovementMode == EMovementMode::MOVE_Flying)
@@ -1074,6 +1084,8 @@ void AWorldCharacter::OnTriggeredUpMaxFlySpeed(const FInputActionValue& Value)
     return;
 }
 
+/* Do NOT convert to const method, as this is a Rider IDEA false positive error. */
+// ReSharper disable once CppMemberFunctionMayBeConst
 void AWorldCharacter::OnTriggeredDownMaxFlySpeed(const FInputActionValue& Value)
 {
     if (this->GetCharacterMovement()->MovementMode == EMovementMode::MOVE_Flying)
@@ -1084,6 +1096,8 @@ void AWorldCharacter::OnTriggeredDownMaxFlySpeed(const FInputActionValue& Value)
     return;
 }
 
+/* Do NOT convert to const method, as this is a Rider IDEA false positive error. */
+// ReSharper disable once CppMemberFunctionMayBeConst
 void AWorldCharacter::OnToggleCameras(const FInputActionValue& Value)
 {
     if (this->FirstPersonCameraComponent->IsActive())
@@ -1102,7 +1116,6 @@ void AWorldCharacter::OnToggleCameras(const FInputActionValue& Value)
     {
         this->ThirdPersonFrontCameraComponent->Deactivate();
         this->FirstPersonCameraComponent->Activate();
-        this->FirstPersonCameraComponent->SetFieldOfView(this->DefaultFieldOfView);
     }
 
     this->OnCameraChangedEvent.Broadcast();
@@ -1135,6 +1148,8 @@ void AWorldCharacter::OnCompleteZoomCameras(const FInputActionValue& Value)
     return;
 }
 
+/* Do NOT convert to const method, as this is a Rider IDEA false positive error. */
+// ReSharper disable once CppMemberFunctionMayBeConst
 void AWorldCharacter::OnTogglePerspective(const FInputActionValue& Value)
 {
     if (this->FirstPersonCameraComponent->ProjectionMode == ECameraProjectionMode::Perspective)
@@ -1152,6 +1167,8 @@ void AWorldCharacter::OnTogglePerspective(const FInputActionValue& Value)
     return;
 }
 
+/* Do NOT convert to const method, as this is a Rider IDEA false positive error. */
+// ReSharper disable once CppMemberFunctionMayBeConst
 void AWorldCharacter::OnStartedToggleContainer(const FInputActionValue& Value)
 {
     UEnhancedInputLocalPlayerSubsystem* Subsystem     = ENHANCED_INPUT_SUBSYSTEM; jcheck(     Subsystem )
@@ -1387,7 +1404,7 @@ void AWorldCharacter::OnEscapeMenuVisibilityChanged(const bool bVisible)
 
 #pragma region Command Interface
 
-void AWorldCharacter::ToggleFly(void)
+void AWorldCharacter::ToggleFly(void) const
 {
     if (this->GetCharacterMovement()->MovementMode == EMovementMode::MOVE_Flying)
     {

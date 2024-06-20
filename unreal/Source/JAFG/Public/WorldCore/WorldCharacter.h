@@ -156,14 +156,14 @@ protected:
 
 #pragma region Enhanced Input
 
-    //////////////////////////////////////////////////////////////////////////
-    // Enhanced Input Extern Events
-    //////////////////////////////////////////////////////////////////////////
-
 public:
 
     FORCEINLINE auto IsFlying(void) const -> bool { return this->GetMyCharacterMovement()->IsFlying(); }
     FORCEINLINE auto IsInputFlyEnabled(void) const -> bool { return this->GetMyCharacterMovement()->bAllowInputFly; }
+
+    //////////////////////////////////////////////////////////////////////////
+    // Enhanced Input Extern Events
+    //////////////////////////////////////////////////////////////////////////
 
     auto SubscribeToContainerVisibleEvent(const FOnContainerVisibleSignature::FDelegate& Delegate) -> FDelegateHandle;
     auto UnSubscribeToContainerVisibleEvent(const FDelegateHandle& Handle) -> bool;
@@ -183,7 +183,7 @@ protected:
 
     virtual auto SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) -> void override;
 
-    auto SetFootContextBasedOnCharacterState(const bool bClearOldMappings = true, const int32 Priority = 0) -> void;
+    auto SetFootContextBasedOnCharacterState(const bool bClearOldMappings = true, const int32 Priority = 0) const -> void;
     auto GetFootContextBasedOnCharacterState(void) const -> UInputMappingContext*;
     auto GetSafeFootContextBasedOnCharacterState(void) const -> UInputMappingContext*;
     auto GetFootContextBasedOnCharacterState(UJAFGInputSubsystem* JAFGInputSubsystem) const -> UInputMappingContext*;
@@ -281,7 +281,7 @@ public:
     // Command Interface
     //////////////////////////////////////////////////////////////////////////
 
-    auto ToggleFly(void) -> void;
+    auto ToggleFly(void) const -> void;
     auto ToggleInputFly(void) const -> void;
 
 #pragma endregion Command Interface
