@@ -52,6 +52,7 @@ void ADrop::BeginPlay(void)
     CollisionConvexMesh.Add(FVector(-this->ConvexX,  this->ConvexY,  this->ConvexZ )); /* Backward Top    Right */
     CollisionConvexMesh.Add(FVector(-this->ConvexX,  this->ConvexY, -this->ConvexZ )); /* Backward Bottom Right */
 
+    // Bug: https://forums.unrealengine.com/t/how-to-fix-static-mesh-falling-through-floor/297778/3
     this->MeshComponent->bUseComplexAsSimpleCollision = false;
 
     this->MeshComponent->AddCollisionConvexMesh(CollisionConvexMesh);
