@@ -75,6 +75,14 @@ Super(ObjectInitializer.SetDefaultSubobjectClass<UMyCharacterMovementComponent>(
     this->RightHandComponent = ObjectInitializer.CreateDefaultSubobject<USceneComponent>(this, TEXT("RightHand"));
     this->RightHandComponent->SetupAttachment(this->RootComponent);
 
+    if (this->GetMesh() == nullptr)
+    {
+        LOG_FATAL(LogWorldChar, "Super mesh is invalid.")
+    }
+    this->GetMesh()->SetupAttachment(this->NonFPMeshWrapper);
+    this->GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -92.0f));
+    this->GetMesh()->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
+
     return;
 }
 

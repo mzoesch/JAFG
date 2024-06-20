@@ -7,9 +7,9 @@
 
 #include "WorldHUD.generated.h"
 
-class UHotbar;
 JAFG_VOID
 
+class UHotbar;
 class UJAFGContainer;
 class UJAFGWidget;
 class UJAFGUserWidget;

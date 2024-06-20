@@ -27,5 +27,6 @@ public:
 
 private:
 
+    UPROPERTY()
     TObjectPtr<UJAFGUserWidget> LoadingScreen;
 };

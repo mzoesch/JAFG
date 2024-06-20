@@ -6,7 +6,7 @@
 #include "OnlineSessionSettings.h"
 #include "Interfaces/OnlineSessionInterface.h"
 #include "Subsystems/GameInstanceSubsystem.h"
-#include "WorldCore/RegisteredWorldNames.h"
+#include "RegisteredWorldNames.h"
 
 #include "LocalSessionSupervisorSubsystem.generated.h"
 

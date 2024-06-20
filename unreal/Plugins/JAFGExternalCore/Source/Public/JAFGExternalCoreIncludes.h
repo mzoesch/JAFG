@@ -6,11 +6,13 @@
  * Add this file to get access to the most common headers and types.
  */
 
+
 /*----------------------------------------------------------------------------
     Engine includes.
 ----------------------------------------------------------------------------*/
 
 #include "CoreMinimal.h"
+
 
 /*----------------------------------------------------------------------------
     Commonly used headers.
@@ -29,6 +31,7 @@
 #include "JAFGTypes.h"
 #include "VoxelMask.h"
 #include "Accumulated.h"
+#include "RegisteredWorldNames.h"
 
 
 /*----------------------------------------------------------------------------

@@ -6,7 +6,7 @@
 #include "Interfaces/OnlineSessionInterface.h"
 #include "OnlineSubsystemUtils.h"
 #include "Kismet/GameplayStatics.h"
-#include "WorldCore/RegisteredWorldNames.h"
+#include "RegisteredWorldNames.h"
 
 ULocalSessionSupervisorSubsystem::ULocalSessionSupervisorSubsystem(void) : Super()
 {

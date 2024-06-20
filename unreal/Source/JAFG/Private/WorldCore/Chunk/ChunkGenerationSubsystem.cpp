@@ -3,6 +3,7 @@
 #include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
 
 #include "WorldCore/ChunkWorldSettings.h"
+#include "RegisteredWorldNames.h"
 #include "WorldCore/Chunk/GreedyChunk.h"
 #include "WorldCore/Chunk/ChunkStates.h"
 
@@ -156,6 +157,12 @@ void UChunkGenerationSubsystem::AddVerticalChunkToPendingKillQueue(const FChunkK
 
 bool UChunkGenerationSubsystem::FindAppropriateLocationForCharacterSpawn(const FVector2D& InApproximateLocation, FVector& OutLocation) const
 {
+    if (this->GetWorld()->GetName() == RegisteredWorlds::Dev)
+    {
+        OutLocation = FVector(0.0f, 0.0f, 300.0f);
+        return true;
+    }
+
     const FChunkKey2    TargetVKey = ChunkStatics::WorldToVerticalChunkKey(InApproximateLocation);
     const FJCoordinate2 TargetJKey = ChunkStatics::WorldToVerticalJCoordinate(InApproximateLocation);
 
@@ -170,7 +177,7 @@ bool UChunkGenerationSubsystem::FindAppropriateLocationForCharacterSpawn(const F
 
     for (FChunkKey CurrentTarget : PossibleSpawnChunks)
     {
-        ACommonChunk* Chunk = this->FindChunkByKey(CurrentTarget);
+        const ACommonChunk* Chunk = this->FindChunkByKey(CurrentTarget);
         if (Chunk == nullptr)
         {
             continue;

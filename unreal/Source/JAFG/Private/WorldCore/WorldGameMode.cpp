@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "UI/WorldHUD.h"
 #include "WorldCore/ChunkWorldSettings.h"
+#include "RegisteredWorldNames.h"
 #include "WorldCore/WorldGameSession.h"
 #include "WorldCore/WorldGameState.h"
 #include "WorldCore/WorldPawn.h"
@@ -91,18 +92,51 @@ void AWorldGameMode::SpawnCharacterForPlayer(AWorldPlayerController* Target)
     const AEditorChunkWorldSettings* WorldSettings = Cast<AEditorChunkWorldSettings>(this->GetWorld()->GetWorldSettings());
     jcheck( WorldSettings ) jcheck( WorldSettings->CharacterToUse )
 
-    FVector SpawnPoint;
-    if (this->GetWorld()->GetSubsystem<UChunkGenerationSubsystem>()->FindAppropriateLocationForCharacterSpawn(PredictedLocation, SpawnPoint) == false)
+    FVector  SpawnPoint;
+    FRotator SpawnRotation = FRotator::ZeroRotator;
+    if (const UChunkGenerationSubsystem* CGSubsystem = this->GetWorld()->GetSubsystem<UChunkGenerationSubsystem>(); CGSubsystem)
     {
-        LOG_FATAL(LogWorldGameMode, "Failed to find appropriate spawn location for player [%s].", *Target->GetDisplayName())
-        return;
+        if (CGSubsystem->FindAppropriateLocationForCharacterSpawn(PredictedLocation, SpawnPoint) == false)
+        {
+            LOG_FATAL(LogWorldGameMode, "Failed to find appropriate spawn location for player [%s].", *Target->GetDisplayName())
+            return;
+        }
+    }
+    else
+    {
+        if (this->GetWorld()->GetName() != RegisteredWorlds::Dev)
+        {
+            LOG_FATAL(
+                LogWorldGameMode,
+                "Failed to find appropriate spawn location for player [%s] due to missing Chunk Generantion Subsystem.",
+                *Target->GetDisplayName()
+            )
+            return;
+        }
+
+        if (const AActor* WithPlayerStart = this->ChoosePlayerStart(Target); WithPlayerStart)
+        {
+            SpawnPoint    = WithPlayerStart->GetActorLocation();
+            SpawnRotation = WithPlayerStart->GetActorRotation();
+        }
+        else
+        {
+            /* Absolute fallback. */
+            SpawnPoint = FVector(0.0f, 0.0f, 300.0f);
+            LOG_WARNING(
+                LogWorldGameMode,
+                "Failed to find appropriate spawn location for player [%s] using PlayerStart. Falling back to [%s].",
+                *Target->GetDisplayName(),
+                *SpawnPoint.ToString()
+            )
+        }
     }
 
     LOG_VERBOSE(LogWorldGameMode, "Spawning character for player [%s] at location [%s].", *Target->GetDisplayName(), *SpawnPoint.ToString())
 
     AWorldCharacter* Result = GetWorld()->SpawnActorDeferred<AWorldCharacter>(
         WorldSettings->CharacterToUse,
-        FTransform(SpawnPoint),
+        FTransform(SpawnRotation, SpawnPoint),
         nullptr,
         nullptr,
         ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn
@@ -117,7 +151,7 @@ void AWorldGameMode::SpawnCharacterForPlayer(AWorldPlayerController* Target)
     Target->Possess(Target->GetPawn());
 
     Target->ClientSetRotation(Target->GetPawn()->GetActorRotation(), true);
-    Target->SetControlRotation(FRotator::ZeroRotator);
+    Target->SetControlRotation(SpawnRotation);
 
     this->SetPlayerDefaults(Target->GetPawn());
 

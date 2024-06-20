@@ -32,22 +32,22 @@ FORCEINLINE auto LexToString(const ERegisteredWorlds::Type InType) -> FString
     switch (InType)
     {
     case ERegisteredWorlds::FrontEnd:
-    {
-        return RegisteredWorlds::FrontEnd;
-    }
+        {
+            return RegisteredWorlds::FrontEnd;
+        }
     case ERegisteredWorlds::World:
-    {
-        return RegisteredWorlds::World;
-    }
+        {
+            return RegisteredWorlds::World;
+        }
     case ERegisteredWorlds::Dev:
-    {
-        return RegisteredWorlds::Dev;
-    }
+        {
+            return RegisteredWorlds::Dev;
+        }
     default:
-    {
-        checkNoEntry()
-        return FString();
-    }
+        {
+            checkNoEntry()
+            return FString();
+        }
     }
 }
 

@@ -11,4 +11,12 @@ UCLASS(Abstract, Blueprintable)
 class COMMONJAFGSLATE_API ULoadingScreen : public UJAFGUserWidget
 {
     GENERATED_BODY()
+
+public:
+
+    explicit ULoadingScreen(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+protected:
+
+    virtual void NativeTick(const FGeometry& MyGeometry, const float InDeltaTime) override;
 };
