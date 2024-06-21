@@ -104,7 +104,7 @@ void AWorldCharacter::BeginPlay(void)
 
         if (WorldPlayerController == nullptr)
         {
-            LOG_ERROR(LogWorldChar, "Owning World PlayerController is invalid. Cannot bind to events.")
+            LOG_FATAL(LogWorldChar, "Owning World PlayerController is invalid. Cannot bind to events.")
             return;
         }
 
@@ -126,6 +126,13 @@ void AWorldCharacter::BeginPlay(void)
 
         /* Let components set the current defaults for the active camera. */
         this->OnCameraChangedEvent.Broadcast();
+
+        this->OnLocalContainerChangedEvent.AddLambda( [this] (void) { this->SafeUpdateHotbar(); });
+    }
+
+    if (UNetStatics::IsSafeServer(this) || this->IsLocallyControlled())
+    {
+        this->OnCursorValueChangedEvent.BindLambda( [this] (void) { this->OnCursorValueChangedEventImpl(); });
     }
 
     if (UNetStatics::IsSafeServer(this))
@@ -261,6 +268,16 @@ void AWorldCharacter::UpdateFOVBasedOnSprintState(void) const
 
 #pragma region Camera Stuff
 
+void AWorldCharacter::SafeUpdateHotbar(void) const
+{
+    if (this->GetWorldHUD() && this->GetWorldHUD()->Hotbar)
+    {
+        this->GetWorldHUD()->Hotbar->MarkAsDirty();
+    }
+
+    return;
+}
+
 void AWorldCharacter::ReattachAccumulatedPreview(void) const
 {
     if (this->IsLocallyControlled() && this->FirstPersonCameraComponent->IsActive())
@@ -335,6 +352,16 @@ bool AWorldCharacter::EasyAddToContainer(const FAccumulated& Value)
     return false;
 }
 
+void AWorldCharacter::OnCursorValueChangedEventImpl(void)
+{
+    if (UNetStatics::IsSafeClient(this))
+    {
+        this->PushCursorValueUpdateToServer_ServerRPC(this->CursorValue);
+    }
+
+    return;
+}
+
 void AWorldCharacter::ChangeContainerSlot(const int32 Index, const accamount_t_signed Delta)
 {
     if (UNetStatics::IsSafeClient(this))
@@ -350,25 +377,115 @@ void AWorldCharacter::ChangeContainerSlot(const int32 Index, const accamount_t_s
     return;
 }
 
+bool AWorldCharacter::PushContainerUpdatesToServer_ServerRPC_Validate(const int32 ChangedIndex, const FAccumulated& ChangedContent)
+{
+    return this->Container.IsValidIndex(ChangedIndex) && FAccumulated::DeepEquals(this->Container[ChangedIndex].Content, ChangedContent) == false;
+}
+
+void AWorldCharacter::PushContainerUpdatesToServer_ServerRPC_Implementation(const int32 ChangedIndex, const FAccumulated& ChangedContent)
+{
+    this->Container[ChangedIndex].Content = ChangedContent;
+}
+
 void AWorldCharacter::PushContainerUpdatesToClient_ClientRPC_Implementation(const TArray<FSlot>& InContainer)
 {
     LOG_VERY_VERBOSE(LogWorldChar, "Updating container on client with authority data.", InContainer.Num())
-    this->Container = InContainer;
 
-    if (this->GetWorldHUD() && this->GetWorldHUD()->Hotbar)
+    this->Container.Reserve(InContainer.Num());
+    this->LastContainerAuth.Reserve(InContainer.Num());
+    for (int32 Index = 0; Index < InContainer.Num(); ++Index)
     {
-        this->GetWorldHUD()->Hotbar->MarkAsDirty();
+        if (this->Container.IsValidIndex(Index))
+        {
+            this->Container[Index].Content = InContainer[Index].Content;
+        }
+        else
+        {
+            this->Container.Emplace(InContainer[Index]);
+        }
+
+        if (this->LastContainerAuth.IsValidIndex(Index))
+        {
+            this->LastContainerAuth[Index].Content = InContainer[Index].Content;
+        }
+        else
+        {
+            this->LastContainerAuth.Emplace(InContainer[Index]);
+        }
     }
+
+    if (this->Container.Num() >= InContainer.Num())
+    {
+        this->Container.SetNum(InContainer.Num());
+    }
+    if (this->LastContainerAuth.Num() >= InContainer.Num())
+    {
+        this->LastContainerAuth.SetNum(InContainer.Num());
+    }
+
+    this->SafeUpdateHotbar();
 
     this->UpdateAccumulatedPreview();
 
     return;
 }
 
+void AWorldCharacter::PushCursorValueUpdateToClient_ClientRPC_Implementation(const FAccumulated& InCursorValue)
+{
+    this->CursorValue = InCursorValue;
+    LOG_FATAL(LogWorldChar, "Cursor updated from server. Updates not implemented yet.")
+    return;
+}
+
+void AWorldCharacter::PushCursorValueUpdateToServer_ServerRPC_Implementation(const FAccumulated& InCursorValue)
+{
+    this->CursorValue = InCursorValue;
+}
+
 void AWorldCharacter::PushContainerUpdatesToClient(void)
 {
     LOG_VERY_VERBOSE(LogWorldChar, "Pusing container updates to client with %d slots.", this->Container.Num())
     this->PushContainerUpdatesToClient_ClientRPC(this->Container);
+
+    return;
+}
+
+void AWorldCharacter::PushContainerUpdatesToServer(void)
+{
+    if (UNetStatics::IsSafeServer(this))
+    {
+        return;
+    }
+
+#if !UE_BUILD_SHIPPING
+    int32 Updates = 0;
+#endif /* !UE_BUILD_SHIPPING */
+
+    for (int32 Index = 0; Index < this->Container.Num(); ++Index)
+    {
+        if (FSlot::DeepEquals(this->Container[Index], this->LastContainerAuth[Index]))
+        {
+            continue;
+        }
+
+        this->PushContainerUpdatesToServer_ServerRPC(Index, this->Container[Index].Content);
+        this->LastContainerAuth[Index].Content = this->Container[Index].Content;
+
+#if !UE_BUILD_SHIPPING
+        ++Updates;
+#endif /* !UE_BUILD_SHIPPING */
+    }
+
+#if !UE_BUILD_SHIPPING
+    if (Updates == 1)
+    {
+        LOG_VERY_VERBOSE(LogWorldChar, "Pushed %d container updates to server.", Updates)
+    }
+    else
+    {
+        LOG_WARNING(LogWorldChar, "Pushed %d container updates to server. Expected one.", Updates)
+    }
+#endif /* !UE_BUILD_SHIPPING */
 
     return;
 }

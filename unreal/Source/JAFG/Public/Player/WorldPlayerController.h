@@ -211,6 +211,8 @@ protected:
 
     /** Server only. */
     FORCEINLINE auto GetWorldGameSession(void) const -> AWorldGameSession* { return Cast<AWorldGameSession>(this->GetWorld()->GetAuthGameMode()->GameSession); }
+    template<class T>
+    FORCEINLINE auto GetCharacter(void) const -> T* { return CastChecked<T>(this->GetPawn(), ECastCheckedType::NullAllowed); }
 
 public:
 

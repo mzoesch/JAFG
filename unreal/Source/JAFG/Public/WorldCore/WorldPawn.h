@@ -9,6 +9,11 @@
 
 JAFG_VOID
 
+/**
+ * A pawn that can be possessed by a player controller for only a very short amount of time.
+ * Is used to overcome loading spans where a controlled character is not yet available but absolutely necessary.
+ * The pawn has no physical representation in the world and will result in a client crash if it exists for too long.
+ */
 UCLASS(NotBlueprintable)
 class JAFG_API AWorldPawn : public APawn
 {

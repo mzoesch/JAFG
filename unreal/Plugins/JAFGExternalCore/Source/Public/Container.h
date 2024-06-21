@@ -9,6 +9,9 @@
 
 #include "Container.generated.h"
 
+DECLARE_DELEGATE(PrivateOnCursorValueChangedSignature)
+DECLARE_DELEGATE(PrivateOnContainerChangedSignature)
+
 DECLARE_MULTICAST_DELEGATE(FOnContainerChangedSignature)
 
 UINTERFACE()
@@ -33,6 +36,10 @@ public:
     FORCEINLINE virtual auto AddToContainer(const FAccumulated& Value) -> bool { return FSlot::AddToFirstSuitableSlot(this->Container, Value); }
 
     virtual void PushContainerUpdatesToClient(void) = 0;
+    virtual void PushContainerUpdatesToServer(void) = 0;
+
+    /** Only locally called. Meaning only there, where a HUD / OSD is displaying information about this container. */
+    FOnContainerChangedSignature OnLocalContainerChangedEvent;
 
 protected:
 
@@ -52,4 +59,7 @@ class JAFGEXTERNALCORE_API IContainerOwner
 public:
 
     FAccumulated CursorValue;
+
+    /** Has to be bound by the implementer to allow for replication. As it is not allowed in an interface. */
+    PrivateOnCursorValueChangedSignature OnCursorValueChangedEvent;
 };

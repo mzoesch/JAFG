@@ -91,6 +91,7 @@ protected:
     template<class T>
     FORCEINLINE auto GetHUD(void) const -> T* { return Cast<T>(this->GetPlayerController()->GetHUD()); }
     FORCEINLINE auto GetWorldHUD(void) const -> AWorldHUD* { return this->GetWorldPlayerController()->GetHUD<AWorldHUD>(); }
+    void SafeUpdateHotbar(void) const;
 
     /** Only works on server or locally controlled characters. */
     FORCEINLINE auto GetDisplayName(void) const -> FString { return this->GetWorldPlayerController()->GetDisplayName(); }
@@ -126,8 +127,6 @@ protected:
 
     const int InventorySize = 30;
 
-    FOnContainerChangedSignature OnCharacterInventoryLikeChangedEvent;
-
 public:
 
     /**
@@ -138,6 +137,8 @@ public:
 
 protected:
 
+    void OnCursorValueChangedEventImpl(void);
+
     /**
      * Server only.
      *
@@ -147,10 +148,21 @@ protected:
 
     UFUNCTION(Client, Reliable)
     void PushContainerUpdatesToClient_ClientRPC(const TArray<FSlot>& InContainer);
+    UFUNCTION(Server, Reliable, WithValidation)
+    void PushContainerUpdatesToServer_ServerRPC(const int32 ChangedIndex, const FAccumulated& ChangedContent);
+    UFUNCTION(Client, Reliable)
+    void PushCursorValueUpdateToClient_ClientRPC(const FAccumulated& InCursorValue);
+    UFUNCTION(Server, Reliable)
+    void PushCursorValueUpdateToServer_ServerRPC(const FAccumulated& InCursorValue);
 
     // IContainer interface
     virtual void PushContainerUpdatesToClient(void) override;
+    virtual void PushContainerUpdatesToServer(void) override;
     // ~IContainer interface
+
+private:
+
+    TArray<FSlot> LastContainerAuth;
 
 #pragma endregion Container
 

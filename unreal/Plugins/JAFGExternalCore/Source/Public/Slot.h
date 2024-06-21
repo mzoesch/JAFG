@@ -7,6 +7,7 @@
 
 #include "Slot.generated.h"
 
+class IContainer;
 class IContainerOwner;
 
 USTRUCT(NotBlueprintable, NotBlueprintType)
@@ -20,13 +21,14 @@ struct JAFGEXTERNALCORE_API FSlot
     UPROPERTY( /* Replicated */ )
     FAccumulated Content;
 
-    /** @return If data was changed. */
+    /** @return True, if data was changed. */
     bool OnPrimaryClicked(IContainerOwner* Owner);
-    /** @return If data was changed. */
+    /** @return True, if data was changed. */
     bool OnSecondaryClicked(IContainerOwner* Owner);
 
     static bool AddToFirstSuitableSlot(TArray<FSlot>& Container, const FAccumulated& Value);
 
     FORCEINLINE        bool operator==(const FSlot& O) const { return this->Content == O.Content; }
     FORCEINLINE static bool Equals(const FSlot& A, const FSlot& B) { return A == B; }
+    FORCEINLINE static bool DeepEquals(const FSlot& A, const FSlot& B) { return FAccumulated::DeepEquals(A.Content, B.Content); }
 };

@@ -1,7 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "Foundation/JAFGContainerSlot.h"
-
 #include "CommonJAFGSlateDeveloperSettings.h"
 #include "Container.h"
 #include "Components/Image.h"
@@ -15,7 +14,7 @@ UJAFGContainerSlot::UJAFGContainerSlot(const FObjectInitializer& ObjectInitializ
     return;
 }
 
-void UJAFGContainerSlot::NativeConstruct()
+void UJAFGContainerSlot::NativeConstruct(void)
 {
     Super::NativeConstruct();
     this->Border_Foreground->SetBrushColor(FColor::Transparent);
@@ -45,12 +44,18 @@ FReply UJAFGContainerSlot::NativeOnMouseButtonUp(const FGeometry& InGeometry, co
     IContainerOwner* ContainerOwner = Cast<IContainerOwner>(this->GetOwningPlayerPawn());
     if (ContainerOwner == nullptr)
     {
-        LOG_FATAL(LogCommonSlate, "Container owner is invalid. Cannot proceed to handle mouse down.")
+        LOG_FATAL(LogCommonSlate, "Container owner is invalid. Cannot proceed to handle mouse down event.")
+        return FReply::Unhandled();
     }
 
     if (this->SlotData->GetSlotRef().OnPrimaryClicked(ContainerOwner))
     {
         this->MarkAsDirty();
+
+        ContainerOwner->OnCursorValueChangedEvent.Execute();
+        this->SlotData->Owner->PushContainerUpdatesToServer();
+        this->SlotData->Owner->OnLocalContainerChangedEvent.Broadcast();
+
         if (ContainerOwner->CursorValue != Accumulated::Null)
         {
             CreateWidget<UContainerValueCursor>(

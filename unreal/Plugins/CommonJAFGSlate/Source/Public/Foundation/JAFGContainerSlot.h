@@ -23,15 +23,11 @@ class UJAFGContainerSlotData : public UObject
 public:
 
     int32          Index;
-    /**
-     * This
-     */
+    /** @deprecated As we now provide the owner as well. */
     TArray<FSlot>* Container;
+    IContainer*    Owner;
 
-    FORCEINLINE auto GetSlot(void) const -> FSlot
-    {
-        return this->Container->GetData()[this->Index];
-    }
+    FORCEINLINE auto GetSlot(void) const -> FSlot { return this->Container->GetData()[this->Index]; }
     FORCEINLINE auto GetSlotRef(void) const -> FSlot& { return this->Container->GetData()[this->Index]; }
     FORCEINLINE auto GetSlotValue(void) const -> FAccumulated { return this->Container->GetData()[this->Index].Content; }
     FORCEINLINE auto GetSlotValueRef(void) const -> FAccumulated& { return this->Container->GetData()[this->Index].Content; }

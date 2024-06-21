@@ -35,7 +35,7 @@ void AWorldPawn::Tick(const float DeltaTime)
     Super::Tick(DeltaTime);
     this->GetGameTimeSinceCreation() > Timeout ? this->TimeoutDestroy() : void();
 
-    if (this->GetWorld()->GetAuthGameMode() && this->GetController<AWorldPlayerController>())
+    if (this->GetWorld()->GetAuthGameMode() && this->GetWorld()->GetName() == RegisteredWorlds::Dev && this->GetController<AWorldPlayerController>())
     {
         this->GetWorld()->GetAuthGameMode<AWorldGameMode>()->SpawnCharacterForPlayer(this->GetController<AWorldPlayerController>());
     }

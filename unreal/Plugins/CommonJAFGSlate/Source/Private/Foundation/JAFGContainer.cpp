@@ -34,6 +34,7 @@ void UJAFGContainer::BuildPlayerInventory(void)
         UJAFGContainerSlotData* Data = NewObject<UJAFGContainerSlotData>(this);
         Data->Index     = i;
         Data->Container = &OwningContainer->GetContainer();
+        Data->Owner     = OwningContainer;
 
         this->TV_PlayerInventory->AddItem(Data);
 

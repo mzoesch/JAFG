@@ -57,6 +57,18 @@ void AWorldPlayerController::BeginPlay(void)
 
     this->OnPossessedPawnChanged.AddDynamic(this, &AWorldPlayerController::PrivateOnPossessedPawnChangeListener);
 
+    /*
+     * We have to call manually here as the pawn is set before the client is logged in. There is no waiting for
+     * chunk generation to complete in a dev world.
+     */
+    if (this->GetWorld()->GetName() == RegisteredWorlds::Dev && UNetStatics::IsSafeClient(this))
+    {
+        AsyncTask(ENamedThreads::GameThread, [this] (void)
+        {
+            this->PrivateOnPossessedPawnChangeListener(nullptr, this->GetCharacter<AWorldCharacter>());
+        });
+    }
+
     return;
 }
 
