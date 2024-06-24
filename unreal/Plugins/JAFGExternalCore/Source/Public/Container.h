@@ -35,6 +35,17 @@ public:
     FORCEINLINE virtual auto GetContainerValueRef(const int32 Index) -> FAccumulated& { return this->Container[Index].Content; }
     FORCEINLINE virtual auto AddToContainer(const FAccumulated& Value) -> bool { return FSlot::AddToFirstSuitableSlot(this->Container, Value); }
 
+    FORCEINLINE FString ToString(void)
+    {
+        FString Result = TEXT("Container{");
+        for (const FSlot& Slot : this->Container)
+        {
+            Result += Slot.Content.ToShortString() + TEXT(",");
+        }
+        Result += TEXT("}");
+        return Result;
+    }
+
     virtual void PushContainerUpdatesToClient(void) = 0;
     virtual void PushContainerUpdatesToServer(void) = 0;
 

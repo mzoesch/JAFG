@@ -117,14 +117,15 @@ void UServerCommandSubsystem::ExecuteCommand(UChatComponent* Owner, const FServe
 
 void UServerCommandSubsystem::InitializeAllCommands(void)
 {
-    DECLARE_SERVER_COMMAND( "help",      OnHelpCommand              )
-    DECLARE_SERVER_COMMAND( "broadcast", OnBroadcastCommand         )
-    DECLARE_SERVER_COMMAND( "fly",       OnFlyCommand               )
-    DECLARE_SERVER_COMMAND( "infly",     OnAllowInputFlyCommand     )
-    DECLARE_SERVER_COMMAND( "players",   OnShowOnlinePlayersCommand )
-    DECLARE_SERVER_COMMAND( "kick" ,     OnKickCommand              )
-    DECLARE_SERVER_COMMAND( "name",      OnChangeDisplayNameCommand )
-    DECLARE_SERVER_COMMAND( "give",      OnGiveAccumulatedCommand   )
+    DECLARE_SERVER_COMMAND( "help",      OnHelpCommand                        )
+    DECLARE_SERVER_COMMAND( "broadcast", OnBroadcastCommand                   )
+    DECLARE_SERVER_COMMAND( "fly",       OnFlyCommand                         )
+    DECLARE_SERVER_COMMAND( "infly",     OnAllowInputFlyCommand               )
+    DECLARE_SERVER_COMMAND( "players",   OnShowOnlinePlayersCommand           )
+    DECLARE_SERVER_COMMAND( "kick" ,     OnKickCommand                        )
+    DECLARE_SERVER_COMMAND( "name",      OnChangeDisplayNameCommand           )
+    DECLARE_SERVER_COMMAND( "give",      OnGiveAccumulatedCommand             )
+    DECLARE_SERVER_COMMAND( "showinv",   OnShowReadOnlyPlayerInventoryCommand )
 
     return;
 }
@@ -356,6 +357,40 @@ void UServerCommandSubsystem::OnGiveAccumulatedCommand(SERVER_COMMAND_SIG) const
 
     TargetContainer->AddToContainer(FAccumulated(AccumulatedIndex));
     TargetContainer->PushContainerUpdatesToClient();
+
+    return;
+}
+
+void UServerCommandSubsystem::OnShowReadOnlyPlayerInventoryCommand(SERVER_COMMAND_SIG) const
+{
+    const UChatComponent* Target = this->GetTargetBasedOnArgs(InArgs, OutReturnCode);
+
+    if (OutReturnCode == ECommandReturnCodes::MissingArgs || InArgs.Num() < 1)
+    {
+        OutResponse   = TEXT("At least one arguments are required.");
+        return;
+    }
+
+    if (Target == nullptr)
+    {
+        OutReturnCode = ECommandReturnCodes::Failure;
+        OutResponse   = FString::Printf(TEXT("Target [%s] not found."), *InArgs[0]);
+        return;
+    }
+
+    IContainer* TargetContainer = Cast<IContainer>(Target->GetPredictedOwner()->GetPawn());
+
+    if (TargetContainer == nullptr)
+    {
+        OutReturnCode = ECommandReturnCodes::Failure;
+        OutResponse   = FString::Printf(TEXT("Target [%s] is not a container."), *InArgs[0]);
+        return;
+    }
+
+    const FString InventoryString = TargetContainer->ToString();
+
+    OutReturnCode = ECommandReturnCodes::Success;
+    OutResponse   = FString::Printf(TEXT("Inventory of [%s]: %s"), *InArgs[0], *InventoryString);
 
     return;
 }

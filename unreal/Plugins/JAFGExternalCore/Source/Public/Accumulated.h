@@ -131,6 +131,10 @@ struct JAFGEXTERNALCORE_API FAccumulated
     {
         return FString::Printf(TEXT("FAccumulated{AccumulatedIndex:%d, Amount:%d}"), this->AccumulatedIndex, this->Amount);
     }
+    FORCEINLINE        auto ToShortString(void) const -> FString
+    {
+        return FString::Printf(TEXT("{%d,%d}"), this->AccumulatedIndex, this->Amount);
+    }
 };
 
 namespace Accumulated
