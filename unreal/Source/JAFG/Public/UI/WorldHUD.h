@@ -48,15 +48,22 @@ protected:
     void OnContainerLostVisibility(void);
     /** Maps identifiers to a UClass of containers. */
     TMap<FString, TFunction<TSubclassOf<UJAFGContainer>(void)>> ContainerClassMap;
+    UPROPERTY()
     TObjectPtr<UJAFGContainer> CurrentContainer;
 
 public:
 
+    UPROPERTY()
     TObjectPtr<UJAFGUserWidget> Crosshair;
+    UPROPERTY()
     TObjectPtr<UJAFGUserWidget> QuickSessionPreview;
+    UPROPERTY()
     TObjectPtr<UJAFGUserWidget> ChatMenu;
+    UPROPERTY()
     TObjectPtr<UJAFGUserWidget> DebugScreen;
+    UPROPERTY()
     TObjectPtr<UJAFGUserWidget> EscapeMenu;
+    UPROPERTY()
     TObjectPtr<UHotbar> Hotbar;
 
 private:

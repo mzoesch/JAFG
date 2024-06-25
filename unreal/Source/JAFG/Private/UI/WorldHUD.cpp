@@ -2,8 +2,10 @@
 
 #include "UI/WorldHUD.h"
 
+#include "CommonJAFGSlateDeveloperSettings.h"
 #include "Player/WorldPlayerController.h"
 #include "JAFGSlateSettings.h"
+#include "Foundation/ContainerValueCursor.h"
 #include "Foundation/Hotbar.h"
 #include "WorldCore/WorldCharacter.h"
 
@@ -163,6 +165,22 @@ void AWorldHUD::BeginPlay(void)
                 NewCharacter->SubscribeToContainerLostVisibilityEvent(FOnContainerLostVisibilitySignature::FDelegate::CreateLambda(
                     [this] (void) { this->OnContainerLostVisibility(); }
                 )); jcheck( this->ContainerLostVisibilityDelegateHandle.IsValid() )
+
+            NewCharacter->OnCursorValueChangedDelegate.AddLambda( [this] (void)
+            {
+                if (
+                       this->GetOwningPlayerController()
+                    && this->GetOwningPlayerController()->IsLocalController()
+                    && this->GetOwningPawn()
+                    && Cast<AWorldCharacter>(this->GetOwningPawn())->CursorValue != Accumulated::Null
+                    )
+                {
+                    CreateWidget<UContainerValueCursor>(
+                        this->GetWorld(),
+                        GetDefault<UCommonJAFGSlateDeveloperSettings>()->ContainerValueCursorWidgetClass
+                    )->AddToViewport();
+                }
+            });
         }
 
         return;

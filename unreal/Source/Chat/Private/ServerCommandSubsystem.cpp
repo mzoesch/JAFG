@@ -355,8 +355,15 @@ void UServerCommandSubsystem::OnGiveAccumulatedCommand(SERVER_COMMAND_SIG) const
         return;
     }
 
-    TargetContainer->AddToContainer(FAccumulated(AccumulatedIndex));
-    TargetContainer->PushContainerUpdatesToClient();
+    if (TargetContainer->EasyAddToContainer(FAccumulated(AccumulatedIndex)) == false)
+    {
+        OutReturnCode = ECommandReturnCodes::Failure;
+        OutResponse   = FString::Printf(TEXT("Failed to add [%s] to [%s]."), *AccumulatedName, *InArgs[0]);
+        return;
+    }
+
+    OutReturnCode = ECommandReturnCodes::Success;
+    OutResponse   = FString::Printf(TEXT("Added [%s] to [%s]."), *AccumulatedName, *InArgs[0]);
 
     return;
 }
@@ -387,7 +394,7 @@ void UServerCommandSubsystem::OnShowReadOnlyPlayerInventoryCommand(SERVER_COMMAN
         return;
     }
 
-    const FString InventoryString = TargetContainer->ToString();
+    const FString InventoryString = TargetContainer->ToString_Container();
 
     OutReturnCode = ECommandReturnCodes::Success;
     OutResponse   = FString::Printf(TEXT("Inventory of [%s]: %s"), *InArgs[0], *InventoryString);

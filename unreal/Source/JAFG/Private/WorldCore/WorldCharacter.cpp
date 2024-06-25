@@ -1,17 +1,21 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "WorldCore/WorldCharacter.h"
+
+#include "CommonJAFGSlateDeveloperSettings.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "JAFGSlateSettings.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Foundation/ContainerValueCursor.h"
 #include "Foundation/Hotbar.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Input/CustomInputNames.h"
 #include "Net/UnrealNetwork.h"
+#include "Net/Core/PushModel/PushModel.h"
 #include "SettingsData/JAFGInputSubsystem.h"
 #include "Player/WorldPlayerController.h"
 #include "UI/OSD/PlayerInventory.h"
@@ -127,12 +131,10 @@ void AWorldCharacter::BeginPlay(void)
         /* Let components set the current defaults for the active camera. */
         this->OnCameraChangedEvent.Broadcast();
 
-        this->OnLocalContainerChangedEvent.AddLambda( [this] (void) { this->SafeUpdateHotbar(); });
-    }
-
-    if (UNetStatics::IsSafeServer(this) || this->IsLocallyControlled())
-    {
-        this->OnCursorValueChangedEvent.BindLambda( [this] (void) { this->OnCursorValueChangedEventImpl(); });
+        this->OnLocalContainerChangedEvent.AddLambda( [this] (const ELocalContainerChange::Type InReason, const int32 InIndex)
+        { this->SafeUpdateHotbar(); });
+        this->OnLocalContainerChangedEvent.AddLambda( [this] (const ELocalContainerChange::Type InReason, const int32 InIndex)
+        { this->OnLocalContainerChangedEventImpl(InReason, InIndex); });
     }
 
     if (UNetStatics::IsSafeServer(this))
@@ -146,7 +148,7 @@ void AWorldCharacter::BeginPlay(void)
 
         LOG_VERY_VERBOSE(LogWorldChar, "Container initialized with %d slots.", this->Container.Num())
 
-        this->PushContainerUpdatesToClient();
+        MARK_PROPERTY_DIRTY_FROM_NAME(AWorldCharacter, Container, this)
     }
 
     return;
@@ -157,6 +159,9 @@ void AWorldCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
     DOREPLIFETIME(AWorldCharacter, RemoteSelectedAccumulatedPreview)
+
+    FDoRepLifetimeParams SharedParams; SharedParams.bIsPushBased = true;
+    DOREPLIFETIME_WITH_PARAMS_FAST(AWorldCharacter, Container, SharedParams)
 
     return;
 }
@@ -345,147 +350,126 @@ bool AWorldCharacter::EasyAddToContainer(const FAccumulated& Value)
 
     if (this->AddToContainer(Value))
     {
-        this->PushContainerUpdatesToClient();
+        if (this->IsLocallyControlled())
+        {
+            this->OnRep_Container();
+        }
+        else
+        {
+            MARK_PROPERTY_DIRTY_FROM_NAME(AWorldCharacter, Container, this)
+        }
         return true;
     }
 
     return false;
 }
 
-void AWorldCharacter::OnCursorValueChangedEventImpl(void)
+bool AWorldCharacter::EasyChangeContainer(const int32 InIndex, const accamount_t_signed InAmount)
 {
     if (UNetStatics::IsSafeClient(this))
     {
-        this->PushCursorValueUpdateToServer_ServerRPC(this->CursorValue);
+        LOG_FATAL(LogWorldChar, "Cannot change container on client.")
+        return false;
     }
 
-    return;
+    if (this->GetContainerValueRef(InIndex).SafeAddAmountRet(InAmount))
+    {
+        MARK_PROPERTY_DIRTY_FROM_NAME(AWorldCharacter, Container, this)
+        return true;
+    }
+
+    LOG_WARNING(LogWorldChar, "Failed to change container [%d with delta %d]." , InIndex, InAmount)
+
+    return false;
 }
 
-void AWorldCharacter::ChangeContainerSlot(const int32 Index, const accamount_t_signed Delta)
+FString AWorldCharacter::ToString_Container(void) const
 {
-    if (UNetStatics::IsSafeClient(this))
+    FString Result = TEXT("Container{");
+    for (const FSlot& Slot : this->Container) { Result += Slot.Content.ToShortString() + TEXT(","); }
+    Result += TEXT("}");
+    return Result;
+}
+
+bool AWorldCharacter::OnContainerChangedEvent_ServerRPC_Validate(const ELocalContainerChange::Type InReason, const int32 InIndex)
+{
+#if !UE_BUILD_SHIPPING
+    if (this->IsLocallyControlled())
     {
-        LOG_FATAL(LogWorldChar, "Cannot change container slot on client.")
+        LOG_ERROR(LogWorldChar, "Disallowed for locals.")
+        return false;
+    }
+#endif /* !UE_BUILD_SHIPPING */
+
+    switch (InReason)
+    {
+    case ELocalContainerChange::Invalid:
+    {
+        return false;
+    }
+    case ELocalContainerChange::Primary:
+    {
+        return this->GetContainer(InIndex).OnPrimaryClicked(this->AsContainerOwner());
+    }
+    default:
+    {
+        LOG_ERROR(LogWorldChar, "Unhandled container change reason.")
+        return false;
+    }
+    }
+}
+
+void AWorldCharacter::OnContainerChangedEvent_ServerRPC_Implementation(const ELocalContainerChange::Type InReason, const int32 InIndex)
+{
+    MARK_PROPERTY_DIRTY_FROM_NAME(AWorldCharacter, Container, this)
+}
+
+bool AWorldCharacter::AddToContainer(const FAccumulated& Value)
+{
+    return FSlot::AddToFirstSuitableSlot(this->Container, Value);
+}
+
+void AWorldCharacter::OnLocalContainerChangedEventImpl(const ELocalContainerChange::Type InReason, const int32 InIndex)
+{
+#if !UE_BUILD_SHIPPING
+    if (UNetStatics::IsSafeDedicatedServer(this))
+    {
+        LOG_FATAL(LogWorldChar, "Cannot handle local container changed event on dedicated server.")
         return;
     }
 
-    this->GetContainerValueRef(Index).SafeAddAmount(Delta);
-
-    this->PushContainerUpdatesToClient();
-
-    return;
-}
-
-bool AWorldCharacter::PushContainerUpdatesToServer_ServerRPC_Validate(const int32 ChangedIndex, const FAccumulated& ChangedContent)
-{
-    return this->Container.IsValidIndex(ChangedIndex) && FAccumulated::DeepEquals(this->Container[ChangedIndex].Content, ChangedContent) == false;
-}
-
-void AWorldCharacter::PushContainerUpdatesToServer_ServerRPC_Implementation(const int32 ChangedIndex, const FAccumulated& ChangedContent)
-{
-    this->Container[ChangedIndex].Content = ChangedContent;
-}
-
-void AWorldCharacter::PushContainerUpdatesToClient_ClientRPC_Implementation(const TArray<FSlot>& InContainer)
-{
-    LOG_VERY_VERBOSE(LogWorldChar, "Updating container on client with authority data.", InContainer.Num())
-
-    this->Container.Reserve(InContainer.Num());
-    this->LastContainerAuth.Reserve(InContainer.Num());
-    for (int32 Index = 0; Index < InContainer.Num(); ++Index)
+    if (InReason == ELocalContainerChange::Invalid)
     {
-        if (this->Container.IsValidIndex(Index))
-        {
-            this->Container[Index].Content = InContainer[Index].Content;
-        }
-        else
-        {
-            this->Container.Emplace(InContainer[Index]);
-        }
-
-        if (this->LastContainerAuth.IsValidIndex(Index))
-        {
-            this->LastContainerAuth[Index].Content = InContainer[Index].Content;
-        }
-        else
-        {
-            this->LastContainerAuth.Emplace(InContainer[Index]);
-        }
-    }
-
-    if (this->Container.Num() >= InContainer.Num())
-    {
-        this->Container.SetNum(InContainer.Num());
-    }
-    if (this->LastContainerAuth.Num() >= InContainer.Num())
-    {
-        this->LastContainerAuth.SetNum(InContainer.Num());
-    }
-
-    this->SafeUpdateHotbar();
-
-    this->UpdateAccumulatedPreview();
-
-    return;
-}
-
-void AWorldCharacter::PushCursorValueUpdateToClient_ClientRPC_Implementation(const FAccumulated& InCursorValue)
-{
-    this->CursorValue = InCursorValue;
-    LOG_FATAL(LogWorldChar, "Cursor updated from server. Updates not implemented yet.")
-    return;
-}
-
-void AWorldCharacter::PushCursorValueUpdateToServer_ServerRPC_Implementation(const FAccumulated& InCursorValue)
-{
-    this->CursorValue = InCursorValue;
-}
-
-void AWorldCharacter::PushContainerUpdatesToClient(void)
-{
-    LOG_VERY_VERBOSE(LogWorldChar, "Pusing container updates to client with %d slots.", this->Container.Num())
-    this->PushContainerUpdatesToClient_ClientRPC(this->Container);
-
-    return;
-}
-
-void AWorldCharacter::PushContainerUpdatesToServer(void)
-{
-    if (UNetStatics::IsSafeServer(this))
-    {
+        LOG_FATAL(LogWorldChar, "Invalid local container change reason.")
         return;
     }
 
-#if !UE_BUILD_SHIPPING
-    int32 Updates = 0;
-#endif /* !UE_BUILD_SHIPPING */
-
-    for (int32 Index = 0; Index < this->Container.Num(); ++Index)
+    if (this->IsLocallyControlled() == false)
     {
-        if (FSlot::DeepEquals(this->Container[Index], this->LastContainerAuth[Index]))
-        {
-            continue;
-        }
+        LOG_FATAL(LogWorldChar, "Cannot handle local container changed event on non-locally controlled character.")
+        return;
+    }
+#endif
 
-        this->PushContainerUpdatesToServer_ServerRPC(Index, this->Container[Index].Content);
-        this->LastContainerAuth[Index].Content = this->Container[Index].Content;
-
-#if !UE_BUILD_SHIPPING
-        ++Updates;
-#endif /* !UE_BUILD_SHIPPING */
+    if (UNetStatics::IsSafeClient(this) && InReason != ELocalContainerChange::Replicated)
+    {
+        this->OnContainerChangedEvent_ServerRPC(InReason, InIndex);
     }
 
+    return;
+}
+
+void AWorldCharacter::OnRep_Container(void)
+{
 #if !UE_BUILD_SHIPPING
-    if (Updates == 1)
+    if (this->IsLocallyControlled() == false)
     {
-        LOG_VERY_VERBOSE(LogWorldChar, "Pushed %d container updates to server.", Updates)
-    }
-    else
-    {
-        LOG_WARNING(LogWorldChar, "Pushed %d container updates to server. Expected one.", Updates)
+        LOG_FATAL(LogWorldChar, "Cannot handle container replication on non-locally controlled character.")
+        return;
     }
 #endif /* !UE_BUILD_SHIPPING */
+
+    this->OnLocalContainerChangedEvent.Broadcast(ELocalContainerChange::Replicated, -1);
 
     return;
 }
@@ -1184,7 +1168,11 @@ void AWorldCharacter::OnStartedSecondary_ServerRPC_Implementation(const FInputAc
     }
 
     TargetedChunk->ModifySingleVoxel(LocalTargetVoxelKey, this->GetContainerValue(this->SelectedQuickSlotIndex).AccumulatedIndex);
-    this->ChangeContainerSlot(this->SelectedQuickSlotIndex, -1);
+    if (this->EasyChangeContainer(this->SelectedQuickSlotIndex, -1) == false)
+    {
+        LOG_FATAL(LogWorldChar, "Failed to remove item from quick slot.")
+        return;
+    }
 
     return;
 }

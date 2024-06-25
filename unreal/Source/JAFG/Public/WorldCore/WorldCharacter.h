@@ -129,39 +129,45 @@ protected:
 
 public:
 
-    /**
-     * Just call this method on the server, and it will handle the rest (e.g., replication,
-     * hud updates, previews, etc.).
-     */
-    bool EasyAddToContainer(const FAccumulated& Value);
+    FORCEINLINE auto AsContainer(void) -> IContainer* { return this; }
+    FORCEINLINE auto AsContainer(void) const -> const IContainer* { return this; }
+    FORCEINLINE auto AsContainerOwner(void) -> IContainerOwner* { return this; }
+    FORCEINLINE auto AsContainerOwner(void) const -> const IContainerOwner* { return this; }
+
+    // IContainer interface
+    /** Server only. Will handle UI updates, replication, etc. */
+    virtual bool EasyAddToContainer(const FAccumulated& Value) override;
+    /** Server only. Will handle UI updates, replication, etc. */
+    virtual bool EasyChangeContainer(const int32 InIndex, const accamount_t_signed InAmount) override;
+    virtual auto ToString_Container(void) const -> FString override;
+    // ~IContainer interface
 
 protected:
 
-    void OnCursorValueChangedEventImpl(void);
-
-    /**
-     * Server only.
-     *
-     * Fully replicated method that always calls all delegates that may want to update after change.
-     */
-    void ChangeContainerSlot(const int32 Index, const accamount_t_signed Delta);
-
-    UFUNCTION(Client, Reliable)
-    void PushContainerUpdatesToClient_ClientRPC(const TArray<FSlot>& InContainer);
     UFUNCTION(Server, Reliable, WithValidation)
-    void PushContainerUpdatesToServer_ServerRPC(const int32 ChangedIndex, const FAccumulated& ChangedContent);
-    UFUNCTION(Client, Reliable)
-    void PushCursorValueUpdateToClient_ClientRPC(const FAccumulated& InCursorValue);
-    UFUNCTION(Server, Reliable)
-    void PushCursorValueUpdateToServer_ServerRPC(const FAccumulated& InCursorValue);
+    void OnContainerChangedEvent_ServerRPC(const ELocalContainerChange::Type InReason, const int32 InIndex);
 
     // IContainer interface
-    virtual void PushContainerUpdatesToClient(void) override;
-    virtual void PushContainerUpdatesToServer(void) override;
+    FORCEINLINE virtual auto GetContainerSize(void) const -> int32  override { return this->Container.Num(); }
+    FORCEINLINE virtual auto GetContainer(void) -> TArray<FSlot>&  override { return this->Container; }
+    FORCEINLINE virtual auto GetContainer(void) const -> const TArray<FSlot>&  override { return this->Container; }
+    FORCEINLINE virtual auto GetContainer(const int32 Index) -> FSlot&  override { return this->Container[Index]; }
+    FORCEINLINE virtual auto GetContainer(const int32 Index) const -> const FSlot&  override { return this->Container[Index]; }
+    FORCEINLINE virtual auto GetContainerValue(const int32 Index) const -> FAccumulated  override { return this->Container[Index].Content; }
+    FORCEINLINE virtual auto GetContainerValueRef(const int32 Index) -> FAccumulated&  override { return this->Container[Index].Content; }
+                virtual auto AddToContainer(const FAccumulated& Value) -> bool  override;
     // ~IContainer interface
 
 private:
 
+    void OnLocalContainerChangedEventImpl(const ELocalContainerChange::Type InReason, const int32 InIndex);
+
+    UPROPERTY(ReplicatedUsing=OnRep_Container)
+    TArray<FSlot> Container;
+    UFUNCTION()
+    void OnRep_Container( /* void */ );
+
+    /** Only meaningful for clients. Holds the last update of this container that was authorized by the server. */
     TArray<FSlot> LastContainerAuth;
 
 #pragma endregion Container

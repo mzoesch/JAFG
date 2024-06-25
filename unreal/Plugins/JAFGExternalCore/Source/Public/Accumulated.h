@@ -104,6 +104,14 @@ struct JAFGEXTERNALCORE_API FAccumulated
         return;
     }
 
+    FORCEINLINE bool SafeAddAmountRet(const accamount_t_signed InAmount)
+    {
+        bool bCouldProcess = false;
+        this->SafeAddAmount(InAmount, bCouldProcess);
+
+        return bCouldProcess;
+    }
+
     FORCEINLINE void SafeAddAmount(const accamount_t_signed InAmount)
     {
         bool bCouldProcess = false;

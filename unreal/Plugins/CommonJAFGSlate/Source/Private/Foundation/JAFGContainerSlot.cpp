@@ -52,17 +52,8 @@ FReply UJAFGContainerSlot::NativeOnMouseButtonUp(const FGeometry& InGeometry, co
     {
         this->MarkAsDirty();
 
-        ContainerOwner->OnCursorValueChangedEvent.Execute();
-        this->SlotData->Owner->PushContainerUpdatesToServer();
-        this->SlotData->Owner->OnLocalContainerChangedEvent.Broadcast();
-
-        if (ContainerOwner->CursorValue != Accumulated::Null)
-        {
-            CreateWidget<UContainerValueCursor>(
-                this->GetWorld(),
-                GetDefault<UCommonJAFGSlateDeveloperSettings>()->ContainerValueCursorWidgetClass
-            )->AddToViewport();
-        }
+        ContainerOwner->OnCursorValueChangedDelegate.Broadcast();
+        this->SlotData->Owner->OnLocalContainerChangedEvent.Broadcast(ELocalContainerChange::Primary, this->SlotData->Index);
     }
 
     return FReply::Handled();
