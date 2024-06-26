@@ -13,18 +13,36 @@ JAFG_VOID
 class UVoxelSubsystem;
 class UProceduralMeshComponent;
 
-UCLASS(NotBlueprintable)
-class JAFG_API ACuboid : public AActor
+/**
+ * Provides basic functionality for creating a single cuboid mesh.
+ * Allows implementation on AActors or AActorComponents.
+ */
+UINTERFACE()
+class JAFG_API UCuboidInterface : public UInterface
+{
+    GENERATED_BODY()
+};
+
+class JAFG_API ICuboidInterface
 {
     GENERATED_BODY()
 
-public:
-
-    explicit ACuboid(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
-
-protected:
-
-    virtual void BeginPlay(void) override;
+/** Has to be declared first, directly after unreal's GENERATED_BODY() macro. */
+#define GENERATED_CUBOID_INTERFACE_BODY()                                               \
+    public:                                                                             \
+    FORCEINLINE virtual auto GenerateMesh(const voxel_t InAccumulated) -> void override \
+    {                                                                                   \
+        ICuboidInterface::GenerateMesh(InAccumulated, this->MeshComponent);             \
+    }                                                                                   \
+    private:
+/** Has to be declared first, directly after unreal's GENERATED_BODY() macro. */
+#define GENERATED_CUBOID_INTERFACE_BODY_WITH_MESH_COMP(MeshComp)                        \
+    public:                                                                             \
+    FORCEINLINE virtual auto GenerateMesh(const voxel_t InAccumulated) -> void override \
+    {                                                                                   \
+        ICuboidInterface::GenerateMesh(InAccumulated, MeshComp);                        \
+    }                                                                                   \
+    private:
 
 public:
 
@@ -36,22 +54,15 @@ public:
     int32 TexY = 8;
     int32 TexZ = 8;
 
+    /* Do not override manually but with the generated body. */
+    virtual void GenerateMesh(const voxel_t InAccumulated) PURE_VIRTUAL(ICuboidInterface::GenerateMesh);
+
 protected:
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-    UProceduralMeshComponent* MeshComponent = nullptr;
+    virtual void GenerateMesh(const voxel_t InAccumulated, UProceduralMeshComponent* InMeshComponent);
 
-    UPROPERTY()
-    TObjectPtr<UVoxelSubsystem> VoxelSubsystem = nullptr;
-
-    UPROPERTY()
+    TObjectPtr<UVoxelSubsystem>    VoxelSubsystem    = nullptr;
     TObjectPtr<UMaterialSubsystem> MaterialSubsystem = nullptr;
-
-public:
-
-    virtual void GenerateMesh(const voxel_t InAccumulated);
-
-protected:
 
     /**
      * Variable is only used as a placeholder. The getter can be safely overriden in a derived class without
@@ -69,7 +80,7 @@ protected:
     TArray<FVector2D>        UVs;
     TArray<FColor>           Colors;
 
-    void ApplyMesh(void) const;
+    void ApplyMesh(UProceduralMeshComponent* InMeshComponent) const;
     /**
      * Adds a quadrilateral to the mesh for the next render sweep.
      *
@@ -80,4 +91,33 @@ protected:
      * @param Tangent Face Tangent
      */
     void CreateQuadrilateral(const FVector& V1, const FVector& V2, const FVector& V3, const FVector& V4, const FProcMeshTangent& Tangent);
+};
+
+UCLASS(NotBlueprintable)
+class JAFG_API ACuboid : public AActor, public ICuboidInterface
+{
+    GENERATED_BODY()
+    GENERATED_CUBOID_INTERFACE_BODY()
+
+public:
+
+    explicit ACuboid(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+protected:
+
+    virtual void BeginPlay(void) override;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    UProceduralMeshComponent* MeshComponent = nullptr;
+};
+
+UCLASS(NotBlueprintable)
+class JAFG_API UCuboidComponent : public UProceduralMeshComponent, public ICuboidInterface
+{
+    GENERATED_BODY()
+    GENERATED_CUBOID_INTERFACE_BODY_WITH_MESH_COMP(this)
+
+public:
+
+    virtual void BeginPlay(void) override;
 };

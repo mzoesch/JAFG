@@ -1,33 +1,11 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "WorldCore/Entity/Cuboid.h"
-
 #include "ProceduralMeshComponent.h"
 #include "System/MaterialSubsystem.h"
 #include "System/VoxelSubsystem.h"
 
-ACuboid::ACuboid(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
-{
-    this->PrimaryActorTick.bCanEverTick = false;
-
-    this->MeshComponent = ObjectInitializer.CreateDefaultSubobject<UProceduralMeshComponent>(this, TEXT("ProceduralMeshComponent"));
-    this->SetRootComponent(this->MeshComponent);
-    this->MeshComponent->SetCastShadow(false);
-
-    return;
-}
-
-void ACuboid::BeginPlay(void)
-{
-    Super::BeginPlay();
-
-    this->VoxelSubsystem    = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>();    check( this->VoxelSubsystem )
-    this->MaterialSubsystem = this->GetGameInstance()->GetSubsystem<UMaterialSubsystem>(); check( this->MaterialSubsystem )
-
-    return;
-}
-
-void ACuboid::GenerateMesh(const voxel_t InAccumulated)
+void ICuboidInterface::GenerateMesh(const voxel_t InAccumulated, UProceduralMeshComponent* InMeshComponent)
 {
     this->CurrentAccumulated = InAccumulated;
 
@@ -42,7 +20,7 @@ void ACuboid::GenerateMesh(const voxel_t InAccumulated)
 
     if (this->GetCurrentAccumulatedIndex() == ECommonVoxels::Null)
     {
-        this->ApplyMesh();
+        this->ApplyMesh(InMeshComponent);
         return;
     }
 
@@ -64,15 +42,15 @@ void ACuboid::GenerateMesh(const voxel_t InAccumulated)
     this->CreateQuadrilateral( PreDefinedShape[6], PreDefinedShape[0], PreDefinedShape[4], PreDefinedShape[2], FProcMeshTangent( 0.0f,  1.0f, 0.0f ) ); /* Top    */
     this->CreateQuadrilateral( PreDefinedShape[1], PreDefinedShape[7], PreDefinedShape[3], PreDefinedShape[5], FProcMeshTangent( 0.0f, -1.0f, 0.0f ) ); /* Bottom */
 
-    this->ApplyMesh();
+    this->ApplyMesh(InMeshComponent);
 
     return;
 }
 
-void ACuboid::ApplyMesh(void) const
+void ICuboidInterface::ApplyMesh(UProceduralMeshComponent* InMeshComponent) const
 {
-    this->MeshComponent->SetMaterial(0, this->MaterialSubsystem->MDynamicGroups[0]);
-    this->MeshComponent->CreateMeshSection(
+    InMeshComponent->SetMaterial(0, this->MaterialSubsystem->MDynamicGroups[0]);
+    InMeshComponent->CreateMeshSection(
         0,
         this->Vertices,
         this->Triangles,
@@ -86,7 +64,7 @@ void ACuboid::ApplyMesh(void) const
     return;
 }
 
-void ACuboid::CreateQuadrilateral(const FVector& V1, const FVector& V2, const FVector& V3, const FVector& V4, const FProcMeshTangent& Tangent)
+void ICuboidInterface::CreateQuadrilateral(const FVector& V1, const FVector& V2, const FVector& V3, const FVector& V4, const FProcMeshTangent& Tangent)
 {
     const int32 P1 = this->TriangleIndexCounter++;
     const int32 P2 = this->TriangleIndexCounter++;
@@ -123,6 +101,37 @@ void ACuboid::CreateQuadrilateral(const FVector& V1, const FVector& V2, const FV
         FVector2D(0.0f, 0.0f), /* Bottom Right */
         FVector2D(0.0f, 1.0f), /* Top    Right */
     });
+
+    return;
+}
+
+ACuboid::ACuboid(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+{
+    this->PrimaryActorTick.bCanEverTick = false;
+
+    this->MeshComponent = ObjectInitializer.CreateDefaultSubobject<UProceduralMeshComponent>(this, TEXT("ProceduralMeshComponent"));
+    this->SetRootComponent(this->MeshComponent);
+    this->MeshComponent->SetCastShadow(false);
+
+    return;
+}
+
+void ACuboid::BeginPlay(void)
+{
+    Super::BeginPlay();
+
+    this->VoxelSubsystem    = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>();    check( this->VoxelSubsystem )
+    this->MaterialSubsystem = this->GetGameInstance()->GetSubsystem<UMaterialSubsystem>(); check( this->MaterialSubsystem )
+
+    return;
+}
+
+void UCuboidComponent::BeginPlay(void)
+{
+    Super::BeginPlay();
+
+    this->VoxelSubsystem    = this->GetWorld()->GetGameInstance()->GetSubsystem<UVoxelSubsystem>();    check( this->VoxelSubsystem )
+    this->MaterialSubsystem = this->GetWorld()->GetGameInstance()->GetSubsystem<UMaterialSubsystem>(); check( this->MaterialSubsystem )
 
     return;
 }

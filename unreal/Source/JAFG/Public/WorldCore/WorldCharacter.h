@@ -14,6 +14,7 @@
 
 #include "WorldCharacter.generated.h"
 
+class UCuboidComponent;
 JAFG_VOID
 
 class ACuboid;
@@ -58,6 +59,11 @@ protected:
     auto ListenForCameraChangedEventWithNonFPMeshWrapper(void) -> void;
     auto UpdateFOVBasedOnSprintState(void) const -> void;
 
+    const FString RightHandSocketName { TEXT("socket_hand_r") };
+
+    UPROPERTY(EditAnywhere)
+    FTransform RightHandSocketTransform;
+
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UCameraComponent> FirstPersonCameraComponent;
 
@@ -72,16 +78,13 @@ protected:
     TObjectPtr<UCameraComponent> ThirdPersonFrontCameraComponent;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-    TObjectPtr<USceneComponent> RightHandComponent;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<ACharacterReach> CharacterReach;
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UStaticMesh> CharacterReachMesh;
     friend ACharacterReach;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-    TObjectPtr<ACuboid> AccumulatedPreview;
+    TObjectPtr<UCuboidComponent> AccumulatedPreview;
 
     FORCEINLINE auto GetPlayerController(void) const -> APlayerController* { return Cast<APlayerController>(this->GetController()); }
     template<class T>
@@ -160,6 +163,7 @@ protected:
     void OnContainerChangedEvent_ServerRPC(const ELocalContainerChange::Type InReason, const int32 InIndex);
 
     // IContainer interface
+    FORCEINLINE virtual auto IsContainerInitialized(void) const -> bool override { return this->Container.Num() > 0; }
     FORCEINLINE virtual auto GetContainerSize(void) const -> int32  override { return this->Container.Num(); }
     FORCEINLINE virtual auto GetContainer(void) -> TArray<FSlot>&  override { return this->Container; }
     FORCEINLINE virtual auto GetContainer(void) const -> const TArray<FSlot>&  override { return this->Container; }
@@ -177,7 +181,7 @@ private:
     UPROPERTY(ReplicatedUsing=OnRep_Container)
     TArray<FSlot> Container;
     UFUNCTION()
-    void OnRep_Container( /* void */ );
+    void OnRep_Container( /* void */ ) const;
 
     /** Only meaningful for clients. Holds the last update of this container that was authorized by the server. */
     TArray<FSlot> LastContainerAuth;

@@ -38,9 +38,18 @@ Super(ObjectInitializer.SetDefaultSubobjectClass<UMyCharacterMovementComponent>(
 
     this->GetCapsuleComponent()->InitCapsuleSize(40.0f, 90.0f);
 
+    if (this->GetMesh() == nullptr)
+    {
+        LOG_FATAL(LogWorldChar, "Super mesh is invalid.")
+    }
+
+    this->GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -92.0f));
+    this->GetMesh()->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
+
     this->NonFPMeshWrapper = ObjectInitializer.CreateDefaultSubobject<UStaticMeshComponent>(this, TEXT("NonFPMeshWrapper"));
     this->NonFPMeshWrapper->SetupAttachment(this->GetCapsuleComponent());
     this->NonFPMeshWrapper->SetOwnerNoSee(true);
+    this->GetMesh()->SetupAttachment(this->NonFPMeshWrapper);
 
     this->FirstPersonCameraComponent = ObjectInitializer.CreateDefaultSubobject<UCameraComponent>(this, TEXT("FirstPersonCamera"));
     this->FirstPersonCameraComponent->SetupAttachment(this->GetCapsuleComponent());
@@ -74,16 +83,9 @@ Super(ObjectInitializer.SetDefaultSubobjectClass<UMyCharacterMovementComponent>(
     this->ThirdPersonFrontCameraComponent->OrthoWidth = this->DefaultOrthoWidth;
     this->ThirdPersonFrontCameraComponent->Deactivate();
 
-    this->RightHandComponent = ObjectInitializer.CreateDefaultSubobject<USceneComponent>(this, TEXT("RightHand"));
-    this->RightHandComponent->SetupAttachment(this->RootComponent);
-
-    if (this->GetMesh() == nullptr)
-    {
-        LOG_FATAL(LogWorldChar, "Super mesh is invalid.")
-    }
-    this->GetMesh()->SetupAttachment(this->NonFPMeshWrapper);
-    this->GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -92.0f));
-    this->GetMesh()->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
+    this->AccumulatedPreview = ObjectInitializer.CreateDefaultSubobject<UCuboidComponent>(this, TEXT("AccumulatedPreview"));
+    this->AccumulatedPreview->SetupAttachment(this->RootComponent);
+    this->AccumulatedPreview->SetCastShadow(false);
 
     return;
 }
@@ -91,10 +93,6 @@ Super(ObjectInitializer.SetDefaultSubobjectClass<UMyCharacterMovementComponent>(
 void AWorldCharacter::BeginPlay(void)
 {
     Super::BeginPlay();
-
-    this->AccumulatedPreview = this->GetWorld()->SpawnActor<ACuboid>(ACuboid::StaticClass(), FTransform(), FActorSpawnParameters());
-    jcheck( this->AccumulatedPreview )
-    this->ReattachAccumulatedPreview();
 
     if (this->IsLocallyControlled())
     {
@@ -149,6 +147,14 @@ void AWorldCharacter::BeginPlay(void)
         MARK_PROPERTY_DIRTY_FROM_NAME(AWorldCharacter, Container, this)
     }
 
+    if (this->GetMesh()->DoesSocketExist(FName(this->RightHandSocketName)) == false)
+    {
+        LOG_FATAL(LogWorldChar, "Right hand socket was not found on parent mesh.")
+        return;
+    }
+
+    this->UpdateAccumulatedPreview(true);
+
     return;
 }
 
@@ -156,10 +162,21 @@ void AWorldCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME(AWorldCharacter, RemoteSelectedAccumulatedPreview)
+    {
+        FDoRepLifetimeParams SharedParams = FDoRepLifetimeParams();
+        SharedParams.bIsPushBased = false;
+        SharedParams.Condition    = ELifetimeCondition::COND_SkipOwner;
 
-    FDoRepLifetimeParams SharedParams; SharedParams.bIsPushBased = true;
-    DOREPLIFETIME_WITH_PARAMS_FAST(AWorldCharacter, Container, SharedParams)
+        DOREPLIFETIME_WITH_PARAMS_FAST(AWorldCharacter, RemoteSelectedAccumulatedPreview, SharedParams)
+    }
+
+    {
+        FDoRepLifetimeParams SharedParams = FDoRepLifetimeParams();
+        SharedParams.bIsPushBased = true;
+        SharedParams.Condition    = ELifetimeCondition::COND_OwnerOnly;
+
+        DOREPLIFETIME_WITH_PARAMS_FAST(AWorldCharacter, Container, SharedParams)
+    }
 
     return;
 }
@@ -239,11 +256,16 @@ void AWorldCharacter::ListenForCameraChangedEventWithNonFPMeshWrapper(void)
         {
             if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Child); Primitive)
             {
+                if (Primitive->IsA<UCuboidComponent>())
+                {
+                    continue;
+                }
+
                 Primitive->SetOwnerNoSee(this->FirstPersonCameraComponent->IsActive());
             }
         }
 
-        this->ReattachAccumulatedPreview();
+        this->UpdateAccumulatedPreview(true);
 
         return;
     });
@@ -289,7 +311,7 @@ void AWorldCharacter::ReattachAccumulatedPreview(void) const
     }
     else
     {
-        this->AccumulatedPreview->AttachToComponent(this->RightHandComponent, FAttachmentTransformRules::KeepRelativeTransform);
+        this->AccumulatedPreview->AttachToComponent(this->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, FName(this->RightHandSocketName));
     }
 
     return;
@@ -304,15 +326,18 @@ void AWorldCharacter::UpdateAccumulatedPreview(const bool bReattach /* = false *
 
     if (this->AccumulatedPreview)
     {
-        this->AccumulatedPreview->SetActorRelativeTransform(this->GetAccumulatedPreviewRelativeTransformNoBob());
+        this->AccumulatedPreview->SetRelativeTransform(this->GetAccumulatedPreviewRelativeTransformNoBob());
 
-        if (this->IsLocallyControlled())
+        if (this->IsContainerInitialized())
         {
-            this->AccumulatedPreview->GenerateMesh(this->GetContainerValue(this->SelectedQuickSlotIndex).AccumulatedIndex);
-        }
-        else
-        {
-            this->AccumulatedPreview->GenerateMesh(this->RemoteSelectedAccumulatedPreview);
+            if (this->IsLocallyControlled())
+            {
+                this->AccumulatedPreview->GenerateMesh(this->GetContainerValue(this->SelectedQuickSlotIndex).AccumulatedIndex);
+            }
+            else
+            {
+                this->AccumulatedPreview->GenerateMesh(this->RemoteSelectedAccumulatedPreview);
+            }
         }
     }
 
@@ -327,11 +352,7 @@ FTransform AWorldCharacter::GetAccumulatedPreviewRelativeTransformNoBob(void) co
             FVector(20.0f, 16.0f, -17.0f),
             FVector::One()
         ) :
-        FTransform(
-            FRotator::ZeroRotator,
-            FVector::ZeroVector,
-            FVector::One()
-        );
+        RightHandSocketTransform;
 }
 
 #pragma endregion Camera Stuff
@@ -457,7 +478,7 @@ void AWorldCharacter::OnLocalContainerChangedEventImpl(const ELocalContainerChan
     return;
 }
 
-void AWorldCharacter::OnRep_Container(void)
+void AWorldCharacter::OnRep_Container(void) const
 {
 #if !UE_BUILD_SHIPPING
     if (this->IsLocallyControlled() == false)

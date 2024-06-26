@@ -39,6 +39,13 @@ protected:
 
 public:
 
+    /*
+     * Fixes Warning C4263 as we now explicitly tell the compiler to also use this overloaded method that was provided
+     * in the inherited interface:
+     *   Member function does not override any base class virtual member function.
+     */
+    using ICuboidInterface::GenerateMesh;
+
     /** Use this method instead of the equivalent super method. */
     void GenerateMesh(const FAccumulated& InAccumulated);
     void SetAccumulatedForDeferredMeshGeneration(const FAccumulated& InAccumulated) { this->CurrentAccumulated = InAccumulated; }

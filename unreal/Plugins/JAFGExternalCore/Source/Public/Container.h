@@ -50,6 +50,7 @@ public:
 
     /* These methods should directly modify the source data. And never handle UI or Replication updates. */
 
+    FORCEINLINE virtual auto IsContainerInitialized(void) const -> bool                 = 0;
     FORCEINLINE virtual auto GetContainerSize(void) const -> int32                      = 0;
     FORCEINLINE virtual auto GetContainer(void) -> TArray<FSlot>&                       = 0;
     FORCEINLINE virtual auto GetContainer(void) const -> const TArray<FSlot>&           = 0;
@@ -80,6 +81,7 @@ class JAFGEXTERNALCORE_API INoRepContainer : public IContainer
 {
     GENERATED_BODY()
 
+    FORCEINLINE virtual auto IsContainerInitialized(void) const -> bool override { return this->Container.Num() > 0; }
     FORCEINLINE virtual auto GetContainerSize(void) const -> int32  override { return this->Container.Num(); }
     FORCEINLINE virtual auto GetContainer(void) -> TArray<FSlot>&  override { return this->Container; }
     FORCEINLINE virtual auto GetContainer(void) const -> const TArray<FSlot>&  override { return this->Container; }
