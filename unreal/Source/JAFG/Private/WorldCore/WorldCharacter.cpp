@@ -131,6 +131,8 @@ void AWorldCharacter::BeginPlay(void)
         { this->SafeUpdateHotbar(); });
         this->OnLocalContainerChangedEvent.AddLambda( [this] (const ELocalContainerChange::Type InReason, const int32 InIndex)
         { this->OnLocalContainerChangedEventImpl(InReason, InIndex); });
+        this->OnLocalContainerChangedEvent.AddLambda( [this] (const ELocalContainerChange::Type InReason, const int32 InIndex)
+        { this->UpdateAccumulatedPreview(); } );
     }
 
     if (UNetStatics::IsSafeServer(this))
@@ -141,6 +143,9 @@ void AWorldCharacter::BeginPlay(void)
         this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel()));
         this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 1, 10));
         this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 2, 99));
+        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 3, 15));
+        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 4, 5));
+        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 5, 2));
 
         LOG_VERY_VERBOSE(LogWorldChar, "Container initialized with %d slots.", this->Container.Num())
 
@@ -393,7 +398,14 @@ bool AWorldCharacter::EasyChangeContainer(const int32 InIndex, const accamount_t
 
     if (this->GetContainerValueRef(InIndex).SafeAddAmountRet(InAmount))
     {
-        MARK_PROPERTY_DIRTY_FROM_NAME(AWorldCharacter, Container, this)
+        if (this->IsLocallyControlled())
+        {
+            this->OnRep_Container();
+        }
+        else
+        {
+            MARK_PROPERTY_DIRTY_FROM_NAME(AWorldCharacter, Container, this)
+        }
         return true;
     }
 

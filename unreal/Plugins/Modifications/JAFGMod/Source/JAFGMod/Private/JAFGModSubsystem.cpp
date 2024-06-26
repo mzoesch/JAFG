@@ -33,6 +33,9 @@ void UJAFGModSubsystem::OnOptionalVoxelsInitialize(TArray<FVoxelMask>& VoxelMask
     VoxelMasks.Add(FVoxelMask(JAFGModNamespace, TEXT("StoneVoxel")));
     VoxelMasks.Add(FVoxelMask(JAFGModNamespace, TEXT("DirtVoxel")));
     VoxelMasks.Add(FVoxelMask(JAFGModNamespace, TEXT("GrassVoxel")));
+    VoxelMasks.Add(FVoxelMask(JAFGModNamespace, TEXT("OakPlanksVoxel")));
+    VoxelMasks.Add(FVoxelMask(JAFGModNamespace, TEXT("OakLogVoxel")));
+    VoxelMasks.Add(FVoxelMask(JAFGModNamespace, TEXT("CraftingTableVoxel")));
 
     return;
 }
