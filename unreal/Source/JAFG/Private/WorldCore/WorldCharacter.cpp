@@ -2,14 +2,12 @@
 
 #include "WorldCore/WorldCharacter.h"
 
-#include "CommonJAFGSlateDeveloperSettings.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "JAFGSlateSettings.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "Components/StaticMeshComponent.h"
-#include "Foundation/ContainerValueCursor.h"
 #include "Foundation/Hotbar.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
