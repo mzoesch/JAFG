@@ -89,7 +89,7 @@ void UChunkValidationSubsystemCl::MyTick(const float DeltaTime)
 
 void UChunkValidationSubsystemCl::LoadUnLoadChunks(const FVector& LocalPlayerLocation) const
 {
-    constexpr int RenderDistance { 1 };
+    constexpr int RenderDistance { 10 };
 
     if (this->ChunkGenerationSubsystem->IsReady() == false)
     {

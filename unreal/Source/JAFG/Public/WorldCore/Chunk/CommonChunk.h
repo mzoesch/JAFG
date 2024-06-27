@@ -197,6 +197,7 @@ protected:
     /**
      * If this chunk has been pre-initialized, this array will have a size of WorldStatics::ChunkSize to the
      * power of three. Not initialized at object construction to save memory.
+     * This object will always be the owner of this array.
      */
     voxel_t* RawVoxelData = nullptr;
 
@@ -327,7 +328,10 @@ public:
     FORCEINLINE voxel_t GetLocalVoxelOnly(const FVoxelKey& LocalVoxelPosition) const
     {
         /*
-         * Do we need to have this if statement?
+         * TODO
+         *      We should not have this if statement because of performance reasons. But currently we have to keep
+         *      this as the greedy algorithm will often call this method with out of bounds values.
+         *      This is a temporary solution.
          */
         if (
                LocalVoxelPosition.X >= WorldStatics::ChunkSize
@@ -363,6 +367,8 @@ public:
     auto GetChunkByNonZeroOrigin_Auth(const FVoxelKey& LocalVoxelKey, FVoxelKey& OutTransformedLocalVoxelKey) -> ACommonChunk*;
     /** Client implementation of the ACommonChunk#GetChunkByNonZeroOrigin_Auth. Only callable on a client. */
     auto GetChunkByNonZeroOrigin_Client(const FVoxelKey& LocalVoxelKey, FVoxelKey& OutTransformedLocalVoxelKey) -> ACommonChunk*;
+
+    auto GetVoxelByNonZeroOrigin_Auth(const FVoxelKey& InLocalVoxelKey, voxel_t& OutVoxel) -> bool;
 
 #pragma endregion Getters
 

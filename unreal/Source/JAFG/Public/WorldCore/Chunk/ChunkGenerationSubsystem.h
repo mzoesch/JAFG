@@ -102,6 +102,7 @@ private:
 
     const float ChunkGenerationInterval            = 0.1f;
     const int32 MaxVerticalChunksToGeneratePerTick = 20;
+    const int32 MaxVerticalChunksToAnswerPerTick   = 40;
     /** True if this subsystem was spawned in a client UWorld. */
           bool  bInClientMode                      = false;
 

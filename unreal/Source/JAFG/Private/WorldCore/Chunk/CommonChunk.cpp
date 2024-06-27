@@ -29,7 +29,13 @@ ACommonChunk::ACommonChunk(const FObjectInitializer& ObjectInitializer) : Super(
 
 ACommonChunk::~ACommonChunk(void)
 {
-    delete[] this->RawVoxelData;
+    if (this->RawVoxelData)
+    {
+        delete[] this->RawVoxelData;
+        this->RawVoxelData = nullptr;
+    }
+
+    return;
 }
 
 void ACommonChunk::BeginPlay(void)
@@ -44,6 +50,13 @@ void ACommonChunk::BeginPlay(void)
 void ACommonChunk::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
     Super::EndPlay(EndPlayReason);
+
+    /* Minimal cleanup which should always happen, of course. */
+    if (this->RawVoxelData)
+    {
+        delete[] this->RawVoxelData;
+        this->RawVoxelData = nullptr;
+    }
 
     if (this->bUncontrolledKill)
     {
@@ -538,7 +551,63 @@ void ACommonChunk::ReplaceSurface(void)
 
 void ACommonChunk::GenerateSurface(void)
 {
-    // checkNoEntry()
+    constexpr int32 SurfaceVoxel    { 4 };
+    constexpr int32 SubsurfaceVoxel { 3 };
+    constexpr int32 BaseVoxel       { 2 };
+
+    constexpr int32 MaxModified { 3 };
+
+    for (int X = 0; X < WorldStatics::ChunkSize; ++X)
+    {
+        for (int Y = 0; Y < WorldStatics::ChunkSize; ++Y)
+        {
+            int32 Modified = 0;
+
+            voxel_t MostTopVoxel;
+            if (this->GetVoxelByNonZeroOrigin_Auth(FVoxelKey(X, Y, WorldStatics::ChunkSize), MostTopVoxel) == false)
+            {
+                MostTopVoxel = ECommonVoxels::Air;
+            }
+
+            if (MostTopVoxel == BaseVoxel)
+            {
+                Modified = MaxModified;
+            }
+
+            else if (MostTopVoxel == SurfaceVoxel)
+            {
+                Modified = 1;
+            }
+
+            /* This is kinda sketchy because now there may be parts with more subsurface blocks. */
+            else if (MostTopVoxel == SubsurfaceVoxel)
+            {
+                Modified = 2;
+            }
+
+            for (int Z = WorldStatics::ChunkSize -1; Z > -1; --Z)
+            {
+                if (this->GetRawVoxelData(FVoxelKey(X, Y, Z)) == ECommonVoxels::Air)
+                {
+                    Modified = 0;
+                    continue;
+                }
+
+                if (Modified >= MaxModified)
+                {
+                    continue;
+                }
+
+                this->ModifyRawVoxelData(FIntVector(X, Y, Z), Modified++ == 0 ? SurfaceVoxel : SubsurfaceVoxel);
+
+                continue;
+            }
+
+            continue;
+        }
+
+        continue;
+    }
 }
 
 void ACommonChunk::ModifySingleVoxel(const FVoxelKey& LocalVoxelKey, const voxel_t NewVoxel)
@@ -721,11 +790,13 @@ ACommonChunk* ACommonChunk::GetChunkByNonZeroOrigin_Implementation(const FVoxelK
         return this;
     }
 
-    LOG_VERBOSE(
-        LogChunkManipulation,
+#if LOG_PERFORMANCE_CRITICAL_SECTIONS
+    LOG_VERY_VERBOSE(
+        LogChunkMisc,
         "Transformed local voxel position from %s to %s. Key change from %s to %s.",
         *LocalVoxelKey.ToString(), *OutTransformedLocalVoxelKey.ToString(), *this->ChunkKey.ToString(), *TransformedChunkKey.ToString()
     )
+#endif /* LOG_PERFORMANCE_CRITICAL_SECTIONS */
 
     ACommonChunk* TargetChunk = this->ChunkGenerationSubsystem->FindChunkByKey(TransformedChunkKey);
 
@@ -758,6 +829,18 @@ ACommonChunk* ACommonChunk::GetChunkByNonZeroOrigin_Client(const FVoxelKey& Loca
     }
 
     return this->GetChunkByNonZeroOrigin_Implementation(LocalVoxelKey, OutTransformedLocalVoxelKey);
+}
+
+bool ACommonChunk::GetVoxelByNonZeroOrigin_Auth(const FVoxelKey& InLocalVoxelKey, voxel_t& OutVoxel)
+{
+    FVoxelKey TransformedLocalVoxelKey;
+    if (const ACommonChunk* TargetChunk = this->GetChunkByNonZeroOrigin_Auth(InLocalVoxelKey, TransformedLocalVoxelKey); TargetChunk)
+    {
+        OutVoxel = TargetChunk->GetRawVoxelData(TransformedLocalVoxelKey);
+        return true;
+    }
+
+    return false;
 }
 
 #pragma endregion Chunk World Generation

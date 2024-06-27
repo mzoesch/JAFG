@@ -185,7 +185,7 @@ public:
 
     /**
      * @note To be called by the consumer thread or producer *thread* (if the queue is SPSC). If the queue is MPSC,
-     *       the producer might run into some unique race conditions. But technically this should be fine in this
+     *       the producer might run into some unique race conditions. But technically, this should be fine in this
      *       kind of application. [Insert sweating meme here]
      */
     FORCEINLINE bool Contains(const FElementType& Item) const

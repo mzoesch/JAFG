@@ -71,7 +71,7 @@ void UChunkGenerationSubsystem::MyTick(const float DeltaTime)
     if (this->bHasReceivedReplicatedServerChunkWorldSettings == false)
     {
         if (
-            UServerWorldSettingsReplicationComponent* Component =
+            const UServerWorldSettingsReplicationComponent* Component =
             GEngine->GetFirstLocalPlayerController(this->GetWorld())->GetComponentByClass<UServerWorldSettingsReplicationComponent>();
             Component == nullptr || Component->HasReplicatedSettings() == false
         )
@@ -110,8 +110,9 @@ void UChunkGenerationSubsystem::MyTick(const float DeltaTime)
     )
     {
         this->DequeueNextVerticalChunk();
-        ChunksGenerated++;
+        ++ChunksGenerated;
 
+        /* Relaxes the hyperlane. */
         if (this->bInClientMode && ChunksGenerated >= 2)
         {
             break;
@@ -126,14 +127,14 @@ void UChunkGenerationSubsystem::MyTick(const float DeltaTime)
 
     // Check for client needs
     //////////////////////////////////////////////////////////////////////////
-    int ChunkAnswered = 0;
+    int ChunksAnswered = 0;
     while (
-           ChunkAnswered < 40
+           ChunksAnswered < this->MaxVerticalChunksToAnswerPerTick
         && this->ClientQueue.IsEmpty() == false
     )
     {
         this->DequeueNextClientChunk();
-        ChunkAnswered++;
+        ++ChunksAnswered;
     }
 
     return;
@@ -414,7 +415,7 @@ ACommonChunk* UChunkGenerationSubsystem::SpawnChunk(const FChunkKey& ChunkKey) c
 
 void UChunkGenerationSubsystem::GetAllChunksFromVerticalChunk(const FChunkKey2& ChunkKey, TArray<FChunkKey>& Out) const
 {
-    jcheck( Out.IsEmpty() )
+    check( Out.IsEmpty() )
 
     Out.Reserve(this->CopiedChunksAboveZero);
     for (int32 Z = 0; Z < this->CopiedChunksAboveZero; ++Z)
@@ -427,7 +428,7 @@ void UChunkGenerationSubsystem::GetAllChunksFromVerticalChunk(const FChunkKey2& 
 
 void UChunkGenerationSubsystem::GetAllChunksFromVerticalChunkReversed(const FChunkKey2& ChunkKey, TArray<FChunkKey>& Out) const
 {
-    jcheck( Out.IsEmpty() )
+    check( Out.IsEmpty() )
 
     Out.Reserve(this->CopiedChunksAboveZero);
     for (int32 Z = this->CopiedChunksAboveZero - 1; Z >= 0; --Z)
