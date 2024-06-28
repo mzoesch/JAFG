@@ -18,6 +18,13 @@ class UJAFGGameSettingRegistry;
         GET_FUNCTION_NAME_STRING_CHECKED(UJAFGSettingsLocal, FunctionOrPropertyName), \
     }))
 
+namespace JAFGGameSettingRegistryHelpers
+{
+
+auto GetDisplayAdapterScreenResolutions(FScreenResolutionArray& Resolutions, const bool bIgnoreRefreshRate = false) -> bool;
+
+}
+
 UCLASS(NotBlueprintable)
 class UJAFGGameSettingRegistrySubsystem : public ULocalPlayerSubsystem
 {

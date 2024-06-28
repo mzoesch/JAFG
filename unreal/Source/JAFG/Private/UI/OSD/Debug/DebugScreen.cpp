@@ -2,8 +2,16 @@
 
 #include "UI/OSD/Debug/DebugScreen.h"
 
+#include "GeneralProjectSettings.h"
+#include "Engine/UserInterfaceSettings.h"
+#include "GameFramework/GameUserSettings.h"
+#include "GenericPlatform/GenericPlatformDriver.h"
+#include "Kismet/GameplayStatics.h"
 #include "Player/WorldPlayerController.h"
 #include "WorldCore/WorldCharacter.h"
+#include "MISC/App.h"
+#include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
+#include "WorldCore/Chunk/CommonChunk.h"
 #if WITH_EDITOR
     #include "LevelEditorViewport.h"
 #endif /* WITH_EDITOR */
@@ -49,6 +57,23 @@ void UDebugScreen::NativeConstruct(void)
 
     this->DebugScreenVisibilityChangedDelegateHandle = WorldPlayerController->SubscribeToDebugScreenVisibilityChanged(ADD_SLATE_VIS_DELG(UDebugScreen::OnDebugScreenVisibilityChanged));
 
+    this->UpdateCachedSections();
+
+    return;
+}
+
+void UDebugScreen::NativeTick(const FGeometry& MyGeometry, const float InDeltaTime)
+{
+    Super::NativeTick(MyGeometry, InDeltaTime);
+
+    this->LastUpdateTime += InDeltaTime;
+
+    if (this->LastUpdateTime > this->UpdateInterval)
+    {
+        this->UpdateCachedSections();
+        this->LastUpdateTime = 0.0f;
+    }
+
     return;
 }
 
@@ -69,6 +94,34 @@ void UDebugScreen::NativeDestruct(void)
     }
 
     return;
+}
+
+void UDebugScreen::UpdateCachedSections(void) const
+{
+    this->ActorCountCache            = 0;
+    this->ActorCommonChunkCountCache = 0;
+
+    TArray<AActor*> AllUWorldActors;
+    UGameplayStatics::GetAllActorsOfClass(this, AActor::StaticClass(), AllUWorldActors);
+
+    this->ActorCountCache = AllUWorldActors.Num();
+    for (const AActor* const Actor : AllUWorldActors)
+    {
+        if (Actor->IsA<ACommonChunk>())
+        {
+            ++this->ActorCommonChunkCountCache;
+        }
+    }
+
+    // Section UWorld
+    //////////////////////////////////////////////////////////////////////////
+    {
+        this->UWorldSectionCache = FString::Printf(
+            TEXT("UWorld: AA: %d, ACC: %d"),
+            this->ActorCountCache,
+            this->ActorCommonChunkCountCache
+        );
+    }
 }
 
 #if WITH_EDITOR
@@ -93,12 +146,71 @@ void UDebugScreen::OnDebugScreenVisibilityChanged(const bool bVisible)
     {
         LOG_VERY_VERBOSE(LogCommonSlate, "Debug Screen is now visible.")
         this->SetVisibility(ESlateVisibility::Visible);
+        this->UpdateCachedSections();
     }
     else
     {
         LOG_VERY_VERBOSE(LogCommonSlate, "Debug Screen is now hidden.")
         this->SetVisibility(ESlateVisibility::Collapsed);
     }
+}
+
+FString UDebugScreen::GetSectionProject(void) const
+{
+    if (this->ProjectSectionCache.IsEmpty())
+    {
+        const UGeneralProjectSettings* ProjectSettings = GetDefault<UGeneralProjectSettings>();
+        this->ProjectSectionCache = FString::Printf(TEXT("%s %s (%s) - %s"),
+            *ProjectSettings->ProjectName,
+            *ProjectSettings->ProjectVersion,
+            *ProjectSettings->ProjectID.ToString(),
+            *ProjectSettings->CompanyName
+        );
+    }
+
+    return this->ProjectSectionCache;
+}
+
+FString UDebugScreen::GetSectionEngine(void) const
+{
+    if (this->EngineSectionCache.IsEmpty())
+    {
+        this->EngineSectionCache = FString::Printf(TEXT("%s (Branch: %s) to %s %s on %s"),
+            *FString(FApp::GetBuildVersion()),
+            *FApp::GetBranchName(),
+            *FString(LexToString(FApp::GetBuildConfiguration())),
+            *FString(LexToString(FApp::GetBuildTargetType())),
+            *FApp::GetBuildDate()
+        );
+
+        // LOG_WARNING(LogTemp, "%s", *FString(FApp::GetEpicProductIdentifier()))
+        // LOG_WARNING(LogTemp, "%s", *FString(FApp::GetName()))
+        // LOG_WARNING(LogTemp, "%s", *FString(FApp::GetZenStoreProjectId()))
+        // LOG_WARNING(LogTemp, "%s", *FApp::GetInstanceId().ToString())
+        // LOG_WARNING(LogTemp, "%s", *FString(FApp::GetInstanceName()))
+        // LOG_WARNING(LogTemp, "%s", *FString(FApp::GetSessionId().ToString()))
+        // LogTemp: Warning: UDebugScreen::GetSectionProject: UnrealEngine
+        // LogTemp: Warning: UDebugScreen::GetSectionProject: UnrealEditor
+        // LogTemp: Warning: UDebugScreen::GetSectionProject: JAFG.74cfd77b
+        // LogTemp: Warning: UDebugScreen::GetSectionProject: 03D7688D4E7FC98C6055E585300D4846
+        // LogTemp: Warning: UDebugScreen::GetSectionProject: MZOESCH-WIN-20100
+        // LogTemp: Warning: UDebugScreen::GetSectionProject: ABC1F6DB441B4263F54C459754249D85
+
+        // LOG_WARNING(LogTemp, "%f", FApp::GetFixedDeltaTime())
+        // LOG_WARNING(LogTemp, "%f", FApp::GetCurrentTime())
+        // LOG_WARNING(LogTemp, "%f", FApp::GetLastTime())
+        // LOG_WARNING(LogTemp, "%f", FApp::GetDeltaTime())
+        // LOG_WARNING(LogTemp, "%f", FApp::GetIdleTime())
+        // LOG_WARNING(LogTemp, "%f", FApp::GetGameTime())
+        // LogTemp: Warning: UDebugScreen::GetSectionProject: 0.033333
+        // LogTemp: Warning: UDebugScreen::GetSectionProject: 17794707.525000
+        // LogTemp: Warning: UDebugScreen::GetSectionProject: 17794707.511298
+        // LogTemp: Warning: UDebugScreen::GetSectionProject: 0.013703
+        // LogTemp: Warning: UDebugScreen::GetSectionProject: 0.000000
+        // LogTemp: Warning: UDebugScreen::GetSectionProject: 1168.417821
+    }
+
+    return this->EngineSectionCache;
 }
 
 FString UDebugScreen::GetSectionFPS(void) const
@@ -124,10 +236,11 @@ FString UDebugScreen::GetSectionFPS(void) const
     }
 
     return FString::Printf(
-        TEXT("%s fps @ %s ms T: %s GPU: N/A"),
+        TEXT("%s fps @ %s ms T: %s; vsync (%s)"),
         *FPS,
         *DeltaFormatted,
-        *FString::SanitizeFloat(DebugScreen::GetMaxFPS())
+        *FString::SanitizeFloat(DebugScreen::GetMaxFPS()),
+        UGameUserSettings::GetGameUserSettings()->IsVSyncEnabled() ? TEXT("Yes") : TEXT("No")
     );
 }
 
@@ -141,8 +254,60 @@ FString UDebugScreen::GetSectionNet(void) const
 #endif /* WITH_EDITOR */
 
     return FString::Printf(
-        TEXT("Net: %d ms"),
+        TEXT("Net M(CL:%s, SV:%s) @ ? mst, %d mslat"),
+        UNetStatics::IsSafeClient(this) ? TEXT("Y") : TEXT("N"),
+        UNetStatics::IsSafeServer(this)
+            ? UNetStatics::IsSafeListenServer(this) ? TEXT("LS") : TEXT("S")
+            : TEXT("N"),
         static_cast<int32>(this->GetOwningPlayerState<AWorldPlayerState>()->GetPingInMilliseconds())
+    );
+}
+
+/* Do NOT convert to const method, as this is a Rider IDEA false positive error. */
+// ReSharper disable once CppUE4BlueprintCallableFunctionMayBeStatic
+FString UDebugScreen::GetSectionSession(void) const
+{
+    return FString::Printf(TEXT("Session: %s logged in as %s"),
+        FApp::GetSessionName().IsEmpty() ? TEXT("N/A") : *FApp::GetSessionName(),
+        *FApp::GetSessionOwner()
+    );
+}
+
+FString UDebugScreen::GetSectionUWorld(void) const
+{
+    return this->UWorldSectionCache;
+}
+
+FString UDebugScreen::GetSectionChunks(void) const
+{
+    bool bChunksMeaningful = false;
+
+    int32 VerticalChunks      = -1;
+    int32 TotalChunks         = -1;
+    int32 PendingChunks       = -1;
+    int32 PendingKillChunks   = -1;
+    int32 PendingClientChunks = -1;
+
+    if (const UChunkGenerationSubsystem* const GenSubsystem = this->GetWorld()->GetSubsystem<UChunkGenerationSubsystem>(); GenSubsystem)
+    {
+        bChunksMeaningful = true;
+
+        VerticalChunks      = GenSubsystem->GetVerticalChunks().Num();
+        TotalChunks         = GenSubsystem->ChunkMap.Num();
+        PendingChunks       = GenSubsystem->VerticalChunkQueue.Num();
+        PendingKillChunks   = GenSubsystem->GetPendingKillVerticalChunkQueue().Num();
+        PendingClientChunks = GenSubsystem->ClientQueue.Num();
+    }
+
+    return FString::Printf(
+        TEXT("Chunks (%s): %d%%, D: %d, VC %d[%d], p: %d, pk: %d, pcl: %d"),
+        bChunksMeaningful ? TEXT("Strong") : TEXT("Weak"),
+        static_cast<int32>(100.0f * (static_cast<float>(ActorCommonChunkCountCache) / static_cast<float>(ActorCountCache))),
+        -1,
+        VerticalChunks, TotalChunks,
+        PendingChunks,
+        PendingKillChunks,
+        PendingClientChunks
     );
 }
 
@@ -257,7 +422,7 @@ FString UDebugScreen::GetSectionClientCharacterChunkLocation(void) const
 
 FString UDebugScreen::GetSectionClientCharacterFacing(void) const
 {
-/* Yaw is clamped from -180 to 180. Therefore, this value is unreachable. */
+/* Yaw is clamped from -180 to 180. Therefore, this arbitrary value is unreachable. */
 #define UNDEFINED_ROT_FLT -200.0f
 
     float Yaw   = UNDEFINED_ROT_FLT;
@@ -273,7 +438,7 @@ FString UDebugScreen::GetSectionClientCharacterFacing(void) const
     checkSlow( GEditor )
     if (GEditor->IsSimulateInEditorInProgress())
     {
-        checkSlow(GCurrentLevelEditingViewportClient)
+        checkSlow( GCurrentLevelEditingViewportClient )
         Yaw   = GCurrentLevelEditingViewportClient->ViewTransformPerspective.GetRotation().Yaw;
         Pitch = GCurrentLevelEditingViewportClient->ViewTransformPerspective.GetRotation().Pitch;
     }
@@ -315,6 +480,69 @@ FString UDebugScreen::GetSectionClientCharacterFacing(void) const
 #undef UNDEFINED_ROT_FLT
 }
 
+/* Do NOT convert to const method, as this is a Rider IDEA false positive error. */
+// ReSharper disable once CppUE4BlueprintCallableFunctionMayBeStatic
+FString UDebugScreen::GetSectionRAMMisc(void) const
+{
+    const double UsedDouble  = static_cast<double>(FPlatformMemory::GetStats().UsedPhysical);
+    const double TotalDouble = static_cast<double>(FPlatformMemory::GetStats().TotalPhysical);
+    const double PeakDouble  = static_cast<double>(FPlatformMemory::GetStats().PeakUsedPhysical);
+
+    FString UtilizationFormatted =
+        SANITIZED_FLT(100.0 * (UsedDouble / TotalDouble), 2)
+        FORMAT_SANITIZED_FLT(UtilizationFormatted, 2)
+
+    return FString::Printf(TEXT("Mem: %s%% %s/%sMB (P : %sMB)"),
+        *UtilizationFormatted,
+        *FString::Printf(TEXT("%d"), static_cast<int32>(UsedDouble  / 1024.0 /* KB */ / 1024.0 /* MB */)),
+        *FString::Printf(TEXT("%d"), static_cast<int32>(TotalDouble / 1024.0 /* KB */ / 1024.0 /* MB */)),
+        *FString::Printf(TEXT("%d"), static_cast<int32>(PeakDouble  / 1024.0 /* KB */ / 1024.0 /* MB */))
+    );
+}
+
+/* Do NOT convert to const method, as this is a Rider IDEA false positive error. */
+// ReSharper disable once CppUE4BlueprintCallableFunctionMayBeStatic
+FString UDebugScreen::GetSectionCPUMisc(void) const
+{
+    return FString::Printf(TEXT("CPU: %s(%s)[%d]"),
+        *FPlatformMisc::GetCPUBrand().TrimEnd(),
+        *FPlatformMisc::GetCPUVendor(),
+        FPlatformMisc::GetCPUInfo()
+    );
+}
+
+FString UDebugScreen::GetSectionGPUMisc(void) const
+{
+    if (this->GPUSectionCache.IsEmpty())
+    {
+        const FGPUDriverInfo Info = FPlatformMisc::GetGPUDriverInfo(FPlatformMisc::GetPrimaryGPUBrand());
+        this->GPUSectionCache = FString::Printf(TEXT("GPU: %s from %s"),
+            *Info.DeviceDescription,
+            *Info.DriverDate
+        );
+    }
+
+    return this->GPUSectionCache;
+}
+
+FString UDebugScreen::GetSectionDisplayMisc(void) const
+{
+    FVector2D ViewportSize; this->GetWorld()->GetGameViewport()->GetViewportSize(ViewportSize);
+
+    FString DPIScaling =
+        SANITIZED_FLT(GetDefault<UUserInterfaceSettings>()->GetDPIScaleBasedOnSize(FIntPoint(ViewportSize.X, ViewportSize.Y)), 2)
+        FORMAT_SANITIZED_FLT(DPIScaling, 2)
+
+    return FString::Printf(TEXT("Display: %dx%d (DPI: %s) (RHI: %s)"),
+        static_cast<int32>(ViewportSize.X),
+        static_cast<int32>(ViewportSize.Y),
+        *DPIScaling,
+        *FApp::GetGraphicsRHI()
+    );
+}
+
+/* Do NOT convert to const method, as this is a Rider IDEA false positive error. */
+// ReSharper disable once CppUE4BlueprintCallableFunctionMayBeStatic
 FString UDebugScreen::GetSectionTargetVoxelData(void) const
 {
     return FString::Printf(TEXT("Targeted Voxel: N/A [REASON: Unknown]"));

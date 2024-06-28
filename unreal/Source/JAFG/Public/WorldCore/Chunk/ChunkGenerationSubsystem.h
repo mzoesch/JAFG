@@ -10,6 +10,7 @@
 
 #include "ChunkGenerationSubsystem.generated.h"
 
+class UDebugScreen;
 JAFG_VOID
 
 class ULocalChunkWorldSettings;
@@ -26,6 +27,8 @@ UCLASS(NotBlueprintable)
 class JAFG_API UChunkGenerationSubsystem final : public UJAFGTickableWorldSubsystemNoDev
 {
     GENERATED_BODY()
+
+    friend UDebugScreen;
 
 public:
 
@@ -50,11 +53,11 @@ public:
     FORCEINLINE auto IsReady(void) const -> bool { return this->bHasReceivedReplicatedServerChunkWorldSettings; }
 
     FORCEINLINE auto GenerateVerticalChunkAsync(const FChunkKey2& ChunkKey) -> void { this->VerticalChunkQueue.Enqueue(ChunkKey); }
-    FORCEINLINE auto GetVerticalChunkQueue(void) -> const TQueue<FChunkKey2>& { return this->VerticalChunkQueue; }
+    FORCEINLINE auto GetVerticalChunkQueue(void) -> const TMyQueue<FChunkKey2>& { return this->VerticalChunkQueue; }
     FORCEINLINE auto ClearVerticalChunkQueue(void) -> void { this->VerticalChunkQueue.Empty(); }
 
                 auto AddVerticalChunkToPendingKillQueue(const FChunkKey2& ChunkKey) -> void;
-    FORCEINLINE auto GetPendingKillVerticalChunkQueue(void) -> const TMyQueue<FChunkKey2>& { return this->PendingKillVerticalChunkQueue; }
+    FORCEINLINE auto GetPendingKillVerticalChunkQueue(void) const -> const TMyQueue<FChunkKey2>& { return this->PendingKillVerticalChunkQueue; }
 
     FORCEINLINE auto GetVerticalChunks(void) const -> const TSet<FChunkKey2>& { return this->VerticalChunks; }
     FORCEINLINE auto GetPersistentVerticalChunks(void) const -> TArray<FChunkKey2>
@@ -118,7 +121,7 @@ private:
     UPROPERTY()
     TObjectPtr<UServerChunkWorldSettings> ServerChunkWorldSettings;
 
-    TQueue<FChunkKey2> VerticalChunkQueue;
+    TMyQueue<FChunkKey2> VerticalChunkQueue;
     auto DequeueNextVerticalChunk(void) -> void;
     /** Called on the client will handle everything (e.g.: network replication). */
     auto SafeLoadClientVerticalChunkAsync(const TArray<FChunkKey>& Chunks) -> void;
@@ -129,7 +132,7 @@ private:
         const float TimeToLive = 10.0f
     ) -> void;
 
-    TQueue<FClientChunk> ClientQueue;
+    TMyQueue<FClientChunk> ClientQueue;
     /** Called on the server to fulfill the requests of the clients. */
     auto DequeueNextClientChunk(void) -> void;
 

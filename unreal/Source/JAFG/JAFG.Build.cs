@@ -18,6 +18,7 @@ public class JAFG : ModuleRules
             "InputCore",
             "EnhancedInput",
             "ProceduralMeshComponent",
+            "RHI",
         }
         );
 
@@ -69,6 +70,13 @@ public class JAFG : ModuleRules
             "Sockets",
             "NetCore",
             "Networking",
+        }
+        );
+
+        PrivateDependencyModuleNames.AddRange(
+        new string[]
+        {
+            "EngineSettings",
         }
         );
 

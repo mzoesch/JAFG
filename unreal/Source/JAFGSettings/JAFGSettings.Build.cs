@@ -18,6 +18,7 @@ public class JAFGSettings : ModuleRules
             "UMG",
             "InputCore",
             "EnhancedInput",
+            "RHI",
         }
         );
 

@@ -202,6 +202,21 @@ public:
     }
 
     /**
+     * @note Same problem as with Contains. But technically, this should be fine in this kind of application.
+     */
+    FORCEINLINE int32 Num(void) const
+    {
+        int32 Count = 0;
+
+        for (TNode* Node = this->Tail->NextNode; Node != nullptr; Node = Node->NextNode)
+        {
+            ++Count;
+        }
+
+        return Count;
+    }
+
+    /**
      * Removes the item from the tail of the queue.
      * @note To be called only from consumer thread.
      */
