@@ -18,29 +18,20 @@ void ICuboidInterface::GenerateMesh(const voxel_t InAccumulated, UProceduralMesh
     this->UVs.Reset();
     this->Colors.Reset();
 
-    if (this->GetCurrentAccumulatedIndex() == ECommonVoxels::Null)
+    if (this->GetCurrentAccumulatedIndex() == ECommonAccumulated::Null)
     {
         this->ApplyMesh(InMeshComponent);
         return;
     }
 
-    FVector PreDefinedShape[8];
-
-    PreDefinedShape[0] = FVector( this->CuboidX,  this->CuboidY,  this->CuboidZ ); /* Forward  Top    Right */
-    PreDefinedShape[1] = FVector( this->CuboidX,  this->CuboidY, -this->CuboidZ ); /* Forward  Bottom Right */
-    PreDefinedShape[2] = FVector( this->CuboidX, -this->CuboidY,  this->CuboidZ ); /* Forward  Top    Left  */
-    PreDefinedShape[3] = FVector( this->CuboidX, -this->CuboidY, -this->CuboidZ ); /* Forward  Bottom Left  */
-    PreDefinedShape[4] = FVector(-this->CuboidX, -this->CuboidY,  this->CuboidZ ); /* Backward Top    Left  */
-    PreDefinedShape[5] = FVector(-this->CuboidX, -this->CuboidY, -this->CuboidZ ); /* Backward Bottom Left  */
-    PreDefinedShape[6] = FVector(-this->CuboidX,  this->CuboidY,  this->CuboidZ ); /* Backward Top    Right */
-    PreDefinedShape[7] = FVector(-this->CuboidX,  this->CuboidY, -this->CuboidZ ); /* Backward Bottom Right */
-
-    this->CreateQuadrilateral( PreDefinedShape[0], PreDefinedShape[1], PreDefinedShape[2], PreDefinedShape[3], FProcMeshTangent( 0.0f,  1.0f, 0.0f ) ); /* Front  */
-    this->CreateQuadrilateral( PreDefinedShape[2], PreDefinedShape[3], PreDefinedShape[4], PreDefinedShape[5], FProcMeshTangent( 1.0f,  0.0f, 0.0f ) ); /* Left   */
-    this->CreateQuadrilateral( PreDefinedShape[4], PreDefinedShape[5], PreDefinedShape[6], PreDefinedShape[7], FProcMeshTangent( 0.0f, -1.0f, 0.0f ) ); /* Back   */
-    this->CreateQuadrilateral( PreDefinedShape[6], PreDefinedShape[7], PreDefinedShape[0], PreDefinedShape[1], FProcMeshTangent(-1.0f,  0.0f, 0.0f ) ); /* Right  */
-    this->CreateQuadrilateral( PreDefinedShape[6], PreDefinedShape[0], PreDefinedShape[4], PreDefinedShape[2], FProcMeshTangent( 0.0f,  1.0f, 0.0f ) ); /* Top    */
-    this->CreateQuadrilateral( PreDefinedShape[1], PreDefinedShape[7], PreDefinedShape[3], PreDefinedShape[5], FProcMeshTangent( 0.0f, -1.0f, 0.0f ) ); /* Bottom */
+    if (FAccumulated::IsVoxel(this->GetCurrentAccumulatedIndex()))
+    {
+        this->GenerateMeshForVoxels();
+    }
+    else
+    {
+        this->GenerateMeshForItems();
+    }
 
     this->ApplyMesh(InMeshComponent);
 
@@ -103,6 +94,33 @@ void ICuboidInterface::CreateQuadrilateral(const FVector& V1, const FVector& V2,
     });
 
     return;
+}
+
+void ICuboidInterface::GenerateMeshForVoxels(void)
+{
+    FVector PreDefinedShape[8];
+
+    PreDefinedShape[0] = FVector( this->CuboidX,  this->CuboidY,  this->CuboidZ ); /* Forward  Top    Right */
+    PreDefinedShape[1] = FVector( this->CuboidX,  this->CuboidY, -this->CuboidZ ); /* Forward  Bottom Right */
+    PreDefinedShape[2] = FVector( this->CuboidX, -this->CuboidY,  this->CuboidZ ); /* Forward  Top    Left  */
+    PreDefinedShape[3] = FVector( this->CuboidX, -this->CuboidY, -this->CuboidZ ); /* Forward  Bottom Left  */
+    PreDefinedShape[4] = FVector(-this->CuboidX, -this->CuboidY,  this->CuboidZ ); /* Backward Top    Left  */
+    PreDefinedShape[5] = FVector(-this->CuboidX, -this->CuboidY, -this->CuboidZ ); /* Backward Bottom Left  */
+    PreDefinedShape[6] = FVector(-this->CuboidX,  this->CuboidY,  this->CuboidZ ); /* Backward Top    Right */
+    PreDefinedShape[7] = FVector(-this->CuboidX,  this->CuboidY, -this->CuboidZ ); /* Backward Bottom Right */
+
+    this->CreateQuadrilateral( PreDefinedShape[0], PreDefinedShape[1], PreDefinedShape[2], PreDefinedShape[3], FProcMeshTangent( 0.0f,  1.0f, 0.0f ) ); /* Front  */
+    this->CreateQuadrilateral( PreDefinedShape[2], PreDefinedShape[3], PreDefinedShape[4], PreDefinedShape[5], FProcMeshTangent( 1.0f,  0.0f, 0.0f ) ); /* Left   */
+    this->CreateQuadrilateral( PreDefinedShape[4], PreDefinedShape[5], PreDefinedShape[6], PreDefinedShape[7], FProcMeshTangent( 0.0f, -1.0f, 0.0f ) ); /* Back   */
+    this->CreateQuadrilateral( PreDefinedShape[6], PreDefinedShape[7], PreDefinedShape[0], PreDefinedShape[1], FProcMeshTangent(-1.0f,  0.0f, 0.0f ) ); /* Right  */
+    this->CreateQuadrilateral( PreDefinedShape[6], PreDefinedShape[0], PreDefinedShape[4], PreDefinedShape[2], FProcMeshTangent( 0.0f,  1.0f, 0.0f ) ); /* Top    */
+    this->CreateQuadrilateral( PreDefinedShape[1], PreDefinedShape[7], PreDefinedShape[3], PreDefinedShape[5], FProcMeshTangent( 0.0f, -1.0f, 0.0f ) ); /* Bottom */
+
+    return;
+}
+
+void ICuboidInterface::GenerateMeshForItems(void)
+{
 }
 
 ACuboid::ACuboid(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)

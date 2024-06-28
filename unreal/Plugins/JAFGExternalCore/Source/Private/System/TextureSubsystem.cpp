@@ -2,6 +2,7 @@
 
 #include "System/TextureSubsystem.h"
 
+#include "Accumulated.h"
 #include "ImageUtils.h"
 #include "System/VoxelSubsystem.h"
 
@@ -139,19 +140,36 @@ UTexture2D* UTextureSubsystem::GetPreviewTexture2D(const voxel_t AccumulatedInde
         return nullptr;
     }
 
-    DECLARE_CACHE_KEY(this->PreviewCachePrefix, this->VoxelSubsystem->GetVoxelName(AccumulatedIndex))
+    DECLARE_CACHE_KEY(this->PreviewCachePrefix, this->VoxelSubsystem->GetAccumulatedName(AccumulatedIndex))
     if (UTexture2D* CachedTexture = this->Cached2DTextures.FindRef(CacheKey); CachedTexture != nullptr)
     {
         return CachedTexture;
     }
 
     FString Path;
+
+    /* Always prioritize real textures over generated ones. */
+    if (this->CreatePathToFile(ESubNameSpacePaths::Items, this->VoxelSubsystem->GetAccumulatedName(AccumulatedIndex), Path))
+    {
+        return this->GetAndCacheTexture2D(CacheKey, Path);
+    }
+
+    if (FAccumulated::IsVoxel(AccumulatedIndex) == false)
+    {
+        LOG_WARNING(
+            LogTextureSubsystem,
+            "Failed to load preview texture for accumulated: %s. Expected path: %s",
+            *this->VoxelSubsystem->GetAccumulatedName(AccumulatedIndex), *Path
+        )
+        return this->GetAndCacheTexture2D(this->TextureFailureTextureFileName, this->TextureFailureTextureFilePathAbsolute);
+    }
+
     if (this->CreatePathToFile(ESubNameSpacePaths::Generated, this->VoxelSubsystem->GetVoxelName(AccumulatedIndex), Path) == false)
     {
         LOG_WARNING(
             LogTextureSubsystem,
             "Failed to load preview texture for accumulated: %s. Expected path: %s",
-            *this->VoxelSubsystem->GetVoxelName(AccumulatedIndex), *Path
+            *this->VoxelSubsystem->GetAccumulatedName(AccumulatedIndex), *Path
         )
         return this->GetAndCacheTexture2D(this->TextureFailureTextureFileName, this->TextureFailureTextureFilePathAbsolute);
     }

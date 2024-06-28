@@ -146,6 +146,7 @@ void AWorldCharacter::BeginPlay(void)
         this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 3, 15));
         this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 4, 5));
         this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 5, 2));
+        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 6, 16));
 
         LOG_VERY_VERBOSE(LogWorldChar, "Container initialized with %d slots.", this->Container.Num())
 

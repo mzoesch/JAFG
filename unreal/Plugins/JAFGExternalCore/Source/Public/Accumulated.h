@@ -135,6 +135,8 @@ struct JAFGEXTERNALCORE_API FAccumulated
     FORCEINLINE static auto Equals(const FAccumulated& A, const FAccumulated& B) -> bool { return A == B; }
     FORCEINLINE static auto DeepEquals(const FAccumulated& A, const FAccumulated& B) -> bool { return A == B && A.Amount == B.Amount; }
     FORCEINLINE        auto IsVoxel(void) const -> bool { return this->AccumulatedIndex < GAccumulatedItemIndexStart; }
+    FORCEINLINE static auto IsVoxel(const FAccumulated& A) -> bool { return A.IsVoxel(); }
+    FORCEINLINE static auto IsVoxel(const voxel_t InAccumulatedIndex) -> bool { return InAccumulatedIndex < GAccumulatedItemIndexStart; }
     FORCEINLINE        auto ToString(void) const -> FString
     {
         return FString::Printf(TEXT("FAccumulated{AccumulatedIndex:%d, Amount:%d}"), this->AccumulatedIndex, this->Amount);

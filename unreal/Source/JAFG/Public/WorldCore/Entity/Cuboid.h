@@ -91,6 +91,11 @@ protected:
      * @param Tangent Face Tangent
      */
     void CreateQuadrilateral(const FVector& V1, const FVector& V2, const FVector& V3, const FVector& V4, const FProcMeshTangent& Tangent);
+
+private:
+
+    void GenerateMeshForVoxels(void);
+    void GenerateMeshForItems(void);
 };
 
 UCLASS(NotBlueprintable)

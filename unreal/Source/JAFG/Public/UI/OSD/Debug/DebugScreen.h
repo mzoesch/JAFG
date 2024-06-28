@@ -68,6 +68,7 @@ protected:
     // ReSharper disable once CppUEBlueprintCallableFunctionUnused
     FString GetSectionProject( /* void */ ) const;
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "JAFG|DebugScreen")
+    // ReSharper disable once CppUEBlueprintCallableFunctionUnused
     FString GetSectionEngine( /* void */ ) const;
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "JAFG|DebugScreen")

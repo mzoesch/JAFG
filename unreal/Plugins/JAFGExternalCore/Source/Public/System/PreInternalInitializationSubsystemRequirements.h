@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
 #include "VoxelMask.h"
+#include "ItemMask.h"
 
 #include "PreInternalInitializationSubsystemRequirements.generated.h"
 
@@ -21,4 +22,5 @@ class JAFGEXTERNALCORE_API IPreInternalInitializationSubsystemRequirements
 public:
 
     virtual void InitializeOptionalVoxels(TArray<FVoxelMask>& VoxelMasks) = 0;
+    virtual void InitializeOptionalItems(TArray<FItemMask>& VoxelMasks) = 0;
 };

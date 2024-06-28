@@ -23,5 +23,10 @@ void UPreInternalInitializationSubsystem::Initialize(FSubsystemCollectionBase& C
 
 void UPreInternalInitializationSubsystem::InitializeOptionalVoxels(TArray<FVoxelMask>& VoxelMasks)
 {
-    this->GetGameInstance()->GetSubsystem<UModificationSupervisorSubsystem>()->InitializeOptionalVoxelsEvent.Broadcast(VoxelMasks);
+    this->GetGameInstance()->GetSubsystem<UModificationSupervisorSubsystem>()->InitializeOptionalVoxelsDelegate.Broadcast(VoxelMasks);
+}
+
+void UPreInternalInitializationSubsystem::InitializeOptionalItems(TArray<FItemMask>& VoxelMasks)
+{
+    this->GetGameInstance()->GetSubsystem<UModificationSupervisorSubsystem>()->InitializeOptionalItemsDelegate.Broadcast(VoxelMasks);
 }

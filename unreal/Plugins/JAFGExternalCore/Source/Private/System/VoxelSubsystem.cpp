@@ -23,6 +23,10 @@ void UVoxelSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
     LOG_DISPLAY(LogVoxelSubsystem, "Voxel Subsystem initialized with [%d/%d] voxels.", this->CommonVoxelNum, this->VoxelMasks.Num() )
 
+    this->InitializeOptionalItems();
+
+    LOG_DISPLAY(LogVoxelSubsystem, "Voxel Subsystem initialized with [%d] items.", this->ItemMasks.Num() )
+
     return;
 }
 
@@ -44,17 +48,63 @@ voxel_t UVoxelSubsystem::GetVoxelIndex(const FString& Name) const
     return ECommonVoxels::Null;
 }
 
-auto UVoxelSubsystem::GetVoxelIndex(const FString& NameSpace, const FString& Name) const -> uint32
+uint32 UVoxelSubsystem::GetVoxelIndex(const FString& NameSpace, const FString& Name) const
 {
     for (voxel_t_signed i = 0; i < this->VoxelMasks.Num(); ++i)
     {
-        if (this->VoxelMasks[i].NameSpace == NameSpace && this->VoxelMasks[i].Name == Name)
+        if (this->VoxelMasks[i].Namespace == NameSpace && this->VoxelMasks[i].Name == Name)
         {
             return i;
         }
     }
 
-    return ECommonVoxels::Null;
+    return ECommonAccumulated::Null;
+}
+
+voxel_t UVoxelSubsystem::GetItemIndex(const FString& Name) const
+{
+    for (voxel_t_signed i = 0; i < this->ItemMasks.Num(); ++i)
+    {
+        if (this->ItemMasks[i].Name == Name)
+        {
+            return i;
+        }
+    }
+
+    return ECommonAccumulated::Null;
+}
+
+voxel_t UVoxelSubsystem::GetItemIndex(const FString& NameSpace, const FString& Name) const
+{
+    for (voxel_t_signed i = 0; i < this->ItemMasks.Num(); ++i)
+    {
+        if (this->ItemMasks[i].Namespace == NameSpace && this->ItemMasks[i].Name == Name)
+        {
+            return i;
+        }
+    }
+
+    return ECommonAccumulated::Null;
+}
+
+voxel_t UVoxelSubsystem::GetAccumulatedIndex(const FString& Name) const
+{
+    if (const voxel_t Voxel = this->GetVoxelIndex(Name); Voxel != ECommonAccumulated::Null)
+    {
+        return Voxel;
+    }
+
+    return this->GetItemIndex(Name);
+}
+
+voxel_t UVoxelSubsystem::GetAccumulatedIndex(const FString& NameSpace, const FString& Name) const
+{
+    if (const voxel_t Voxel = this->GetVoxelIndex(NameSpace, Name); Voxel != ECommonAccumulated::Null)
+    {
+        return Voxel;
+    }
+
+    return this->GetItemIndex(NameSpace, Name);
 }
 
 void UVoxelSubsystem::SetCommonVoxelNum(void)
@@ -66,7 +116,7 @@ void UVoxelSubsystem::SetCommonVoxelNum(void)
     {
         FallbackRet = i + 1;
 
-        if (this->VoxelMasks[i].NameSpace == CommonNamespace)
+        if (this->VoxelMasks[i].Namespace == CommonNamespace)
         {
             continue;
         }
@@ -94,20 +144,39 @@ void UVoxelSubsystem::InitializeCommonVoxels(void)
 
 void UVoxelSubsystem::InitializeOptionalVoxels(void)
 {
-    TArray<UGameInstanceSubsystem*> Arr =
-        this->GetGameInstance()->GetSubsystemArray<UGameInstanceSubsystem>();
-
-    for (UGameInstanceSubsystem* Subsystem : Arr)
+    for (UGameInstanceSubsystem* Subsystem : this->GetGameInstance()->GetSubsystemArray<UGameInstanceSubsystem>())
     {
-        IPreInternalInitializationSubsystemRequirements* SubsystemInterface =
-            Cast<IPreInternalInitializationSubsystemRequirements>(Subsystem);
-
-        if (SubsystemInterface)
+        if (
+            IPreInternalInitializationSubsystemRequirements* SubsystemInterface =
+                Cast<IPreInternalInitializationSubsystemRequirements>(Subsystem)
+        )
         {
             SubsystemInterface->InitializeOptionalVoxels(this->VoxelMasks);
             return;
         }
 
+        continue;
+    }
+
+    LOG_FATAL(LogVoxelSubsystem, "No subsystem found that implements the IPreInternalInitializationSubsystemRequirements interface.")
+
+    return;
+}
+
+void UVoxelSubsystem::InitializeOptionalItems(void)
+{
+    for (UGameInstanceSubsystem* Subsystem : this->GetGameInstance()->GetSubsystemArray<UGameInstanceSubsystem>())
+    {
+        if (
+            IPreInternalInitializationSubsystemRequirements* SubsystemInterface =
+                Cast<IPreInternalInitializationSubsystemRequirements>(Subsystem)
+        )
+        {
+            SubsystemInterface->InitializeOptionalItems(this->ItemMasks);
+            return;
+        }
+
+        continue;
     }
 
     LOG_FATAL(LogVoxelSubsystem, "No subsystem found that implements the IPreInternalInitializationSubsystemRequirements interface.")

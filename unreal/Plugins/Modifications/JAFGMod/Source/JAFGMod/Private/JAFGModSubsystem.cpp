@@ -13,13 +13,18 @@ void UJAFGModSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     LOG_DISPLAY(LogModSubsystem, "Called.")
 
     UModificationSupervisorSubsystem* ModSupervisor = this->GetGameInstance()->GetSubsystem<UModificationSupervisorSubsystem>();
-
     check( ModSupervisor )
 
-    ModSupervisor->InitializeOptionalVoxelsEvent.AddLambda(
+    ModSupervisor->InitializeOptionalVoxelsDelegate.AddLambda(
     [this] (TArray<FVoxelMask>& VoxelMasks)
     {
         this->OnOptionalVoxelsInitialize(VoxelMasks);
+    });
+
+    ModSupervisor->InitializeOptionalItemsDelegate.AddLambda(
+    [this] (TArray<FItemMask>& ItemMasks)
+    {
+        this->OnOptionalItemsInitialize(ItemMasks);
     });
 
     return;
@@ -36,6 +41,16 @@ void UJAFGModSubsystem::OnOptionalVoxelsInitialize(TArray<FVoxelMask>& VoxelMask
     VoxelMasks.Add(FVoxelMask(JAFGModNamespace, TEXT("OakPlanksVoxel")));
     VoxelMasks.Add(FVoxelMask(JAFGModNamespace, TEXT("OakLogVoxel")));
     VoxelMasks.Add(FVoxelMask(JAFGModNamespace, TEXT("CraftingTableVoxel")));
+
+    return;
+}
+
+// ReSharper disable once CppMemberFunctionMayBeStatic
+void UJAFGModSubsystem::OnOptionalItemsInitialize(TArray<FItemMask>& ItemMasks)
+{
+    LOG_DISPLAY(LogModSubsystem, "JAFG mod is initializing its items.")
+
+    ItemMasks.Add(FItemMask(JAFGModNamespace, TEXT("Stick")));
 
     return;
 }

@@ -14,9 +14,9 @@
 
 #include "WorldCharacter.generated.h"
 
-class UCuboidComponent;
 JAFG_VOID
 
+class UCuboidComponent;
 class ACuboid;
 class ACharacterReach;
 class UJAFGInputSubsystem;

@@ -16,12 +16,13 @@ struct JAFGEXTERNALCORE_API FVoxelMask
 
     //////////////////////////////////////////////////////////////////////////
     // Constructors
-    FVoxelMask(void) = default;
+    /** Default constructor. Required by the engine. Do not use. */
+    FVoxelMask(void)  = default;
     ~FVoxelMask(void) = default;
 
-    FORCEINLINE explicit FVoxelMask(const FString& NameSpace, const FString& Name)
+    FORCEINLINE explicit FVoxelMask(const FString& Namespace, const FString& Name)
     {
-        this->NameSpace = NameSpace;
+        this->Namespace = Namespace;
         this->Name      = Name;
 
         /* Filled later on during the game boot-up by the Material Subsystem. */
@@ -32,9 +33,9 @@ struct JAFGEXTERNALCORE_API FVoxelMask
         return;
     }
 
-    FORCEINLINE explicit FVoxelMask(const FString& NameSpace, const FString& Name, const ETextureGroup::Type TextureGroup)
+    FORCEINLINE explicit FVoxelMask(const FString& Namespace, const FString& Name, const ETextureGroup::Type TextureGroup)
     {
-        this->NameSpace = NameSpace;
+        this->Namespace = Namespace;
         this->Name      = Name;
 
         this->TextureGroups.Empty();
@@ -51,7 +52,7 @@ struct JAFGEXTERNALCORE_API FVoxelMask
     static const FVoxelMask Null;
     static const FVoxelMask Air;
 
-    FString NameSpace;
+    FString Namespace;
     FString Name;
 
     /**
@@ -76,7 +77,7 @@ struct JAFGEXTERNALCORE_API FVoxelMask
     }
 
     /**
-     * Gets the texture index of the owning texture array at the given texture group based on the normal vector.
+     * Gets the texture index of the owning texture array at the given texture group based on a normal vector.
      */
     FORCEINLINE int32 GetTextureIndex(const FVector& Normal) const
     {

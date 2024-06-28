@@ -22,6 +22,7 @@ enum Type : uint8
     Destruction,
     GUI,
     Voxels,
+    Items,
     Blends,
 
     Generated   = 0xFF,
@@ -44,6 +45,10 @@ FORCEINLINE FString LexToString(const ESubNameSpacePaths::Type InType)
     case ESubNameSpacePaths::Voxels:
     {
         return TEXT("Voxels");
+    }
+    case ESubNameSpacePaths::Items:
+    {
+        return TEXT("Items");
     }
     case ESubNameSpacePaths::Blends:
     {

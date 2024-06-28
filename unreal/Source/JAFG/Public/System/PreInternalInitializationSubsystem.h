@@ -33,5 +33,6 @@ public:
 
     // IPreInternalInitializationSubsystemRequirements interface
     virtual void InitializeOptionalVoxels(TArray<FVoxelMask>& VoxelMasks) override;
+    virtual void InitializeOptionalItems(TArray<FItemMask>& VoxelMasks) override;
     // ~IPreInternalInitializationSubsystemRequirements interface
 };

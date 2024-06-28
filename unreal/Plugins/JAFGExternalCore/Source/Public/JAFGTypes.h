@@ -6,6 +6,23 @@
 #include "JAFGMacros.h"
 #include "JAFGTypeDefs.h"
 
+/**
+ * Note, that this is the very same as ECommonVoxels. It is just a different namespace for some cleaner implementation
+ * and better readability. But JAFG does not give a fuck about the type of Accumulated behind the scenes.
+ * Meaning it does not differentiate between Voxels and Items.
+ */
+namespace ECommonAccumulated
+{
+
+enum Type : voxel_t
+{
+    Null = 0,
+    Max  = 0,
+    Num  = 1,
+};
+
+}
+
 namespace ECommonVoxels
 {
 

@@ -6,10 +6,12 @@
 #include "ExternalModificationSubsystem.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "VoxelMask.h"
+#include "ItemMask.h"
 
 #include "ModificationSupervisorSubsystem.generated.h"
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FInitializeOptionalVoxelsEventSignature, TArray<FVoxelMask>& /* VoxelMasks */)
+DECLARE_MULTICAST_DELEGATE_OneParam(FInitializeOptionalVoxelsDelegateSignature, TArray<FVoxelMask>& /* VoxelMasks */)
+DECLARE_MULTICAST_DELEGATE_OneParam(FInitializeOptionalItemsDelegateSignature,  TArray<FItemMask>&  /* ItemMasks  */)
 
 UCLASS(NotBlueprintable)
 class MODIFICATIONSUPERVISOR_API UModificationSupervisorSubsystem final : public UGameInstanceSubsystem
@@ -28,5 +30,6 @@ public:
 
     static void AddMod(const TSubclassOf<UExternalModificationSubsystem> ModSubsystem);
 
-    FInitializeOptionalVoxelsEventSignature InitializeOptionalVoxelsEvent;
+    FInitializeOptionalVoxelsDelegateSignature InitializeOptionalVoxelsDelegate;
+    FInitializeOptionalItemsDelegateSignature  InitializeOptionalItemsDelegate;
 };
