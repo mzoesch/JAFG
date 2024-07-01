@@ -65,6 +65,7 @@ void UMaterialSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
     this->InitializeMaterials();
     this->InitializeDestructionMaterial();
+    this->InitializeItemMaterial();
 
     return;
 }
@@ -540,6 +541,11 @@ void UMaterialSubsystem::InitializeDestructionMaterial(void)
     this->MDynamicDestruction->SetTextureParameterValue("TexArr", TexArr);
 
     return;
+}
+
+void UMaterialSubsystem::InitializeItemMaterial(void)
+{
+    this->MDynamicItem = UMaterialInstanceDynamic::Create(this->MaterialSettings->MItem.LoadSynchronous(), this);
 }
 
 #undef PERFORM_R_AND_B_CHANNEL_FLIP

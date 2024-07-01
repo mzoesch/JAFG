@@ -3,7 +3,14 @@
 #include "WorldCore/Entity/Cuboid.h"
 #include "ProceduralMeshComponent.h"
 #include "System/MaterialSubsystem.h"
+#include "System/TextureSubsystem.h"
 #include "System/VoxelSubsystem.h"
+
+struct FTexture2DPixelMask final
+{
+    FIntVector2 Pixel;
+    FColor      Color;
+};
 
 void ICuboidInterface::GenerateMesh(const voxel_t InAccumulated, UProceduralMeshComponent* InMeshComponent)
 {
@@ -40,7 +47,15 @@ void ICuboidInterface::GenerateMesh(const voxel_t InAccumulated, UProceduralMesh
 
 void ICuboidInterface::ApplyMesh(UProceduralMeshComponent* InMeshComponent) const
 {
-    InMeshComponent->SetMaterial(0, this->MaterialSubsystem->MDynamicGroups[0]);
+    if (FAccumulated::IsVoxel(this->GetCurrentAccumulatedIndex()))
+    {
+        InMeshComponent->SetMaterial(0, this->MaterialSubsystem->MDynamicGroups[0]);
+    }
+    else
+    {
+        InMeshComponent->SetMaterial(0, this->MaterialSubsystem->MDynamicItem);
+    }
+
     InMeshComponent->CreateMeshSection(
         0,
         this->Vertices,
@@ -55,7 +70,7 @@ void ICuboidInterface::ApplyMesh(UProceduralMeshComponent* InMeshComponent) cons
     return;
 }
 
-void ICuboidInterface::CreateQuadrilateral(const FVector& V1, const FVector& V2, const FVector& V3, const FVector& V4, const FProcMeshTangent& Tangent)
+void ICuboidInterface::CreateQuadrilateral(const FVector& V1, const FVector& V2, const FVector& V3, const FVector& V4, const FProcMeshTangent& Tangent, const TOptional<const FColor>& Pixel)
 {
     const int32 P1 = this->TriangleIndexCounter++;
     const int32 P2 = this->TriangleIndexCounter++;
@@ -81,7 +96,8 @@ void ICuboidInterface::CreateQuadrilateral(const FVector& V1, const FVector& V2,
     {
         this->Normals.Add(Normal);
         this->Tangents.Add(Tangent);
-        this->Colors.Add(FColor(0, 0, 0, this->VoxelSubsystem->GetTextureIndex(this->GetCurrentAccumulatedIndex(), Normal)));
+
+        this->Colors.Add(Pixel.IsSet() ? Pixel.GetValue() : FColor(0, 0, 0, this->VoxelSubsystem->GetTextureIndex(this->GetCurrentAccumulatedIndex(), Normal)));
 
         continue;
     }
@@ -121,6 +137,77 @@ void ICuboidInterface::GenerateMeshForVoxels(void)
 
 void ICuboidInterface::GenerateMeshForItems(void)
 {
+    UTexture2D* Tex = this->TextureSubsystem->GetSafePreviewTexture2D(this->GetCurrentAccumulatedIndex());
+
+    TArray<FTexture2DPixelMask> Masks   = TArray<FTexture2DPixelMask>();
+    FTexture2DMipMap*           Mip     = &Tex->GetPlatformData()->Mips[0];
+    const uint32                Width   = Mip->SizeX;
+    const uint32                Height  = Mip->SizeY;
+    FByteBulkData*              Bulk    = &Mip->BulkData;
+    const FColor*               Data    = static_cast<FColor*>(Bulk->Lock(EBulkDataLockFlags::LOCK_READ_ONLY));
+
+    for (uint32 w = 0; w < Width; ++w) { for (uint32 h = 0; h < Height; ++h)
+    {
+        if (const FColor Pixel = Data[w + h * Width]; Pixel != FColor::Transparent && Pixel.A >= 255)
+        {
+            Masks.Add(FTexture2DPixelMask(FIntVector2(w, h), Pixel));
+        }
+    } }
+
+    Bulk->Unlock();
+
+    for (const auto& [Pixel, Color] : Masks)
+    {
+        FVector P1 = FVector( this->TexX,  this->TexY,  this->TexZ ); /* Forward  Top    Right */
+        FVector P2 = FVector( this->TexX,  this->TexY, -this->TexZ ); /* Forward  Bottom Right */
+        FVector P3 = FVector( this->TexX, -this->TexY,  this->TexZ ); /* Forward  Top    Left  */
+        FVector P4 = FVector( this->TexX, -this->TexY, -this->TexZ ); /* Forward  Bottom Left  */
+        FVector P5 = FVector(-this->TexX, -this->TexY,  this->TexZ ); /* Backward Top    Left  */
+        FVector P6 = FVector(-this->TexX, -this->TexY, -this->TexZ ); /* Backward Bottom Left  */
+        FVector P7 = FVector(-this->TexX,  this->TexY,  this->TexZ ); /* Backward Top    Right */
+        FVector P8 = FVector(-this->TexX,  this->TexY, -this->TexZ ); /* Backward Bottom Right */
+
+        P1 += FVector( Pixel.X * this->TexX * 2,  Pixel.Y * this->TexY * 2, 0 ); /* Forward  Top    Right with Space Shift */
+        P2 += FVector( Pixel.X * this->TexX * 2,  Pixel.Y * this->TexY * 2, 0 ); /* Forward  Bottom Right with Space Shift */
+        P3 += FVector( Pixel.X * this->TexX * 2,  Pixel.Y * this->TexY * 2, 0 ); /* Forward  Top    Left  with Space Shift */
+        P4 += FVector( Pixel.X * this->TexX * 2,  Pixel.Y * this->TexY * 2, 0 ); /* Forward  Bottom Left  with Space Shift */
+        P5 += FVector( Pixel.X * this->TexX * 2,  Pixel.Y * this->TexY * 2, 0 ); /* Backward Top    Left  with Space Shift */
+        P6 += FVector( Pixel.X * this->TexX * 2,  Pixel.Y * this->TexY * 2, 0 ); /* Backward Bottom Left  with Space Shift */
+        P7 += FVector( Pixel.X * this->TexX * 2,  Pixel.Y * this->TexY * 2, 0 ); /* Backward Top    Right with Space Shift */
+        P8 += FVector( Pixel.X * this->TexX * 2,  Pixel.Y * this->TexY * 2, 0 ); /* Backward Bottom Right with Space Shift */
+
+        /* Front */
+        if (Masks.ContainsByPredicate( [&] (const FTexture2DPixelMask& Mask) { return Mask.Pixel == Pixel + FIntVector2( 1,  0 ); } ) == false)
+        {
+            this->CreateQuadrilateral( P1, P2, P3, P4, FProcMeshTangent( 0.f,  1.f, 0.f ), Color);
+        }
+
+        /* Left */
+        if (Masks.ContainsByPredicate( [&] (const FTexture2DPixelMask& Mask) { return Mask.Pixel == Pixel + FIntVector2( 0, -1 ); } ) == false)
+        {
+            this->CreateQuadrilateral( P3, P4, P5, P6, FProcMeshTangent( 1.f,  0.f, 0.f ), Color);
+        }
+
+        /* Back */
+        if (Masks.ContainsByPredicate( [&] (const FTexture2DPixelMask& Mask) { return Mask.Pixel == Pixel + FIntVector2(-1,  0 ); } ) == false)
+        {
+            this->CreateQuadrilateral( P5, P6, P7, P8, FProcMeshTangent( 0.f, -1.f, 0.f ), Color);
+        }
+
+        /* Right */
+        if (Masks.ContainsByPredicate( [&] (const FTexture2DPixelMask& Mask) { return Mask.Pixel == Pixel + FIntVector2( 0,  1 ); } ) == false)
+        {
+            this->CreateQuadrilateral( P7, P8, P1, P2, FProcMeshTangent(-1.f,  0.f, 0.f ), Color);
+        }
+
+        this->CreateQuadrilateral( P7, P1, P5, P3, FProcMeshTangent( 0.f,  1.f, 0.f ), Color); /* Top    */
+        this->CreateQuadrilateral( P2, P8, P4, P6, FProcMeshTangent( 0.f, -1.f, 0.f ), Color); /* Bottom */
+
+        continue;
+    }
+
+
+    return;
 }
 
 ACuboid::ACuboid(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -140,6 +227,7 @@ void ACuboid::BeginPlay(void)
 
     this->VoxelSubsystem    = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>();    check( this->VoxelSubsystem )
     this->MaterialSubsystem = this->GetGameInstance()->GetSubsystem<UMaterialSubsystem>(); check( this->MaterialSubsystem )
+    this->TextureSubsystem  = this->GetGameInstance()->GetSubsystem<UTextureSubsystem>();  check( this->TextureSubsystem )
 
     return;
 }
@@ -150,6 +238,7 @@ void UCuboidComponent::BeginPlay(void)
 
     this->VoxelSubsystem    = this->GetWorld()->GetGameInstance()->GetSubsystem<UVoxelSubsystem>();    check( this->VoxelSubsystem )
     this->MaterialSubsystem = this->GetWorld()->GetGameInstance()->GetSubsystem<UMaterialSubsystem>(); check( this->MaterialSubsystem )
+    this->TextureSubsystem  = this->GetWorld()->GetGameInstance()->GetSubsystem<UTextureSubsystem>();  check( this->TextureSubsystem )
 
     return;
 }

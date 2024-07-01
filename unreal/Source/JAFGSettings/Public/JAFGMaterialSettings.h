@@ -37,4 +37,7 @@ public:
 
     UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Material")
     const TSoftObjectPtr<UMaterialInterface> MDestruction;
+
+    UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Material")
+    const TSoftObjectPtr<UMaterialInterface> MItem;
 };

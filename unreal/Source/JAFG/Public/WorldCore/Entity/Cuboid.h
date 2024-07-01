@@ -8,6 +8,7 @@
 
 #include "Cuboid.generated.h"
 
+class UTextureSubsystem;
 JAFG_VOID
 
 class UVoxelSubsystem;
@@ -50,9 +51,9 @@ public:
     int32 CuboidY = 8;
     int32 CuboidZ = 8;
 
-    int32 TexX = 8;
-    int32 TexY = 8;
-    int32 TexZ = 8;
+    int32 TexX = 1;
+    int32 TexY = 1;
+    int32 TexZ = 1;
 
     /* Do not override manually but with the generated body. */
     virtual void GenerateMesh(const voxel_t InAccumulated) PURE_VIRTUAL(ICuboidInterface::GenerateMesh);
@@ -63,6 +64,7 @@ protected:
 
     TObjectPtr<UVoxelSubsystem>    VoxelSubsystem    = nullptr;
     TObjectPtr<UMaterialSubsystem> MaterialSubsystem = nullptr;
+    TObjectPtr<UTextureSubsystem>  TextureSubsystem  = nullptr;
 
     /**
      * Variable is only used as a placeholder. The getter can be safely overriden in a derived class without
@@ -89,8 +91,14 @@ protected:
      * @param V3      Top    Left  Vertex
      * @param V4      Bottom Left  Vertex
      * @param Tangent Face Tangent
+     * @param Pixel   Non-obligatory face color.
      */
-    void CreateQuadrilateral(const FVector& V1, const FVector& V2, const FVector& V3, const FVector& V4, const FProcMeshTangent& Tangent);
+    void CreateQuadrilateral(const FVector& V1, const FVector& V2, const FVector& V3, const FVector& V4, const FProcMeshTangent& Tangent, const TOptional<const FColor>& Pixel);
+    FORCEINLINE
+    void CreateQuadrilateral(const FVector& V1, const FVector& V2, const FVector& V3, const FVector& V4, const FProcMeshTangent& Tangent)
+    {
+        this->CreateQuadrilateral(V1, V2, V3, V4, Tangent, TOptional<const FColor>());
+    }
 
 private:
 

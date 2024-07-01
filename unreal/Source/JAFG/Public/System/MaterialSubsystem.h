@@ -40,6 +40,9 @@ public:
     UPROPERTY()
     TObjectPtr<UMaterialInstanceDynamic> MDynamicDestruction;
 
+    UPROPERTY()
+    TObjectPtr<UMaterialInstanceDynamic> MDynamicItem;
+
 private:
 
     /**
@@ -72,8 +75,8 @@ private:
     /** @return The names of the textures, not paths. */
     TArray<FString> FindAllImportantTextures(void) const;
 
-
     void InitializeDestructionMaterial(void);
+    void InitializeItemMaterial(void);
 
     /**
      * All the blend texture names that where found at application boot-up.
