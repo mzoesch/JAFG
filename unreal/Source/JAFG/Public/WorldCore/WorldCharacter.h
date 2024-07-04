@@ -105,6 +105,7 @@ public:
 
     FORCEINLINE auto GetCurrentVelocity(void) const -> FVector { return this->CurrentVelocity; }
     FORCEINLINE auto GetCurrentSpeed(void) const -> float { return this->CurrentSpeed; }
+    FORCEINLINE auto GetCurrentHorizontalSpeed(void) const -> float { return this->CurrentHorizontalSpeed; }
 
 private:
 
@@ -114,10 +115,14 @@ private:
     UFUNCTION(BlueprintPure, Category = "JAFG|Character", meta = (DisplayName = "Get Current Speed", AllowPrivateAccess = "true"))
     float DynamicGetCurrentSpeed( /* void */ ) const { return this->GetCurrentSpeed(); }
 
+    UFUNCTION(BlueprintPure, Category = "JAFG|Character", meta = (DisplayName = "Get Current Horizontal Speed", AllowPrivateAccess = "true"))
+    float DynamicGetCurrentHorizontalSpeed( /* void */ ) const { return this->GetCurrentHorizontalSpeed(); }
+
 protected:
 
     FVector CurrentVelocity           = FVector::ZeroVector;
     float   CurrentSpeed              = 0.0f;
+    float   CurrentHorizontalSpeed    = 0.0f;
 
 public:
 

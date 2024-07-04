@@ -191,8 +191,9 @@ void AWorldCharacter::Tick(const float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
 
-    this->CurrentVelocity = this->GetVelocity();
-    this->CurrentSpeed    = this->CurrentVelocity.Size();
+    this->CurrentVelocity        = this->GetVelocity();
+    this->CurrentSpeed           = this->CurrentVelocity.Size();
+    this->CurrentHorizontalSpeed = FVector(this->CurrentVelocity.X, this->CurrentVelocity.Y, 0.0f).Size();
 
     if (this->IsLocallyControlled() == false)
     {

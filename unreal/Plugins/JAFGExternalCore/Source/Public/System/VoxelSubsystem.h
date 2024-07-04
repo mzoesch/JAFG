@@ -32,6 +32,7 @@ public:
 
     /** Also includes all common voxels. */
     FORCEINLINE auto GetVoxelNum(void) const -> voxel_t { return this->VoxelMasks.Num(); }
+    FORCEINLINE auto GetItemNum(void) const -> voxel_t { return this->ItemMasks.Num(); }
     /** The index where all other accumulates are items and not voxels anymore. */
     FORCEINLINE auto GetItemIndexStart(void) const -> voxel_t { return this->VoxelMasks.Num(); }
 

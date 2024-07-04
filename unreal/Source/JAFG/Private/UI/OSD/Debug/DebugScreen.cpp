@@ -3,6 +3,7 @@
 #include "UI/OSD/Debug/DebugScreen.h"
 
 #include "GeneralProjectSettings.h"
+#include "ModificationSupervisorSubsystem.h"
 #include "Engine/UserInterfaceSettings.h"
 #include "GameFramework/GameUserSettings.h"
 #include "GenericPlatform/GenericPlatformDriver.h"
@@ -10,6 +11,7 @@
 #include "Player/WorldPlayerController.h"
 #include "WorldCore/WorldCharacter.h"
 #include "MISC/App.h"
+#include "System/VoxelSubsystem.h"
 #include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
 #include "WorldCore/Chunk/CommonChunk.h"
 #if WITH_EDITOR
@@ -117,7 +119,8 @@ void UDebugScreen::UpdateCachedSections(void) const
     //////////////////////////////////////////////////////////////////////////
     {
         this->UWorldSectionCache = FString::Printf(
-            TEXT("UWorld: AA: %d, ACC: %d"),
+            TEXT("UWorld (%s): AA: %d, ACC: %d"),
+            *this->GetWorld()->GetName(),
             this->ActorCountCache,
             this->ActorCommonChunkCountCache
         );
@@ -169,6 +172,17 @@ FString UDebugScreen::GetSectionProject(void) const
     }
 
     return this->ProjectSectionCache;
+}
+
+FString UDebugScreen::GetSectionProjectGamePlay(void) const
+{
+    const UVoxelSubsystem* const VoxelSubsystem = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>();
+    return FString::Printf(TEXT("GamePlugins: %d, [%d/%d] [%d]"),
+        this->GetGameInstance()->GetSubsystem<UModificationSupervisorSubsystem>()->ModSubsystems.Num(),
+        VoxelSubsystem->GetCommonVoxelNum(),
+        VoxelSubsystem->GetVoxelNum(),
+        VoxelSubsystem->GetItemNum()
+    );
 }
 
 FString UDebugScreen::GetSectionEngine(void) const
@@ -349,8 +363,8 @@ FString UDebugScreen::GetSectionClientCharacterLocation(void) const
 
 FString UDebugScreen::GetSectionClientCharacterVelocity(void) const
 {
-    bool bMeaningful = false;
-    FVector Velocity = FVector::ZeroVector;
+    bool bMeaningful  = false;
+    FVector Velocity  = FVector::ZeroVector;
 
     if (const AWorldCharacter* Character = OWNING_CHARACTER)
     {
@@ -390,7 +404,11 @@ FString UDebugScreen::GetSectionClientCharacterVelocity(void) const
         SANITIZED_FLT(Velocity.Size() * WorldStatics::UToJScale, 2)
         FORMAT_SANITIZED_FLT(Speed, 2)
 
-    return FString::Printf(TEXT("Vel: %s (%s / %s / %s)"), *Speed, *X, *Y, *Z);
+    FString HorizontalSpeed =
+        SANITIZED_FLT(FVector(Velocity.X, Velocity.Y, 0).Size() * WorldStatics::UToJScale, 2)
+        FORMAT_SANITIZED_FLT(HorizontalSpeed, 2)
+
+    return FString::Printf(TEXT("Vel: %s [%s] (%s / %s / %s)"), *Speed, *HorizontalSpeed, *X, *Y, *Z);
 }
 
 FString UDebugScreen::GetSectionClientCharacterChunkLocation(void) const
