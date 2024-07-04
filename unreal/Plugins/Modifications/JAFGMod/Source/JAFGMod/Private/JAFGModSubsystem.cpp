@@ -50,7 +50,12 @@ void UJAFGModSubsystem::OnOptionalItemsInitialize(TArray<FItemMask>& ItemMasks)
 {
     LOG_DISPLAY(LogModSubsystem, "JAFG mod is initializing its items.")
 
-    ItemMasks.Add(FItemMask(JAFGModNamespace, TEXT("Stick")));
+    ItemMasks.Add(FItemMask(JAFGModNamespace, TEXT("WoodenStick")));
+    ItemMasks.Add(FItemMask(JAFGModNamespace, TEXT("WoodenAxe")));
+    ItemMasks.Add(FItemMask(JAFGModNamespace, TEXT("WoodenHoe")));
+    ItemMasks.Add(FItemMask(JAFGModNamespace, TEXT("WoodenPickaxe")));
+    ItemMasks.Add(FItemMask(JAFGModNamespace, TEXT("WoodenShovel")));
+    ItemMasks.Add(FItemMask(JAFGModNamespace, TEXT("WoodenSword")));
 
     return;
 }

@@ -141,12 +141,17 @@ void AWorldCharacter::BeginPlay(void)
 
         this->Container.Init(FSlot(Accumulated::Null), 43);
         this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel()));
-        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 1, 10));
         this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 2, 99));
-        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 3, 15));
         this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 4, 5));
         this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 5, 2));
-        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 6, 16));
+        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 6, 1));
+        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 7, 1));
+        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 8, 1));
+        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 9, 1));
+        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 10, 1));
+        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 11, 1));
+        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 1, 10));
+        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 3, 15));
 
         LOG_VERY_VERBOSE(LogWorldChar, "Container initialized with %d slots.", this->Container.Num())
 
@@ -353,13 +358,32 @@ void AWorldCharacter::UpdateAccumulatedPreview(const bool bReattach /* = false *
 
 FTransform AWorldCharacter::GetAccumulatedPreviewRelativeTransformNoBob(void) const
 {
-    return this->FirstPersonCameraComponent->IsActive() ?
-        FTransform(
+    const FTransform TempLocVoxel =  FTransform(
             FRotator(0.0f, 14.0f, 0.0f),
             FVector(20.0f, 16.0f, -17.0f),
             FVector::One()
-        ) :
-        RightHandSocketTransform;
+        );
+    const FTransform TempLocItem = FTransform(
+            FRotator(50.0f, 194.0f, 90.0f),
+            FVector(50.0f, 39.0f, -17.0f),
+            FVector::One()
+        );
+
+    if (this->IsLocallyControlled() == false)
+    {
+        return this->RightHandSocketTransform;
+    }
+
+    if (this->IsContainerInitialized() == false)
+    {
+        return TempLocVoxel;
+    }
+
+    return this->FirstPersonCameraComponent->IsActive()
+        ? FAccumulated::IsVoxel(this->GetContainerValue(this->SelectedQuickSlotIndex))
+            ? TempLocVoxel
+            : TempLocItem
+        : this->RightHandSocketTransform;
 }
 
 #pragma endregion Camera Stuff

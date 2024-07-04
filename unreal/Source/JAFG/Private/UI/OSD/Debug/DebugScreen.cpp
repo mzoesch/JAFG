@@ -177,11 +177,12 @@ FString UDebugScreen::GetSectionProject(void) const
 FString UDebugScreen::GetSectionProjectGamePlay(void) const
 {
     const UVoxelSubsystem* const VoxelSubsystem = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>();
-    return FString::Printf(TEXT("GamePlugins: %d, [%d/%d] [%d]"),
+    return FString::Printf(TEXT("GamePlugins: %d, [%d/%d] [%d], GAIIS: %d"),
         this->GetGameInstance()->GetSubsystem<UModificationSupervisorSubsystem>()->ModSubsystems.Num(),
         VoxelSubsystem->GetCommonVoxelNum(),
         VoxelSubsystem->GetVoxelNum(),
-        VoxelSubsystem->GetItemNum()
+        VoxelSubsystem->GetItemNum(),
+        GAccumulatedItemIndexStart
     );
 }
 
