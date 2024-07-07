@@ -38,19 +38,23 @@ public:
 
     FORCEINLINE auto GetVoxelName(const voxel_t Voxel) const -> FString { return this->VoxelMasks[Voxel].Name; }
                 auto GetVoxelIndex(const FString& Name) const -> voxel_t;
+                auto GetSafeVoxelIndex(const FString& Name) const -> voxel_t;
                 auto GetVoxelIndex(const FString& NameSpace, const FString& Name) const -> voxel_t;
+                auto GetSafeVoxelIndex(const FString& Namespace, const FString& Name) const -> voxel_t;
     FORCEINLINE auto GetVoxelNamespace(const voxel_t Voxel) const -> FString { return this->VoxelMasks[Voxel].Namespace; }
     FORCEINLINE auto GetVoxelTextureGroup(const voxel_t Voxel, const FVector& Normal) const -> ETextureGroup::Type { return this->VoxelMasks[Voxel].GetTextureGroup(Normal); }
     FORCEINLINE auto GetTextureIndex(const voxel_t Voxel, const FVector& Normal) const -> int32 { return this->VoxelMasks[Voxel].GetTextureIndex(Normal); };
 
     FORCEINLINE auto GetItemName(const voxel_t Item) const -> FString { return this->ItemMasks[this->TransformAccumulatedToItem(Item)].Name; }
                 auto GetItemIndex(const FString& Name) const -> voxel_t;
-                auto GetItemIndex(const FString& NameSpace, const FString& Name) const -> voxel_t;
+                auto GetItemIndex(const FString& Namespace, const FString& Name) const -> voxel_t;
     FORCEINLINE auto GetItemNamespace(const voxel_t Item) const -> FString { return this->ItemMasks[this->TransformAccumulatedToItem(Item)].Namespace; }
 
     FORCEINLINE auto GetAccumulatedName(const voxel_t Accumulated) const -> FString { return this->VoxelMasks.IsValidIndex(Accumulated) ? this->GetVoxelName(Accumulated) : this->GetItemName(Accumulated); }
                 auto GetAccumulatedIndex(const FString& Name) const -> voxel_t;
+                auto GetSafeAccumulatedIndex(const FString& Name) const -> voxel_t;
                 auto GetAccumulatedIndex(const FString& NameSpace, const FString& Name) const -> voxel_t;
+                auto GetSafeAccumulatedIndex(const FString& Namespace, const FString& Name) const -> voxel_t;
     FORCEINLINE auto GetAccumulatedNamespace(const voxel_t Accumulated) const -> FString { return this->VoxelMasks.IsValidIndex(Accumulated) ? this->GetVoxelNamespace(Accumulated) : this->GetItemNamespace(Accumulated); }
 
 private:
@@ -72,8 +76,9 @@ private:
     TArray<FItemMask> ItemMasks;
     void InitializeOptionalItems(void);
 
-    FORCEINLINE voxel_t TransformAccumulatedToItem(const voxel_t Accumulated) const
-    {
-        return Accumulated - this->GetItemIndexStart();
-    }
+    auto GetItemRealIndex(const FString& Name) const -> voxel_t;
+    auto GetItemRealIndex(const FString& Namespace, const FString& Name) const -> voxel_t;
+
+    FORCEINLINE auto TransformAccumulatedToItem(const voxel_t Accumulated) const -> voxel_t { return Accumulated - this->GetItemIndexStart(); }
+    FORCEINLINE auto TransformItemToAccumulated(const voxel_t Item) const -> voxel_t { return Item + this->GetItemIndexStart(); }
 };

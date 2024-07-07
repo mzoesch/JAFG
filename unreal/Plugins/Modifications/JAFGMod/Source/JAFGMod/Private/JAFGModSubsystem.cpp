@@ -35,12 +35,14 @@ void UJAFGModSubsystem::OnOptionalVoxelsInitialize(TArray<FVoxelMask>& VoxelMask
 {
     LOG_DISPLAY(LogModSubsystem, "JAFG mod is initializing its voxels.")
 
-    VoxelMasks.Add(FVoxelMask(JAFGModNamespace, TEXT("StoneVoxel")));
-    VoxelMasks.Add(FVoxelMask(JAFGModNamespace, TEXT("DirtVoxel")));
-    VoxelMasks.Add(FVoxelMask(JAFGModNamespace, TEXT("GrassVoxel")));
-    VoxelMasks.Add(FVoxelMask(JAFGModNamespace, TEXT("OakPlanksVoxel")));
-    VoxelMasks.Add(FVoxelMask(JAFGModNamespace, TEXT("OakLogVoxel")));
-    VoxelMasks.Add(FVoxelMask(JAFGModNamespace, TEXT("CraftingTableVoxel")));
+    VoxelMasks.Add(FVoxelMask(JAFGModNamespace, TEXT("Stone")));
+    VoxelMasks.Add(FVoxelMask(JAFGModNamespace, TEXT("Dirt")));
+    VoxelMasks.Add(FVoxelMask(JAFGModNamespace, TEXT("Grass")));
+    VoxelMasks.Add(FVoxelMask(JAFGModNamespace, TEXT("OakPlanks")));
+    VoxelMasks.Add(FVoxelMask(JAFGModNamespace, TEXT("OakLog")));
+    VoxelMasks.Add(FVoxelMask(JAFGModNamespace, TEXT("CraftingTable")));
+
+    VoxelMasks.Add(FVoxelMask(JAFGModNamespace, TEXT("Barrel")));
 
     return;
 }

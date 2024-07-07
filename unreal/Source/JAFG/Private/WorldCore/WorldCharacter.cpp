@@ -140,18 +140,15 @@ void AWorldCharacter::BeginPlay(void)
         LOG_VERY_VERBOSE(LogWorldChar, "Initializing container on server.")
 
         this->Container.Init(FSlot(Accumulated::Null), 43);
-        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel()));
-        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 2, 99));
-        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 4, 5));
-        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 5, 2));
-        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 6, 1));
-        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 7, 1));
-        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 8, 1));
-        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 9, 1));
-        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 10, 1));
-        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 11, 1));
-        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 1, 10));
-        this->AddToContainer(FAccumulated(ECommonVoxels::GetBaseVoxel() + 3, 15));
+
+        this->AddToContainer(FAccumulated(this, "WoodenPickaxe", 1));
+        this->AddToContainer(FAccumulated(this, "WoodenAxe", 1));
+        this->AddToContainer(FAccumulated(this, "WoodenSword", 1));
+        this->AddToContainer(FAccumulated(this, "Stone", 64));
+        this->AddToContainer(FAccumulated(this, "Grass", 32));
+        this->AddToContainer(FAccumulated(this, "OakLog", 64));
+        this->AddToContainer(FAccumulated(this, "CraftingTable", 1));
+        this->AddToContainer(FAccumulated(this, "Barrel", 16));
 
         LOG_VERY_VERBOSE(LogWorldChar, "Container initialized with %d slots.", this->Container.Num())
 

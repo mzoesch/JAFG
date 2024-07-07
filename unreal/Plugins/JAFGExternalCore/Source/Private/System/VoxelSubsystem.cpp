@@ -48,7 +48,19 @@ voxel_t UVoxelSubsystem::GetVoxelIndex(const FString& Name) const
     return ECommonVoxels::Null;
 }
 
-uint32 UVoxelSubsystem::GetVoxelIndex(const FString& NameSpace, const FString& Name) const
+voxel_t UVoxelSubsystem::GetSafeVoxelIndex(const FString& Name) const
+{
+    if (const voxel_t Voxel = this->GetVoxelIndex(Name); Voxel != ECommonVoxels::Null)
+    {
+        return Voxel;
+    }
+
+    LOG_FATAL(LogVoxelSubsystem, "Voxel [%s] not found.", *Name)
+
+    return ECommonVoxels::Null;
+}
+
+voxel_t UVoxelSubsystem::GetVoxelIndex(const FString& NameSpace, const FString& Name) const
 {
     for (voxel_t_signed i = 0; i < this->VoxelMasks.Num(); ++i)
     {
@@ -58,7 +70,19 @@ uint32 UVoxelSubsystem::GetVoxelIndex(const FString& NameSpace, const FString& N
         }
     }
 
-    return ECommonAccumulated::Null;
+    return ECommonVoxels::Null;
+}
+
+voxel_t UVoxelSubsystem::GetSafeVoxelIndex(const FString& Namespace, const FString& Name) const
+{
+    if (const voxel_t Voxel = this->GetVoxelIndex(Namespace, Name); Voxel != ECommonVoxels::Null)
+    {
+        return Voxel;
+    }
+
+    LOG_FATAL(LogVoxelSubsystem, "Voxel [%s] not found.", *Name)
+
+    return ECommonVoxels::Null;
 }
 
 voxel_t UVoxelSubsystem::GetItemIndex(const FString& Name) const
@@ -67,20 +91,20 @@ voxel_t UVoxelSubsystem::GetItemIndex(const FString& Name) const
     {
         if (this->ItemMasks[i].Name == Name)
         {
-            return i;
+            return this->TransformItemToAccumulated(i);
         }
     }
 
     return ECommonAccumulated::Null;
 }
 
-voxel_t UVoxelSubsystem::GetItemIndex(const FString& NameSpace, const FString& Name) const
+voxel_t UVoxelSubsystem::GetItemIndex(const FString& Namespace, const FString& Name) const
 {
     for (voxel_t_signed i = 0; i < this->ItemMasks.Num(); ++i)
     {
-        if (this->ItemMasks[i].Namespace == NameSpace && this->ItemMasks[i].Name == Name)
+        if (this->ItemMasks[i].Namespace == Namespace && this->ItemMasks[i].Name == Name)
         {
-            return i;
+            return this->TransformItemToAccumulated(i);
         }
     }
 
@@ -97,6 +121,18 @@ voxel_t UVoxelSubsystem::GetAccumulatedIndex(const FString& Name) const
     return this->GetItemIndex(Name);
 }
 
+voxel_t UVoxelSubsystem::GetSafeAccumulatedIndex(const FString& Name) const
+{
+    if (const voxel_t Accumulated = this->GetAccumulatedIndex(Name); Accumulated != ECommonAccumulated::Null)
+    {
+        return Accumulated;
+    }
+
+    LOG_FATAL(LogVoxelSubsystem, "Accumulated [%s] not found.", *Name)
+
+    return ECommonAccumulated::Null;
+}
+
 voxel_t UVoxelSubsystem::GetAccumulatedIndex(const FString& NameSpace, const FString& Name) const
 {
     if (const voxel_t Voxel = this->GetVoxelIndex(NameSpace, Name); Voxel != ECommonAccumulated::Null)
@@ -105,6 +141,18 @@ voxel_t UVoxelSubsystem::GetAccumulatedIndex(const FString& NameSpace, const FSt
     }
 
     return this->GetItemIndex(NameSpace, Name);
+}
+
+voxel_t UVoxelSubsystem::GetSafeAccumulatedIndex(const FString& Namespace, const FString& Name) const
+{
+    if (const voxel_t Accumulated = this->GetAccumulatedIndex(Namespace, Name); Accumulated != ECommonAccumulated::Null)
+    {
+        return Accumulated;
+    }
+
+    LOG_FATAL(LogVoxelSubsystem, "Accumulated [%s] not found.", *Name)
+
+    return ECommonAccumulated::Null;
 }
 
 void UVoxelSubsystem::SetCommonVoxelNum(void)
@@ -182,4 +230,42 @@ void UVoxelSubsystem::InitializeOptionalItems(void)
     LOG_FATAL(LogVoxelSubsystem, "No subsystem found that implements the IPreInternalInitializationSubsystemRequirements interface.")
 
     return;
+}
+
+voxel_t UVoxelSubsystem::GetItemRealIndex(const FString& Name) const
+{
+    for (voxel_t_signed i = 0; i < this->ItemMasks.Num(); ++i)
+    {
+        if (this->ItemMasks[i].Name == Name)
+        {
+            return i;
+        }
+    }
+
+    LOG_WARNING(LogVoxelSubsystem, "Item [?::%s] not found.", *Name)
+
+    /*
+     * The first index. Note that ECommonAccumulated::Null does not make sense in this context the first index is
+     * in fact not null but the first valid item.
+     */
+    return 0;
+}
+
+voxel_t UVoxelSubsystem::GetItemRealIndex(const FString& Namespace, const FString& Name) const
+{
+    for (voxel_t_signed i = 0; i < this->ItemMasks.Num(); ++i)
+    {
+        if (this->ItemMasks[i].Namespace == Namespace && this->ItemMasks[i].Name == Name)
+        {
+            return i;
+        }
+    }
+
+    LOG_WARNING(LogVoxelSubsystem, "Item [%s::%s] not found.", *Namespace, *Name)
+
+    /*
+     * The first index. Note that ECommonAccumulated::Null does not make sense in this context the first index is
+     * in fact not null but the first valid item.
+     */
+    return 0;
 }

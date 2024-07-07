@@ -34,6 +34,8 @@ struct JAFGEXTERNALCORE_API FAccumulated
 {
     GENERATED_BODY()
 
+    //////////////////////////////////////////////////////////////////////////
+    // Constructors
     FORCEINLINE FAccumulated(void)
     {
         this->AccumulatedIndex = ACCUMULATED_PRIVATE_NULL_IDX;
@@ -58,17 +60,51 @@ struct JAFGEXTERNALCORE_API FAccumulated
         return;
     }
 
+    /**
+     * This is a slow operation, use it with caution, e.g., do not use every frame.
+     * @note Null-Accumulated are not allowed to be constructed with this constructor.
+     */
+                explicit FAccumulated(const UObject& Context, const FString& InAccumulatedName);
+    FORCEINLINE explicit FAccumulated(const UObject* const Context, const FString& InAccumulatedName)
+                : FAccumulated(*Context, InAccumulatedName) { return; }
+
+    /**
+     * This is a slow operation, use it with caution, e.g., do not use every frame.
+     * @note Null-Accumulated are not allowed to be constructed with this constructor.
+     */
+                explicit FAccumulated(const UObject& Context, const FString& InAccumulatedNamespace, const FString& InAccumulatedName);
+    FORCEINLINE explicit FAccumulated(const UObject* const Context, const FString& InAccumulatedNamespace, const FString& InAccumulatedName)
+                : FAccumulated(*Context, InAccumulatedNamespace, InAccumulatedName) { return; }
+
+    /**
+     * This is a slow operation, use it with caution, e.g., do not use every frame.
+     * @note Null-Accumulated are not allowed to be constructed with this constructor.
+     */
+                explicit FAccumulated(const UObject& Context, const FString& InAccumulatedName, const accamount_t InAmount);
+    FORCEINLINE explicit FAccumulated(const UObject* const Context, const FString& InAccumulatedName, const accamount_t InAmount)
+                : FAccumulated(*Context, InAccumulatedName, InAmount) { return; }
+
+    /**
+     * This is a slow operation, use it with caution, e.g., do not use every frame.
+     * @note Null-Accumulated are not allowed to be constructed with this constructor.
+     */
+                explicit FAccumulated(const UObject& Context, const FString& InAccumulatedNamespace, const FString& InAccumulatedName, const accamount_t InAmount);
+    FORCEINLINE explicit FAccumulated(const UObject* const Context, const FString& InAccumulatedNamespace, const FString& InAccumulatedName, const accamount_t InAmount)
+                : FAccumulated(*Context, InAccumulatedNamespace, InAccumulatedName, InAmount) { return; }
+    // ~Constructors
+    //////////////////////////////////////////////////////////////////////////
+
     UPROPERTY( /* Replicated */ )
     uint32 /* voxel_t */ AccumulatedIndex;
     UPROPERTY( /* Replicated */ )
     uint16 /* accamount_t */ Amount;
 
     /** Checks for overflow, underflow and if post add amount is zero, the Null Accumulated is set. */
-    FORCEINLINE void SafeAddAmount(const accamount_t_signed InAmount, bool& bCouldProcess)
+    FORCEINLINE void SafeAddAmount(const accamount_t_signed InAmount, bool& bOutCouldProcess)
     {
         if (InAmount == 0)
         {
-            bCouldProcess = true;
+            bOutCouldProcess = true;
             return;
         }
 
@@ -78,7 +114,7 @@ struct JAFGEXTERNALCORE_API FAccumulated
         /* Underflow Error */
         if (NewAmount < 0)
         {
-            bCouldProcess = false;
+            bOutCouldProcess = false;
             return;
         }
 
@@ -86,7 +122,7 @@ struct JAFGEXTERNALCORE_API FAccumulated
         {
             this->AccumulatedIndex = ACCUMULATED_PRIVATE_NULL_IDX;
             this->Amount           = ACCUMULATED_PRIVATE_NULL_AMT;
-            bCouldProcess          = true;
+            bOutCouldProcess          = true;
 
             return;
         }
@@ -94,12 +130,12 @@ struct JAFGEXTERNALCORE_API FAccumulated
         /* Overflow Error */
         if (NewAmount > ACCUMULATED_MAX_AMT)
         {
-            bCouldProcess = false;
+            bOutCouldProcess = false;
             return;
         }
 
         this->Amount    += InAmount;
-        bCouldProcess    = true;
+        bOutCouldProcess    = true;
 
         return;
     }
