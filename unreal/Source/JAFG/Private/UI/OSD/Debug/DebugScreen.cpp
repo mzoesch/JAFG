@@ -269,10 +269,13 @@ FString UDebugScreen::GetSectionNet(void) const
 #endif /* WITH_EDITOR */
 
     return FString::Printf(
-        TEXT("Net M(CL:%s, SV:%s) @ ? mst, %d mslat"),
+        TEXT("Net M(SA: %s, SANS: %s, CL:%s, SV:%s) @ ? mst, %d mslat"),
+        UNetStatics::IsSafeStandalone(this) ? TEXT("Y") : TEXT("N"),
+        UNetStatics::IsSafeStandaloneNoServer(this) ? TEXT("Y") : TEXT("N"),
         UNetStatics::IsSafeClient(this) ? TEXT("Y") : TEXT("N"),
-        UNetStatics::IsSafeServer(this)
-            ? UNetStatics::IsSafeListenServer(this) ? TEXT("LS") : TEXT("S")
+        UNetStatics::IsSafeDedicatedServer(this) ? TEXT("DS")
+            : UNetStatics::IsSafeListenServer(this) ? TEXT("LS")
+            : UNetStatics::IsSafeServer(this) ? TEXT("S")
             : TEXT("N"),
         static_cast<int32>(this->GetOwningPlayerState<AWorldPlayerState>()->GetPingInMilliseconds())
     );
