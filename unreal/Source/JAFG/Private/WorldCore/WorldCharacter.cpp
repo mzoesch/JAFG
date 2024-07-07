@@ -351,6 +351,10 @@ void AWorldCharacter::UpdateAccumulatedPreview(const bool bReattach /* = false *
                 this->AccumulatedPreview->GenerateMesh(this->RemoteSelectedAccumulatedPreview);
             }
         }
+        else
+        {
+            this->AccumulatedPreview->GenerateMesh(this->RemoteSelectedAccumulatedPreview);
+        }
     }
 
     return;
@@ -1467,6 +1471,11 @@ void AWorldCharacter::OnRep_RemoteSelectedAccumulatedPreview(void) const
 {
     /* We ignore server requests as they might be "hanging" behind the client that is controlling this character. */
     if (this->IsLocallyControlled())
+    {
+        return;
+    }
+
+    if (UNetStatics::IsSafeDedicatedServer(this))
     {
         return;
     }
