@@ -2,6 +2,7 @@
 
 #include "FrontEnd/GenPrevWorldSubsystem.h"
 
+#include "CommonHUD.h"
 #include "ImageUtils.h"
 #include "LocalSessionSupervisorSubsystem.h"
 #include "Components/SceneCaptureComponent2D.h"
@@ -250,6 +251,19 @@ void UGenPrevWorldSubsystem::OnWorldBeginPlay(UWorld& InWorld)
     Super::OnWorldBeginPlay(InWorld);
 
     this->BindToOnFinishedGeneratingAssetsDelegate();
+
+    if (
+           this->GetWorld()->GetFirstPlayerController()
+        && this->GetWorld()->GetFirstPlayerController()->GetHUD()
+        && Cast<ACommonHUD>(this->GetWorld()->GetFirstPlayerController()->GetHUD())
+    )
+    {
+        Cast<ACommonHUD>(this->GetWorld()->GetFirstPlayerController()->GetHUD())->CreateLoadingScreen();
+    }
+    else
+    {
+        LOG_WARNING(LogGenPrevAssets, "Failed to create loading screen.")
+    }
 
     this->GetWorld()->SpawnActor<AGenPrevAssets>(AGenPrevAssets::StaticClass(), FTransform::Identity);
 
