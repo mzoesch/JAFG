@@ -292,7 +292,7 @@ void UMaterialSubsystem::InitializeMaterials(void)
                 static_cast<uint8*>( DestinationSliceMipDataPtr )[i * CHANNEL_COUNT + Channel]
                 /*
                  * I really do not know why the IDEA is complaining here about the cast?
-                 * We cannot cas this crap because it is a const void pointer.
+                 * We cannot cast this crap because it is a const void pointer.
                  */
                 // ReSharper disable once CppCStyleCast
                     = ( (uint8*) CurrentSliceMipDataPtr )[i * CHANNEL_COUNT + (Channel == 0 ? 2 : Channel == 2 ? 0 : Channel)];

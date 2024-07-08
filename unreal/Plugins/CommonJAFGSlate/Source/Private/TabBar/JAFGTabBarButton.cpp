@@ -18,7 +18,7 @@ void UJAFGTabBarButton::PassDataToWidget(const FWidgetPassData& UncastedData)
 
     if (this->OwningTabBar == nullptr)
     {
-        LOG_FATAL(LogCommonSlate, "Owning Tab Bar is not set. Falty entry: %s.", *this->TabIdentifier)
+        LOG_FATAL(LogCommonSlate, "Owning Tab Bar is not set. Faulty entry: %s.", *this->TabIdentifier)
         return;
     }
 

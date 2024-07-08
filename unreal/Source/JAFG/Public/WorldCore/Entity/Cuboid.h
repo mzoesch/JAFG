@@ -8,9 +8,9 @@
 
 #include "Cuboid.generated.h"
 
-class UTextureSubsystem;
 JAFG_VOID
 
+class UTextureSubsystem;
 class UVoxelSubsystem;
 class UProceduralMeshComponent;
 
@@ -51,9 +51,37 @@ public:
     int32 CuboidY = 8;
     int32 CuboidZ = 8;
 
+    FORCEINLINE auto SetCuboidVoxelDimensions(const int32 InCuboidX, const int32 InCuboidY, const int32 InCuboidZ) -> void
+    {
+        this->CuboidX = InCuboidX;
+        this->CuboidY = InCuboidY;
+        this->CuboidZ = InCuboidZ;
+
+        return;
+    }
+
+    FORCEINLINE auto SetCuboidVoxelDimensions(const int32 InCuboidXYZ) -> void
+    {
+        this->SetCuboidVoxelDimensions(InCuboidXYZ, InCuboidXYZ, InCuboidXYZ);
+    }
+
     int32 TexX = 1;
     int32 TexY = 1;
     int32 TexZ = 1;
+
+    FORCEINLINE auto SetCuboidTextureDimensions(const int32 InCuboidTextureX, const int32 InCuboidTextureY, const int32 InCuboidTextureZ) -> void
+    {
+        this->TexX = InCuboidTextureX;
+        this->TexY = InCuboidTextureY;
+        this->TexZ = InCuboidTextureZ;
+
+        return;
+    }
+
+    FORCEINLINE auto SetCuboidTextureDimensions(const int32 InCuboidTextureXYZ) -> void
+    {
+        this->SetCuboidTextureDimensions(InCuboidTextureXYZ, InCuboidTextureXYZ, InCuboidTextureXYZ);
+    }
 
     /* Do not override manually but with the generated body. */
     virtual void GenerateMesh(const voxel_t InAccumulated) PURE_VIRTUAL(ICuboidInterface::GenerateMesh);

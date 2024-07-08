@@ -21,3 +21,17 @@
         }                                                           \
     }
 #endif /* !DO_CHECK */
+
+/**
+ * A no entry check that is always executed even in shipping builds.
+ */
+#if DO_CHECK
+    // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
+    #define jcheckNoEntry() checkNoEntry()
+#else /* DO_CHECK */
+    // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
+    #define jcheckNoEntry()                                             \
+    {                                                                   \
+        LOG_FATAL(LogSystem, "Enclosing block should never be called.") \
+    }
+#endif /* !DO_CHECK */

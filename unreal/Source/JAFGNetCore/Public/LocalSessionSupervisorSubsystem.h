@@ -10,6 +10,7 @@
 
 #include "LocalSessionSupervisorSubsystem.generated.h"
 
+class UCurrentWorldInformationSubsystem;
 class IOnlineSessionSearchCallback;
 class ULocalSessionSupervisorSubsystem;
 
@@ -82,6 +83,8 @@ public:
 
     const FMyOnlineSessionSearch& GetSearch(void) const { return this->ActiveSessionSearch; }
 
+    ECurrentLSSSSState::Type GetCurrentState(void) const { return this->CurrentState; }
+
 protected:
 
     virtual void OnCreateSessionCompleteDelegate(const FName SessionName, const bool bSuccess);
@@ -91,6 +94,7 @@ protected:
     virtual bool ForceActiveSessionDestroy(void);
 
     virtual void SafeClientTravel(const ERegisteredWorlds::Type InNewWorld);
+    friend UCurrentWorldInformationSubsystem;
 
 private:
 

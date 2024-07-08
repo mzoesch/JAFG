@@ -295,13 +295,13 @@ void ULocalSessionSupervisorSubsystem::OnCreateSessionCompleteDelegate(const FNa
 
     if (MyURL.IsLocalInternal() == false)
     {
-        LOG_FATAL(LogLSSSS, "URL is not local internal. Must be as we are the hosting listen server. Falty URL: %s.", *MyURL.ToString())
+        LOG_FATAL(LogLSSSS, "URL is not local internal. Must be as we are the hosting listen server. Faulty URL: %s.", *MyURL.ToString())
         return;
     }
 
     if (GEngine->MakeSureMapNameIsValid(MyURL.Map) == false)
     {
-        LOG_FATAL(LogLSSSS, "Map name is invalid. Falty URL: %s.", *MyURL.ToString())
+        LOG_FATAL(LogLSSSS, "Map name is invalid. Faulty URL: %s.", *MyURL.ToString())
         return;
     }
 
@@ -422,13 +422,13 @@ void ULocalSessionSupervisorSubsystem::SafeClientTravel(const ERegisteredWorlds:
 
     if (MyURL.IsLocalInternal() == false)
     {
-        LOG_FATAL(LogLSSSS, "URL is not local internal. Must be as we are the client. No networking here. Falty URL: %s.", *MyURL.ToString())
+        LOG_FATAL(LogLSSSS, "URL is not local internal. Must be as we are the client. No networking here. Faulty URL: %s.", *MyURL.ToString())
         return;
     }
 
     if (GEngine->MakeSureMapNameIsValid(MyURL.Map) == false)
     {
-        LOG_FATAL(LogLSSSS, "Map name is invalid. Falty URL: %s.", *MyURL.ToString())
+        LOG_FATAL(LogLSSSS, "Map name is invalid. Faulty URL: %s.", *MyURL.ToString())
         return;
     }
 
