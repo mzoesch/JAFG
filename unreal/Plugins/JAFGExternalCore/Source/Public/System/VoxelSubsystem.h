@@ -44,6 +44,8 @@ public:
     FORCEINLINE auto GetVoxelNamespace(const voxel_t Voxel) const -> FString { return this->VoxelMasks[Voxel].Namespace; }
     FORCEINLINE auto GetVoxelTextureGroup(const voxel_t Voxel, const FVector& Normal) const -> ETextureGroup::Type { return this->VoxelMasks[Voxel].GetTextureGroup(Normal); }
     FORCEINLINE auto GetTextureIndex(const voxel_t Voxel, const FVector& Normal) const -> int32 { return this->VoxelMasks[Voxel].GetTextureIndex(Normal); };
+    FORCEINLINE auto GetVoxelMask(const voxel_t Voxel) const -> const FVoxelMask& { return this->VoxelMasks[Voxel]; }
+    FORCEINLINE auto GetVoxelMaskAsPtr(const voxel_t Voxel) const -> const FVoxelMask* { return &this->VoxelMasks[Voxel]; }
 
     FORCEINLINE auto GetItemName(const voxel_t Item) const -> FString { return this->ItemMasks[this->TransformAccumulatedToItem(Item)].Name; }
                 auto GetItemIndex(const FString& Name) const -> voxel_t;

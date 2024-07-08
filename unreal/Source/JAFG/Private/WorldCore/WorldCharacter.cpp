@@ -16,6 +16,7 @@
 #include "Net/Core/PushModel/PushModel.h"
 #include "SettingsData/JAFGInputSubsystem.h"
 #include "Player/WorldPlayerController.h"
+#include "System/VoxelSubsystem.h"
 #include "UI/OSD/PlayerInventory.h"
 #include "WorldCore/Entity/Cuboid.h"
 #include "WorldCore/Character/CharacterReach.h"
@@ -1113,11 +1114,6 @@ void AWorldCharacter::OnCompletedVoxelMinded_ServerRPC_Implementation(const bool
 
 void AWorldCharacter::OnStartedSecondary(const FInputActionValue& Value)
 {
-    if (this->GetContainerValue(this->SelectedQuickSlotIndex) == Accumulated::Null)
-    {
-        return;
-    }
-
     ACommonChunk*             TargetedChunk;
     FVector                   WorldHitLocation;
     FVector_NetQuantizeNormal WorldNormalHitLocation;
@@ -1129,6 +1125,23 @@ void AWorldCharacter::OnStartedSecondary(const FInputActionValue& Value)
     );
 
     if (TargetedChunk == nullptr)
+    {
+        return;
+    }
+
+    if (
+        const FVoxelMask* const LocalHitVoxelMask = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>()
+            ->GetVoxelMaskAsPtr(TargetedChunk->GetLocalVoxelOnly(LocalHitVoxelKey));
+        LocalHitVoxelMask->OnCustomSecondaryActionDelegate.IsBound()
+    )
+    {
+        if (LocalHitVoxelMask->OnCustomSecondaryActionDelegate.Execute(FCustomSecondaryActionDelegateParams(this->AsContainer(), this->AsContainerOwner())))
+        {
+            return;
+        }
+    }
+
+    if (this->GetContainerValue(this->SelectedQuickSlotIndex) == Accumulated::Null)
     {
         return;
     }

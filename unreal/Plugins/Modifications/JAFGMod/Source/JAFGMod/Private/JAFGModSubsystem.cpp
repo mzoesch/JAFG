@@ -5,6 +5,7 @@
 #include "JAFGLogDefs.h"
 #include "ModificationSupervisorSubsystem.h"
 #include "JAFGModTypes.h"
+#include "MaskFactory.h"
 
 void UJAFGModSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -42,7 +43,7 @@ void UJAFGModSubsystem::OnOptionalVoxelsInitialize(TArray<FVoxelMask>& VoxelMask
     VoxelMasks.Add(FVoxelMask(JAFGModNamespace, TEXT("OakLog")));
     VoxelMasks.Add(FVoxelMask(JAFGModNamespace, TEXT("CraftingTable")));
 
-    VoxelMasks.Add(FVoxelMask(JAFGModNamespace, TEXT("Barrel")));
+    VoxelMasks.Add(CreateMask_Barrel());
 
     return;
 }

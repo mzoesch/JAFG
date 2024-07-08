@@ -7,7 +7,27 @@
 
 #include "VoxelMask.generated.h"
 
+class IContainerOwner;
+class IContainer;
 class UMaterialSubsystem;
+
+struct FCustomSecondaryActionDelegateParams final
+{
+    IContainer*      Container;
+    IContainerOwner* ContainerOwner;
+
+    FCustomSecondaryActionDelegateParams(void) = default;
+    FORCEINLINE FCustomSecondaryActionDelegateParams(IContainer* Container, IContainerOwner* ContainerOwner)
+    {
+        this->Container      = Container;
+        this->ContainerOwner = ContainerOwner;
+
+        return;
+    }
+
+};
+
+DECLARE_DELEGATE_RetVal_OneParam(const bool /* bConsumed */, OnCustomSeconaryActionDelegateSignature, const FCustomSecondaryActionDelegateParams& /* Params */);
 
 USTRUCT(NotBlueprintType)
 struct JAFGEXTERNALCORE_API FVoxelMask
@@ -54,6 +74,8 @@ struct JAFGEXTERNALCORE_API FVoxelMask
 
     FString Namespace;
     FString Name;
+
+    OnCustomSeconaryActionDelegateSignature OnCustomSecondaryActionDelegate;
 
     /**
      * Gets the texture group from a normal vector for this voxel.
