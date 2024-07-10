@@ -162,6 +162,10 @@ public:
     virtual auto ToString_Container(void) const -> FString override;
     // ~IContainer interface
 
+    // IContainerOwner interface
+    FORCEINLINE virtual auto GetContainerReplicatorComponent(void) const -> UContainerReplicatorComponentBase* override { return this->GetWorldPlayerController()->GetContainerReplicatorComponent(); }
+    // ~IContainerOwner interface
+
 protected:
 
     UFUNCTION(Server, Reliable, WithValidation)
@@ -199,6 +203,8 @@ public:
 
     FORCEINLINE auto IsFlying(void) const -> bool { return this->GetMyCharacterMovement()->IsFlying(); }
     FORCEINLINE auto IsInputFlyEnabled(void) const -> bool { return this->GetMyCharacterMovement()->bAllowInputFly; }
+
+    auto OnStartedToggleContainer(const FInputActionValue& Value, const FString& Identifier) -> void;
 
     //////////////////////////////////////////////////////////////////////////
     // Enhanced Input Extern Events

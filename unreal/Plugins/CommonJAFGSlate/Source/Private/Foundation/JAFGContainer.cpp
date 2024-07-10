@@ -2,7 +2,9 @@
 
 #include "Foundation/JAFGContainer.h"
 
+#include "CommonJAFGSlateDeveloperSettings.h"
 #include "Container.h"
+#include "Components/JAFGTextBlock.h"
 #include "Components/TileView.h"
 #include "Foundation/JAFGContainerSlot.h"
 
@@ -11,32 +13,92 @@ UJAFGContainer::UJAFGContainer(const FObjectInitializer& ObjectInitializer) : Su
     return;
 }
 
+void UJAFGContainer::BuildDeferred(void)
+{
+    this->OnBuild();
+}
+
 void UJAFGContainer::NativeConstruct(void)
 {
     Super::NativeConstruct();
+
+    if (this->bDeferredBuild)
+    {
+        this->TryUpdateDisplayNames();
+        return;
+    }
+
+    this->OnBuild();
+
+    return;
+}
+
+void UJAFGContainer::OnBuild(void)
+{
+    this->TryUpdateDisplayNames();
     this->BuildPlayerInventory();
+
+    return;
+}
+
+void UJAFGContainer::TryUpdateDisplayNames(void)
+{
+    if (this->TextBlock_PlayerInventoryDisplayName)
+    {
+        this->TextBlock_PlayerInventoryDisplayName->SetText(FText::FromString(this->GetPlayerInventoryDisplayName()));
+    }
+
     return;
 }
 
 void UJAFGContainer::BuildPlayerInventory(void)
 {
-    this->TV_PlayerInventory->ClearListItems();
+    this->BuildContainerWithCommonLogic(Cast<IContainer>(this->GetOwningPlayerPawn()), this->ScrollBox_PlayerInventoryWrapper, this->TV_PlayerInventory);
+}
 
-    IContainer* OwningContainer = Cast<IContainer>(this->GetOwningPlayerPawn());
-    if (OwningContainer == nullptr)
+void UJAFGContainer::BuildContainerWithCommonLogic(IContainer* Container, UJAFGScrollBox* ScrollBox_TargetWrapper, UTileView* TileView_Target)
+{
+    TileView_Target->ClearListItems();
+
+    if (Container == nullptr)
     {
-        LOG_WARNING(LogCommonSlate, "Container is null")
+        TileView_Target->SetVisibility(ESlateVisibility::Collapsed);
+
+        ScrollBox_TargetWrapper->AddChild(CreateWidget<UJAFGUserWidget>(this, GetDefault<UCommonJAFGSlateDeveloperSettings>()->WaitingForContainerContentWidgetClass));
+
         return;
     }
 
-    for (int i = 0; i < OwningContainer->GetContainerSize(); ++i)
+    if (ScrollBox_TargetWrapper->GetChildrenCount() > 1)
+    {
+        const int32 Index = ScrollBox_TargetWrapper->GetChildIndex(TileView_Target);
+        if (Index == INDEX_NONE)
+        {
+            LOG_FATAL(LogCommonSlate, "TileView not found in ScrollBox. Cannot proceed to build on: %s.", *TileView_Target->GetName())
+            return;
+        }
+
+        UWidget* Widget = ScrollBox_TargetWrapper->GetChildAt(Index);
+        if (Widget == nullptr)
+        {
+            LOG_FATAL(LogCommonSlate, "Widget is invalid. Cannot proceed to build on: %s.", *TileView_Target->GetName())
+            return;
+        }
+
+        ScrollBox_TargetWrapper->ClearChildren();
+        ScrollBox_TargetWrapper->AddChild(Widget);
+    }
+
+    TileView_Target->SetVisibility(ESlateVisibility::Visible);
+
+    for (int i = 0; i < Container->GetContainerSize(); ++i)
     {
         UJAFGContainerSlotData* Data = NewObject<UJAFGContainerSlotData>(this);
         Data->Index     = i;
-        Data->Container = &OwningContainer->GetContainer();
-        Data->Owner     = OwningContainer;
+        Data->Container = &Container->GetContainer();
+        Data->Owner     = Container;
 
-        this->TV_PlayerInventory->AddItem(Data);
+        TileView_Target->AddItem(Data);
 
         continue;
     }

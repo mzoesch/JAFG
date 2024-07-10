@@ -32,6 +32,14 @@ public class CommonJAFGSlate : ModuleRules
         }
         );
 
+        /* Plugins */
+        PublicDependencyModuleNames.AddRange(
+        new string[]
+        {
+            "JAFGExternalCore",
+        }
+        );
+
         PrivateDependencyModuleNames.AddRange(
         new string[]
         {
@@ -44,7 +52,6 @@ public class CommonJAFGSlate : ModuleRules
         PrivateDependencyModuleNames.AddRange(
         new string[]
         {
-            "JAFGExternalCore",
             "JAFGGlobalLogging",
         }
         );

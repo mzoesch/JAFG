@@ -7,6 +7,7 @@
 
 #include "CommonJAFGSlateDeveloperSettings.generated.h"
 
+class UCommonJAFGDualContainer;
 class UJAFGUserWidget;
 class ULoadingScreen;
 class UJAFGWarningPopUpYesNo;
@@ -14,7 +15,7 @@ class UJAFGWarningPopUp;
 class UJAFGTabBarBase;
 class UJAFGTabBarButton;
 
-UCLASS(Config=JAFG, DefaultConfig, meta = (DisplayName="JAFG Slate Settings"))
+UCLASS(Config=JAFG, DefaultConfig, meta = (DisplayName="JAFG Core Slate Settings"))
 class COMMONJAFGSLATE_API UCommonJAFGSlateDeveloperSettings : public UDeveloperSettings
 {
     GENERATED_BODY()
@@ -40,4 +41,10 @@ public:
 
     UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "PopUp")
     TSubclassOf<UJAFGUserWidget> ContainerValueCursorWidgetClass;
+
+    UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Container")
+    TSubclassOf<UCommonJAFGDualContainer> DualContainerWidgetClass;
+
+    UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Container")
+    TSubclassOf<UJAFGUserWidget> WaitingForContainerContentWidgetClass;
 };

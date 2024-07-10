@@ -13,6 +13,7 @@
 #include "WorldCore/WorldCharacter.h"
 #include "WorldCore/WorldGameMode.h"
 #include "WorldCore/WorldPawn.h"
+#include "WorldCore/ActorInfos/ContainerReplicatorActor.h"
 #if WITH_EDITOR
     #include "Editor.h"
     #include "LevelEditorViewport.h"
@@ -26,11 +27,13 @@
 AWorldPlayerController::AWorldPlayerController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
     this->HyperlaneComponent                      =
-        CreateDefaultSubobject<UMyHyperlaneComponent>(TEXT("HyperlaneComponent"));
+        ObjectInitializer.CreateDefaultSubobject<UMyHyperlaneComponent>(this, TEXT("HyperlaneComponent"));
     this->ChatComponent                           =
-        CreateDefaultSubobject<UChatComponent>(TEXT("ChatComponent"));
+        ObjectInitializer.CreateDefaultSubobject<UChatComponent>(this, TEXT("ChatComponent"));
     this->ServerWorldSettingsReplicationComponent =
-        CreateDefaultSubobject<UServerWorldSettingsReplicationComponent>(TEXT("ServerWorldSettingsReplicationComponent"));
+        ObjectInitializer.CreateDefaultSubobject<UServerWorldSettingsReplicationComponent>(this, TEXT("ServerWorldSettingsReplicationComponent"));
+    this->ContainerReplicatorComponent            =
+        ObjectInitializer.CreateDefaultSubobject<UContainerReplicatorComponent>(this, TEXT("ContainerReplicatorComponent"));
 
     return;
 }

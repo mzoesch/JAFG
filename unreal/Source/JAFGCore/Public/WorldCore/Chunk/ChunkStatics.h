@@ -172,7 +172,7 @@ FORCEINLINE auto WorldToJCoordinate(const FVector& WorldLocation) -> FJCoordinat
     return JCoordinate;
 }
 
-FORCEINLINE FVector WorldToGrid(const FVector& WorldLocation)
+FORCEINLINE auto WorldToGrid(const FVector& WorldLocation) -> FVector
 {
     return FVector(ChunkStatics::WorldToJCoordinate(WorldLocation)) * WorldStatics::JToUScale;
 }
@@ -192,6 +192,11 @@ FORCEINLINE auto WorldToVerticalJCoordinate(const FVector& WorldLocation) -> FJC
 FORCEINLINE auto JCoordinateToWorldLocation(const FJCoordinate& JCoordinate) -> FVector
 {
     return FVector(JCoordinate) * WorldStatics::JToUScale;
+}
+
+FORCEINLINE auto JCoordinateToUniqueString(const FJCoordinate& JCoordinate) -> FString
+{
+    return FString::Printf(TEXT("%d_%d_%d"), JCoordinate.X, JCoordinate.Y, JCoordinate.Z);
 }
 
 }

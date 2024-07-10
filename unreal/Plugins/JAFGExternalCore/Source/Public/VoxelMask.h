@@ -7,27 +7,41 @@
 
 #include "VoxelMask.generated.h"
 
+class IWorldHUDBaseInterface;
 class IContainerOwner;
 class IContainer;
 class UMaterialSubsystem;
 
 struct FCustomSecondaryActionDelegateParams final
 {
-    IContainer*      Container;
-    IContainerOwner* ContainerOwner;
+    UObject*                Context;
+    FJCoordinate            WorldHitLocation;
+
+    IContainer*             Container;
+    IContainerOwner*        ContainerOwner;
+    IWorldHUDBaseInterface* WorldHUD;
 
     FCustomSecondaryActionDelegateParams(void) = default;
-    FORCEINLINE FCustomSecondaryActionDelegateParams(IContainer* Container, IContainerOwner* ContainerOwner)
+    FORCEINLINE FCustomSecondaryActionDelegateParams(
+        UObject* Context,
+        const FJCoordinate WorldHitLocation,
+        IContainer* Container,
+        IContainerOwner* ContainerOwner,
+        IWorldHUDBaseInterface* WorldHUD
+    )
     {
-        this->Container      = Container;
-        this->ContainerOwner = ContainerOwner;
+        this->Context          = Context;
+        this->WorldHitLocation = WorldHitLocation;
+        this->Container        = Container;
+        this->ContainerOwner   = ContainerOwner;
+        this->WorldHUD         = WorldHUD;
 
         return;
     }
 
 };
 
-DECLARE_DELEGATE_RetVal_OneParam(const bool /* bConsumed */, OnCustomSeconaryActionDelegateSignature, const FCustomSecondaryActionDelegateParams& /* Params */);
+DECLARE_DELEGATE_RetVal_OneParam(const bool /* bConsumed */, OnCustomSeconaryActionDelegateSignature, const FCustomSecondaryActionDelegateParams& /* Params */)
 
 USTRUCT(NotBlueprintType)
 struct JAFGEXTERNALCORE_API FVoxelMask

@@ -35,6 +35,7 @@
 #include "VoxelMask.h"
 #include "Accumulated.h"
 #include "RegisteredWorldNames.h"
+#include "CommonNetworkStatics.h"
 
 #include "WorldCore/WorldTypes.h"
 #include "WorldCore/Chunk/ChunkStatics.h"
@@ -45,8 +46,6 @@
 /*----------------------------------------------------------------------------
     Commonly used extern modules headers.
 ----------------------------------------------------------------------------*/
-
-#include "JAFGNetCore/Public/CommonNetworkStatics.h"
 
 
 /*----------------------------------------------------------------------------

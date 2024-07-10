@@ -189,6 +189,11 @@ void AWorldHUD::BeginPlay(void)
     return;
 }
 
+bool AWorldHUD::IsContainerRegistered(const FString& Identifier) const
+{
+    return this->ContainerClassMap.Contains(Identifier);
+}
+
 bool AWorldHUD::RegisterContainer(const FString& Identifier, const TFunction<TSubclassOf<UJAFGContainer>()>& ContainerClassGetter)
 {
     if (this->ContainerClassMap.Contains(Identifier))
@@ -202,6 +207,25 @@ bool AWorldHUD::RegisterContainer(const FString& Identifier, const TFunction<TSu
     LOG_VERBOSE(LogCommonSlate, "Container with identifier %s is now registered.", *Identifier)
 
     return true;
+}
+
+UJAFGContainer* AWorldHUD::PushContainerToViewport(const FString& Identifier)
+{
+    if (this->CurrentContainer)
+    {
+        LOG_FATAL(LogCommonSlate, "Current container is not null. Cannot push another container to viewport.")
+        return nullptr;
+    }
+
+    if (this->IsContainerRegistered(Identifier) == false)
+    {
+        LOG_FATAL(LogCommonSlate, "Container with identifier %s is not registered in the container class map.", *Identifier)
+        return nullptr;
+    }
+
+    Cast<AWorldCharacter>(this->GetOwningPawn())->OnStartedToggleContainer(FInputActionValue(), Identifier);
+
+    return this->CurrentContainer;
 }
 
 #if WITH_EDITOR
@@ -229,7 +253,7 @@ void AWorldHUD::CreateSimulationHUD(void)
 
 void AWorldHUD::OnContainerVisible(const FString& Identifier)
 {
-    if (this->ContainerClassMap.Contains(Identifier) == false)
+    if (this->IsContainerRegistered(Identifier) == false)
     {
         LOG_FATAL(LogCommonSlate, "Container with identifier %s is not registered in the container class map.", *Identifier)
         return;

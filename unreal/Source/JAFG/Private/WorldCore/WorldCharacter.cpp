@@ -1,7 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "WorldCore/WorldCharacter.h"
-
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "JAFGSlateSettings.h"
@@ -536,6 +535,37 @@ void AWorldCharacter::OnRep_Container(void) const
 #pragma endregion Container
 
 #pragma region Enhanced Input
+
+/* Do NOT convert to const method, as this is a Rider IDEA false positive error. */
+// ReSharper disable once CppMemberFunctionMayBeConst
+void AWorldCharacter::OnStartedToggleContainer(const FInputActionValue& Value, const FString& Identifier)
+{
+    UEnhancedInputLocalPlayerSubsystem* Subsystem     = ENHANCED_INPUT_SUBSYSTEM; jcheck(     Subsystem )
+    UJAFGInputSubsystem*                JAFGSubsystem = JAFG_INPUT_SUBSYSTEM;     jcheck( JAFGSubsystem )
+
+    if (Subsystem->HasMappingContext(JAFGSubsystem->GetSafeContextValue(InputContexts::Container)))
+    {
+        Subsystem->ClearAllMappings();
+        this->SetFootContextBasedOnCharacterState();
+
+        this->OnContainerLostVisibilityEvent.Broadcast();
+
+        return;
+    }
+
+    Subsystem->ClearAllMappings();
+    Subsystem->AddMappingContext(JAFGSubsystem->GetSafeContextValue(InputContexts::Container), 0);
+
+    if (this->OnContainerVisibleEvent.IsBound() == false)
+    {
+        LOG_FATAL(LogWorldChar, "On Container Visible Event is not bound.")
+        return;
+    }
+
+    this->OnContainerVisibleEvent.Broadcast(Identifier);
+
+    return;
+}
 
 FDelegateHandle AWorldCharacter::SubscribeToContainerVisibleEvent(const FOnContainerVisibleSignature::FDelegate& Delegate)
 {
@@ -1135,7 +1165,15 @@ void AWorldCharacter::OnStartedSecondary(const FInputActionValue& Value)
         LocalHitVoxelMask->OnCustomSecondaryActionDelegate.IsBound()
     )
     {
-        if (LocalHitVoxelMask->OnCustomSecondaryActionDelegate.Execute(FCustomSecondaryActionDelegateParams(this->AsContainer(), this->AsContainerOwner())))
+        if (LocalHitVoxelMask->OnCustomSecondaryActionDelegate.Execute(
+            FCustomSecondaryActionDelegateParams(
+                this,
+                ChunkStatics::WorldToJCoordinate(WorldHitLocation),
+                this->AsContainer(),
+                this->AsContainerOwner(),
+                this->GetHUD<IWorldHUDBaseInterface>()
+            )
+        ))
         {
             return;
         }
@@ -1347,31 +1385,7 @@ void AWorldCharacter::OnTogglePerspective(const FInputActionValue& Value)
 // ReSharper disable once CppMemberFunctionMayBeConst
 void AWorldCharacter::OnStartedToggleContainer(const FInputActionValue& Value)
 {
-    UEnhancedInputLocalPlayerSubsystem* Subsystem     = ENHANCED_INPUT_SUBSYSTEM; jcheck(     Subsystem )
-    UJAFGInputSubsystem*                JAFGSubsystem = JAFG_INPUT_SUBSYSTEM;     jcheck( JAFGSubsystem )
-
-    if (Subsystem->HasMappingContext(JAFGSubsystem->GetSafeContextValue(InputContexts::Container)))
-    {
-        Subsystem->ClearAllMappings();
-        this->SetFootContextBasedOnCharacterState();
-
-        this->OnContainerLostVisibilityEvent.Broadcast();
-
-        return;
-    }
-
-    Subsystem->ClearAllMappings();
-    Subsystem->AddMappingContext(JAFGSubsystem->GetSafeContextValue(InputContexts::Container), 0);
-
-    if (this->OnContainerVisibleEvent.IsBound() == false)
-    {
-        LOG_FATAL(LogWorldChar, "On Container Visible Event is not bound.")
-        return;
-    }
-
-    this->OnContainerVisibleEvent.Broadcast(UPlayerInventory::Identifier);
-
-    return;
+    this->OnStartedToggleContainer(Value, UPlayerInventory::Identifier);
 }
 
 #define QUICK_SLOT_0    0

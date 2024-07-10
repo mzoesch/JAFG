@@ -3,7 +3,7 @@
 #pragma once
 
 #include "MyCore.h"
-#include "CommonHUD.h"
+#include "WorldHUDBase.h"
 
 #include "WorldHUD.generated.h"
 
@@ -16,7 +16,7 @@ class UJAFGUserWidget;
 class UEditorWorldCommandsSimulation;
 
 UCLASS(NotBlueprintable)
-class JAFG_API AWorldHUD : public ACommonHUD
+class JAFG_API AWorldHUD : public AWorldHUDBase
 {
     GENERATED_BODY()
 
@@ -32,7 +32,11 @@ protected:
 
 public:
 
-    auto RegisterContainer(const FString& Identifier, const TFunction<TSubclassOf<UJAFGContainer>(void)>& ContainerClassGetter) -> bool;
+    // AWorldHUDBase implementation
+    virtual auto IsContainerRegistered(const FString& Identifier) const -> bool override;
+    virtual auto RegisterContainer(const FString& Identifier, const TFunction<TSubclassOf<UJAFGContainer>(void)>& ContainerClassGetter) -> bool override;
+    virtual auto PushContainerToViewport(const FString& Identifier) -> UJAFGContainer* override;
+    // ~AWorldHUDBase implementation
 
 protected:
 

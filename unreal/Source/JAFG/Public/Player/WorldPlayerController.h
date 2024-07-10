@@ -5,6 +5,7 @@
 #include "MyCore.h"
 #include "Player/CommonPlayerController.h"
 #include "InputTriggers.h"
+#include "Components/ContainerReplicatorComponentBase.h"
 #include "GameFramework/GameModeBase.h"
 #include "WorldCore/WorldGameSession.h"
 #include "WorldCore/WorldPlayerState.h"
@@ -16,6 +17,7 @@ JAFG_VOID
 /** The time in seconds after this AActor creation, when this strike was marked. */
 typedef int32 FStrike;
 
+class UContainerReplicatorComponent;
 class AWorldCharacter;
 class UServerWorldSettingsReplicationComponent;
 class UChatMenu;
@@ -64,6 +66,9 @@ protected:
 
     UPROPERTY()
     TObjectPtr<UServerWorldSettingsReplicationComponent> ServerWorldSettingsReplicationComponent = nullptr;
+
+    UPROPERTY()
+    TObjectPtr<UContainerReplicatorComponent> ContainerReplicatorComponent = nullptr;
 
 #pragma region Enhanced Input
 
@@ -227,4 +232,9 @@ public:
 
     /** @return True if OutLocation is meaningful. */
     bool GetPredictedCharacterLocation(FVector& OutLocation) const;
+
+    FORCEINLINE auto GetContainerReplicatorComponent(void) const -> UContainerReplicatorComponentBase*
+    {
+        return Cast<UContainerReplicatorComponentBase>(this->ContainerReplicatorComponent);
+    }
 };

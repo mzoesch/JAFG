@@ -9,6 +9,8 @@
 
 #include "Container.generated.h"
 
+class UContainerReplicatorComponentBase;
+
 namespace ELocalContainerChange { enum Type : uint8; }
 
 DECLARE_MULTICAST_DELEGATE(OnCursorValueChangedDelegateSignature)
@@ -81,6 +83,8 @@ class JAFGEXTERNALCORE_API INoRepContainer : public IContainer
 {
     GENERATED_BODY()
 
+public:
+
     FORCEINLINE virtual auto IsContainerInitialized(void) const -> bool override { return this->Container.Num() > 0; }
     FORCEINLINE virtual auto GetContainerSize(void) const -> int32  override { return this->Container.Num(); }
     FORCEINLINE virtual auto GetContainer(void) -> TArray<FSlot>&  override { return this->Container; }
@@ -102,6 +106,9 @@ class JAFGEXTERNALCORE_API INoRepContainer : public IContainer
     virtual void PushContainerUpdatesToClient(void) = 0;
     virtual void PushContainerUpdatesToServer(void) = 0;
 
+    FORCEINLINE virtual auto ResetContainerData(const TArray<FSlot>& NewData) -> void { this->Container = NewData; }
+    FORCEINLINE virtual void ResetContainerData(const int32 NewSize) { this->Container.Empty(NewSize); this->Container.SetNum(NewSize); }
+
 protected:
 
     TArray<FSlot> Container;
@@ -122,4 +129,6 @@ public:
     FAccumulated CursorValue;
 
     OnCursorValueChangedDelegateSignature OnCursorValueChangedDelegate;
+
+    virtual auto GetContainerReplicatorComponent(void) const -> UContainerReplicatorComponentBase* = 0;
 };

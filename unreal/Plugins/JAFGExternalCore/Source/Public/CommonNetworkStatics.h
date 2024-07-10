@@ -19,31 +19,31 @@ class UNetStatics : public UBlueprintFunctionLibrary
 public:
 
     UFUNCTION(BlueprintPure, Category = "JAFG|NetworkStatics", meta = (WorldContext = "WorldContextObject"))
-    static JAFGNETCORE_API bool IsStandalone(const UObject* WorldContextObject)
+    static JAFGEXTERNALCORE_API bool IsStandalone(const UObject* WorldContextObject)
     {
         return UKismetSystemLibrary::IsStandalone(WorldContextObject);
     }
 
     UFUNCTION(BlueprintPure, Category = "JAFG|NetworkStatics", meta = (WorldContext = "WorldContextObject"))
-    static JAFGNETCORE_API bool IsServer(const UObject* WorldContextObject)
+    static JAFGEXTERNALCORE_API bool IsServer(const UObject* WorldContextObject)
     {
         return UKismetSystemLibrary::IsServer(WorldContextObject);
     }
 
     UFUNCTION(BlueprintPure, Category = "JAFG|NetworkStatics", meta = (WorldContext = "WorldContextObject"))
-    static JAFGNETCORE_API bool IsDedicatedServer(const UObject* WorldContextObject)
+    static JAFGEXTERNALCORE_API bool IsDedicatedServer(const UObject* WorldContextObject)
     {
         return UKismetSystemLibrary::IsDedicatedServer(WorldContextObject);
     }
 
     UFUNCTION(BlueprintPure, Category = "JAFG|NetworkStatics", meta = (WorldContext = "WorldContextObject"))
-    static JAFGNETCORE_API bool IsSafeStandalone(const UObject* WorldContextObject)
+    static JAFGEXTERNALCORE_API bool IsSafeStandalone(const UObject* WorldContextObject)
     {
         return UKismetSystemLibrary::IsStandalone(WorldContextObject);
     }
 
     UFUNCTION(BlueprintPure, Category = "JAFG|NetworkStatics", meta = (WorldContext = "WorldContextObject"))
-    static JAFGNETCORE_API bool IsSafeStandaloneNoServer(const UObject* WorldContextObject)
+    static JAFGEXTERNALCORE_API bool IsSafeStandaloneNoServer(const UObject* WorldContextObject)
     {
         return
                UKismetSystemLibrary::IsStandalone(WorldContextObject) == true
@@ -51,19 +51,19 @@ public:
     }
 
     UFUNCTION(BlueprintPure, Category = "JAFG|NetworkStatics", meta = (WorldContext = "WorldContextObject"))
-    static JAFGNETCORE_API bool IsSafeServer(const UObject* WorldContextObject)
+    static JAFGEXTERNALCORE_API bool IsSafeServer(const UObject* WorldContextObject)
     {
         return UKismetSystemLibrary::IsServer(WorldContextObject);
     }
 
     UFUNCTION(BlueprintPure, Category = "JAFG|NetworkStatics", meta = (WorldContext = "WorldContextObject"))
-    static JAFGNETCORE_API bool IsSafeDedicatedServer(const UObject* WorldContextObject)
+    static JAFGEXTERNALCORE_API bool IsSafeDedicatedServer(const UObject* WorldContextObject)
     {
         return UKismetSystemLibrary::IsDedicatedServer(WorldContextObject);
     }
 
     UFUNCTION(BlueprintPure, Category = "JAFG|NetworkStatics", meta = (WorldContext = "WorldContextObject"))
-    static JAFGNETCORE_API bool IsSafeListenServer(const UObject* WorldContextObject)
+    static JAFGEXTERNALCORE_API bool IsSafeListenServer(const UObject* WorldContextObject)
     {
 #if WITH_EDITOR
         return
@@ -89,7 +89,7 @@ public:
     }
 
     UFUNCTION(BlueprintPure, Category = "JAFG|NetworkStatics", meta = (WorldContext = "WorldContextObject"))
-    static JAFGNETCORE_API bool IsSafeClient(const UObject* WorldContextObject)
+    static JAFGEXTERNALCORE_API bool IsSafeClient(const UObject* WorldContextObject)
     {
         return
                UKismetSystemLibrary::IsStandalone(WorldContextObject)      == false

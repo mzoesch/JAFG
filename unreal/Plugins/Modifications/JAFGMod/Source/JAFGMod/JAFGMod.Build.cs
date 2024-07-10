@@ -25,6 +25,7 @@ public class JAFGMod : ModuleRules
         new string[]
         {
             "Core",
+            "DeveloperSettings",
         }
         );
 
@@ -34,6 +35,7 @@ public class JAFGMod : ModuleRules
         {
             "JAFGExternalCore",
             "ModificationSupervisor",
+            "CommonJAFGSlate",
         }
         );
 
