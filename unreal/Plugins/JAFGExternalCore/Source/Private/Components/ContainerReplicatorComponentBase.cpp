@@ -85,7 +85,6 @@ void UContainerReplicatorComponentBase::BeginPlay(void)
         return;
     }
 
-
     return;
 }
 
@@ -93,17 +92,34 @@ void UContainerReplicatorComponentBase::TickComponent(const float DeltaTime, con
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-    if (FPrivateRequestedContainerQueue Item; this->RequestedContainerQueue.Dequeue(Item))
+    FPrivateRequestedContainerQueue Item;
+    if (this->RequestedContainerQueue.Dequeue(Item) == false)
     {
-        if (this->CurrentPendingRequestedContainerSet.Contains(Item))
+        return;
+    }
+
+    /* If true, this is being executed on a server-like instance. */
+    if (this->ContainerReplicatorActor.IsValid())
+    {
+        if (IContainer* InstantContainer = this->ContainerReplicatorActor->GetContainer(Item.WorldCoordinate, [Item] (IContainer* Container)
         {
-            LOG_FATAL(LogContainerStuff, "Current Pending Requested Container set already contains the item: %s.", *Item.WorldCoordinate.ToString())
-            return;
+            Item.OnReplicated(Container);
+        }))
+        {
+            Item.OnReplicated(InstantContainer);
         }
 
-        this->CurrentPendingRequestedContainerSet.Emplace(Item);
-        this->RequestContainer_ServerRPC(Item.WorldCoordinate);
+        return;
     }
+
+    if (this->CurrentPendingRequestedContainerSet.Contains(Item))
+    {
+        LOG_FATAL(LogContainerStuff, "Current Pending Requested Container set already contains the item: %s.", *Item.WorldCoordinate.ToString())
+        return;
+    }
+
+    this->CurrentPendingRequestedContainerSet.Emplace(Item);
+    this->RequestContainer_ServerRPC(Item.WorldCoordinate);
 
     return;
 }

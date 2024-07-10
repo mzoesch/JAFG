@@ -14,21 +14,25 @@ class JAFG_API FUnownedContainer final : public INoRepContainer
 
 bool FUnownedContainer::EasyAddToContainer(const FAccumulated& Value)
 {
+    LOG_WARNING(LogTemp, "Not implemented yet.")
     return false;
 }
 
 bool FUnownedContainer::EasyChangeContainer(const int32 Index, const accamount_t_signed Amount)
 {
+    LOG_WARNING(LogTemp, "Not implemented yet.")
     return false;
 }
 
 void FUnownedContainer::PushContainerUpdatesToClient(void)
 {
+    LOG_WARNING(LogTemp, "Not implemented yet.")
     return;
 }
 
 void FUnownedContainer::PushContainerUpdatesToServer(void)
 {
+    LOG_WARNING(LogTemp, "Not implemented yet.")
     return;
 }
 
