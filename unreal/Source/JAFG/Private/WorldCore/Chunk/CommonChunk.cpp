@@ -135,6 +135,12 @@ auto ACommonChunk::SetChunkPersistency(const EChunkPersistency::Type NewPersiste
         return;
     }
 
+    //
+    // This sucks!!!
+    // We should do an extra tick in the generation and check there for all chunks and remove them from there
+    // this causes to many race conditions.
+    //
+
     this->PersistentFutureCounter.Increment();
     this->PersistencyFuture = Async(
         EAsyncExecution::ThreadPool,
