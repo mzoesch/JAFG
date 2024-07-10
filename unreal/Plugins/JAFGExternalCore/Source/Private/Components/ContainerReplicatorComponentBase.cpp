@@ -88,6 +88,13 @@ void UContainerReplicatorComponentBase::BeginPlay(void)
     return;
 }
 
+void UContainerReplicatorComponentBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    Super::EndPlay(EndPlayReason);
+    this->ContainerReplicatorActor.Reset();
+    return;
+}
+
 void UContainerReplicatorComponentBase::TickComponent(const float DeltaTime, const ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -109,6 +116,13 @@ void UContainerReplicatorComponentBase::TickComponent(const float DeltaTime, con
             Item.OnReplicated(InstantContainer);
         }
 
+        return;
+    }
+
+    /* This client is already subscribed to this container. */
+    if (this->Containers.Contains(Item.WorldCoordinate))
+    {
+        Item.OnReplicated(this->Containers[Item.WorldCoordinate]);
         return;
     }
 
