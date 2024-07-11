@@ -10,9 +10,9 @@
 
 #include "ChunkGenerationSubsystem.generated.h"
 
-class UDebugScreen;
 JAFG_VOID
 
+class UDebugScreen;
 class ULocalChunkWorldSettings;
 class UServerChunkWorldSettings;
 

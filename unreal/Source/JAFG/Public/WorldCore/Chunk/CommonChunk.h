@@ -78,6 +78,12 @@ public:
 
                 auto SetChunkPersistency(const EChunkPersistency::Type NewPersistency, const float TimeToLive = 0.0f) -> void;
     FORCEINLINE auto GetChunkPersistency(void) const -> EChunkPersistency::Type { return this->ChunkPersistency; }
+    FORCEINLINE auto IsPersistent(void) const -> bool { return this->ChunkPersistency == EChunkPersistency::Persistent; }
+    FORCEINLINE auto IsTemporary(void) const -> bool { return this->ChunkPersistency == EChunkPersistency::Temporary; }
+    FORCEINLINE auto ShouldBeKilled(void) const -> bool
+    {
+        return this->IsTemporary() && this->RealTimeInSecondsWhenTemporaryChunkShouldBeKilled < this->GetWorld()->GetRealTimeSeconds();
+    }
 
 private:
 
@@ -88,9 +94,11 @@ private:
     auto SubscribeWithPrivateStateDelegate(void) -> void;
 
     EChunkPersistency::Type ChunkPersistency = EChunkPersistency::Persistent;
-    TFuture<void>           PersistencyFuture;
-    /** Counts how many persistent futures are currently active. */
-    FThreadSafeCounter PersistentFutureCounter = 0;
+    /**
+     * The real time (not stopped or dilated / clamped) when this chunk should be killed  by the generation subsystem.
+     * Only meaningful when the persistency of this chunk is temporary.
+     */
+    double RealTimeInSecondsWhenTemporaryChunkShouldBeKilled = 0.0f;
 
 protected:
 
@@ -315,10 +323,8 @@ private:
 
 public:
 
-    FORCEINLINE const FChunkKey& GetChunkKey(void) const
-    {
-        return this->ChunkKey;
-    }
+    FORCEINLINE auto GetChunkKey(void) const -> const FChunkKey& { return this->ChunkKey; }
+    FORCEINLINE auto ToString(void) const -> FString { return this->GetChunkKey().ToString(); }
 
     /**
      * Does not check for out of bounds. The callee must ensure that the

@@ -126,7 +126,7 @@ void ACommonChunk::KillControlled(void)
 
 #pragma region Chunk State
 
-auto ACommonChunk::SetChunkPersistency(const EChunkPersistency::Type NewPersistency, const float TimeToLive) -> void
+void ACommonChunk::SetChunkPersistency(const EChunkPersistency::Type NewPersistency, const float TimeToLive)
 {
     this->ChunkPersistency = NewPersistency;
 
@@ -135,50 +135,13 @@ auto ACommonChunk::SetChunkPersistency(const EChunkPersistency::Type NewPersiste
         return;
     }
 
-    //
-    // This sucks!!!
-    // We should do an extra tick in the generation and check there for all chunks and remove them from there
-    // this causes to many race conditions.
-    //
-
-    this->PersistentFutureCounter.Increment();
-    this->PersistencyFuture = Async(
-        EAsyncExecution::ThreadPool,
-        [this, TimeToLive]
-        {
-            FPlatformProcess::Sleep(TimeToLive);
-
-            if (this->IsValidLowLevel() == false)
-            {
-                return;
-            }
-
-            this->PersistentFutureCounter.Decrement();
-            if (this->PersistentFutureCounter.GetValue() > 0)
-            {
-                return;
-            }
-
-            /* Request to kill was invoked in some manner. */
-            if (this->ChunkPersistency == EChunkPersistency::Persistent)
-            {
-                return;
-            }
-
-            AsyncTask(ENamedThreads::GameThread, [this]
-            {
-                /* Request to kill was invoked in some manner. */
-                if (this->ChunkPersistency == EChunkPersistency::Persistent)
-                {
-                    return;
-                }
-                LOG_DISPLAY(LogChunkMisc, "Chunk %s will kill itself due to persistency.", *this->ChunkKey.ToString())
-                this->SetChunkState(EChunkState::Kill);
-            });
-
-            return;
-        }
-    );
+    if (
+        const double EndOfLife = this->GetWorld()->GetRealTimeSeconds() + TimeToLive;
+        EndOfLife > this->RealTimeInSecondsWhenTemporaryChunkShouldBeKilled
+    )
+    {
+        this->RealTimeInSecondsWhenTemporaryChunkShouldBeKilled = EndOfLife;
+    }
 
     return;
 }

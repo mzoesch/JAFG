@@ -109,7 +109,7 @@ void FHyperlaneTransmitter::SendChunkInitializationData(const UHyperlaneComponen
 {
     if (Target->IsLocalController())
     {
-        jcheck( false && "Enclosing block should never be executed." )
+        jcheckNoEntry()
         return;
     }
 

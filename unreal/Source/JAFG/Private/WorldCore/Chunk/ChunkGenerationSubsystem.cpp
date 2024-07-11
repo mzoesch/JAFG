@@ -117,24 +117,37 @@ void UChunkGenerationSubsystem::MyTick(const float DeltaTime)
         {
             break;
         }
-
     }
 
-    if (this->bInClientMode)
+    if (this->bInClientMode == false)
     {
-        return;
+        // Check for client needs
+        //////////////////////////////////////////////////////////////////////////
+        int ChunksAnswered = 0;
+        while (
+               ChunksAnswered < this->MaxVerticalChunksToAnswerPerTick
+            && this->ClientQueue.IsEmpty() == false
+        )
+        {
+            this->DequeueNextClientChunk();
+            ++ChunksAnswered;
+        }
     }
 
-    // Check for client needs
+    // Check for the end of life in temporary chunks
     //////////////////////////////////////////////////////////////////////////
-    int ChunksAnswered = 0;
-    while (
-           ChunksAnswered < this->MaxVerticalChunksToAnswerPerTick
-        && this->ClientQueue.IsEmpty() == false
-    )
+    TArray<ACommonChunk*> ChunksToKill = TArray<ACommonChunk*>();
+    for (const TTuple<FChunkKey, TObjectPtr<ACommonChunk>>& Pair : this->ChunkMap)
     {
-        this->DequeueNextClientChunk();
-        ++ChunksAnswered;
+        if (Pair.Value->ShouldBeKilled())
+        {
+            ChunksToKill.Add(Pair.Value);
+        }
+    }
+    for (ACommonChunk* Chunk : ChunksToKill)
+    {
+        LOG_DISPLAY(LogChunkMisc, "Chunk %s will kill itself due to persistency.", *Chunk->ToString())
+        Chunk->SetChunkState(EChunkState::Kill);
     }
 
     return;
