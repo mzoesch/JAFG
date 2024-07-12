@@ -228,6 +228,16 @@ UJAFGContainer* AWorldHUD::PushContainerToViewport(const FString& Identifier)
     return this->CurrentContainer;
 }
 
+void AWorldHUD::MarkCurrentContainerAsDirty(void)
+{
+    if (this->CurrentContainer != nullptr)
+    {
+        this->CurrentContainer->MarkAsDirty();
+    }
+
+    return;
+}
+
 #if WITH_EDITOR
 void AWorldHUD::CreateSimulationHUD(void)
 {

@@ -6,10 +6,10 @@
 #include "JAFGTypeDefs.h"
 #include "Slot.h"
 #include "Components/ActorComponent.h"
+#include "Container.h"
 
 #include "ContainerReplicatorComponentBase.generated.h"
 
-class IContainer;
 class UContainerReplicatorComponentBase;
 
 struct FPrivateRequestedContainerQueue
@@ -43,7 +43,13 @@ public:
 
     explicit AContainerReplicatorActorBase(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
+protected:
+
     virtual void BeginPlay(void) override;
+
+public:
+
+    virtual void Tick(const float DeltaSeconds) override;
 
     /**
      * @param Identifier              The identifier of the container.
@@ -58,12 +64,16 @@ public:
         const TFunction<void(IContainer* const Container)>& OnLongExecQueryFinished
     ) const -> IContainer*;
 
+    mutable TSet<TObjectPtr<UContainerReplicatorComponentBase>> SubscribedComponents;
+
 protected:
 
     virtual auto CreateNewContainer(
         const FJCoordinate& Identifier,
         const TFunction<void(IContainer* const Container)>& OnLongExecQueryFinished
     ) const -> void PURE_VIRTUAL(AContainerReplicatorActorBase::CreateNewContainer)
+
+    void BroadcastUpdateToSubscribedClients(const FJCoordinate& Identifier, const int32 Index) const;
 
 private:
 
@@ -91,6 +101,14 @@ public:
 
     void RequestContainerAsync(const FJCoordinate& WorldKey, const TFunction<void(IContainer* Container)>& OnReplicated);
 
+    FORCEINLINE auto GetSubscribedContainers(void) const -> const TSet<FJCoordinate>&
+    {
+        return this->SubscribedContainers;
+    }
+
+    UFUNCTION(Client, Reliable)
+    void UpdateSubbedContainer_ClientRPC(const FIntVector /* FJCoordinate */ & WorldKey, const int32 Index, const FAccumulated& Content);
+
 private:
 
     UFUNCTION(Server, Reliable)
@@ -98,6 +116,11 @@ private:
 
     UFUNCTION(Client, Reliable)
     void RequestedContainerData_ClientRPC(const FIntVector /* FJCoordinate */ & WorldKey, const TArray<FSlot>& ContainerSlots);
+
+    UFUNCTION(Server, Reliable)
+    void UnSubscribeContainer_ServerRPC(const FIntVector /* FJCoordinate */ & WorldKey);
+
+    mutable TSet<FJCoordinate> SubscribedContainers;
 
 protected:
 

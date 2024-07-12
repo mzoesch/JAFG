@@ -23,4 +23,6 @@ public:
     virtual auto RegisterContainer(const FString& Identifier, const TFunction<TSubclassOf<UJAFGContainer>(void)>& ContainerClassGetter) -> bool override PURE_VIRTUAL(AWorldHUDBase::RegisterContainer, return false;)
 
     virtual auto PushContainerToViewport(const FString& Identifier) -> UJAFGContainer* override PURE_VIRTUAL(AWorldHUDBase::PushContainerToViewport, return nullptr;)
+
+    virtual auto MarkCurrentContainerAsDirty(void) -> void override PURE_VIRTUAL(AWorldHUDBase::MarkCurrentContainerAsDirty)
 };

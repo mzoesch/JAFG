@@ -44,16 +44,22 @@ FReply UJAFGContainerSlot::NativeOnMouseButtonUp(const FGeometry& InGeometry, co
     IContainerOwner* ContainerOwner = Cast<IContainerOwner>(this->GetOwningPlayerPawn());
     if (ContainerOwner == nullptr)
     {
-        LOG_FATAL(LogCommonSlate, "Container owner is invalid. Cannot proceed to handle mouse down event.")
+        LOG_FATAL(LogCommonSlate, "Container owner is invalid. Cannot proceed to handle mouse up event.")
         return FReply::Unhandled();
     }
 
-    if (this->SlotData->GetSlotRef().OnPrimaryClicked(ContainerOwner))
+    if (this->SlotData->Owner->EasyChangeContainerSoftPredict(
+        this,
+        ContainerOwner,
+        this->SlotData->Index,
+        [] (const int32 InLambdaIndex, IContainer* InLambdaTarget, IContainerOwner* InLambdaOwner) -> bool
+        {
+            return InLambdaTarget->GetContainer(InLambdaIndex).OnPrimaryClicked(InLambdaOwner);
+        },
+        ELocalContainerChange::Primary
+    ))
     {
         this->MarkAsDirty();
-
-        ContainerOwner->OnCursorValueChangedDelegate.Broadcast();
-        this->SlotData->Owner->OnLocalContainerChangedEvent.Broadcast(ELocalContainerChange::Primary, this->SlotData->Index);
     }
 
     return FReply::Handled();

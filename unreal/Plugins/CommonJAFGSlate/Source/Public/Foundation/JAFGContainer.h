@@ -34,6 +34,10 @@ protected:
     virtual void NativeConstruct(void) override;
     // ~UUserWidget implementation
 
+    // UJAFGDirtyUserWidget implementation
+    virtual void OnRefresh(void) override;
+    // ~UJAFGDirtyUserWidget implementation
+
     bool bDeferredBuild = false;
     virtual void OnBuild(void);
     virtual void TryUpdateDisplayNames(void);

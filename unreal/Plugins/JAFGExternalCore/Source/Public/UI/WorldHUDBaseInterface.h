@@ -30,4 +30,6 @@ public:
     {
         return Cast<T>(this->PushContainerToViewport(Identifier));
     }
+
+    virtual auto MarkCurrentContainerAsDirty(void) -> void = 0;
 };

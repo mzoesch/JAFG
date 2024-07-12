@@ -1,7 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "Components/ContainerReplicatorComponentBase.h"
-
 #include "CommonNetworkStatics.h"
 #include "Container.h"
 #include "JAFGLogDefs.h"
@@ -9,7 +8,7 @@
 
 AContainerReplicatorActorBase::AContainerReplicatorActorBase(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-    this->PrimaryActorTick.bCanEverTick = false;
+    this->PrimaryActorTick.bCanEverTick = true;
     this->bNetLoadOnClient              = false;
     this->bReplicates                   = false;
 
@@ -21,8 +20,14 @@ void AContainerReplicatorActorBase::BeginPlay(void)
     Super::BeginPlay();
 
     this->Containers.Empty();
+    this->SetActorTickInterval(1.0);
 
     return;
+}
+
+void AContainerReplicatorActorBase::Tick(const float DeltaSeconds)
+{
+    Super::Tick(DeltaSeconds);
 }
 
 IContainer* AContainerReplicatorActorBase::GetContainer(
@@ -54,6 +59,28 @@ IContainer* AContainerReplicatorActorBase::GetContainer(
     );
 
     return nullptr;
+}
+
+void AContainerReplicatorActorBase::BroadcastUpdateToSubscribedClients(const FJCoordinate& Identifier, const int32 Index) const
+{
+    const IContainer* const * const Container = this->Containers.Find(Identifier);
+#if !UE_BUILD_SHIPPING
+    if (Container == nullptr)
+    {
+        LOG_FATAL(LogContainerStuff, "Container for identifier [%s] not found.", *Identifier.ToString())
+        return;
+    }
+#endif /* !UE_BUILD_SHIPPING */
+
+    for (const TObjectPtr<UContainerReplicatorComponentBase> Subscriber :  this->SubscribedComponents)
+    {
+        if (const FJCoordinate* SubbedContent = Subscriber->GetSubscribedContainers().Find(Identifier); SubbedContent)
+        {
+            Subscriber->UpdateSubbedContainer_ClientRPC(Identifier, Index, (*Container)->GetContainer()[Index].Content);
+        }
+    }
+
+    return;
 }
 
 UContainerReplicatorComponentBase::UContainerReplicatorComponentBase(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -143,6 +170,33 @@ void UContainerReplicatorComponentBase::RequestContainerAsync(const FJCoordinate
     this->RequestedContainerQueue.Enqueue({ WorldKey, OnReplicated });
 }
 
+void UContainerReplicatorComponentBase::UnSubscribeContainer_ServerRPC_Implementation(const FIntVector& WorldKey)
+{
+    this->SubscribedContainers.Remove(WorldKey);
+
+    if (this->SubscribedContainers.IsEmpty())
+    {
+        this->ContainerReplicatorActor->SubscribedComponents.Remove(this);
+    }
+
+    return;
+}
+
+void UContainerReplicatorComponentBase::UpdateSubbedContainer_ClientRPC_Implementation(const FIntVector& WorldKey, const int32 Index, const FAccumulated& Content)
+{
+    IContainer* const * const Container = this->Containers.Find(WorldKey);
+    if (Container == nullptr)
+    {
+        LOG_WARNING(LogContainerStuff, "Container for [%s] not found. Requesting to unsubscribe.", *WorldKey.ToString())
+        this->UnSubscribeContainer_ServerRPC(WorldKey);
+        return;
+    }
+
+    (*Container)->EasyOverrideContainerOnCl(Index, Content, ELocalContainerChange::Replicated);
+
+    return;
+}
+
 void UContainerReplicatorComponentBase::RequestContainer_ServerRPC_Implementation(const FJCoordinate& WorldKey)
 {
 #if !UE_BUILD_SHIPPING
@@ -153,14 +207,20 @@ void UContainerReplicatorComponentBase::RequestContainer_ServerRPC_Implementatio
     }
 #endif /* !UE_BUILD_SHIPPING */
 
+    this->ContainerReplicatorActor->SubscribedComponents.Add(this);
+
     if (IContainer* LoadedContainer = this->ContainerReplicatorActor->GetContainer(
         WorldKey,
         [this, WorldKey] (IContainer* Container)
         {
+            LOG_WARNING(LogContainerStuff, "Loaded container for [%s].", *WorldKey.ToString())
+            this->SubscribedContainers.Add(WorldKey);
             this->RequestedContainerData_ClientRPC(WorldKey, Container->GetContainer());
         }
     ); LoadedContainer)
     {
+        LOG_WARNING(LogContainerStuff, "Loaded container for [%s].", *WorldKey.ToString())
+        this->SubscribedContainers.Add(WorldKey);
         this->RequestedContainerData_ClientRPC(WorldKey, LoadedContainer->GetContainer());
     }
 

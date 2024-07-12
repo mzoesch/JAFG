@@ -6,6 +6,7 @@
 #include "JAFGDirtyUserWidget.h"
 #include "Blueprint/IUserObjectListEntry.h"
 #include "Slot.h"
+#include "Container.h"
 
 #include "JAFGContainerSlot.generated.h"
 
@@ -23,16 +24,14 @@ class UJAFGContainerSlotData : public UObject
 public:
 
     int32          Index;
-    /** @deprecated As we now provide the owner as well. */
-    TArray<FSlot>* Container;
     IContainer*    Owner;
 
-    FORCEINLINE auto GetSlot(void) const -> FSlot { return this->Container->GetData()[this->Index]; }
-    FORCEINLINE auto GetSlotRef(void) const -> FSlot& { return this->Container->GetData()[this->Index]; }
-    FORCEINLINE auto GetSlotValue(void) const -> FAccumulated { return this->Container->GetData()[this->Index].Content; }
-    FORCEINLINE auto GetSlotValueRef(void) const -> FAccumulated& { return this->Container->GetData()[this->Index].Content; }
-    FORCEINLINE auto GetSlotAmount(void) const -> accamount_t { return this->Container->GetData()[this->Index].Content.Amount; }
-    FORCEINLINE auto GetSlotAmountRef(void) const -> accamount_t& { return this->Container->GetData()[this->Index].Content.Amount; }
+    FORCEINLINE auto GetSlot(void) const -> FSlot { return this->Owner->GetContainer().GetData()[this->Index]; }
+    FORCEINLINE auto GetSlotRef(void) const -> FSlot& { return this->Owner->GetContainer().GetData()[this->Index]; }
+    FORCEINLINE auto GetSlotValue(void) const -> FAccumulated { return this->Owner->GetContainer().GetData()[this->Index].Content; }
+    FORCEINLINE auto GetSlotValueRef(void) const -> FAccumulated& { return this->Owner->GetContainer().GetData()[this->Index].Content; }
+    FORCEINLINE auto GetSlotAmount(void) const -> accamount_t { return this->Owner->GetContainer().GetData()[this->Index].Content.Amount; }
+    FORCEINLINE auto GetSlotAmountRef(void) const -> accamount_t& { return this->Owner->GetContainer().GetData()[this->Index].Content.Amount; }
 };
 
 /** Optional widget to use as a foundation for containers inside JAFG. */

@@ -6,6 +6,7 @@
 #include "UObject/Interface.h"
 #include "Slot.h"
 #include "Accumulated.h"
+#include "CommonNetworkStatics.h"
 
 #include "Container.generated.h"
 
@@ -18,6 +19,8 @@ DECLARE_DELEGATE(PrivateOnContainerChangedSignature)
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnContainerChangedSignature, ELocalContainerChange::Type InReason, const int32 InIndex)
 
+DECLARE_DELEGATE_OneParam(FOnPushUpdatesToClientDelegateSignature, const int32 InIndex)
+
 UENUM(NotBlueprintType)
 namespace ELocalContainerChange
 {
@@ -28,6 +31,7 @@ enum Type : uint8
     Replicated,
     Primary,
     Secondary,
+    Custom,
 };
 
 }
@@ -50,7 +54,7 @@ class JAFGEXTERNALCORE_API IContainer
 
 public:
 
-    /* These methods should directly modify the source data. And never handle UI or Replication updates. */
+    /* These methods should directly modify the source data. And never handle UI or replication updates. */
 
     FORCEINLINE virtual auto IsContainerInitialized(void) const -> bool                 = 0;
     FORCEINLINE virtual auto GetContainerSize(void) const -> int32                      = 0;
@@ -65,14 +69,77 @@ public:
     /* These methods should allow for network replication. */
 
     FORCEINLINE virtual auto EasyAddToContainer(const FAccumulated& Value) -> bool = 0;
-    FORCEINLINE virtual auto EasyChangeContainer(const int32 Index, const accamount_t_signed Amount) -> bool = 0;
+    /** @return True if container was changed at the provided index and side effects were called. */
+    FORCEINLINE virtual auto EasyChangeContainer(
+        const int32 InIndex,
+        const accamount_t_signed InAmount,
+        const ELocalContainerChange::Type Reason = ELocalContainerChange::Custom
+    ) -> bool = 0;
+    /**
+     * Should generally always call the same side effects as the IContainer::EasyChangeContainer(int32,
+     * accamount_t_signed) to not generate confusion.
+     * This method is useful if it is not known beforehand if or how the contents of the containers are going to
+     * change.
+     *
+     * @param InIndex    The index to call the Alternator on.
+     * @param InOwner    The owner to perform the alternation operation on.
+     * @param Alternator The function to change the content at the specified index. Should return true if something
+     *                   was changed.
+     * @param InReason   The reason for the change.
+     * @return True if container was changed at the index.
+     */
+    FORCEINLINE virtual auto EasyChangeContainer(
+        const int32 InIndex,
+        IContainerOwner* InOwner,
+        const TFunctionRef<bool(const int32 InLambdaIndex, IContainer* InLambdaTarget, IContainerOwner* InLambdaOwner)>& Alternator,
+        const ELocalContainerChange::Type InReason
+    ) -> bool = 0;
+
+    /** Client interpretation of IContainer::EasyChangeContainer. */
+    FORCEINLINE virtual auto EasyChangeContainerCl(
+        const int32 InIndex,
+        IContainerOwner* InOwner,
+        const TFunctionRef<bool(const int32 InLambdaIndex, IContainer* InLambdaTarget, IContainerOwner* InLambdaOwner)>& Alternator,
+        const ELocalContainerChange::Type InReason
+    ) -> bool = 0;
+    /** @return True if container was changed at the provided index and side effects were called. */
+    FORCEINLINE virtual auto EasyOverrideContainerOnCl(
+        const int32 InIndex,
+        const FAccumulated& InContent,
+        const ELocalContainerChange::Type Reason = ELocalContainerChange::Replicated
+    ) -> bool = 0;
+    FORCEINLINE virtual auto EasyChangeContainerSoftPredict(
+        const UObject* Context,
+        IContainerOwner* InOwner,
+        const int32 InIndex,
+        const TFunctionRef<bool(const int32 InLambdaIndex, IContainer* InLambdaTarget, IContainerOwner* InLambdaOwner)>& Alternator,
+        const ELocalContainerChange::Type InReason
+    ) -> bool
+    {
+        if (UNetStatics::IsSafeClient(Context))
+        {
+            return this->EasyChangeContainerCl(InIndex, InOwner, Alternator, InReason);
+        }
+
+        return this->EasyChangeContainer(InIndex, InOwner, Alternator, InReason);
+    };
 
     FORCEINLINE virtual auto ToString_Container(void) const -> FString = 0;
 
     /** Only for local "owners" called. Meaning never on a dedicated server. */
+    /*
+     * TODO We need to make a delegate here with the method that changes something?
+     *      Properly not? We need to make a dynamic system though.
+     */
     FOnContainerChangedSignature OnLocalContainerChangedEvent;
 };
 
+/**
+ * A container that does not use the unreal's push model replication subsystem but instead relies on a more
+ * manuel approach. E.g.: UActorComponents, AActors (tough should be avoided due to additional costs).
+ * Very useful if this container has no real owner and no bounds which could be used for priority replication
+ * consideration to clients.
+ */
 UINTERFACE()
 class JAFGEXTERNALCORE_API UNoRepContainer : public UContainer
 {
@@ -103,7 +170,15 @@ public:
         return Result;
     }
 
-    virtual void PushContainerUpdatesToClient(void) = 0;
+    FORCEINLINE virtual auto OnPushUpdatesToClient(void) -> FOnPushUpdatesToClientDelegateSignature&
+    {
+        return this->OnPushUpdatesToClientDelegate;
+    }
+    FORCEINLINE virtual void PushContainerUpdatesToClient(const int32 InIndex)
+    {
+        this->OnPushUpdatesToClientDelegate.Execute(InIndex);
+    }
+
     virtual void PushContainerUpdatesToServer(void) = 0;
 
     FORCEINLINE virtual auto ResetContainerData(const TArray<FSlot>& NewData) -> void { this->Container = NewData; }
@@ -112,6 +187,8 @@ public:
 protected:
 
     TArray<FSlot> Container;
+
+    FOnPushUpdatesToClientDelegateSignature OnPushUpdatesToClientDelegate;
 };
 
 UINTERFACE()
@@ -125,6 +202,8 @@ class JAFGEXTERNALCORE_API IContainerOwner
     GENERATED_BODY()
 
 public:
+
+    FORCEINLINE virtual bool IsLocalContainerOwner(void) = 0;
 
     FAccumulated CursorValue;
 

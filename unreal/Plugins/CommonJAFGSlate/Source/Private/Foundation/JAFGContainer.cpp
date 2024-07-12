@@ -33,6 +33,13 @@ void UJAFGContainer::NativeConstruct(void)
     return;
 }
 
+void UJAFGContainer::OnRefresh(void)
+{
+    this->OnBuild();
+
+    return;
+}
+
 void UJAFGContainer::OnBuild(void)
 {
     this->TryUpdateDisplayNames();
@@ -95,7 +102,6 @@ void UJAFGContainer::BuildContainerWithCommonLogic(IContainer* Container, UJAFGS
     {
         UJAFGContainerSlotData* Data = NewObject<UJAFGContainerSlotData>(this);
         Data->Index     = i;
-        Data->Container = &Container->GetContainer();
         Data->Owner     = Container;
 
         TileView_Target->AddItem(Data);

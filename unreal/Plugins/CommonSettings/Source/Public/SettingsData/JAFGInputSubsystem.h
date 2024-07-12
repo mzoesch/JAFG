@@ -55,7 +55,6 @@ struct COMMONSETTINGS_API FJAFGOneDimensionalInputAction
     TArray<FString>  Contexts;
 };
 
-
 struct COMMONSETTINGS_API FJAFGTwoDimensionalInputAction
 {
     FString          Name;

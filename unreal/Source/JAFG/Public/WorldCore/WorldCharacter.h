@@ -156,14 +156,41 @@ public:
 
     // IContainer interface
     /** Server only. Will handle UI updates, replication, etc. */
-    virtual bool EasyAddToContainer(const FAccumulated& Value) override;
+    virtual auto EasyAddToContainer(const FAccumulated& Value) -> bool override;
     /** Server only. Will handle UI updates, replication, etc. */
-    virtual bool EasyChangeContainer(const int32 InIndex, const accamount_t_signed InAmount) override;
+    virtual auto EasyChangeContainer(
+        const int32 InIndex,
+        const accamount_t_signed InAmount,
+        const ELocalContainerChange::Type InReason = ELocalContainerChange::Custom
+    ) -> bool override;
+    /** Server only. Will handle UI updates, replication, etc. */
+    virtual auto EasyChangeContainer(
+        const int32 InIndex,
+        IContainerOwner* InOwner,
+        const TFunctionRef<bool(const int32 InLambdaIndex, IContainer* InLambdaTarget, IContainerOwner* InLambdaOwner)>& Alternator,
+        const ELocalContainerChange::Type InReason
+    ) -> bool override;
+    /** Client only. Will handle UI updates, replication, etc. */
+    virtual auto EasyChangeContainerCl(
+        const int32 InIndex,
+        IContainerOwner* InOwner,
+        const TFunctionRef<bool(const int32 InLambdaIndex, IContainer* InLambdaTarget, IContainerOwner* InLambdaOwner)>& Alternator,
+        const ELocalContainerChange::Type InReason
+    ) -> bool override;
+    virtual auto EasyOverrideContainerOnCl(
+        const int32 InIndex,
+        const FAccumulated& InContent,
+        const ELocalContainerChange::Type InReason = ELocalContainerChange::Replicated
+    ) -> bool override;
     virtual auto ToString_Container(void) const -> FString override;
     // ~IContainer interface
 
     // IContainerOwner interface
-    FORCEINLINE virtual auto GetContainerReplicatorComponent(void) const -> UContainerReplicatorComponentBase* override { return this->GetWorldPlayerController()->GetContainerReplicatorComponent(); }
+    FORCEINLINE virtual bool IsLocalContainerOwner(void) override { return this->IsLocallyControlled(); }
+    FORCEINLINE virtual auto GetContainerReplicatorComponent(void) const -> UContainerReplicatorComponentBase* override
+    {
+        return this->GetWorldPlayerController()->GetContainerReplicatorComponent();
+    }
     // ~IContainerOwner interface
 
 protected:
