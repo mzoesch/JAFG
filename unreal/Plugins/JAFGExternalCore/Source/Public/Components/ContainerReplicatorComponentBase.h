@@ -109,6 +109,8 @@ public:
     UFUNCTION(Client, Reliable)
     void UpdateSubbedContainer_ClientRPC(const FIntVector /* FJCoordinate */ & WorldKey, const int32 Index, const FAccumulated& Content);
 
+    void UnsubscribeContainer(IContainer* Container);
+
 private:
 
     UFUNCTION(Server, Reliable)
@@ -118,7 +120,7 @@ private:
     void RequestedContainerData_ClientRPC(const FIntVector /* FJCoordinate */ & WorldKey, const TArray<FSlot>& ContainerSlots);
 
     UFUNCTION(Server, Reliable)
-    void UnSubscribeContainer_ServerRPC(const FIntVector /* FJCoordinate */ & WorldKey);
+    void UnsubscribeContainer_ServerRPC(const FIntVector /* FJCoordinate */ & WorldKey);
 
     mutable TSet<FJCoordinate> SubscribedContainers;
 

@@ -27,11 +27,13 @@ public:
 
     FORCEINLINE void SetOtherContainerDisplayName(const FString& DisplayName) { this->OtherContainerDisplayName = DisplayName; }
     FORCEINLINE void SetOtherContainerData(IContainer* Container) { this->OtherContainerData = Container; }
+    FORCEINLINE void SetAutoUnsubscribeOtherContainerOnKill(bool bValue) { this->bAutoUnsubscribeOtherContainerOnKill = bValue; }
 
 protected:
 
     // UUserWidget implementation
     virtual void NativeConstruct(void) override;
+    virtual void NativeDestruct(void) override;
     // ~UUserWidget implementation
 
     // UJAFGContainer implementation
@@ -58,4 +60,5 @@ protected:
 private:
 
     FString OtherContainerDisplayName = TEXT("Other Container");
+    bool bAutoUnsubscribeOtherContainerOnKill = true;
 };

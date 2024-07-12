@@ -170,9 +170,50 @@ void UContainerReplicatorComponentBase::RequestContainerAsync(const FJCoordinate
     this->RequestedContainerQueue.Enqueue({ WorldKey, OnReplicated });
 }
 
-void UContainerReplicatorComponentBase::UnSubscribeContainer_ServerRPC_Implementation(const FIntVector& WorldKey)
+void UContainerReplicatorComponentBase::UnsubscribeContainer(IContainer* Container)
 {
-    this->SubscribedContainers.Remove(WorldKey);
+#if !UE_BUILD_SHIPPING
+    if (UNetStatics::IsSafeClient(this) == false)
+    {
+        LOG_FATAL(LogContainerStuff, "This function should only be called on a client-like instance.")
+        return;
+    }
+
+#if WITH_EDITOR
+    if (this->SubscribedContainers.Num() > 0)
+    {
+        LOG_FATAL(LogContainerStuff, "Subbed containers count is counted on the client. Disallowed.")
+        return;
+    }
+#endif /* WITH_EDITOR */
+#endif /* !UE_BUILD_SHIPPING */
+
+    const FJCoordinate* FoundContainerKey = this->Containers.FindKey(Container);
+    if (FoundContainerKey == nullptr)
+    {
+        LOG_WARNING(LogContainerStuff, "Container not found in map. Cannot unsubscribe.")
+        return;
+    }
+
+    const FJCoordinate FoundContainerKeyCopy = *FoundContainerKey;
+
+    this->Containers.Remove(FoundContainerKeyCopy);
+
+    this->UnsubscribeContainer_ServerRPC(FoundContainerKeyCopy);
+
+    return;
+}
+
+void UContainerReplicatorComponentBase::UnsubscribeContainer_ServerRPC_Implementation(const FIntVector& WorldKey)
+{
+    if (this->SubscribedContainers.Contains(WorldKey) == false)
+    {
+        LOG_WARNING(LogContainerStuff, "Container for [%s] not found in subscribed containers.", *WorldKey.ToString())
+    }
+    else
+    {
+        this->SubscribedContainers.Remove(WorldKey);
+    }
 
     if (this->SubscribedContainers.IsEmpty())
     {
@@ -188,7 +229,7 @@ void UContainerReplicatorComponentBase::UpdateSubbedContainer_ClientRPC_Implemen
     if (Container == nullptr)
     {
         LOG_WARNING(LogContainerStuff, "Container for [%s] not found. Requesting to unsubscribe.", *WorldKey.ToString())
-        this->UnSubscribeContainer_ServerRPC(WorldKey);
+        this->UnsubscribeContainer_ServerRPC(WorldKey);
         return;
     }
 
@@ -213,7 +254,7 @@ void UContainerReplicatorComponentBase::RequestContainer_ServerRPC_Implementatio
         WorldKey,
         [this, WorldKey] (IContainer* Container)
         {
-            LOG_WARNING(LogContainerStuff, "Loaded container for [%s].", *WorldKey.ToString())
+            LOG_WARNING(LogContainerStuff, "Lazy loaded container for [%s].", *WorldKey.ToString())
             this->SubscribedContainers.Add(WorldKey);
             this->RequestedContainerData_ClientRPC(WorldKey, Container->GetContainer());
         }

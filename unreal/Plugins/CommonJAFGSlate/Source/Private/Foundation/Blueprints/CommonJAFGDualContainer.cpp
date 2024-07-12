@@ -3,6 +3,7 @@
 #include "Foundation/Blueprints/CommonJAFGDualContainer.h"
 
 #include "Container.h"
+#include "Components/ContainerReplicatorComponentBase.h"
 #include "Components/JAFGTextBlock.h"
 
 UCommonJAFGDualContainer::UCommonJAFGDualContainer(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -16,6 +17,23 @@ UCommonJAFGDualContainer::UCommonJAFGDualContainer(const FObjectInitializer& Obj
 void UCommonJAFGDualContainer::NativeConstruct(void)
 {
     Super::NativeConstruct();
+}
+
+void UCommonJAFGDualContainer::NativeDestruct(void)
+{
+    Super::NativeDestruct();
+
+    if (UNetStatics::IsSafeClient(this) == false)
+    {
+        return;
+    }
+
+    if (this->bAutoUnsubscribeOtherContainerOnKill)
+    {
+        this->GetOwningPlayer()->FindComponentByClass<UContainerReplicatorComponentBase>()->UnsubscribeContainer(this->OtherContainerData);
+    }
+
+    return;
 }
 
 void UCommonJAFGDualContainer::OnBuild(void)
