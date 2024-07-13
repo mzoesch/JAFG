@@ -26,6 +26,7 @@
  * So change the order with caution.
  */
 
+#include "Runtime/JAFGBuild.h"
 #include "JAFGMacros.h"
 #include "JAFGTypeDefs.h"
 #include "JAFGTypes.h"

@@ -28,15 +28,16 @@
  * So change the order with caution.
  */
 
-/* External core plugin */
+/* External core plugin. */
+#include "Runtime/JAFGBuild.h"
 #include "JAFGMacros.h"
 #include "JAFGTypeDefs.h"
 #include "JAFGTypes.h"
 #include "VoxelMask.h"
 #include "Accumulated.h"
 #include "RegisteredWorldNames.h"
-#include "CommonNetworkStatics.h"
 
+/* Internal headers. */
 #include "WorldCore/WorldTypes.h"
 #include "WorldCore/Chunk/ChunkStatics.h"
 #include "WorldCore/Validation/CommonValidation.h"
@@ -53,3 +54,4 @@
 ----------------------------------------------------------------------------*/
 
 #include "JAFGLogDefs.h"
+#include "CommonNetworkStatics.h"

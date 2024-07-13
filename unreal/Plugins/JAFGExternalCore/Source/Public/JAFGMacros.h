@@ -4,6 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "JAFGLogDefs.h"
+#include "Runtime/JAFGBuild.h"
+
+#ifndef DO_HARSH_JCHECK
+    #error "DO_HARSH_JCHECK is not defined."
+#endif /* !DO_HARSH_JCHECK */
+
+#ifndef DO_RELAXED_JCHECKS
+    #error "DO_RELAXED_JCHECKS is not defined."
+#endif /* !DO_RELAXED_JCHECKS */
+
+#define UNREACHABLE_ENCLOSING_BLOCK_TEXT "Enclosing block should never be called."
 
 /**
  * A check that is always executed even in shipping builds.
@@ -12,15 +23,44 @@
     // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
     #define jcheck(expr) check(expr)
 #else /* DO_CHECK */
-    // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
-    #define jcheck(expr)                                            \
-    {                                                               \
-        if ((!!(!(expr))))                                          \
-        {                                                           \
-            LOG_FATAL(LogSystem, "jcheck failed with [%s].", #expr) \
-        }                                                           \
-    }
+    #if DO_HARSH_JCHECK
+        // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
+        #define jcheck(expr)                                            \
+        {                                                               \
+            if (UNLIKELY(!(expr)))                                      \
+            {                                                           \
+                LOG_FATAL(LogSystem, "jcheck failed with [%s].", #expr) \
+            }                                                           \
+        }
+    #else /* DO_HARSH_JCHECK */
+        // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
+        #define jcheck(expr)                                            \
+        {                                                               \
+            if (UNLIKELY(!(expr)))                                      \
+            {                                                           \
+                LOG_ERROR(LogSystem, "jcheck failed with [%s].", #expr) \
+            }                                                           \
+        }
+    #endif /* !DO_HARSH_JCHECK */
 #endif /* !DO_CHECK */
+
+/**
+ * A check that only throws an error. If DO_RELAXED_JCHECKS is false, it will be treated
+ * by the compiler as a normal jcheck.
+ */
+#if DO_RELAXED_JCHECKS
+    // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
+    #define jrelaxedCheck(expr)                                            \
+    {                                                                      \
+        if (UNLIKELY(!(expr)))                                             \
+        {                                                                  \
+            LOG_ERROR(LogSystem, "jrelaxedCheck failed with [%s].", #expr) \
+        }                                                                  \
+    }
+#else /* DO_RELAXED_JCHECKS */
+    // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
+    #define jrelaxedCheck(expr) jcheck(expr)
+#endif /* !DO_RELAXED_JCHECKS */
 
 /**
  * A no entry check that is always executed even in shipping builds.
@@ -29,14 +69,31 @@
     // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
     #define jcheckNoEntry() checkNoEntry()
 #else /* DO_CHECK */
-    // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
-    #define jcheckNoEntry()                                             \
-    {                                                                   \
-        LOG_FATAL(LogSystem, "Enclosing block should never be called.") \
-    }
+    #if DO_HARSH_JCHECK
+        // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
+        #define jcheckNoEntry()                                             \
+        {                                                                   \
+            LOG_FATAL(LogSystem, UNREACHABLE_ENCLOSING_BLOCK_TEXT)          \
+        }
+    #else /* DO_HARSH_JCHECK */
+        // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
+        #define jcheckNoEntry()                                             \
+        {                                                                   \
+            LOG_ERROR(LogSystem, UNREACHABLE_ENCLOSING_BLOCK_TEXT)          \
+        }
+    #endif /* !DO_HARSH_JCHECK */
 #endif /* !DO_CHECK */
 
-/* TODO: Make this throwable. */
-// ReSharper disable once CppUE4CodingStandardNamingViolationWarning
-#define jrelaxedCheckNoEntry()                                      \
-    LOG_ERROR(LogSystem, "Enclosing block should never be called.")
+/**
+ * A no entry check that only throws an error. If DO_RELAXED_JCHECKS is false, it
+ * will be treated by the compiler as a normal jcheck.
+ */
+#if DO_RELAXED_JCHECKS
+    // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
+    #define jrelaxedCheckNoEntry()                                      \
+        LOG_ERROR(LogSystem, "Enclosing block should never be called.")
+#else /* DO_RELAXED_JCHECKS */
+    // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
+    #define jrelaxedCheckNoEntry()                                      \
+        jcheckNoEntry()
+#endif /* !DO_RELAXED_JCHECKS */
