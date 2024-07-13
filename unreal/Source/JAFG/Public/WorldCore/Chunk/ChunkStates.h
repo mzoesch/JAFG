@@ -4,6 +4,8 @@
 
 #include "MyCore.h"
 
+JAFG_VOID
+
 namespace EChunkState
 {
 
@@ -68,6 +70,8 @@ enum Type : uint8
     BlockedByHyperlane,
 };
 
+}
+
 FORCEINLINE auto LexToString(const EChunkState::Type ChunkState) -> FString
 {
     switch (ChunkState)
@@ -110,12 +114,10 @@ FORCEINLINE auto LexToString(const EChunkState::Type ChunkState) -> FString
     }
     default:
     {
-        LOG_FATAL(LogChunkGeneration, "Unknown chunk state %d.", ChunkState)
+        jcheckNoEntry()
         return TEXT("Unknown");
     }
     }
-}
-
 }
 
 namespace EChunkPersistency
@@ -126,6 +128,8 @@ enum Type : uint8
     Persistent,
     Temporary,
 };
+
+}
 
 FORCEINLINE auto LexToString(const EChunkPersistency::Type ChunkPersistency) -> FString
 {
@@ -141,10 +145,8 @@ FORCEINLINE auto LexToString(const EChunkPersistency::Type ChunkPersistency) -> 
     }
     default:
     {
-        LOG_FATAL(LogChunkGeneration, "Unknown chunk persistency %d.", ChunkPersistency)
+        jcheckNoEntry()
         return TEXT("Unknown");
     }
     }
-}
-
 }

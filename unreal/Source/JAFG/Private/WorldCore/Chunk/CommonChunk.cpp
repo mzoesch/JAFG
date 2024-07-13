@@ -253,7 +253,7 @@ bool ACommonChunk::IsStateChangeValid(const EChunkState::Type NewChunkState)
     }
     default:
     {
-        LOG_FATAL(LogChunkValidation, "Unsupported chunk state %s.", *EChunkState::LexToString(NewChunkState))
+        LOG_FATAL(LogChunkValidation, "Unsupported chunk state %s.", *LexToString(NewChunkState))
         return false;
     }
     }
@@ -305,7 +305,7 @@ bool ACommonChunk::SetChunkState(const EChunkState::Type NewChunkState, const bo
         LOG_ERROR(
             LogChunkValidation,
             "Invalid state change from %s to %s in chunk %s.",
-            *EChunkState::LexToString(this->ChunkState), *EChunkState::LexToString(NewChunkState), *this->ChunkKey.ToString()
+            *LexToString(this->ChunkState), *LexToString(NewChunkState), *this->ChunkKey.ToString()
         )
         this->KillControlled();
         return false;
