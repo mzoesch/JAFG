@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "JAFGExternalCoreIncludes.h"
 
 namespace RegisteredWorlds
 {
@@ -28,6 +28,8 @@ enum Type
     World,
     Dev
 };
+
+}
 
 FORCEINLINE auto LexToString(const ERegisteredWorlds::Type InType) -> FString
 {
@@ -51,10 +53,8 @@ FORCEINLINE auto LexToString(const ERegisteredWorlds::Type InType) -> FString
     }
     default:
     {
-        checkNoEntry()
+        jrelaxedCheckNoEntry()
         return FString();
     }
     }
-}
-
 }

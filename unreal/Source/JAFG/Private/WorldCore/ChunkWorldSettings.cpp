@@ -148,7 +148,7 @@ void UServerChunkWorldSettings::ReflectChangesFromEditorOnlySettings(const AEdit
         LOG_WARNING(
             LogChunkMisc,
             "Found override for world generation type. Value: [%s].",
-            *EWorldGenerationType::LexToString(EditorChunkWorldSettings.GetWorldGenerationType())
+            *LexToString(EditorChunkWorldSettings.GetWorldGenerationType())
         )
         this->WorldGenerationType = EditorChunkWorldSettings.GetWorldGenerationType();
     }

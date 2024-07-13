@@ -16,3 +16,5 @@
  * If false, the application will treat the relaxed checks as normal jchecks.
  */
 #define DO_RELAXED_JCHECKS 1
+
+#define WITH_STRIKE_SUBSYSTEM 0

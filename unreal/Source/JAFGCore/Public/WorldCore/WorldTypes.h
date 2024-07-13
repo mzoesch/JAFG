@@ -22,10 +22,7 @@ enum Type : uint8
 
 }
 
-namespace EChunkType
-{
-
-FORCEINLINE FString LexToString(const EChunkType::Type ChunkType)
+FORCEINLINE auto LexToString(const EChunkType::Type ChunkType) -> FString
 {
     switch (ChunkType)
     {
@@ -35,12 +32,10 @@ FORCEINLINE FString LexToString(const EChunkType::Type ChunkType)
     }
     default:
     {
-        checkNoEntry()
+        jrelaxedCheckNoEntry()
         return TEXT("Unknown");
     }
     }
-}
-
 }
 
 UENUM(BlueprintType)
@@ -56,10 +51,7 @@ enum Type : uint8
 
 }
 
-namespace EWorldGenerationType
-{
-
-FORCEINLINE FString LexToString(const EWorldGenerationType::Type GenerationType)
+FORCEINLINE auto LexToString(const EWorldGenerationType::Type GenerationType) -> FString
 {
     switch (GenerationType)
     {
@@ -73,10 +65,8 @@ FORCEINLINE FString LexToString(const EWorldGenerationType::Type GenerationType)
     }
     default:
     {
-        jcheck( false && "Unknown generation type." )
+        jrelaxedCheckNoEntry()
         return TEXT("Unknown");
     }
     }
-}
-
 }

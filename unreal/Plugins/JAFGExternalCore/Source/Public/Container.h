@@ -55,12 +55,31 @@ FORCEINLINE FString LexToString(const ELocalContainerChange::Type InType)
 {
     switch (InType)
     {
-        case ELocalContainerChange::Invalid: return TEXT("Invalid");
-        case ELocalContainerChange::Replicated: return TEXT("Replicated");
-        case ELocalContainerChange::Primary: return TEXT("Primary");
-        case ELocalContainerChange::Secondary: return TEXT("Secondary");
-        case ELocalContainerChange::Custom: return TEXT("Custom");
-        default: return TEXT("Unknown");
+        case ELocalContainerChange::Invalid:
+        {
+            return TEXT("Invalid");
+        }
+        case ELocalContainerChange::Replicated:
+        {
+            return TEXT("Replicated");
+        }
+        case ELocalContainerChange::Primary:
+        {
+            return TEXT("Primary");
+        }
+        case ELocalContainerChange::Secondary:
+        {
+            return TEXT("Secondary");
+        }
+        case ELocalContainerChange::Custom:
+        {
+            return TEXT("Custom");
+        }
+        default:
+        {
+            jrelaxedCheckNoEntry()
+            return TEXT("Unknown");
+        }
     }
 }
 

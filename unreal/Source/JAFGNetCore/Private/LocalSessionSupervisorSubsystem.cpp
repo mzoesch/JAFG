@@ -408,7 +408,7 @@ void ULocalSessionSupervisorSubsystem::SafeClientTravel(const ERegisteredWorlds:
     }
 
     /* Shamelessly copied from GameplayStatics.h. There may be safer ways to implement this? */
-    const     FString     LevelName  = FString::Printf(TEXT("%s"), *ERegisteredWorlds::LexToString(InNewWorld));
+    const     FString     LevelName  = FString::Printf(TEXT("%s"), *LexToString(InNewWorld));
     constexpr ETravelType TravelType = ETravelType::TRAVEL_Absolute;
 
     FWorldContext* WorldContextObject = GEngine->GetWorldContextFromWorld(this->GetWorld());
@@ -439,7 +439,7 @@ void ULocalSessionSupervisorSubsystem::SafeClientTravel(const ERegisteredWorlds:
         return;
     }
 
-    LOG_DISPLAY(LogLSSSS, "Client traveling to [%s].", *ERegisteredWorlds::LexToString(InNewWorld))
+    LOG_DISPLAY(LogLSSSS, "Client traveling to [%s].", *LexToString(InNewWorld))
 
     PlayerController->ClientTravel(MyURL.ToString(), ETravelType::TRAVEL_Absolute);
 
