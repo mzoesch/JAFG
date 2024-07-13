@@ -71,12 +71,6 @@ public:
 
     mutable TSet<TObjectPtr<UContainerReplicatorComponentBase>> SubscribedComponents;
 
-    // /**
-    //  * @return True if container values were changed. Note that potential updates will already have been broadcasted
-    //  *         to all subscribers of the specified container.
-    //  */
-    // bool PerformActionOnContainer(const FJCoordinate& InIdentifier, const int32 InIndex, IContainerOwner* InOwner, const ELocalContainerChange::Type InReason) const;
-
 protected:
 
     virtual auto CreateNewContainer(

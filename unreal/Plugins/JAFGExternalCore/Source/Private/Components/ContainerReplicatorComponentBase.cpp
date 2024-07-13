@@ -61,54 +61,6 @@ IContainer* AContainerReplicatorActorBase::GetContainer(
     return nullptr;
 }
 
-// bool AContainerReplicatorActorBase::PerformActionOnContainer(const FJCoordinate& InIdentifier, const int32 InIndex, IContainerOwner* InOwner, const ELocalContainerChange::Type InReason) const
-// {
-//     bool bChangedData;
-//
-//     IContainer** Value = this->Containers.Find(InIdentifier);
-//     if (Value == nullptr)
-//     {
-//         LOG_WARNING(LogContainerStuff, "Container for identifier [%s] not found.", *InIdentifier.ToString())
-//         return false;
-//     }
-//
-//     switch (InReason)
-//     {
-//     case ELocalContainerChange::Primary:
-//     {
-//         bChangedData = (*Value)->GetContainer(InIndex).OnPrimaryClicked(InOwner);
-//         break;
-//     }
-//     case ELocalContainerChange::Secondary:
-//     {
-//         bChangedData = (*Value)->GetContainer(InIndex).OnSecondaryClicked(InOwner);
-//         break;
-//     }
-//     default:
-//     {
-//         jcheckNoEntry()
-//         return false;
-//     }
-//     }
-//
-//     if (bChangedData == false)
-//     {
-//         return false;
-//     }
-//
-//     if (InOwner->IsLocalContainerOwner())
-//     {
-//         jcheckNoEntry()
-//     }
-//
-//
-//     ... Check if this is correct ... We need to broadcast this to subscribers
-//     (*Value)->OnContainerChangedDelegate.Broadcast(InReason, InIndex);
-//
-//
-//     return true;
-// }
-
 void AContainerReplicatorActorBase::BroadcastUpdateToSubscribedClients(const FJCoordinate& Identifier, const int32 Index) const
 {
     const IContainer* const * const Container = this->Containers.Find(Identifier);
