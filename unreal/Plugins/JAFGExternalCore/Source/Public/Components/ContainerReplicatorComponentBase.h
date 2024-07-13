@@ -64,7 +64,18 @@ public:
         const TFunction<void(IContainer* const Container)>& OnLongExecQueryFinished
     ) const -> IContainer*;
 
+    FORCEINLINE auto FindContainer(const FJCoordinate& Identifier) const -> IContainer**
+    {
+        return this->Containers.Find(Identifier);
+    }
+
     mutable TSet<TObjectPtr<UContainerReplicatorComponentBase>> SubscribedComponents;
+
+    // /**
+    //  * @return True if container values were changed. Note that potential updates will already have been broadcasted
+    //  *         to all subscribers of the specified container.
+    //  */
+    // bool PerformActionOnContainer(const FJCoordinate& InIdentifier, const int32 InIndex, IContainerOwner* InOwner, const ELocalContainerChange::Type InReason) const;
 
 protected:
 
@@ -111,13 +122,23 @@ public:
 
     void UnsubscribeContainer(IContainer* Container);
 
+    FORCEINLINE virtual auto AsContainerOwner(void) const -> IContainerOwner* PURE_VIRTUAL(
+        UContainerReplicatorComponentBase::AsContainerOwner, return nullptr;)
+
 private:
 
     UFUNCTION(Server, Reliable)
     void RequestContainer_ServerRPC(const FIntVector /* FJCoordinate */ & WorldKey);
 
     UFUNCTION(Client, Reliable)
-    void RequestedContainerData_ClientRPC(const FIntVector /* FJCoordinate */ & WorldKey, const TArray<FSlot>& ContainerSlots);
+    void PushRequestedContainerData_ClientRPC(const FIntVector /* FJCoordinate */ & WorldKey, const TArray<FSlot>& ContainerSlots);
+
+protected:
+
+    UFUNCTION(Server, Reliable, WithValidation)
+    void PushClientContainerAction_ServerRPC(const FIntVector /* FJCoordinate */ & InWorldKey, const int32 InIndex, const ELocalContainerChange::Type InReason);
+
+private:
 
     UFUNCTION(Server, Reliable)
     void UnsubscribeContainer_ServerRPC(const FIntVector /* FJCoordinate */ & WorldKey);

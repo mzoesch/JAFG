@@ -28,6 +28,8 @@ public:
     /** Call this method if this deferred container should be build now. */
     void BuildDeferred(void);
 
+    FORCEINLINE virtual auto ConditionalMarkAsDirty(const IContainer* TargetedContainer) -> void { }
+
 protected:
 
     // UUserWidget implementation

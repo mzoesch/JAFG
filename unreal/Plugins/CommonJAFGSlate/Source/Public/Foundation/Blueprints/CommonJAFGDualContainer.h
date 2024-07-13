@@ -25,20 +25,30 @@ public:
 
     inline static const FString Identifier = TEXT("CommonDualContainer");
 
-    FORCEINLINE void SetOtherContainerDisplayName(const FString& DisplayName) { this->OtherContainerDisplayName = DisplayName; }
-    FORCEINLINE void SetOtherContainerData(IContainer* Container) { this->OtherContainerData = Container; }
-    FORCEINLINE void SetAutoUnsubscribeOtherContainerOnKill(bool bValue) { this->bAutoUnsubscribeOtherContainerOnKill = bValue; }
+    FORCEINLINE auto SetOtherContainerDisplayName(const FString& DisplayName) -> void { this->OtherContainerDisplayName = DisplayName; }
+                auto SetOtherContainerData(IContainer* Container) -> void ;
+    FORCEINLINE auto SetAutoUnsubscribeOtherContainerOnKill(const bool bValue) -> void { this->bAutoUnsubscribeOtherContainerOnKill = bValue; }
+
+    // UJAFGContainer implementation
+    FORCEINLINE virtual auto ConditionalMarkAsDirty(const IContainer* TargetedContainer) -> void override
+    {
+        if (this->OtherContainerData == TargetedContainer)
+        {
+            this->MarkAsDirty();
+        }
+    }
+    // ~UJAFGContainer implementation
 
 protected:
 
     // UUserWidget implementation
-    virtual void NativeConstruct(void) override;
-    virtual void NativeDestruct(void) override;
+    virtual auto NativeConstruct(void) -> void override;
+    virtual auto NativeDestruct(void) -> void override;
     // ~UUserWidget implementation
 
     // UJAFGContainer implementation
-    virtual void OnBuild(void) override;
-    virtual void TryUpdateDisplayNames(void) override;
+    virtual auto OnBuild(void) -> void override;
+    virtual auto TryUpdateDisplayNames(void) -> void override;
     // ~UJAFGContainer implementation
 
     virtual void BuildOtherContainer(void);
@@ -61,4 +71,5 @@ private:
 
     FString OtherContainerDisplayName = TEXT("Other Container");
     bool bAutoUnsubscribeOtherContainerOnKill = true;
+    FDelegateHandle OnOtherContainerChangedDelegateHandle;
 };

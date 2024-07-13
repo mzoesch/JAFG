@@ -127,11 +127,11 @@ void AWorldCharacter::BeginPlay(void)
         /* Let components set the current defaults for the active camera. */
         this->OnCameraChangedEvent.Broadcast();
 
-        this->OnLocalContainerChangedEvent.AddLambda( [this] (const ELocalContainerChange::Type InReason, const int32 InIndex)
+        this->OnContainerChangedDelegate.AddLambda( [this] (const ELocalContainerChange::Type InReason, const int32 InIndex)
         { this->SafeUpdateHotbar(); });
-        this->OnLocalContainerChangedEvent.AddLambda( [this] (const ELocalContainerChange::Type InReason, const int32 InIndex)
+        this->OnContainerChangedDelegate.AddLambda( [this] (const ELocalContainerChange::Type InReason, const int32 InIndex)
         { this->OnLocalContainerChangedEventImpl(InReason, InIndex); });
-        this->OnLocalContainerChangedEvent.AddLambda( [this] (const ELocalContainerChange::Type InReason, const int32 InIndex)
+        this->OnContainerChangedDelegate.AddLambda( [this] (const ELocalContainerChange::Type InReason, const int32 InIndex)
         { this->UpdateAccumulatedPreview(); } );
     }
 
@@ -432,7 +432,7 @@ bool AWorldCharacter::EasyChangeContainer(
         if (this->IsLocallyControlled())
         {
             this->OnCursorValueChangedDelegate.Broadcast();
-            this->OnLocalContainerChangedEvent.Broadcast(InReason, InIndex);
+            this->OnContainerChangedDelegate.Broadcast(InReason, InIndex);
         }
         else
         {
@@ -472,7 +472,7 @@ bool AWorldCharacter::EasyChangeContainer(
         if (this->IsLocallyControlled())
         {
             this->OnCursorValueChangedDelegate.Broadcast();
-            this->OnLocalContainerChangedEvent.Broadcast(InReason, InIndex);
+            this->OnContainerChangedDelegate.Broadcast(InReason, InIndex);
         }
         else
         {
@@ -506,7 +506,7 @@ bool AWorldCharacter::EasyChangeContainerCl(
     if (Alternator(InIndex, this, InOwner))
     {
         this->OnCursorValueChangedDelegate.Broadcast();
-        this->OnLocalContainerChangedEvent.Broadcast(InReason, InIndex);
+        this->OnContainerChangedDelegate.Broadcast(InReason, InIndex);
         return true;
     }
 
@@ -525,7 +525,7 @@ bool AWorldCharacter::EasyOverrideContainerOnCl(
         return false;
     }
 
-    this->OnLocalContainerChangedEvent.Broadcast(InReason, InIndex);
+    this->OnContainerChangedDelegate.Broadcast(InReason, InIndex);
 
     return true;
 }
@@ -616,7 +616,7 @@ void AWorldCharacter::OnRep_Container(void) const
     }
 #endif /* !UE_BUILD_SHIPPING */
 
-    this->OnLocalContainerChangedEvent.Broadcast(ELocalContainerChange::Replicated, -1);
+    this->OnContainerChangedDelegate.Broadcast(ELocalContainerChange::Replicated, -1);
 
     return;
 }

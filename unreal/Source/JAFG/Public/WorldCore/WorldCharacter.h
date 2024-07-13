@@ -177,6 +177,7 @@ public:
         const TFunctionRef<bool(const int32 InLambdaIndex, IContainer* InLambdaTarget, IContainerOwner* InLambdaOwner)>& Alternator,
         const ELocalContainerChange::Type InReason
     ) -> bool override;
+    /** Client only. Will handle UI updates, replication, etc. */
     virtual auto EasyOverrideContainerOnCl(
         const int32 InIndex,
         const FAccumulated& InContent,

@@ -7,6 +7,7 @@
 
 #include "WorldHUDBaseInterface.generated.h"
 
+class IContainer;
 class UJAFGContainer;
 
 UINTERFACE()
@@ -32,4 +33,6 @@ public:
     }
 
     virtual auto MarkCurrentContainerAsDirty(void) -> void = 0;
+    /** Will only mark the container as dirty if the owning pointer of the current visible container is the same. */
+    virtual auto ConditionalMarkCurrentContainerAsDirty(const IContainer* TargetedContainer) -> void = 0;
 };

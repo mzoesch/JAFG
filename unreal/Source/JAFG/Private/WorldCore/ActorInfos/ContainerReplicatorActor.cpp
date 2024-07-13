@@ -2,7 +2,9 @@
 
 #include "WorldCore/ActorInfos/ContainerReplicatorActor.h"
 #include "Container.h"
+#include "Player/WorldPlayerController.h"
 #include "UI/WorldHUD.h"
+#include "WorldCore/WorldCharacter.h"
 
 class JAFG_API FUnownedContainer final : public INoRepContainer
 {
@@ -29,8 +31,6 @@ class JAFG_API FUnownedContainer final : public INoRepContainer
         const FAccumulated& InContent,
         const ELocalContainerChange::Type InReason = ELocalContainerChange::Replicated
     ) -> bool override;
-
-    virtual auto PushContainerUpdatesToServer(void) -> void override;
 };
 
 bool FUnownedContainer::EasyAddToContainer(const FAccumulated& Value)
@@ -61,17 +61,18 @@ bool FUnownedContainer::EasyChangeContainer(
         if (InOwner->IsLocalContainerOwner())
         {
             InOwner->OnCursorValueChangedDelegate.Broadcast();
-            this->OnLocalContainerChangedEvent.Broadcast(InReason, InIndex);
         }
 
-        this->PushContainerUpdatesToClient(InIndex);
+        this->OnContainerChangedDelegate.Broadcast(InReason, InIndex);
+
+        this->PushContainerUpdateToClient(InIndex);
 
         return true;
     }
 
     if (InOwner->IsLocalContainerOwner() == false)
     {
-        LOG_ERROR(LogContainerStuff, "Enclosing block should never be called.")
+        jrelaxedCheckNoEntry()
     }
 
     return false;
@@ -87,9 +88,9 @@ bool FUnownedContainer::EasyChangeContainerCl(
     if (Alternator(InIndex, this, InOwner))
     {
         InOwner->OnCursorValueChangedDelegate.Broadcast();
-        this->OnLocalContainerChangedEvent.Broadcast(InReason, InIndex);
+        this->OnContainerChangedDelegate.Broadcast(InReason, InIndex);
 
-        // TODO Push container updates ? or this this the OnLocalContainerChangedEvent
+        this->PushContainerUpdateToServer(InIndex, InReason);
 
         return true;
     }
@@ -103,17 +104,18 @@ bool FUnownedContainer::EasyOverrideContainerOnCl(
     const ELocalContainerChange::Type InReason /* = ELocalContainerChange::Replicated */
 )
 {
-    this->GetContainerValueRef(InIndex) = InContent;
+    FAccumulated& ValueRef = this->GetContainerValueRef(InIndex);
+    if (FAccumulated::DeepEquals(ValueRef, InContent))
+    {
+        /* Happens if the server confirms the action that the client has performed and predicted successfully. */
+        return false;
+    }
 
-    this->OnLocalContainerChangedEvent.Broadcast(InReason, InIndex);
+    ValueRef = InContent;
+
+    this->OnContainerChangedDelegate.Broadcast(InReason, InIndex);
 
     return true;
-}
-
-void FUnownedContainer::PushContainerUpdatesToServer(void)
-{
-    LOG_WARNING(LogTemp, "Not implemented yet.")
-    return;
 }
 
 AContainerReplicatorActor::AContainerReplicatorActor(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -127,7 +129,7 @@ void AContainerReplicatorActor::CreateNewContainer(
 ) const
 {
     INoRepContainer* Container = new FUnownedContainer();
-    Container->OnPushUpdatesToClient().BindLambda([this, Identifier] (const int32 Index) -> void
+    Container->OnPushContainerUpdateToClient().BindLambda([this, Identifier] (const int32 Index) -> void
     {
         this->BroadcastUpdateToSubscribedClients(Identifier, Index);
     });
@@ -143,15 +145,24 @@ UContainerReplicatorComponent::UContainerReplicatorComponent(const FObjectInitia
     this->PrimaryComponentTick.bCanEverTick = true;
 }
 
+IContainerOwner* UContainerReplicatorComponent::AsContainerOwner(void) const
+{
+    return Cast<AWorldCharacter>(Cast<APlayerController>(this->GetOwner())->GetPawn())->AsContainerOwner();
+}
+
 void UContainerReplicatorComponent::AddContainer(const FJCoordinate& WorldKey, const TArray<FSlot>& Slots)
 {
     INoRepContainer* Container = new FUnownedContainer();
-    Container->OnLocalContainerChangedEvent.AddLambda([this] (const ELocalContainerChange::Type InReason, const int32 InIndex) -> void
+    Container->OnContainerChangedDelegate.AddLambda([this] (const ELocalContainerChange::Type InReason, const int32 InIndex) -> void
     {
         if (InReason == ELocalContainerChange::Replicated)
         {
             this->GetWorld()->GetFirstPlayerController()->GetHUD<AWorldHUD>()->MarkCurrentContainerAsDirty();
         }
+    });
+    Container->OnPushContainerUpdateToServer().BindLambda( [this, WorldKey] (const int32 InIndex, const ELocalContainerChange::Type InReason)
+    {
+        this->PushClientContainerAction_ServerRPC(WorldKey, InIndex, InReason);
     });
     Container->ResetContainerData(Slots);
 

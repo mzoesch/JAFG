@@ -37,6 +37,7 @@ public:
     virtual auto RegisterContainer(const FString& Identifier, const TFunction<TSubclassOf<UJAFGContainer>(void)>& ContainerClassGetter) -> bool override;
     virtual auto PushContainerToViewport(const FString& Identifier) -> UJAFGContainer* override;
     virtual auto MarkCurrentContainerAsDirty(void) -> void override;
+    virtual auto ConditionalMarkCurrentContainerAsDirty(const IContainer* TargetedContainer) -> void override;
     // ~AWorldHUDBase implementation
 
 protected:

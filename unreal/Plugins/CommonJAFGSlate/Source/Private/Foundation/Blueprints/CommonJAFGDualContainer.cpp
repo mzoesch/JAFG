@@ -14,6 +14,24 @@ UCommonJAFGDualContainer::UCommonJAFGDualContainer(const FObjectInitializer& Obj
     return;
 }
 
+void UCommonJAFGDualContainer::SetOtherContainerData(IContainer* Container)
+{
+    if (Container == nullptr)
+    {
+        jcheckNoEntry()
+        return;
+    }
+
+    this->OtherContainerData = Container;
+
+    this->OnOtherContainerChangedDelegateHandle =  Container->OnContainerChangedDelegate.AddLambda( [this] (const ELocalContainerChange::Type InReason, const int32 InIndex)
+    {
+        this->MarkAsDirty();
+    });
+
+    return;
+}
+
 void UCommonJAFGDualContainer::NativeConstruct(void)
 {
     Super::NativeConstruct();
@@ -26,6 +44,11 @@ void UCommonJAFGDualContainer::NativeDestruct(void)
     if (UNetStatics::IsSafeClient(this) == false)
     {
         return;
+    }
+
+    if (this->OtherContainerData)
+    {
+        this->OtherContainerData->OnContainerChangedDelegate.Remove(this->OnOtherContainerChangedDelegateHandle);
     }
 
     if (this->bAutoUnsubscribeOtherContainerOnKill)

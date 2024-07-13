@@ -35,3 +35,8 @@
         LOG_FATAL(LogSystem, "Enclosing block should never be called.") \
     }
 #endif /* !DO_CHECK */
+
+/* TODO: Make this throwable. */
+// ReSharper disable once CppUE4CodingStandardNamingViolationWarning
+#define jrelaxedCheckNoEntry()                                      \
+    LOG_ERROR(LogSystem, "Enclosing block should never be called.")

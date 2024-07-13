@@ -238,6 +238,16 @@ void AWorldHUD::MarkCurrentContainerAsDirty(void)
     return;
 }
 
+void AWorldHUD::ConditionalMarkCurrentContainerAsDirty(const IContainer* TargetedContainer)
+{
+    if (this->CurrentContainer != nullptr)
+    {
+        this->CurrentContainer->ConditionalMarkAsDirty(TargetedContainer);
+    }
+
+    return;
+}
+
 #if WITH_EDITOR
 void AWorldHUD::CreateSimulationHUD(void)
 {

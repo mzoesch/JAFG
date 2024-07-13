@@ -61,6 +61,54 @@ IContainer* AContainerReplicatorActorBase::GetContainer(
     return nullptr;
 }
 
+// bool AContainerReplicatorActorBase::PerformActionOnContainer(const FJCoordinate& InIdentifier, const int32 InIndex, IContainerOwner* InOwner, const ELocalContainerChange::Type InReason) const
+// {
+//     bool bChangedData;
+//
+//     IContainer** Value = this->Containers.Find(InIdentifier);
+//     if (Value == nullptr)
+//     {
+//         LOG_WARNING(LogContainerStuff, "Container for identifier [%s] not found.", *InIdentifier.ToString())
+//         return false;
+//     }
+//
+//     switch (InReason)
+//     {
+//     case ELocalContainerChange::Primary:
+//     {
+//         bChangedData = (*Value)->GetContainer(InIndex).OnPrimaryClicked(InOwner);
+//         break;
+//     }
+//     case ELocalContainerChange::Secondary:
+//     {
+//         bChangedData = (*Value)->GetContainer(InIndex).OnSecondaryClicked(InOwner);
+//         break;
+//     }
+//     default:
+//     {
+//         jcheckNoEntry()
+//         return false;
+//     }
+//     }
+//
+//     if (bChangedData == false)
+//     {
+//         return false;
+//     }
+//
+//     if (InOwner->IsLocalContainerOwner())
+//     {
+//         jcheckNoEntry()
+//     }
+//
+//
+//     ... Check if this is correct ... We need to broadcast this to subscribers
+//     (*Value)->OnContainerChangedDelegate.Broadcast(InReason, InIndex);
+//
+//
+//     return true;
+// }
+
 void AContainerReplicatorActorBase::BroadcastUpdateToSubscribedClients(const FJCoordinate& Identifier, const int32 Index) const
 {
     const IContainer* const * const Container = this->Containers.Find(Identifier);
@@ -204,6 +252,34 @@ void UContainerReplicatorComponentBase::UnsubscribeContainer(IContainer* Contain
     return;
 }
 
+bool UContainerReplicatorComponentBase::PushClientContainerAction_ServerRPC_Validate(const FIntVector& InWorldKey, const int32 InIndex, const ELocalContainerChange::Type InReason)
+{
+    if (ELocalContainerChange::IsValidClientAction(InReason) == false)
+    {
+        LOG_ERROR(LogContainerStuff, "Invalid client action [%s].", *LexToString(InReason))
+        return false;
+    }
+
+    IContainer** Container = this->ContainerReplicatorActor->FindContainer(InWorldKey);
+    if (Container == nullptr)
+    {
+        LOG_ERROR(LogContainerStuff, "Container for [%s] not found.", *InWorldKey.ToString())
+        return false;
+    }
+
+    return (*Container)->EasyChangeContainer(
+        InIndex,
+        this->AsContainerOwner(),
+        ELocalContainerChange::ToFunction(InReason),
+        InReason
+    );
+}
+
+void UContainerReplicatorComponentBase::PushClientContainerAction_ServerRPC_Implementation(const FIntVector& InWorldKey, const int32 InIndex, const ELocalContainerChange::Type InReason)
+{
+    /* Unused method body. This is intentional. See the appropriate validate method. */
+}
+
 void UContainerReplicatorComponentBase::UnsubscribeContainer_ServerRPC_Implementation(const FIntVector& WorldKey)
 {
     if (this->SubscribedContainers.Contains(WorldKey) == false)
@@ -256,19 +332,19 @@ void UContainerReplicatorComponentBase::RequestContainer_ServerRPC_Implementatio
         {
             LOG_WARNING(LogContainerStuff, "Lazy loaded container for [%s].", *WorldKey.ToString())
             this->SubscribedContainers.Add(WorldKey);
-            this->RequestedContainerData_ClientRPC(WorldKey, Container->GetContainer());
+            this->PushRequestedContainerData_ClientRPC(WorldKey, Container->GetContainer());
         }
     ); LoadedContainer)
     {
         LOG_WARNING(LogContainerStuff, "Loaded container for [%s].", *WorldKey.ToString())
         this->SubscribedContainers.Add(WorldKey);
-        this->RequestedContainerData_ClientRPC(WorldKey, LoadedContainer->GetContainer());
+        this->PushRequestedContainerData_ClientRPC(WorldKey, LoadedContainer->GetContainer());
     }
 
     return;
 }
 
-void UContainerReplicatorComponentBase::RequestedContainerData_ClientRPC_Implementation(const FJCoordinate& WorldKey, const TArray<FSlot>& ContainerSlots)
+void UContainerReplicatorComponentBase::PushRequestedContainerData_ClientRPC_Implementation(const FJCoordinate& WorldKey, const TArray<FSlot>& ContainerSlots)
 {
     this->AddContainer(WorldKey, ContainerSlots);
 

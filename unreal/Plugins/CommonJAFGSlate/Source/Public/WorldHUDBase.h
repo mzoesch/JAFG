@@ -8,6 +8,7 @@
 
 #include "WorldHUDBase.generated.h"
 
+class IContainer;
 class UJAFGContainer;
 
 UCLASS(Abstract, NotBlueprintable)
@@ -25,4 +26,5 @@ public:
     virtual auto PushContainerToViewport(const FString& Identifier) -> UJAFGContainer* override PURE_VIRTUAL(AWorldHUDBase::PushContainerToViewport, return nullptr;)
 
     virtual auto MarkCurrentContainerAsDirty(void) -> void override PURE_VIRTUAL(AWorldHUDBase::MarkCurrentContainerAsDirty)
+    virtual auto ConditionalMarkCurrentContainerAsDirty(const IContainer* TargetedContainer) -> void override PURE_VIRTUAL(AWorldHUDBase::ConditionalMarkCurrentContainerAsDirty)
 };

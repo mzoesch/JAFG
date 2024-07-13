@@ -35,6 +35,8 @@ public:
 
     explicit UContainerReplicatorComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
+    virtual auto AsContainerOwner(void) const -> IContainerOwner* override;
+
 protected:
 
     // UContainerReplicatorComponentBase implementation

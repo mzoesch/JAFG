@@ -17,9 +17,10 @@ namespace ELocalContainerChange { enum Type : uint8; }
 DECLARE_MULTICAST_DELEGATE(OnCursorValueChangedDelegateSignature)
 DECLARE_DELEGATE(PrivateOnContainerChangedSignature)
 
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnContainerChangedSignature, ELocalContainerChange::Type InReason, const int32 InIndex)
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnContainerChangedDelegateSignature, const ELocalContainerChange::Type InReason, const int32 InIndex)
 
-DECLARE_DELEGATE_OneParam(FOnPushUpdatesToClientDelegateSignature, const int32 InIndex)
+DECLARE_DELEGATE_OneParam(FOnPushContainerUpdateToClientDelegateSignature, const int32 InIndex)
+DECLARE_DELEGATE_TwoParams(FOnPushContainerUpdateToServerDelegateSignature, const int32 InIndex, const ELocalContainerChange::Type InReason)
 
 UENUM(NotBlueprintType)
 namespace ELocalContainerChange
@@ -34,6 +35,33 @@ enum Type : uint8
     Custom,
 };
 
+}
+
+namespace ELocalContainerChange
+{
+
+/**
+ * @return True if this action can be performed by a client connection. All other actions / change reasons can only
+ *         be executed by the authority.
+ */
+FORCEINLINE auto IsValidClientAction(const ELocalContainerChange::Type InType) -> bool
+{
+    return InType == ELocalContainerChange::Primary || InType == ELocalContainerChange::Secondary;
+}
+
+}
+
+FORCEINLINE FString LexToString(const ELocalContainerChange::Type InType)
+{
+    switch (InType)
+    {
+        case ELocalContainerChange::Invalid: return TEXT("Invalid");
+        case ELocalContainerChange::Replicated: return TEXT("Replicated");
+        case ELocalContainerChange::Primary: return TEXT("Primary");
+        case ELocalContainerChange::Secondary: return TEXT("Secondary");
+        case ELocalContainerChange::Custom: return TEXT("Custom");
+        default: return TEXT("Unknown");
+    }
 }
 
 /**
@@ -126,13 +154,40 @@ public:
 
     FORCEINLINE virtual auto ToString_Container(void) const -> FString = 0;
 
-    /** Only for local "owners" called. Meaning never on a dedicated server. */
-    /*
-     * TODO We need to make a delegate here with the method that changes something?
-     *      Properly not? We need to make a dynamic system though.
-     */
-    FOnContainerChangedSignature OnLocalContainerChangedEvent;
+    FOnContainerChangedDelegateSignature OnContainerChangedDelegate;
 };
+
+namespace ELocalContainerChange
+{
+
+FORCEINLINE auto ToFunction(const ELocalContainerChange::Type InType)
+    -> TFunction<bool(
+        const int32 InLambdaIndex,
+        IContainer* InLambdaTarget,
+        IContainerOwner* InLambdaOwner
+    )>
+{
+    switch (InType)
+    {
+    case ELocalContainerChange::Primary:
+    {
+        return [] (const int32 InLambdaIndex, IContainer* InLambdaTarget, IContainerOwner* InLambdaOwner)
+        {
+            return InLambdaTarget->GetContainer(InLambdaIndex).OnPrimaryClicked(InLambdaOwner);
+        };
+    }
+    default:
+    {
+        LOG_WARNING(LogContainerStuff, "No function for change type %s. Returning empty lambda.", *LexToString(InType))
+        return [] (const int32 InLambdaIndex, IContainer* InLambdaTarget, IContainerOwner* InLambdaOwner) -> bool
+        {
+            return false;
+        };
+    }
+    }
+}
+
+}
 
 /**
  * A container that does not use the unreal's push model replication subsystem but instead relies on a more
@@ -170,16 +225,25 @@ public:
         return Result;
     }
 
-    FORCEINLINE virtual auto OnPushUpdatesToClient(void) -> FOnPushUpdatesToClientDelegateSignature&
+    FORCEINLINE auto OnPushContainerUpdateToClient(void) -> FOnPushContainerUpdateToClientDelegateSignature&
     {
-        return this->OnPushUpdatesToClientDelegate;
+        return this->OnPushContainerUpdateToClientDelegate;
     }
-    FORCEINLINE virtual void PushContainerUpdatesToClient(const int32 InIndex)
+    // ReSharper disable once CppMemberFunctionMayBeConst
+    FORCEINLINE auto PushContainerUpdateToClient(const int32 InIndex) -> void
     {
-        this->OnPushUpdatesToClientDelegate.Execute(InIndex);
+        this->OnPushContainerUpdateToClientDelegate.Execute(InIndex);
     }
 
-    virtual void PushContainerUpdatesToServer(void) = 0;
+    FORCEINLINE auto OnPushContainerUpdateToServer(void) -> FOnPushContainerUpdateToServerDelegateSignature&
+    {
+        return this->OnPushContainerUpdateToServerDelegate;
+    }
+    // ReSharper disable once CppMemberFunctionMayBeConst
+    FORCEINLINE auto PushContainerUpdateToServer(const int32 InIndex, const ELocalContainerChange::Type InReason) -> void
+    {
+        this->OnPushContainerUpdateToServerDelegate.Execute(InIndex, InReason);
+    }
 
     FORCEINLINE virtual auto ResetContainerData(const TArray<FSlot>& NewData) -> void { this->Container = NewData; }
     FORCEINLINE virtual void ResetContainerData(const int32 NewSize) { this->Container.Empty(NewSize); this->Container.SetNum(NewSize); }
@@ -188,7 +252,8 @@ protected:
 
     TArray<FSlot> Container;
 
-    FOnPushUpdatesToClientDelegateSignature OnPushUpdatesToClientDelegate;
+    FOnPushContainerUpdateToClientDelegateSignature OnPushContainerUpdateToClientDelegate;
+    FOnPushContainerUpdateToServerDelegateSignature OnPushContainerUpdateToServerDelegate;
 };
 
 UINTERFACE()
