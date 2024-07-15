@@ -126,6 +126,20 @@ void AWorldHUD::BeginPlay(void)
         this->EscapeMenu = CreateWidget<UJAFGUserWidget>(this->GetWorld(), SlateSettings->EscapeMenuWidgetClass);
         this->EscapeMenu->AddToViewport();
         this->EscapeMenu->SetVisibility(ESlateVisibility::Collapsed);
+
+        this->EscapeMenuVisibilityChangedHandle = Cast<AWorldPlayerController>(this->GetOwningPlayerController())->SubscribeToEscapeMenuVisibilityChanged(
+            FSlateVisibilityChangedSignature::FDelegate::CreateLambda( [this] (const bool bVisible)
+            {
+                if (this->Hotbar)
+                {
+                    this->Hotbar->SetVisibility(bVisible ? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
+                }
+                if (this->Crosshair)
+                {
+                    this->Crosshair->SetVisibility(bVisible ? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
+                }
+            })
+        );
     }
 
     // Loading Screen
@@ -185,6 +199,24 @@ void AWorldHUD::BeginPlay(void)
 
         return;
     });
+
+    return;
+}
+
+void AWorldHUD::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    Super::EndPlay(EndPlayReason);
+
+    if (this->EscapeMenuVisibilityChangedHandle.IsValid())
+    {
+        if (AWorldPlayerController* OwningController = Cast<AWorldPlayerController>(this->GetOwningPlayerController()); OwningController)
+        {
+            if (OwningController->UnSubscribeToEscapeMenuVisibilityChanged(this->EscapeMenuVisibilityChangedHandle) == false)
+            {
+                LOG_WARNING(LogCommonSlate, "Failed to unsubscribe from escape menu visibility changed event.")
+            }
+        }
+    }
 
     return;
 }

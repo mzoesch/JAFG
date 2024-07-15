@@ -28,7 +28,10 @@ public:
 
 protected:
 
+    // AAActor implementation
     virtual void BeginPlay(void) override;
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+    // ~AAActor implementation
 
 public:
 
@@ -76,4 +79,6 @@ private:
 
     FDelegateHandle ContainerVisibleDelegateHandle;
     FDelegateHandle ContainerLostVisibilityDelegateHandle;
+
+    FDelegateHandle EscapeMenuVisibilityChangedHandle;
 };
