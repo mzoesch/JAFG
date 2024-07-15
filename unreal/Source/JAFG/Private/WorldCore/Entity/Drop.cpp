@@ -52,7 +52,6 @@ void ADrop::BeginPlay(void)
     CollisionConvexMesh.Add(FVector(-this->ConvexX,  this->ConvexY,  this->ConvexZ )); /* Backward Top    Right */
     CollisionConvexMesh.Add(FVector(-this->ConvexX,  this->ConvexY, -this->ConvexZ )); /* Backward Bottom Right */
 
-    // Bug: https://forums.unrealengine.com/t/how-to-fix-static-mesh-falling-through-floor/297778/3
     this->MeshComponent->bUseComplexAsSimpleCollision = false;
 
     this->MeshComponent->AddCollisionConvexMesh(CollisionConvexMesh);
@@ -87,9 +86,13 @@ void ADrop::Tick(const float DeltaTime)
         this->Destroy();
     }
 
+    if (UNetStatics::IsSafeClient(this))
+    {
+        return;
+    }
+
     if (
-           UNetStatics::IsSafeClient(this) == false
-        && this->CreationTime != 0.0f
+           this->CreationTime != 0.0f
         && this->GetWorld()->GetTimeSeconds() - this->CreationTime > ADrop::InvincibleTime + ADrop::EpsilonInvincibleThreshold
     )
     {
@@ -131,7 +134,10 @@ void ADrop::OnSphereComponentOverlapBegin(
 {
     if (UNetStatics::IsSafeClient(this))
     {
-        LOG_WARNING(LogEntitySystem, "Client should not be able to overlap with this actor.")
+        if (this->bBeginPlayed == false)
+        {
+            LOG_WARNING(LogEntitySystem, "Client should not be able to overlap with this actor type.")
+        }
         return;
     }
 
@@ -143,7 +149,7 @@ void ADrop::OnSphereComponentOverlapBegin(
     AWorldCharacter* OtherCharacter = Cast<AWorldCharacter>(OtherActor); check( OtherCharacter )
 
     /* We check for zero. Because the overlap event will be called before the Begin Play event. */
-    if (this->CreationTime == 0.0f || this->GetWorld()->GetTimeSeconds() - this->CreationTime <= ADrop::InvincibleTime)
+    if (this->CreationTime == 0.0f || this->GetWorld()->GetTimeSeconds() - this->CreationTime < ADrop::InvincibleTime)
     {
         this->OverlappingCharacters.AddUnique(OtherCharacter);
         return;
@@ -166,7 +172,10 @@ void ADrop::OnSphereComponentOverlapEnd(
 {
     if (UNetStatics::IsSafeClient(this))
     {
-        LOG_WARNING(LogEntitySystem, "Client should not be able to overlap with this actor.")
+        if (this->bBeginPlayed == false)
+        {
+            LOG_WARNING(LogEntitySystem, "Client should not be able to overlap with this actor type.")
+        }
         return;
     }
 

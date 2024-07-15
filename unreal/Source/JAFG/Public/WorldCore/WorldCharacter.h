@@ -304,6 +304,9 @@ protected:
 
     auto OnStartedToggleContainer(const FInputActionValue& Value) -> void;
 
+    auto OnStartedDropAccumulated(const FInputActionValue& Value) -> void;
+    UFUNCTION(Server, Reliable, WithValidation)
+    void OnStartedDropAccumulated_ServerRPC(const FInputActionValue& Value);
     auto OnQuickSlotZero(const FInputActionValue& Value) -> void;
     auto OnQuickSlotOne(const FInputActionValue& Value) -> void;
     auto OnQuickSlotTwo(const FInputActionValue& Value) -> void;
@@ -395,6 +398,14 @@ public:
             this->GetFirstPersonTraceStart().GetLocation(),
             FVector::OneVector
         );
+    }
+    FORCEINLINE auto GetPredictedFirstPersonTraceStart(void) const -> FTransform
+    {
+        if (this->IsLocallyControlled())
+        {
+            return this->GetFirstPersonTraceStart();
+        }
+        return this->GetNonLocalFirstPersonTraceStart();
     }
 
     /** The added offset to the First-Person Camera Component. */

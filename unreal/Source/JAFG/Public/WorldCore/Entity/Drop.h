@@ -84,7 +84,7 @@ protected:
     static constexpr float EpsilonInvincibleThreshold { 1.0f };
 
     /** In seconds. */
-    int32 CreationTime = 0;
+    double CreationTime = 0;
 
     int32 ConvexX = 8;
     int32 ConvexY = 8;

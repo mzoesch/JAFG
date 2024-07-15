@@ -853,6 +853,11 @@ void AWorldCharacter::BindAction(const FString& ActionName, UEnhancedInputCompon
         this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Triggered, &AWorldCharacter::OnTriggeredDownMaxFlySpeed);
     }
 
+    else if (ActionName == InputActions::DropAccumulated)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldCharacter::OnStartedDropAccumulated);
+    }
+
     else if (ActionName == InputActions::QuickSlotZero)
     {
         this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldCharacter::OnQuickSlotZero);
@@ -1475,6 +1480,43 @@ void AWorldCharacter::OnTogglePerspective(const FInputActionValue& Value)
 void AWorldCharacter::OnStartedToggleContainer(const FInputActionValue& Value)
 {
     this->OnStartedToggleContainer(Value, UPlayerInventory::Identifier);
+}
+
+void AWorldCharacter::OnStartedDropAccumulated(const FInputActionValue& Value)
+{
+    if (this->GetContainerValueRef(this->SelectedQuickSlotIndex) == Accumulated::Null)
+    {
+        return;
+    }
+
+    this->OnQuickSlot_ReliableServerRPC(this->SelectedQuickSlotIndex);
+    this->OnStartedDropAccumulated_ServerRPC(Value);
+
+    return;
+}
+
+bool AWorldCharacter::OnStartedDropAccumulated_ServerRPC_Validate(const FInputActionValue& Value)
+{
+    return this->GetContainerValueRef(this->SelectedQuickSlotIndex) != Accumulated::Null;
+}
+
+void AWorldCharacter::OnStartedDropAccumulated_ServerRPC_Implementation(const FInputActionValue& Value)
+{
+    FAccumulated ToDrop = this->GetContainerValue(this->SelectedQuickSlotIndex);
+    ToDrop.Amount = 1;
+    this->EasyChangeContainer(this->SelectedQuickSlotIndex, -1);
+
+    const FTransform PredictedFirstPersonTraceStart = this->GetPredictedFirstPersonTraceStart();
+
+    UEntitySubsystem* EntitySubsystem = this->GetWorld()->GetSubsystem<UEntitySubsystem>(); check( EntitySubsystem )
+    EntitySubsystem->CreateDrop(
+        ToDrop,
+        PredictedFirstPersonTraceStart.GetLocation() + PredictedFirstPersonTraceStart.GetRotation().Vector().GetSafeNormal() * 100.0f,
+        PredictedFirstPersonTraceStart.GetRotation().Vector(),
+        60000.0f
+    );
+
+    return;
 }
 
 #define QUICK_SLOT_0    0

@@ -345,6 +345,17 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
         InputSubsystem->AddAction(Action);
     }
 
+    // Drop Accumulated
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::DropAccumulated;
+        Action.Keys.KeyA = EKeys::X;
+        Action.Keys.KeyB = EKeys::Invalid;
+        Action.Contexts.Add(InputContexts::Footlike);
+        InputSubsystem->AddAction(Action);
+    }
+
     // Quick Switch Zero Action
     //////////////////////////////////////////////////////////////////////////
     {

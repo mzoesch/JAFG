@@ -95,7 +95,7 @@ private:
 
     EChunkPersistency::Type ChunkPersistency = EChunkPersistency::Persistent;
     /**
-     * The real time (not stopped or dilated / clamped) when this chunk should be killed  by the generation subsystem.
+     * The real time (not stopped or dilated / clamped) when this chunk should be killed by the generation subsystem.
      * Only meaningful when the persistency of this chunk is temporary.
      */
     double RealTimeInSecondsWhenTemporaryChunkShouldBeKilled = 0.0f;

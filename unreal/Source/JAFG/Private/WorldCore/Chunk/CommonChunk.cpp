@@ -21,6 +21,7 @@ ACommonChunk::ACommonChunk(const FObjectInitializer& ObjectInitializer) : Super(
     /* We can do this for far away chunks, maybe? */
     /* this->ProceduralMeshComponent->bUseAsyncCooking = true; */
     this->ProceduralMeshComponent->SetCastShadow(true);
+    this->ProceduralMeshComponent->bUseComplexAsSimpleCollision = true;
 
     this->SubscribeWithPrivateStateDelegate();
 
@@ -73,6 +74,7 @@ void ACommonChunk::InitializeCommonStuff(void)
     if (this->RawVoxelData != nullptr)
     {
         delete[] this->RawVoxelData;
+        this->RawVoxelData = nullptr;
     }
 #endif /* WITH_EDITOR */
 

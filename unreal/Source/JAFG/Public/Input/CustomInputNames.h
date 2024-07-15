@@ -55,6 +55,7 @@ static const FString ZoomCameras               = TEXT("ZoomCameras");
 static const FString TogglePerspective         = TEXT("TogglePerspective");
 static const FString UpMaxFlySpeed             = TEXT("UpMaxFlySpeed");
 static const FString DownMaxFlySpeed           = TEXT("DownMaxFlySpeed");
+static const FString DropAccumulated           = TEXT("DropAccumulated");
 static const FString QuickSlotZero             = TEXT("QuickSlotZero");
 static const FString QuickSlotOne              = TEXT("QuickSlotOne");
 static const FString QuickSlotTwo              = TEXT("QuickSlotTwo");
