@@ -171,7 +171,8 @@ protected:
     UPROPERTY()
     TObjectPtr<UProceduralMeshComponent> ProceduralMeshComponent = nullptr;
 
-    virtual auto GenerateProceduralMesh(void) -> void PURE_VIRTUAL(ACommonChunk::GenerateProceduralMesh)
+    virtual auto GenerateProceduralMesh(void) -> void;
+    virtual auto GenerateCollisionConvexMesh(void) -> void;
             auto ApplyProceduralMesh(void) -> void;
 
     FORCEINLINE auto ClearProceduralMesh(void) -> void

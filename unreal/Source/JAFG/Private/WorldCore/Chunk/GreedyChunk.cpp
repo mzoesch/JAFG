@@ -15,6 +15,8 @@ AGreedyChunk::AGreedyChunk(const FObjectInitializer& ObjectInitializer) : Super(
 
 void AGreedyChunk::GenerateProceduralMesh(void)
 {
+    Super::GenerateProceduralMesh();
+
     // Sweep over each axis (X, Y, Z)
     for (int Axis = 0; Axis < 3; ++Axis)
     {

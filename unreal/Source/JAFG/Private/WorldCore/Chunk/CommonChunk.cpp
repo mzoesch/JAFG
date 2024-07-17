@@ -21,7 +21,7 @@ ACommonChunk::ACommonChunk(const FObjectInitializer& ObjectInitializer) : Super(
     /* We can do this for far away chunks, maybe? */
     /* this->ProceduralMeshComponent->bUseAsyncCooking = true; */
     this->ProceduralMeshComponent->SetCastShadow(true);
-    this->ProceduralMeshComponent->bUseComplexAsSimpleCollision = true;
+    this->ProceduralMeshComponent->bUseComplexAsSimpleCollision = false;
 
     this->SubscribeWithPrivateStateDelegate();
 
@@ -345,6 +345,94 @@ FChunkKey ACommonChunk::GetChunkKeyOnTheFly(void) const
 #pragma endregion MISC
 
 #pragma region Procedural Mesh
+
+void ACommonChunk::GenerateProceduralMesh(void)
+{
+    this->GenerateCollisionConvexMesh();
+}
+
+void ACommonChunk::GenerateCollisionConvexMesh(void)
+{
+    /*
+     * Calculates convex meshes down the X axis. Each mesh is one voxel in the Z and Y direction,
+     * but the X direction is the whole chunk. Separated by non-convex voxels.
+     */
+
+    this->ProceduralMeshComponent->ClearCollisionConvexMeshes();
+
+    constexpr float ConvexX { 50.0f };
+    constexpr float ConvexY { 50.0f };
+    constexpr float ConvexZ { 50.0f };
+
+    TArray<FVector> SingleVoxelConvexMesh;
+    SingleVoxelConvexMesh.Add(FVector( ConvexX * 2, ConvexY * 2, ConvexZ * 2 )); /* Forward  Top    Right */
+    SingleVoxelConvexMesh.Add(FVector( ConvexX * 2, ConvexY * 2, 0           )); /* Forward  Bottom Right */
+    SingleVoxelConvexMesh.Add(FVector( ConvexX * 2, 0,           ConvexZ * 2 )); /* Forward  Top    Left  */
+    SingleVoxelConvexMesh.Add(FVector( ConvexX * 2, 0,           0           )); /* Forward  Bottom Left  */
+    SingleVoxelConvexMesh.Add(FVector( 0,           0,           ConvexZ * 2 )); /* Backward Top    Left  */
+    SingleVoxelConvexMesh.Add(FVector( 0,           0,           0           )); /* Backward Bottom Left  */
+    SingleVoxelConvexMesh.Add(FVector( 0,           ConvexY * 2, ConvexZ * 2 )); /* Backward Top    Right */
+    SingleVoxelConvexMesh.Add(FVector( 0,           ConvexY * 2, 0           )); /* Backward Bottom Right */
+
+    TArray<TArray<FVector>> ConvexMeshes;
+
+    for (int Z = 0; Z < WorldStatics::ChunkSize; ++Z)
+    {
+        for (int Y = 0; Y < WorldStatics::ChunkSize; ++Y)
+        {
+            for (int X = 0; X < WorldStatics::ChunkSize; ++X)
+            {
+                if (this->GetRawVoxelData(FVoxelKey(X, Y, Z)) == ECommonVoxels::Air)
+                {
+                    continue;
+                }
+
+                int32 AddedVoxels = 0;
+                for (int ColX = X + 1; ColX < WorldStatics::ChunkSize; ++ColX)
+                {
+                    if (this->GetRawVoxelData(FVoxelKey(ColX, Y, Z)) == ECommonVoxels::Air)
+                    {
+                        break;
+                    }
+
+                    ++AddedVoxels;
+                }
+
+                TArray<FVector> CurrentVoxelConvexMesh = SingleVoxelConvexMesh;
+
+                const FVector XOffset      = FVector(AddedVoxels * (ConvexX * 2), 0, 0);
+                CurrentVoxelConvexMesh[0] += XOffset;
+                CurrentVoxelConvexMesh[1] += XOffset;
+                CurrentVoxelConvexMesh[2] += XOffset;
+                CurrentVoxelConvexMesh[3] += XOffset;
+
+                const FVector TotalOffset  = FVector(X * (ConvexX * 2), Y * (ConvexY * 2), Z * (ConvexZ * 2));
+                CurrentVoxelConvexMesh[0] += TotalOffset;
+                CurrentVoxelConvexMesh[1] += TotalOffset;
+                CurrentVoxelConvexMesh[2] += TotalOffset;
+                CurrentVoxelConvexMesh[3] += TotalOffset;
+                CurrentVoxelConvexMesh[4] += TotalOffset;
+                CurrentVoxelConvexMesh[5] += TotalOffset;
+                CurrentVoxelConvexMesh[6] += TotalOffset;
+                CurrentVoxelConvexMesh[7] += TotalOffset;
+
+                ConvexMeshes.Add(CurrentVoxelConvexMesh);
+
+                X += AddedVoxels;
+
+                continue;
+            }
+
+            continue;
+        }
+
+        continue;
+    }
+
+    this->ProceduralMeshComponent->SetCollisionConvexMeshes(ConvexMeshes);
+
+    return;
+}
 
 void ACommonChunk::ApplyProceduralMesh(void)
 {

@@ -9,4 +9,5 @@ AConvexChunk::AConvexChunk(const FObjectInitializer& ObjectInitializer) : Super(
 
 void AConvexChunk::GenerateProceduralMesh(void)
 {
+    Super::GenerateProceduralMesh();
 }
