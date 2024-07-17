@@ -398,7 +398,7 @@ void FHyperlaneWorker::OnBytesReceivedDelegateHandler(TArray<uint8>& InBytes) co
         }
         default:
         {
-            checkNoEntry()
+            jcheckNoEntry()
             break;
         }
         }
@@ -426,7 +426,6 @@ void FHyperlaneWorker::OnBytesReceivedDelegateHandler(TArray<uint8>& InBytes) co
 
         continue;
     }
-
 
     return;
 }

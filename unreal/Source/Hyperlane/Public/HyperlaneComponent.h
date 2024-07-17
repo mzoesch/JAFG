@@ -74,7 +74,7 @@ private:
      * The corresponding Worker that is associated with this component.
      * Therefore, this variable is only set on the locally controlled player.
      *
-     * Note, a listen server character is locally controlled, but we will also never create a worker there. We will
+     * @note A listen server character is locally controlled, but we will also never create a worker there. We will
      * just mimic the server's worker.
      */
     FHyperlaneWorker* HyperlaneWorker = nullptr;
