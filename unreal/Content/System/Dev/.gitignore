@@ -1,10 +1,7 @@
 # Ignoring changes in bare dev as they should be local only.
-
-# Level changes will not be captured in source control.
-L_BareDev.umap
-
 # Level assets will not be captured in source control.
 # Only put assets in here that are part of the L_BareDev.umap file.
 BareDev/*
 !BareDev/README.md
 !BareDev/.gitkeep
+!BareDev/L_BareDev.umap
