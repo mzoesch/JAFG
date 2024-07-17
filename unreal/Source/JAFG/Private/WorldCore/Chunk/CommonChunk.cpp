@@ -18,8 +18,8 @@ ACommonChunk::ACommonChunk(const FObjectInitializer& ObjectInitializer) : Super(
 
     this->ProceduralMeshComponent = ObjectInitializer.CreateDefaultSubobject<UProceduralMeshComponent>(this, TEXT("ProceduralMeshComponent"));
     this->SetRootComponent(this->ProceduralMeshComponent);
-    /* We can do this for far away chunks, maybe? */
-    /* this->ProceduralMeshComponent->bUseAsyncCooking = true; */
+    /* TODO We currently use this, and it does not seem to cause any issues. But we have to investigate this further. */
+    this->ProceduralMeshComponent->bUseAsyncCooking = true;
     this->ProceduralMeshComponent->SetCastShadow(true);
     this->ProceduralMeshComponent->bUseComplexAsSimpleCollision = false;
 
@@ -71,7 +71,7 @@ void ACommonChunk::InitializeCommonStuff(void)
 {
 #if WITH_EDITOR
     /* PIE May not always clean up correctly. */
-    if (this->RawVoxelData != nullptr)
+    if (this->RawVoxelData)
     {
         delete[] this->RawVoxelData;
         this->RawVoxelData = nullptr;
