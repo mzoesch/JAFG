@@ -6,8 +6,8 @@
 #include "Components/Image.h"
 #include "Components/JAFGBorder.h"
 #include "Components/JAFGTextBlock.h"
-#include "Foundation/ContainerValueCursor.h"
 #include "System/TextureSubsystem.h"
+#include "Foundation/JAFGContainerSlotTooltip.h"
 
 UJAFGContainerSlot::UJAFGContainerSlot(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -24,6 +24,12 @@ void UJAFGContainerSlot::NativeOnMouseEnter(const FGeometry& InGeometry, const F
 {
     Super::NativeOnMouseEnter(InGeometry, InMouseEvent);
     this->Border_Foreground->SetBrushColor(this->HoverColor);
+
+    if (this->SlotData->GetSlotValue() != Accumulated::Null)
+    {
+        this->SetToolTip(this->CreateToolTip());
+    }
+
     return;
 }
 
@@ -31,6 +37,7 @@ void UJAFGContainerSlot::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
 {
     Super::NativeOnMouseLeave(InMouseEvent);
     this->Border_Foreground->SetBrushColor(FColor::Transparent);
+    this->SetToolTip(nullptr);
     return;
 }
 
@@ -81,11 +88,12 @@ void UJAFGContainerSlot::OnRefresh(void)
     this->RenderSlot();
 }
 
-void UJAFGContainerSlot::RenderSlot(void) const
+void UJAFGContainerSlot::RenderSlot(void)
 {
     if (this->SlotData == nullptr)
     {
         LOG_WARNING(LogCommonSlate, "Slot data is invalid. Cannot proceed to render slot.")
+        this->SetToolTip(nullptr);
         return;
     }
 
@@ -104,12 +112,33 @@ void UJAFGContainerSlot::RenderSlot(void) const
         );
         this->Image_Preview->SetColorAndOpacity(FLinearColor::White);
 
+        if (this->GetToolTip() == nullptr)
+        {
+            this->SetToolTip(this->CreateToolTip());
+        }
+        else
+        {
+            Cast<UJAFGContainerSlotTooltip>(this->GetToolTip())->MarkAsDirtySynchronous();
+        }
+
         return;
     }
 
     this->Text_Amount->SetText(FText());
     this->Image_Preview->SetBrushFromTexture(nullptr);
     this->Image_Preview->SetColorAndOpacity(FLinearColor::Transparent);
+    this->SetToolTip(nullptr);
 
     return;
+}
+
+UJAFGContainerSlotTooltip* UJAFGContainerSlot::CreateToolTip(void)
+{
+    UJAFGContainerSlotTooltip* Tooltip = CreateWidget<UJAFGContainerSlotTooltip>(
+        this->GetWorld(),
+        GetDefault<UCommonJAFGSlateDeveloperSettings>()->ContainerSlotTooltipWidgetClass
+    );
+    Tooltip->PassDataToWidget(FSlotTooltipPassData{ this });
+
+    return Tooltip;
 }

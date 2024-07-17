@@ -84,6 +84,14 @@ public:
 
     explicit UJAFGUserWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
+protected:
+
+    // UUserWidget implementation
+    virtual void NativeConstruct(void) override;
+    // ~UUserWidget implementation
+
+public:
+
     /**
      * Generic virtual method declaration that some derived classes may implement to function as a deferred constructor
      * call. Highly sketchy solution as it requires anyone who works with this method to be extra carefully with
@@ -94,14 +102,6 @@ public:
      * See FWidgetPassData for more information.
      */
     virtual void PassDataToWidget(const FWidgetPassData& UncastedData) PURE_VIRTUAL(UJAFGUserWidget::PassDataToWidget)
-
-protected:
-
-    // UUserWidget implementation
-    virtual void NativeConstruct(void) override;
-    // ~UUserWidget implementation
-
-public:
 
     /** Updates all children in the widget tree with their wanted colors. */
     void UpdateTreeSchemes(void) const;

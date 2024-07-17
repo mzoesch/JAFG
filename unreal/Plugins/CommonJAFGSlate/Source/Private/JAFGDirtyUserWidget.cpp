@@ -2,13 +2,9 @@
 
 #include "JAFGDirtyUserWidget.h"
 
-void UJAFGDirtyUserWidget::NativeConstruct()
+void UJAFGDirtyUserWidget::NativeConstruct(void)
 {
     Super::NativeConstruct();
-
-    this->bDirty = false;
-
-    return;
 }
 
 void UJAFGDirtyUserWidget::NativeTick(const FGeometry& MyGeometry, const float InDeltaTime)

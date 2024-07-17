@@ -20,10 +20,17 @@ public:
         this->bDirty = true;
     }
 
+    FORCEINLINE auto MarkAsDirtySynchronous(void) -> void
+    {
+        this->OnRefresh();
+    }
+
 protected:
 
+    // UUserWidget implementation
     virtual auto NativeConstruct(void) -> void override;
     virtual auto NativeTick(const FGeometry& MyGeometry, const float InDeltaTime) -> void final override;
+    // ~UUserWidget implementation
 
     /** Called on the next tick if the user widget is marked as dirty. */
     virtual auto OnRefresh(void) -> void PURE_VIRTUAL(UJAFGDirtyUserWidget::OnRefresh)

@@ -10,6 +10,7 @@
 
 #include "JAFGContainerSlot.generated.h"
 
+class UJAFGContainerSlotTooltip;
 class UImage;
 class UJAFGTextBlock;
 class UJAFGBorder;
@@ -44,6 +45,8 @@ public:
 
     explicit UJAFGContainerSlot(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
+    FORCEINLINE auto GetSlotData(void) const -> UJAFGContainerSlotData* { return this->SlotData.Get(); }
+
 protected:
 
     // UUserWidget implementation
@@ -75,7 +78,9 @@ protected:
     virtual auto OnRefresh(void) -> void override;
     // ~UJAFGDirtyUserWidget implementation
 
-    void RenderSlot(void) const;
+    auto RenderSlot(void) -> void;
+
+    auto CreateToolTip(void) -> UJAFGContainerSlotTooltip*;
 
 private:
 

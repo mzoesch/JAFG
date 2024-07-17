@@ -7,6 +7,7 @@
 
 #include "CommonJAFGSlateDeveloperSettings.generated.h"
 
+class UJAFGContainerSlotTooltip;
 class UCommonJAFGDualContainer;
 class UJAFGUserWidget;
 class ULoadingScreen;
@@ -39,8 +40,11 @@ public:
     UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "PopUp")
     TSubclassOf<ULoadingScreen> LoadingScreenWidgetClass;
 
-    UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "PopUp")
+    UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Container")
     TSubclassOf<UJAFGUserWidget> ContainerValueCursorWidgetClass;
+
+    UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Container")
+    TSubclassOf<UJAFGContainerSlotTooltip> ContainerSlotTooltipWidgetClass;
 
     UPROPERTY(Config, EditAnywhere,  BlueprintReadOnly, Category = "Container")
     TSubclassOf<UCommonJAFGDualContainer> DualContainerWidgetClass;
