@@ -23,6 +23,13 @@ protected:
     virtual void NativeDestruct(void) override;
     // ~UUserWidget implementation
 
+    // UJAFGTabBarBase implementation
+    virtual bool AllowClose(void) const override;
+    // ~UJAFGTabBarBase implementation
+
+    FDelegateHandle VisibilityWillChangeDelegateHandle;
+    void OnVisibilityWillChange(const bool bVisible, bool& bAllow, const TFunction<void(void)>& CallbackIfLateAllow);
+
     FDelegateHandle VisibilityShouldChangeDelegateHandle;
     void OnVisibilityShouldChange(const bool bVisible);
 

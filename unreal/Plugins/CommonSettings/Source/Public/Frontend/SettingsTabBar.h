@@ -21,7 +21,9 @@ public:
 
 protected:
 
+    // UUserWidget implementation
     virtual void NativeConstruct(void) override;
+    // ~UUserWidget implementation
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
     TSubclassOf<USettingsTabBarPanel> TabBarPanelClass;

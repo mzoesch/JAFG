@@ -54,12 +54,23 @@ public:
     /** Will focus the No Active Tab. */
     void UnfocusAllTabs(void);
 
+    // UUserWidget implementation
+    virtual void SetVisibility(const ESlateVisibility InVisibility) override;
+    // ~UUserWidget implementation
+
 protected:
 
     // UUserWidget implementation
     virtual void NativeConstruct(void) override;
     virtual void NativeDestruct(void) override;
     // ~UUserWidget implementation
+
+    // UJAFGTabBarBase implementation
+    virtual void OnNativeMadeVisible() override;
+    virtual void OnNativeMadeCollapsed() override;
+    virtual bool AllowClose(void) const override;
+    virtual void TryToClose(const TFunction<void()>& CallbackIfLateAllow) override;
+    // ~UJAFGTabBarBase implementation
 
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
     TObjectPtr<UPanelWidget> P_EntryButtonContainer;
@@ -74,6 +85,10 @@ protected:
     static  auto GetDefaultTabDescriptorWithPanel(void) -> FTabBarTabDescriptor;
 #endif /* !UE_BUILD_SHIPPING */
     static  auto GetDefaultTabDescriptor(void) -> FTabBarTabDescriptor;
+
+    FORCEINLINE bool HasActiveTap(void) const { return this->ActiveTabIdentifier != UJAFGTabBar::NoActiveTabIdentifier; }
+
+    virtual void RequestToCloseCurrentTabAsync(const TFunction<void(void)>& CallbackIfLateAllow);
 
 private:
 

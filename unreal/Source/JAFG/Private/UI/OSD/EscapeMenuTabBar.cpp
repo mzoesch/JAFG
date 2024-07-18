@@ -25,6 +25,10 @@ void UEscapeMenuTabBar::NativeConstruct(void)
 #endif /* !WITH_EDITOR */
     }
 
+    this->VisibilityWillChangeDelegateHandle =
+        WorldPlayerController->SubscribeToEscapeMenuVisibilityChangeRequest(
+            FSlateVisibilityChnageRequestDelegateSignature::FDelegate::CreateUObject(this, &UEscapeMenuTabBar::OnVisibilityWillChange
+        ));
     this->VisibilityShouldChangeDelegateHandle =
         WorldPlayerController->SubscribeToEscapeMenuVisibilityChanged(
             ADD_SLATE_VIS_DELG(UEscapeMenuTabBar::OnVisibilityShouldChange
@@ -36,6 +40,44 @@ void UEscapeMenuTabBar::NativeConstruct(void)
 void UEscapeMenuTabBar::NativeDestruct(void)
 {
     Super::NativeDestruct();
+}
+
+bool UEscapeMenuTabBar::AllowClose(void) const
+{
+    return Super::AllowClose();
+}
+
+void UEscapeMenuTabBar::OnVisibilityWillChange(const bool bVisible, bool& bAllow, const TFunction<void(void)>& CallbackIfLateAllow)
+{
+    /*
+     * Some other delegate bound to this multicast event hast already denied the close.
+     * We do nothing and should for the next close broadcast request.
+     */
+    if (bAllow == false)
+    {
+        return;
+    }
+
+    if (bVisible)
+    {
+        return;
+    }
+
+    if (this->HasActiveTap() == false)
+    {
+        return;
+    }
+
+    if (this->AllowClose())
+    {
+        return;
+    }
+
+    bAllow = false;
+
+    this->RequestToCloseCurrentTabAsync(CallbackIfLateAllow);
+
+    return;
 }
 
 void UEscapeMenuTabBar::OnVisibilityShouldChange(const bool bVisible)

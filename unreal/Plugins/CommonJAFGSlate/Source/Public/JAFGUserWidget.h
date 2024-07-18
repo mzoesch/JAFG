@@ -8,6 +8,8 @@
 
 #include "JAFGUserWidget.generated.h"
 
+class ACommonHUD;
+
 /**
  * Empty declaration of a data class that can be used to pass data to a specific widget without knowing both the
  * widget class or / and the passed data class. Highly sketchy solution but helps to avoid some boilerplate code
@@ -105,6 +107,13 @@ public:
 
     /** Updates all children in the widget tree with their wanted colors. */
     void UpdateTreeSchemes(void) const;
+
+protected:
+
+    auto GetHUD(void) const -> AHUD*;
+    auto GetCommonHUD(void) const -> ACommonHUD*;
+    template <class T>
+    FORCEINLINE auto GetHUD(void) const -> T* { return Cast<T>(this->GetHUD()); }
 
 private:
 

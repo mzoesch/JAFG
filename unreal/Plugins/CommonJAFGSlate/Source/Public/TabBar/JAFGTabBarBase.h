@@ -39,15 +39,16 @@ public:
 
 protected:
 
-    /** For tab bar panels. */
     UFUNCTION(BlueprintImplementableEvent, Category = "JAFG|Widget", meta = (AllowPrivateAccess = "true"))
+    // ReSharper disable once CppUEBlueprintImplementableEventNotImplemented
     void OnMadeVisible( /* void */ );
-    /** For tab bar panels. */
     virtual void OnNativeMadeVisible(void) { }
 
-    /** For tab bar panels. */
     UFUNCTION(BlueprintImplementableEvent, Category = "JAFG|Widget", meta = (AllowPrivateAccess = "true"))
+    // ReSharper disable once CppUEBlueprintImplementableEventNotImplemented
     void OnMadeCollapsed( /* void */ );
-    /** For tab bar panels. */
     virtual void OnNativeMadeCollapsed(void) { }
+
+    virtual bool AllowClose(void) const { return true; }
+    virtual void TryToClose(const TFunction<void(void)>& CallbackIfLateAllow) { }
 };

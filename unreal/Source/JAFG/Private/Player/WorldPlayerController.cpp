@@ -1,3 +1,4 @@
+
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "Player/WorldPlayerController.h"
@@ -83,6 +84,22 @@ void AWorldPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 }
 
 #pragma region Enhanced Input
+
+FDelegateHandle AWorldPlayerController::SubscribeToEscapeMenuVisibilityChangeRequest(const FSlateVisibilityChnageRequestDelegateSignature::FDelegate& Delegate)
+{
+    if (this->IsLocalController() == false)
+    {
+        LOG_FATAL(LogWorldChar, "Not a local controller.")
+        return FDelegateHandle();
+    }
+
+    return this->EscapeMenuVisibilityChangeRequestDelegate.Add(Delegate);
+}
+
+bool AWorldPlayerController::UnSubscribeToEscapeMenuVisibilityChangeRequest(const FDelegateHandle& Handle)
+{
+    return this->EscapeMenuVisibilityChangeRequestDelegate.Remove(Handle);
+}
 
 FDelegateHandle AWorldPlayerController::SubscribeToEscapeMenuVisibilityChanged(const FSlateVisibilityChangedSignature::FDelegate& Delegate)
 {
@@ -263,6 +280,19 @@ void AWorldPlayerController::BindAction(const FString& ActionName, UEnhancedInpu
 
 void AWorldPlayerController::OnToggleEscapeMenu(const FInputActionValue& Value)
 {
+    bool bAllowChange = true;
+
+    this->EscapeMenuVisibilityChangeRequestDelegate.Broadcast(!this->bEscapeMenuVisible, bAllowChange, [this] (void)
+    {
+        LOG_VERY_VERBOSE(LogCommonSlate, "Late allowed. Now retrying to close the escape menu.")
+        this->OnToggleEscapeMenu(FInputActionValue());
+    });
+
+    if (bAllowChange == false)
+    {
+        return;
+    }
+
     if (this->EscapeMenuVisibilityChangedDelegate.IsBound() == false)
     {
         LOG_FATAL(LogWorldChar, "No subscribers to Escape Menu Visibility Changed.")

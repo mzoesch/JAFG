@@ -2,6 +2,7 @@
 
 #include "Frontend/SettingsTabBarPanel.h"
 
+#include "CommonHUD.h"
 #include "CustomSettingsLocalPlayer.h"
 #include "JAFGSettingsLocal.h"
 #include "Blueprint/WidgetTree.h"
@@ -92,6 +93,45 @@ void USettingsTabBarPanel::OnNativeMadeCollapsed(void)
     Super::OnNativeMadeCollapsed();
 }
 
+bool USettingsTabBarPanel::AllowClose(void) const
+{
+    if (Super::AllowClose() == false)
+    {
+        return false;
+    }
+
+    return bHasSettingChanged == false;
+}
+
+void USettingsTabBarPanel::TryToClose(const TFunction<void(void)>& CallbackIfLateAllow)
+{
+    Super::TryToClose(CallbackIfLateAllow);
+
+    /*
+     * TODO Make popup if settings can not be applied and maybe should be discarded.
+     */
+
+    this->GetCommonHUD()->CreateWarningPopup("You have unsaved changes. Do you want to apply them?", [this, CallbackIfLateAllow] (const bool bAccepted)
+    {
+        if (bAccepted == false)
+        {
+            return;
+        }
+
+        if (this->ChildrenThatDisallowApply.IsEmpty() == false)
+        {
+            LOG_WARNING(LogCommonSlate, "Some settings are not valid. Cannot apply.")
+            return;
+        }
+
+        this->OnApplyClicked();
+
+        CallbackIfLateAllow();
+    });
+
+    return;
+}
+
 void USettingsTabBarPanel::CreateSettingsPage(void)
 {
     LOG_DISPLAY(LogCommonSlate, "Creating Settings Page for %s", *this->PageSetting->GetDisplayName().ToString())
@@ -163,7 +203,7 @@ void USettingsTabBarPanel::CreateConcreteSetting(UGameSetting* InSetting, UPanel
         return;
     }
 
-    LOG_DISPLAY(LogCommonSlate, "Creating concrete setting: %s", *InSetting->GetIdentifier())
+    LOG_DISPLAY(LogCommonSlate, "Creating concrete setting: %s.", *InSetting->GetIdentifier())
 
     if (InSetting->IsA(UGameSettingValueScalar::StaticClass()))
     {
@@ -226,6 +266,7 @@ void USettingsTabBarPanel::OnApplyClicked(void)
     LOG_DISPLAY(LogGameSettings, "Applying settings.")
 
     this->B_Apply->SetIsEnabled(false);
+    this->bHasSettingChanged = false;
 
     if (this->PageSetting->GetChildSettings().IsEmpty())
     {

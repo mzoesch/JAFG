@@ -27,6 +27,22 @@ void UJAFGTabBar::UnfocusAllTabs(void)
     return;
 }
 
+void UJAFGTabBar::SetVisibility(const ESlateVisibility InVisibility)
+{
+    Super::SetVisibility(InVisibility);
+
+    if (InVisibility == ESlateVisibility::Collapsed || InVisibility == ESlateVisibility::Hidden)
+    {
+        this->OnNativeMadeCollapsed();
+    }
+    else
+    {
+        this->OnNativeMadeVisible();
+    }
+
+    return;
+}
+
 void UJAFGTabBar::NativeConstruct(void)
 {
     Super::NativeConstruct();
@@ -48,6 +64,82 @@ void UJAFGTabBar::NativeConstruct(void)
 void UJAFGTabBar::NativeDestruct(void)
 {
     Super::NativeDestruct();
+}
+
+void UJAFGTabBar::OnNativeMadeVisible(void)
+{
+    Super::OnNativeMadeVisible();
+}
+
+void UJAFGTabBar::OnNativeMadeCollapsed(void)
+{
+    Super::OnNativeMadeCollapsed();
+
+    if (this->HasActiveTap())
+    {
+        this->OnTabPressed(this->ActiveTabIdentifier);
+    }
+
+#if !UE_BUILD_SHIPPING
+    if (this->HasActiveTap())
+    {
+#if WITH_EDITOR
+        LOG_ERROR(LogCommonSlate, "Tab bar has an active tab when it tryed to close just now.")
+#else /* WITH_EDITOR */
+        LOG_FATAL(LogCommonSlate, "Tab bar has an active tab when it tryed to close just now.")
+#endif /* !WITH_EDITOR */
+    }
+#endif
+
+    return;
+}
+
+bool UJAFGTabBar::AllowClose(void) const
+{
+    if (Super::AllowClose() == false)
+    {
+        return false;
+    }
+
+    if (this->HasActiveTap() == false)
+    {
+        return true;
+    }
+
+    for (const UWidget* const Child : this->WS_PanelContainer->GetAllChildren())
+    {
+        if (const UJAFGTabBarBase* const Tab = Cast<UJAFGTabBarBase>(Child); Tab)
+        {
+            if (Tab->AllowClose() == false)
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+void UJAFGTabBar::TryToClose(const TFunction<void()>& CallbackIfLateAllow)
+{
+    Super::TryToClose(CallbackIfLateAllow);
+
+    for (UWidget* const Child : this->WS_PanelContainer->GetAllChildren())
+    {
+        if (UJAFGTabBarBase* const Tab = Cast<UJAFGTabBarBase>(Child); Tab)
+        {
+            if (Tab->AllowClose() == false)
+            {
+                Tab->TryToClose(CallbackIfLateAllow);
+                return;
+            }
+        }
+    }
+
+    LOG_ERROR(LogCommonSlate, "No tab found that disallows the close. Calling late delegate on next tick.")
+    AsyncTask(ENamedThreads::GameThread, CallbackIfLateAllow);
+
+    return;
 }
 
 void UJAFGTabBar::RegisterConcreteTab(const FTabBarTabDescriptor& TabDescriptor)
@@ -124,6 +216,40 @@ FTabBarTabDescriptor UJAFGTabBar::GetDefaultTabDescriptor(void)
     DefaultDescriptor.PanelWidgetClass  = nullptr;
 
     return DefaultDescriptor;
+}
+
+void UJAFGTabBar::RequestToCloseCurrentTabAsync(const TFunction<void(void)>& CallbackIfLateAllow)
+{
+    if (this->HasActiveTap() == false)
+    {
+        LOG_WARNING(LogCommonSlate, "No active tab to close. Calling late delegate on next tick.")
+        AsyncTask(ENamedThreads::GameThread, CallbackIfLateAllow);
+        return;
+    }
+
+    if (this->AllowClose())
+    {
+        LOG_WARNING(LogCommonSlate, "Tab bar can be closed via normal close procedure. Calling late delegate on next tick.")
+        AsyncTask(ENamedThreads::GameThread, CallbackIfLateAllow);
+        return;
+    }
+
+    for (UWidget* const Child : this->WS_PanelContainer->GetAllChildren())
+    {
+        if (UJAFGTabBarBase* const Tab = Cast<UJAFGTabBarBase>(Child); Tab)
+        {
+            if (Tab->AllowClose() == false)
+            {
+                Tab->TryToClose(CallbackIfLateAllow);
+                return;
+            }
+        }
+    }
+
+    LOG_ERROR(LogCommonSlate, "No tab found that disallows the close. Calling late delegate on next tick.")
+    AsyncTask(ENamedThreads::GameThread, CallbackIfLateAllow);
+
+    return;
 }
 
 void UJAFGTabBar::OnTabPressed(const FString& Identifier)

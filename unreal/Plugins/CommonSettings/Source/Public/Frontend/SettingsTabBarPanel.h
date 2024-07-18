@@ -74,8 +74,12 @@ protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
     TSubclassOf<UGameSettingListEntry_Color> GameSettingListEntry_ColorWidgetClass;
 
+    // UJAFGTabBarBase implementation
     virtual auto OnNativeMadeVisible(void) -> void override;
     virtual auto OnNativeMadeCollapsed(void) -> void override;
+    virtual auto AllowClose(void) const -> bool override;
+    virtual auto TryToClose(const TFunction<void(void)>& CallbackIfLateAllow) -> void override;
+    // ~UJAFGTabBarBase implementation
 
     virtual void CreateSettingsPage(void);
     virtual void CreateCollectionSubPage(const UGameSettingCollection* InCollection);

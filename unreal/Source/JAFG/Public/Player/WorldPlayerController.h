@@ -25,6 +25,9 @@ class UChatComponent;
 class UEscapeMenuResumeButton;
 class UMyHyperlaneComponent;
 
+/** Bind to this delegate before the visibility change to deny it. */
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FSlateVisibilityChnageRequestDelegateSignature, const bool /* bVisible */, bool& /* bAllow */, const TFunction<void(void)>& /* CallbackIfLateAllow */)
+
 DECLARE_MULTICAST_DELEGATE(FSlateVisibilityChangedOwnerVisSignature)
 DECLARE_MULTICAST_DELEGATE_OneParam(FSlateVisibilityChangedSignature, const bool /* bVisible */)
 
@@ -78,6 +81,9 @@ public:
     // Enhanced Input Extern Events
     //////////////////////////////////////////////////////////////////////////
 
+    auto SubscribeToEscapeMenuVisibilityChangeRequest(const FSlateVisibilityChnageRequestDelegateSignature::FDelegate& Delegate) -> FDelegateHandle;
+    auto UnSubscribeToEscapeMenuVisibilityChangeRequest(const FDelegateHandle& Handle) -> bool;
+
     auto SubscribeToEscapeMenuVisibilityChanged(const FSlateVisibilityChangedSignature::FDelegate& Delegate) -> FDelegateHandle;
     auto UnSubscribeToEscapeMenuVisibilityChanged(const FDelegateHandle& Handle) -> bool;
 
@@ -95,6 +101,8 @@ public:
 
 private:
 
+    /** Obviously local controller only. */
+    FSlateVisibilityChnageRequestDelegateSignature EscapeMenuVisibilityChangeRequestDelegate;
     /** Obviously local controller only. */
     FSlateVisibilityChangedSignature EscapeMenuVisibilityChangedDelegate;
     /** Obviously local controller only. */

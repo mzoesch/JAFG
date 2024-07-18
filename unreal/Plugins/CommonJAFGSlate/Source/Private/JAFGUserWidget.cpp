@@ -4,6 +4,7 @@
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/JAFGBorder.h"
+#include "CommonHUD.h"
 
 UJAFGUserWidget::UJAFGUserWidget(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -30,4 +31,14 @@ void UJAFGUserWidget::UpdateTreeSchemes(void) const
     }
 
     return;
+}
+
+AHUD* UJAFGUserWidget::GetHUD(void) const
+{
+    return this->GetOwningPlayer()->GetHUD();
+}
+
+auto UJAFGUserWidget::GetCommonHUD(void) const -> ACommonHUD*
+{
+    return this->GetHUD<ACommonHUD>();
 }

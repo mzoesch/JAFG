@@ -14,13 +14,15 @@ USettingsTabBar::USettingsTabBar(const FObjectInitializer& ObjectInitializer) : 
 
 void USettingsTabBar::NativeConstruct(void)
 {
+    Super::NativeConstruct();
+
     if (this->OwningRegistry == nullptr || !this->OwningRegistry->IsValidLowLevel())
     {
         LOG_FATAL(LogCommonSlate, "Local Settings Registry is invalid.")
         return;
     }
 
-    Super::NativeConstruct();
+    return;
 }
 
 FTabBarTabDescriptor USettingsTabBar::GetDefaultSettingsTabDescriptor(void) const
