@@ -24,5 +24,7 @@ void UGameSettingListEntry::PassDataToWidget(const FWidgetPassData& UncastedData
         return;
     }
 
+    this->OwningPanel->OnRestoreSettingsToInitialDelegate.AddLambda( [this] (void) { this->OnRestoreSettingsToInitial(); });
+
     return;
 }

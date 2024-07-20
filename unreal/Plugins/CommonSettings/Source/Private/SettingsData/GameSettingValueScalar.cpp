@@ -12,7 +12,7 @@ UGameSettingValueScalar::UGameSettingValueScalar(const FObjectInitializer& Objec
 
 void UGameSettingValueScalar::StoreInitial(void)
 {
-    Super::StoreInitial();
+    this->InitialValue = this->GetValue();
 }
 
 void UGameSettingValueScalar::ResetToDefault(void)
@@ -30,7 +30,7 @@ void UGameSettingValueScalar::ResetToDefault(void)
 
 void UGameSettingValueScalar::RestoreToInitial(void)
 {
-    Super::RestoreToInitial();
+    this->SetValue(this->InitialValue, EGameSettingChangeReason::RestoreToInitial);
 }
 
 FText UGameSettingValueScalar::GetFormattedText(void) const
@@ -84,6 +84,23 @@ float UGameSettingValueScalar::TransformRangeToValue(const float Value)
     const TRange<double> InputRange  = TRange<double>(0, 1);
 
     return FMath::GetMappedRangeValueClamped(InputRange, this->GetSourceRange(), static_cast<double>(Value));
+}
+
+void UGameSettingValueScalar::OnInitialized(void)
+{
+    if (this->GetDefaultValue().IsSet() == false)
+    {
+        LOG_ERROR(
+            LogGameSettings,
+            "Scalar setting [%s] has no default value set. This logic is not implemented yet.",
+            *this->GetIdentifier()
+        )
+        return;
+    }
+
+    Super::OnInitialized();
+
+    return;
 }
 
 TRange<double> UGameSettingValueScalar::GetSourceRange(void)

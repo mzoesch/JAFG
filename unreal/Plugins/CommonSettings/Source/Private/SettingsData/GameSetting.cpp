@@ -43,5 +43,7 @@ void UGameSetting::Initialize(UCustomSettingsLocalPlayer* InOwningPlayer)
         Setting->Initialize(InOwningPlayer);
     }
 
+    this->OnInitialized();
+
     return;
 }

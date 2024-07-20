@@ -39,7 +39,7 @@ UGameSettingCollection* UJAFGGameSettingRegistry::InitializeAudioSettings(UJAFGL
             ConcreteSetting->SetDisplayName("Music");
 
             ConcreteSetting->SetValueGetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(GetMusicVolume));
-            ConcreteSetting->SetValueSetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(SetMiscVolume));
+            ConcreteSetting->SetValueSetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(SetMusicVolume));
             ConcreteSetting->SetDefaultValue(UJAFGSettingsLocal::DefaultMusicVolume);
 
             ConcreteSetting->SetDisplayFormat(UGameSettingValueScalar::ZeroToOneAsPercent);

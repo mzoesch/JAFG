@@ -38,6 +38,10 @@ public:
 
 protected:
 
+    // UGameSettingListEntry implementation
+    virtual void OnRestoreSettingsToInitial(void) override;
+    // ~UGameSettingListEntry implementation
+
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
     TObjectPtr<UJAFGSlider> Slider_SettingValue;
 

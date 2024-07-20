@@ -39,8 +39,35 @@ void UGameSettingListEntry_Scalar::PassDataToWidget(const FWidgetPassData& Uncas
         this->Text_SettingValue->SetText(this->Setting->GetFormattedText());
         this->OnValueChanged(this->Setting->GetDefaultValue().GetValue(), this->Setting->GetValueNormalized());
     }
+    else
+    {
+        LOG_ERROR(
+            LogGameSettings,
+            "Scalar setting [%s] has no default value set. This is not implemented yet.",
+            *this->Setting->GetIdentifier()
+        )
+    }
 
     this->UpdateResetToDefaultButton();
+
+    return;
+}
+
+void UGameSettingListEntry_Scalar::OnRestoreSettingsToInitial(void)
+{
+    Super::OnRestoreSettingsToInitial();
+
+    LOG_VERBOSE(
+        LogGameSettings,
+        "Restoring [%s] scalar setting to initial [%f].",
+        *this->Setting->GetIdentifier(), this->Setting->GetInitialValue()
+    )
+
+    this->Setting->RestoreToInitial();
+
+    this->Text_SettingValue->SetText(this->Setting->GetFormattedText());
+    this->UpdateResetToDefaultButton();
+    this->OnValueChanged(this->Setting->GetValue(), this->Setting->GetValueNormalized());
 
     return;
 }
@@ -55,10 +82,9 @@ void UGameSettingListEntry_Scalar::OnSliderValueChanged(const float Value)
 
     this->Setting->SetValue(this->Setting->TransformRangeToValue(Value), EGameSettingChangeReason::Change);
 
-    this->Text_SettingValue->SetText(this->Setting->GetFormattedText());
-
     this->OwningPanel->OnApplyableSettingChanged();
 
+    this->Text_SettingValue->SetText(this->Setting->GetFormattedText());
     this->UpdateResetToDefaultButton();
     this->OnValueChanged(this->Setting->GetValue(), this->Setting->GetValueNormalized());
 

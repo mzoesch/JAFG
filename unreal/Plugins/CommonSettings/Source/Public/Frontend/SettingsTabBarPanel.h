@@ -15,6 +15,8 @@ class UGameSettingListEntry_Color;
 class UGameSettingListEntry_KeyIn;
 class UGameSettingListEntry_Scalar;
 
+DECLARE_MULTICAST_DELEGATE(FRestoreSettingsToInitialDelegateSignature)
+
 struct COMMONSETTINGS_API FSettingsPassData : public FWidgetPassData
 {
     explicit FSettingsPassData(TObjectPtr<UGameSetting> InPageSetting) : PageSetting(InPageSetting) { }
@@ -53,6 +55,8 @@ public:
      * made changes.
      */
     void ReleaseDisallowApply(const FString& ChildIdentifier);
+
+    FRestoreSettingsToInitialDelegateSignature OnRestoreSettingsToInitialDelegate;
 
 protected:
 
@@ -98,5 +102,7 @@ private:
 
     TSet<FString> ChildrenThatDisallowApply;
     bool bHasSettingChanged = false;
+    void UpdateButtonStates(void) const;
     void UpdateApplyButtonState(void) const;
+    void UpdateCancelButtonState(void) const;
 };

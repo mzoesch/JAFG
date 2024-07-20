@@ -1,9 +1,9 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "Frontend/SettingsTabBarPanel.h"
-
 #include "CommonHUD.h"
 #include "CustomSettingsLocalPlayer.h"
+#include "JAFGMacros.h"
 #include "JAFGSettingsLocal.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/JAFGButton.h"
@@ -31,6 +31,7 @@ void USettingsTabBarPanel::NativeConstruct(void)
     this->B_Cancel->OnClicked.AddDynamic(this, &USettingsTabBarPanel::OnCancelClicked);
 
     this->B_Apply->SetIsEnabled(false);
+    this->B_Cancel->SetIsEnabled(false);
 
     return;
 }
@@ -42,8 +43,6 @@ void USettingsTabBarPanel::PassDataToWidget(const FWidgetPassData& UncastedData)
         this->PageSetting = Data->PageSetting;
     }
 
-    // delete &UncastedData;
-
     if (this->PageSetting == nullptr || !this->PageSetting->IsValidLowLevel())
     {
         LOG_FATAL(LogCommonSlate, "Invalid Page Setting received.")
@@ -51,6 +50,7 @@ void USettingsTabBarPanel::PassDataToWidget(const FWidgetPassData& UncastedData)
     }
 
     this->CreateSettingsPage();
+    this->UpdateButtonStates();
 
     return;
 }
@@ -58,7 +58,7 @@ void USettingsTabBarPanel::PassDataToWidget(const FWidgetPassData& UncastedData)
 void USettingsTabBarPanel::OnApplyableSettingChanged(void)
 {
     this->bHasSettingChanged = true;
-    this->UpdateApplyButtonState();
+    this->UpdateButtonStates();
 
     return;
 }
@@ -70,7 +70,7 @@ void USettingsTabBarPanel::DisallowApply(const FString& ChildIdentifier)
         this->ChildrenThatDisallowApply.Add(ChildIdentifier);
     }
 
-    this->UpdateApplyButtonState();
+    this->UpdateButtonStates();
 
     return;
 }
@@ -78,7 +78,7 @@ void USettingsTabBarPanel::DisallowApply(const FString& ChildIdentifier)
 void USettingsTabBarPanel::ReleaseDisallowApply(const FString& ChildIdentifier)
 {
     this->ChildrenThatDisallowApply.Remove(ChildIdentifier);
-    this->UpdateApplyButtonState();
+    this->UpdateButtonStates();
 
     return;
 }
@@ -257,16 +257,18 @@ void USettingsTabBarPanel::CreateConcreteSetting(UGameSetting* InSetting, UPanel
         Parent->AddChild(SettingText);
     }
 
-
     return;
 }
 
 void USettingsTabBarPanel::OnApplyClicked(void)
 {
-    LOG_DISPLAY(LogGameSettings, "Applying settings.")
+    LOG_DISPLAY(LogGameSettings, "Applying page [%s] settings.", *this->PageSetting->GetIdentifier())
 
-    this->B_Apply->SetIsEnabled(false);
-    this->bHasSettingChanged = false;
+    if (this->ChildrenThatDisallowApply.IsEmpty() == false)
+    {
+        jcheckNoEntry()
+        return;
+    }
 
     if (this->PageSetting->GetChildSettings().IsEmpty())
     {
@@ -275,23 +277,54 @@ void USettingsTabBarPanel::OnApplyClicked(void)
     }
 
     UJAFGSettingsLocal* SettingsLocal = UJAFGSettingsLocal::Get();
-
     if (SettingsLocal == nullptr || !SettingsLocal->IsValidLowLevel())
     {
         LOG_FATAL(LogCommonSlate, "Invalid local settings.")
         return;
     }
-
     SettingsLocal->ApplySettings(false);
+
+    this->bHasSettingChanged = false;
+    this->UpdateButtonStates();
 
     return;
 }
 
 void USettingsTabBarPanel::OnCancelClicked(void)
 {
+    LOG_DISPLAY(LogGameSettings, "Discarding page [%s] settings.", *this->PageSetting->GetIdentifier())
+
+    this->bHasSettingChanged = false;
+    this->ChildrenThatDisallowApply.Empty();
+
+    if (this->PageSetting->GetChildSettings().IsEmpty())
+    {
+        LOG_ERROR(LogCommonSlate, "No settings to discard.")
+        return;
+    }
+
+    this->OnRestoreSettingsToInitialDelegate.Broadcast();
+
+    this->bHasSettingChanged = false;
+    this->UpdateButtonStates();
+
+    return;
+}
+
+void USettingsTabBarPanel::UpdateButtonStates(void) const
+{
+    this->UpdateApplyButtonState();
+    this->UpdateCancelButtonState();
+
+    return;
 }
 
 void USettingsTabBarPanel::UpdateApplyButtonState(void) const
 {
     this->B_Apply->SetIsEnabled(this->bHasSettingChanged && this->ChildrenThatDisallowApply.IsEmpty());
+}
+
+void USettingsTabBarPanel::UpdateCancelButtonState(void) const
+{
+    this->B_Cancel->SetIsEnabled(this->bHasSettingChanged);
 }

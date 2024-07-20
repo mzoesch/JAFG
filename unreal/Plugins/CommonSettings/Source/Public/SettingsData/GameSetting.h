@@ -19,6 +19,11 @@ public:
 
     explicit UGameSetting(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
+    /**
+     * Called to initialize the setting.
+     * @note It is not safe to check potential child settings, as they might not have been initialized yet. If
+     *       children have to be checked, do so in the UGameSetting#OnInitialized delegate.
+     */
     void Initialize(UCustomSettingsLocalPlayer* InOwningPlayer);
 
     FORCEINLINE virtual auto GetChildSettings(void) const -> TArray<UGameSetting*> { return TArray<UGameSetting*>(); }
@@ -34,6 +39,10 @@ public:
 
 protected:
 
+    /**
+     * Called down from the children to the top parents after the setting has been initialized and
+     * UGameSetting#Initialize was called and executed.
+     */
     virtual void OnInitialized(void) { }
 
     UPROPERTY(Transient)

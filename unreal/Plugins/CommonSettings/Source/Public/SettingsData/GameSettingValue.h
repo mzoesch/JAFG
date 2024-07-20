@@ -22,7 +22,7 @@ public:
 
     /**
      * Stores an initial value for the setting.
-     * This will be called OnInitialized, but should also be called if the setting is 'applied'.
+     * This will be called OnInitialized, but should also be called if the setting is "applied".
      */
     virtual auto StoreInitial(void) -> void PURE_VIRTUAL(UGameSettingValue::StoreInitial)
 
@@ -37,5 +37,7 @@ public:
 
 protected:
 
+    // UGameSetting implementation
     virtual auto OnInitialized(void) -> void override;
+    // ~UGameSetting implementation
 };

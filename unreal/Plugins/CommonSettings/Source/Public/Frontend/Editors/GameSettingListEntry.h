@@ -29,6 +29,8 @@ public:
 
 protected:
 
+    virtual void OnRestoreSettingsToInitial(void) { }
+
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
     TObjectPtr<UJAFGTextBlock> Text_SettingName;
 

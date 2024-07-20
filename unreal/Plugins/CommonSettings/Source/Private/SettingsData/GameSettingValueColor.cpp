@@ -1,7 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "SettingsData/GameSettingValueColor.h"
-
 #include "JAFGLogDefs.h"
 #include "Kismet/KismetStringLibrary.h"
 
@@ -12,7 +11,6 @@ UGameSettingValueColor::UGameSettingValueColor(const FObjectInitializer& ObjectI
 
 void UGameSettingValueColor::StoreInitial(void)
 {
-    Super::StoreInitial();
 }
 
 void UGameSettingValueColor::ResetToDefault(void)

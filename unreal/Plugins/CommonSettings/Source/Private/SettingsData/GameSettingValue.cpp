@@ -10,4 +10,8 @@ UGameSettingValue::UGameSettingValue(const FObjectInitializer& ObjectInitializer
 void UGameSettingValue::OnInitialized(void)
 {
     Super::OnInitialized();
+
+    this->StoreInitial();
+
+    return;
 }

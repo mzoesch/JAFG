@@ -11,6 +11,7 @@
 
 typedef TFunction<FText(const double Value)> FSettingScalarFormatFunction;
 
+/** A game setting value that stores a scalar. */
 UCLASS(NotBlueprintable)
 class COMMONSETTINGS_API UGameSettingValueScalar : public UGameSettingValue
 {
@@ -43,6 +44,8 @@ public:
     FORCEINLINE auto SetValueGetter(const TSharedRef<FGameSettingDataSource>& InGetter) -> void { this->ValueGetter = InGetter; }
     FORCEINLINE auto SetValueSetter(const TSharedRef<FGameSettingDataSource>& InSetter) -> void { this->ValueSetter = InSetter; }
 
+    FORCEINLINE auto GetInitialValue(void) const -> double { return this->InitialValue; }
+
     FORCEINLINE auto SetUserMinimum(const double InMinimum) -> void { this->Minimum = InMinimum; }
     FORCEINLINE auto SetUserMinimum(const float  InMinimum) -> void { this->SetUserMinimum(static_cast<double>(InMinimum)); }
     FORCEINLINE auto GetUserMinimum(void) const -> TOptional<double> { return this->Minimum; }
@@ -57,9 +60,13 @@ public:
      * @param Value Has to be [0, 1]. Will transform it to the local used range in this setting.
      *              Requires that UGameSettingValueScalar#Minimum and UGameSettingValueScalar#Maximum are set.
      */
-    float TransformRangeToValue(const float Value);
+    auto TransformRangeToValue(const float Value) -> float;
 
 protected:
+
+    // UGameSetting implementation
+    virtual void OnInitialized(void) override;
+    // ~UGameSetting implementation
 
     TOptional<double> DefaultValue;
 
