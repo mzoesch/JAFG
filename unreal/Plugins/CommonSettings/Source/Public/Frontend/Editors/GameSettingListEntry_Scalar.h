@@ -39,6 +39,7 @@ public:
 protected:
 
     // UGameSettingListEntry implementation
+    virtual void OnAppliedSettings(void) override;
     virtual void OnRestoreSettingsToInitial(void) override;
     // ~UGameSettingListEntry implementation
 

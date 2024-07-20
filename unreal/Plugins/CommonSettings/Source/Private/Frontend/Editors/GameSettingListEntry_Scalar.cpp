@@ -53,6 +53,15 @@ void UGameSettingListEntry_Scalar::PassDataToWidget(const FWidgetPassData& Uncas
     return;
 }
 
+void UGameSettingListEntry_Scalar::OnAppliedSettings(void)
+{
+    Super::OnAppliedSettings();
+
+    this->Setting->StoreInitial();
+
+    return;
+}
+
 void UGameSettingListEntry_Scalar::OnRestoreSettingsToInitial(void)
 {
     Super::OnRestoreSettingsToInitial();

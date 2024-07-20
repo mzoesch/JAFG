@@ -29,6 +29,7 @@ public:
 
 protected:
 
+    virtual void OnAppliedSettings(void) { }
     virtual void OnRestoreSettingsToInitial(void) { }
 
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))

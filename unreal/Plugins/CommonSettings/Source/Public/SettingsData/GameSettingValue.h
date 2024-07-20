@@ -39,5 +39,6 @@ protected:
 
     // UGameSetting implementation
     virtual auto OnInitialized(void) -> void override;
+    virtual auto OnApply(void) -> void;
     // ~UGameSetting implementation
 };

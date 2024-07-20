@@ -284,6 +284,8 @@ void USettingsTabBarPanel::OnApplyClicked(void)
     }
     SettingsLocal->ApplySettings(false);
 
+    this->OnAppliedSettingsDelegate.Broadcast();
+
     this->bHasSettingChanged = false;
     this->UpdateButtonStates();
 

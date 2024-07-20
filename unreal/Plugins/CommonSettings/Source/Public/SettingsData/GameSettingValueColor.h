@@ -37,6 +37,8 @@ protected:
 
     FColor DefaultValue;
 
+    FColor InitialColor;
+
     TSharedPtr<FGameSettingDataSource> ValueGetter;
     TSharedPtr<FGameSettingDataSource> ValueSetter;
 };

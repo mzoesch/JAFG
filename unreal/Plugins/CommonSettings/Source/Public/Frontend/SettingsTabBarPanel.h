@@ -15,7 +15,8 @@ class UGameSettingListEntry_Color;
 class UGameSettingListEntry_KeyIn;
 class UGameSettingListEntry_Scalar;
 
-DECLARE_MULTICAST_DELEGATE(FRestoreSettingsToInitialDelegateSignature)
+DECLARE_MULTICAST_DELEGATE(FOnAppliedSettingsDelegateSignature)
+DECLARE_MULTICAST_DELEGATE(FOnRestoreSettingsToInitialDelegateSignature)
 
 struct COMMONSETTINGS_API FSettingsPassData : public FWidgetPassData
 {
@@ -56,7 +57,8 @@ public:
      */
     void ReleaseDisallowApply(const FString& ChildIdentifier);
 
-    FRestoreSettingsToInitialDelegateSignature OnRestoreSettingsToInitialDelegate;
+    FOnAppliedSettingsDelegateSignature OnAppliedSettingsDelegate;
+    FOnRestoreSettingsToInitialDelegateSignature OnRestoreSettingsToInitialDelegate;
 
 protected:
 
