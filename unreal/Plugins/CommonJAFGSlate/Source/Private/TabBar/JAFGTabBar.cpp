@@ -18,11 +18,28 @@ UJAFGTabBar::UJAFGTabBar(const FObjectInitializer& ObjectInitializer) : Super(Ob
     return;
 }
 
-void UJAFGTabBar::UnfocusAllTabs(void)
+void UJAFGTabBar::UnfocusAllTabs(const TFunction<void(void)>& OnUnfocusedAllTabsDelegate)
 {
+    if (UJAFGTabBarBase* Child = Cast<UJAFGTabBarBase>(this->WS_PanelContainer->GetActiveWidget()))
+    {
+        if (Child->AllowClose() == false)
+        {
+            Child->TryToClose( [this, OnUnfocusedAllTabsDelegate] (void)
+            {
+                this->UnfocusAllTabs(OnUnfocusedAllTabsDelegate);
+            });
+            return;
+        }
+
+        Child->OnNativeMadeCollapsed();
+        Child->OnMadeCollapsed();
+    }
+
     this->ActiveTabIdentifier = UJAFGTabBar::NoActiveTabIdentifier;
     this->WS_PanelContainer->SetActiveWidgetIndex(this->FindIndexOfIdentifier(this->ActiveTabIdentifier));
     this->OnTabPressedEvent.Broadcast(this->ActiveTabIdentifier);
+
+    OnUnfocusedAllTabsDelegate();
 
     return;
 }
@@ -256,6 +273,16 @@ void UJAFGTabBar::OnTabPressed(const FString& Identifier)
 {
     if (UJAFGTabBarBase* Child = Cast<UJAFGTabBarBase>(this->WS_PanelContainer->GetActiveWidget()))
     {
+        if (Child->AllowClose() == false)
+        {
+            Child->TryToClose( [this, Identifier] (void)
+            {
+                this->OnTabPressed(Identifier);
+            });
+
+            return;
+        }
+
         Child->OnNativeMadeCollapsed();
         Child->OnMadeCollapsed();
     }

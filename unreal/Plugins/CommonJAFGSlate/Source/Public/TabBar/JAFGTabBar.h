@@ -51,8 +51,12 @@ public:
 
     FOnTabPressedSignature OnTabPressedEvent;
 
-    /** Will focus the No Active Tab. */
-    void UnfocusAllTabs(void);
+    /**
+     * Will try to focus the No Active Tab.
+     *
+     * @param OnUnfocusedAllTabsDelegate The delegate that will be called if all tabs have been unfocused.
+     */
+    void UnfocusAllTabs(const TFunction<void(void)>& OnUnfocusedAllTabsDelegate);
 
     // UUserWidget implementation
     virtual void SetVisibility(const ESlateVisibility InVisibility) override;
