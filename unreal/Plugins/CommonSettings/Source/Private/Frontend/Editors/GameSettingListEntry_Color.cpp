@@ -52,12 +52,43 @@ void UGameSettingListEntry_Color::PassDataToWidget(const FWidgetPassData& Uncast
     return;
 }
 
+bool UGameSettingListEntry_Color::CanBeApplied(void) const
+{
+    if (Super::CanBeApplied() == false)
+    {
+        return false;
+    }
+
+    return this->OwningPanel->HasDisallowedApply(this->Setting->GetIdentifier()) == false;
+}
+
+void UGameSettingListEntry_Color::OnRestoreSettingsToInitial(void)
+{
+    Super::OnRestoreSettingsToInitial();
+
+    LOG_VERBOSE(
+        LogGameSettings,
+        "Restoring [%s] scalar setting to initial [%s].",
+        *this->Setting->GetIdentifier(), *this->Setting->GetInitialValue().ToString()
+    )
+
+    this->Setting->RestoreToInitial();
+
+    this->Border_Container->SetBrushColor(this->StandardContainerColor);
+    this->Border_ColorPreview->SetBrushColor(this->Setting->GetValue());
+    this->SetEditableText(this->Setting->GetValue());
+    this->UpdateResetToDefaultButton();
+
+    return;
+}
+
 /* Do NOT convert to const method, as this is a Rider IDEA false positive error. */
 // ReSharper disable once CppMemberFunctionMayBeConst
 void UGameSettingListEntry_Color::OnTextChanged(const FText& Text)
 {
     if (UGameSettingListEntry_Color::IsInTextAViableColor(Text) == false)
     {
+        this->OwningPanel->OnApplyableSettingChanged();
         this->OwningPanel->DisallowApply(this->Setting->GetIdentifier());
         this->Border_Container->SetBrushColor(this->DangerContainerColor);
         this->UpdateResetToDefaultButton();

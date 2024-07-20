@@ -8,6 +8,7 @@
 
 #include "SettingsTabBarPanel.generated.h"
 
+class UGameSettingListEntry;
 class UJAFGButton;
 class UJAFGScrollBox;
 class UGameSettingCollection;
@@ -57,6 +58,8 @@ public:
      */
     void ReleaseDisallowApply(const FString& ChildIdentifier);
 
+    bool HasDisallowedApply(const FString& ChildIdentifier) const;
+
     FOnAppliedSettingsDelegateSignature OnAppliedSettingsDelegate;
     FOnRestoreSettingsToInitialDelegateSignature OnRestoreSettingsToInitialDelegate;
 
@@ -91,6 +94,8 @@ protected:
     virtual void CreateCollectionSubPage(const UGameSettingCollection* InCollection);
     virtual void CreateConcreteSetting(UGameSetting* InSetting, UPanelWidget* Parent);
 
+    virtual bool CanBeApplied(void) const;
+
     UFUNCTION()
     void OnApplyClicked( /* void */ );
     UFUNCTION()
@@ -107,4 +112,6 @@ private:
     void UpdateButtonStates(void) const;
     void UpdateApplyButtonState(void) const;
     void UpdateCancelButtonState(void) const;
+
+    TArray<UGameSettingListEntry*> SettingEntryWidgets;
 };

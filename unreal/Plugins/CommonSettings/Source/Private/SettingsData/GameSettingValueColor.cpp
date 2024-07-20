@@ -11,6 +11,7 @@ UGameSettingValueColor::UGameSettingValueColor(const FObjectInitializer& ObjectI
 
 void UGameSettingValueColor::StoreInitial(void)
 {
+    this->InitialColor = this->GetValue();
 }
 
 void UGameSettingValueColor::ResetToDefault(void)
@@ -20,7 +21,7 @@ void UGameSettingValueColor::ResetToDefault(void)
 
 void UGameSettingValueColor::RestoreToInitial(void)
 {
-    Super::RestoreToInitial();
+    this->SetValue(this->InitialColor, EGameSettingChangeReason::RestoreToInitial);
 }
 
 FColor UGameSettingValueColor::GetValue(void)

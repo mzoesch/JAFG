@@ -83,6 +83,11 @@ void USettingsTabBarPanel::ReleaseDisallowApply(const FString& ChildIdentifier)
     return;
 }
 
+bool USettingsTabBarPanel::HasDisallowedApply(const FString& ChildIdentifier) const
+{
+    return this->ChildrenThatDisallowApply.Contains(ChildIdentifier);
+}
+
 void USettingsTabBarPanel::OnNativeMadeVisible(void)
 {
     Super::OnNativeMadeVisible();
@@ -107,9 +112,28 @@ void USettingsTabBarPanel::TryToClose(const TFunction<void(void)>& CallbackIfLat
 {
     Super::TryToClose(CallbackIfLateAllow);
 
-    /*
-     * TODO Make popup if settings can not be applied and maybe should be discarded.
-     */
+    if (this->CanBeApplied() == false)
+    {
+        this->GetCommonHUD()->CreateWarningPopup("You have unsaved changes that can not be applied. Do you want to discard them?", [this, CallbackIfLateAllow] (const bool bAccepted)
+        {
+            if (bAccepted == false)
+            {
+                return;
+            }
+
+            this->OnCancelClicked();
+
+            if (this->ChildrenThatDisallowApply.IsEmpty() == false)
+            {
+                LOG_WARNING(LogCommonSlate, "Some settings are not valid. Cannot apply.")
+                return;
+            }
+
+            CallbackIfLateAllow();
+        });
+
+        return;
+    }
 
     this->GetCommonHUD()->CreateWarningPopup("You have unsaved changes. Do you want to apply them?", [this, CallbackIfLateAllow] (const bool bAccepted)
     {
@@ -218,6 +242,8 @@ void USettingsTabBarPanel::CreateConcreteSetting(UGameSetting* InSetting, UPanel
         Widget->PassDataToWidget(PassData);
 
         Parent->AddChild(Widget);
+
+        this->SettingEntryWidgets.Add(Widget);
     }
 
     else if (InSetting->IsA(UGameSettingValueKeyIn::StaticClass()))
@@ -233,6 +259,8 @@ void USettingsTabBarPanel::CreateConcreteSetting(UGameSetting* InSetting, UPanel
         Widget->PassDataToWidget(PassData);
 
         Parent->AddChild(Widget);
+
+        this->SettingEntryWidgets.Add(Widget);
     }
 
     else if (InSetting->IsA(UGameSettingValueColor::StaticClass()))
@@ -248,6 +276,8 @@ void USettingsTabBarPanel::CreateConcreteSetting(UGameSetting* InSetting, UPanel
         Widget->PassDataToWidget(PassData);
 
         Parent->AddChild(Widget);
+
+        this->SettingEntryWidgets.Add(Widget);
     }
 
     else
@@ -258,6 +288,25 @@ void USettingsTabBarPanel::CreateConcreteSetting(UGameSetting* InSetting, UPanel
     }
 
     return;
+}
+
+bool USettingsTabBarPanel::CanBeApplied(void) const
+{
+    for (const UGameSettingListEntry* Entry : this->SettingEntryWidgets)
+    {
+        if (Entry == nullptr || !Entry->IsValidLowLevel())
+        {
+            LOG_FATAL(LogCommonSlate, "Invalid entry found.")
+            return false;
+        }
+
+        if (Entry->CanBeApplied() == false)
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 void USettingsTabBarPanel::OnApplyClicked(void)

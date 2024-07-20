@@ -27,6 +27,8 @@ public:
     FORCEINLINE auto GetDefaultValue(void) const -> FColor { return this->DefaultValue; }
     FORCEINLINE auto SetDefaultValue(const FColor& InValue) -> void { this->DefaultValue = InValue; }
 
+    FORCEINLINE auto GetInitialValue(void) const -> FColor { return this->InitialColor; }
+
     virtual auto GetValue(void) -> FColor;
     virtual auto SetValue(const FColor InValue, const EGameSettingChangeReason::Type Reason = EGameSettingChangeReason::Change) -> void;
 

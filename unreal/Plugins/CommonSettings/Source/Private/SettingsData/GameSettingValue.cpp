@@ -15,8 +15,3 @@ void UGameSettingValue::OnInitialized(void)
 
     return;
 }
-
-void UGameSettingValue::OnApply(void)
-{
-    this->StoreInitial();
-}

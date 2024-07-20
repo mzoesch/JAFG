@@ -29,14 +29,22 @@ public:
 protected:
 
     // UUserWidget implementation
-    virtual void NativeConstruct(void) override;
+    virtual auto NativeConstruct(void) -> void override;
     // ~UUserWidget implementation
 
 public:
 
-    virtual void PassDataToWidget(const FWidgetPassData& UncastedData) override;
+    virtual auto PassDataToWidget(const FWidgetPassData& UncastedData) -> void override;
+
+    // UGameSettingListEntry implementation
+    virtual auto CanBeApplied(void) const -> bool override;
+    // ~UGameSettingListEntry implementation
 
 protected:
+
+    // UGameSettingListEntry implementation
+    virtual auto OnRestoreSettingsToInitial(void) -> void override;
+    // ~UGameSettingListEntry implementation
 
           FColor StandardContainerColor;
     const FColor DangerContainerColor = FColor(127, 0, 0, 127);

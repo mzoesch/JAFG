@@ -27,6 +27,8 @@ public:
 
     virtual void PassDataToWidget(const FWidgetPassData& UncastedData) override;
 
+    virtual bool CanBeApplied(void) const { return true; }
+
 protected:
 
     virtual void OnAppliedSettings(void) { }
