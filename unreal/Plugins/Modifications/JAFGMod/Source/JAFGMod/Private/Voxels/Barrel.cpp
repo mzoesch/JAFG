@@ -42,13 +42,13 @@ FVoxelMask CreateMask_Barrel(void)
             }
 
             Widget->SetOtherContainerData(Container);
-            Widget->BuildDeferred();
+            Widget->NowDoBuildDeferred();
 
             return;
         });
 
         Widget->SetOtherContainerDisplayName(MaskName);
-        Widget->BuildDeferred();
+        Widget->NowDoBuildDeferred();
 
         return true;
     });

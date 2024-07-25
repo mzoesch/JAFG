@@ -17,6 +17,7 @@
 #include "Player/WorldPlayerController.h"
 #include "System/VoxelSubsystem.h"
 #include "UI/OSD/PlayerInventory.h"
+#include "WorldCore/Character/CharacterContainerChangeLogic.h"
 #include "WorldCore/Entity/Cuboid.h"
 #include "WorldCore/Character/CharacterReach.h"
 #include "WorldCore/Chunk/CommonChunk.h"
@@ -87,6 +88,9 @@ Super(ObjectInitializer.SetDefaultSubobjectClass<UMyCharacterMovementComponent>(
     this->AccumulatedPreview->SetupAttachment(this->RootComponent);
     this->AccumulatedPreview->SetCastShadow(false);
 
+    this->CharacterCrafterComponent = ObjectInitializer.CreateDefaultSubobject<UCharacterCrafterComponent>(this, TEXT("CharacterCrafterComponent"));
+    this->CharacterCrafterComponent->SetIsReplicated(true);
+
     return;
 }
 
@@ -150,7 +154,7 @@ void AWorldCharacter::BeginPlay(void)
         this->AddToContainer(FAccumulated(this, "CraftingTable", 1));
         this->AddToContainer(FAccumulated(this, "Barrel", 16));
 
-        LOG_VERY_VERBOSE(LogWorldChar, "Container initialized with %d slots.", this->Container.Num())
+        LOG_VERY_VERBOSE(LogWorldChar, "Container initialized with %d slots.", this->GetContainerSize())
 
         MARK_PROPERTY_DIRTY_FROM_NAME(AWorldCharacter, Container, this)
     }
@@ -160,7 +164,6 @@ void AWorldCharacter::BeginPlay(void)
         LOG_FATAL(LogWorldChar, "Right hand socket was not found on parent mesh.")
         return;
     }
-
     this->UpdateAccumulatedPreview(true);
 
     return;
@@ -421,70 +424,109 @@ bool AWorldCharacter::EasyChangeContainer(
     const ELocalContainerChange::Type InReason
 )
 {
-    if (UNetStatics::IsSafeClient(this))
+    if (CharacterContainerChangeLogic::EasyChangeContainer(
+        this,
+        this->AsContainer(),
+        &this->OnContainerChangedDelegate,
+        InIndex,
+        InAmount,
+        InReason
+    ))
     {
-        LOG_FATAL(LogWorldChar, "Cannot change container on client.")
-        return false;
-    }
-
-    if (this->GetContainerValueRef(InIndex).SafeAddAmountRet(InAmount))
-    {
-        if (this->IsLocallyControlled())
-        {
-            this->OnCursorValueChangedDelegate.Broadcast();
-            this->OnContainerChangedDelegate.Broadcast(InReason, InIndex);
-        }
-        else
+        if (this->IsLocallyControlled() == false)
         {
             MARK_PROPERTY_DIRTY_FROM_NAME(AWorldCharacter, Container, this)
         }
+
         return true;
     }
 
-    LOG_WARNING(LogWorldChar, "Failed to change container [%d with delta %d]." , InIndex, InAmount)
-
     return false;
+    //
+    // if (UNetStatics::IsSafeClient(this))
+    // {
+    //     LOG_FATAL(LogWorldChar, "Cannot change container on client.")
+    //     return false;
+    // }
+    //
+    // if (this->GetContainerValueRef(InIndex).SafeAddAmountRet(InAmount))
+    // {
+    //     if (this->IsLocallyControlled())
+    //     {
+    //         this->OnCursorValueChangedDelegate.Broadcast();
+    //         this->OnContainerChangedDelegate.Broadcast(InReason, InIndex);
+    //     }
+    //     else
+    //     {
+    //         MARK_PROPERTY_DIRTY_FROM_NAME(AWorldCharacter, Container, this)
+    //     }
+    //     return true;
+    // }
+    //
+    // LOG_WARNING(LogWorldChar, "Failed to change container [%d with delta %d]." , InIndex, InAmount)
+    //
+    // return false;
 }
 
 bool AWorldCharacter::EasyChangeContainer(
     const int32 InIndex,
     IContainerOwner* InOwner,
-    const TFunctionRef<bool(const int32 InLambdaIndex, IContainer* InLambdaTarget, IContainerOwner* InLambdaOwner)>& Alternator,
+    const TFunctionRef<bool(const int32 InLambdaIndex, IContainer* InLambdaTarget, IContainerOwner* InLambdaOwner)>& InAlternator,
     const ELocalContainerChange::Type InReason
 )
 {
-    if (UNetStatics::IsSafeClient(this))
-    {
-        LOG_FATAL(LogWorldChar, "Cannot change container on client.")
-        return false;
-    }
+//     if (UNetStatics::IsSafeClient(this))
+//     {
+//         LOG_FATAL(LogWorldChar, "Cannot change container on client.")
+//         return false;
+//     }
+//
+// #if !UE_BUILD_SHIPPING
+//     if (InOwner != this)
+//     {
+//         jcheckNoEntry()
+//         return false;
+//     }
+// #endif /* !UE_BUILD_SHIPPING */
+//
+//     if (Alternator(InIndex, this, InOwner))
+//     {
+//         if (this->IsLocallyControlled())
+//         {
+//             this->OnCursorValueChangedDelegate.Broadcast();
+//             this->OnContainerChangedDelegate.Broadcast(InReason, InIndex);
+//         }
+//         else
+//         {
+//             MARK_PROPERTY_DIRTY_FROM_NAME(AWorldCharacter, Container, this)
+//         }
+//
+//         return true;
+//     }
+//
+//     if (this->IsLocallyControlled() == false)
+//     {
+//         LOG_ERROR(LogContainerStuff, "Enclosing block should never be called.")
+//     }
+//
+//     return false;
 
-#if !UE_BUILD_SHIPPING
-    if (InOwner != this)
+    if (CharacterContainerChangeLogic::EasyChangeContainer(
+        this,
+        this->AsContainer(),
+        &this->OnContainerChangedDelegate,
+        InIndex,
+        InOwner,
+        InAlternator,
+        InReason
+    ))
     {
-        jcheckNoEntry()
-        return false;
-    }
-#endif /* !UE_BUILD_SHIPPING */
-
-    if (Alternator(InIndex, this, InOwner))
-    {
-        if (this->IsLocallyControlled())
-        {
-            this->OnCursorValueChangedDelegate.Broadcast();
-            this->OnContainerChangedDelegate.Broadcast(InReason, InIndex);
-        }
-        else
+        if (this->IsLocallyControlled() == false)
         {
             MARK_PROPERTY_DIRTY_FROM_NAME(AWorldCharacter, Container, this)
         }
 
         return true;
-    }
-
-    if (this->IsLocallyControlled() == false)
-    {
-        LOG_ERROR(LogContainerStuff, "Enclosing block should never be called.")
     }
 
     return false;
@@ -493,24 +535,33 @@ bool AWorldCharacter::EasyChangeContainer(
 bool AWorldCharacter::EasyChangeContainerCl(
     const int32 InIndex,
     IContainerOwner* InOwner,
-    const TFunctionRef<bool(const int32 InLambdaIndex, IContainer* InLambdaTarget, IContainerOwner* InLambdaOwner)>& Alternator,
+    const TFunctionRef<bool(const int32 InLambdaIndex, IContainer* InLambdaTarget, IContainerOwner* InLambdaOwner)>& InAlternator,
     const ELocalContainerChange::Type InReason
 )
 {
-    if (UNetStatics::IsSafeClient(this) == false)
-    {
-        LOG_FATAL(LogWorldChar, "Cannot change container on server.")
-        return false;
-    }
-
-    if (Alternator(InIndex, this, InOwner))
-    {
-        this->OnCursorValueChangedDelegate.Broadcast();
-        this->OnContainerChangedDelegate.Broadcast(InReason, InIndex);
-        return true;
-    }
-
-    return false;
+    return CharacterContainerChangeLogic::EasyChangeContainerCl(
+        this,
+        this->AsContainer(),
+        &this->OnContainerChangedDelegate,
+        InIndex,
+        InOwner,
+        InAlternator,
+        InReason
+    );
+    // if (UNetStatics::IsSafeClient(this) == false)
+    // {
+    //     LOG_FATAL(LogWorldChar, "Cannot change container on server.")
+    //     return false;
+    // }
+    //
+    // if (Alternator(InIndex, this, InOwner))
+    // {
+    //     this->OnCursorValueChangedDelegate.Broadcast();
+    //     this->OnContainerChangedDelegate.Broadcast(InReason, InIndex);
+    //     return true;
+    // }
+    //
+    // return false;
 }
 
 bool AWorldCharacter::EasyOverrideContainerOnCl(
@@ -519,15 +570,24 @@ bool AWorldCharacter::EasyOverrideContainerOnCl(
     const ELocalContainerChange::Type InReason /* = ELocalContainerChange::Replicated */
 )
 {
-    if (UNetStatics::IsSafeClient(this) == false)
-    {
-        LOG_FATAL(LogWorldChar, "Cannot change container on server.")
-        return false;
-    }
+    return CharacterContainerChangeLogic::EasyOverrideContainerOnCl(
+        this,
+        this->AsContainer(),
+        &this->OnContainerChangedDelegate,
+        InIndex,
+        InContent,
+        InReason
+    );
 
-    this->OnContainerChangedDelegate.Broadcast(InReason, InIndex);
-
-    return true;
+    // if (UNetStatics::IsSafeClient(this) == false)
+    // {
+    //     LOG_FATAL(LogWorldChar, "Cannot change container on server.")
+    //     return false;
+    // }
+    //
+    // this->OnContainerChangedDelegate.Broadcast(InReason, InIndex);
+    //
+    // return true;
 }
 
 FString AWorldCharacter::ToString_Container(void) const

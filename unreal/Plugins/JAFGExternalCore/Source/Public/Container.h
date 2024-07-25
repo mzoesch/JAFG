@@ -51,7 +51,7 @@ FORCEINLINE auto IsValidClientAction(const ELocalContainerChange::Type InType) -
 
 }
 
-FORCEINLINE FString LexToString(const ELocalContainerChange::Type InType)
+FORCEINLINE auto LexToString(const ELocalContainerChange::Type InType) -> FString
 {
     switch (InType)
     {
@@ -120,7 +120,7 @@ public:
     FORCEINLINE virtual auto EasyChangeContainer(
         const int32 InIndex,
         const accamount_t_signed InAmount,
-        const ELocalContainerChange::Type Reason = ELocalContainerChange::Custom
+        const ELocalContainerChange::Type InReason = ELocalContainerChange::Custom
     ) -> bool = 0;
     /**
      * Should generally always call the same side effects as the IContainer::EasyChangeContainer(int32,
@@ -153,7 +153,7 @@ public:
     FORCEINLINE virtual auto EasyOverrideContainerOnCl(
         const int32 InIndex,
         const FAccumulated& InContent,
-        const ELocalContainerChange::Type Reason = ELocalContainerChange::Replicated
+        const ELocalContainerChange::Type InReason = ELocalContainerChange::Replicated
     ) -> bool = 0;
     FORCEINLINE virtual auto EasyChangeContainerSoftPredict(
         const UObject* Context,
@@ -169,7 +169,7 @@ public:
         }
 
         return this->EasyChangeContainer(InIndex, InOwner, Alternator, InReason);
-    };
+    }
 
     FORCEINLINE virtual auto ToString_Container(void) const -> FString = 0;
 
@@ -211,7 +211,7 @@ FORCEINLINE auto ToFunction(const ELocalContainerChange::Type InType)
 /**
  * A container that does not use the unreal's push model replication subsystem but instead relies on a more
  * manuel approach. E.g.: UActorComponents, AActors (tough should be avoided due to additional costs).
- * Very useful if this container has no real owner and no bounds which could be used for priority replication
+ * Very useful if this container has no real owner and no bounds that could be used for priority replication
  * consideration to clients.
  */
 UINTERFACE()
@@ -275,6 +275,9 @@ protected:
     FOnPushContainerUpdateToServerDelegateSignature OnPushContainerUpdateToServerDelegate;
 };
 
+/**
+ * Represents a player that can interact with a container.
+ */
 UINTERFACE()
 class JAFGEXTERNALCORE_API UContainerOwner : public UInterface
 {

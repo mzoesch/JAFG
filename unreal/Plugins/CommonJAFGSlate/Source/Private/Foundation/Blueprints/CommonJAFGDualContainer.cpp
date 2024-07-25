@@ -24,7 +24,7 @@ void UCommonJAFGDualContainer::SetOtherContainerData(IContainer* Container)
 
     this->OtherContainerData = Container;
 
-    this->OnOtherContainerChangedDelegateHandle =  Container->OnContainerChangedDelegate.AddLambda( [this] (const ELocalContainerChange::Type InReason, const int32 InIndex)
+    this->OnOtherContainerChangedDelegateHandle = Container->OnContainerChangedDelegate.AddLambda( [this] (const ELocalContainerChange::Type InReason, const int32 InIndex)
     {
         this->MarkAsDirty();
     });
@@ -82,5 +82,5 @@ void UCommonJAFGDualContainer::TryUpdateDisplayNames(void)
 
 void UCommonJAFGDualContainer::BuildOtherContainer(void)
 {
-    this->BuildContainerWithCommonLogic(this->OtherContainerData, this->ScrollBox_OtherContainerWrapper, this->TileView_OtherContainer);
+    this->BuildContainerWithCommonLogic(this->OtherContainerData, this->Panel_OtherContainerWrapper, this->TileView_OtherContainer);
 }

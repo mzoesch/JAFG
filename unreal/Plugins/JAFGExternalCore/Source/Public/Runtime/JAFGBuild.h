@@ -15,6 +15,10 @@
  * Only the error-reporter will be notified.
  * If false, the application will treat the relaxed checks as normal jchecks.
  */
-#define DO_RELAXED_JCHECKS 1
+#if WITH_EDITOR
+    #define DO_RELAXED_JCHECKS 1
+#else /* WITH_EDITOR */
+    #define DO_RELAXED_JCHECKS 0
+#endif /* !WITH_EDITOR */
 
 #define WITH_STRIKE_SUBSYSTEM 0

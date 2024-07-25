@@ -8,6 +8,7 @@
 
 #include "JAFGContainer.generated.h"
 
+class UOverlay;
 class UJAFGScrollBox;
 class IContainer;
 class UJAFGTextBlock;
@@ -26,7 +27,7 @@ public:
     explicit UJAFGContainer(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
     /** Call this method if this deferred container should be build now. */
-    void BuildDeferred(void);
+    void NowDoBuildDeferred(void);
 
     FORCEINLINE virtual auto ConditionalMarkAsDirty(const IContainer* TargetedContainer) -> void { }
 
@@ -59,5 +60,5 @@ protected:
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true", OptionalWidget))
     TObjectPtr<UJAFGTextBlock> TextBlock_PlayerInventoryDisplayName;
 
-    void BuildContainerWithCommonLogic(IContainer* Container, UJAFGScrollBox* ScrollBox_TargetWrapper, UTileView* TileView_Target);
+    void BuildContainerWithCommonLogic(IContainer* Container, UPanelWidget* Panel_TargetWrapper, UTileView* TileView_Target);
 };

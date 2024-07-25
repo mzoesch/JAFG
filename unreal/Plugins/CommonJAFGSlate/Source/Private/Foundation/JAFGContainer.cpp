@@ -13,7 +13,7 @@ UJAFGContainer::UJAFGContainer(const FObjectInitializer& ObjectInitializer) : Su
     return;
 }
 
-void UJAFGContainer::BuildDeferred(void)
+void UJAFGContainer::NowDoBuildDeferred(void)
 {
     this->OnBuild();
 }
@@ -63,7 +63,7 @@ void UJAFGContainer::BuildPlayerInventory(void)
     this->BuildContainerWithCommonLogic(Cast<IContainer>(this->GetOwningPlayerPawn()), this->ScrollBox_PlayerInventoryWrapper, this->TV_PlayerInventory);
 }
 
-void UJAFGContainer::BuildContainerWithCommonLogic(IContainer* Container, UJAFGScrollBox* ScrollBox_TargetWrapper, UTileView* TileView_Target)
+void UJAFGContainer::BuildContainerWithCommonLogic(IContainer* Container, UPanelWidget* Panel_TargetWrapper, UTileView* TileView_Target)
 {
     TileView_Target->ClearListItems();
 
@@ -71,29 +71,29 @@ void UJAFGContainer::BuildContainerWithCommonLogic(IContainer* Container, UJAFGS
     {
         TileView_Target->SetVisibility(ESlateVisibility::Collapsed);
 
-        ScrollBox_TargetWrapper->AddChild(CreateWidget<UJAFGUserWidget>(this, GetDefault<UCommonJAFGSlateDeveloperSettings>()->WaitingForContainerContentWidgetClass));
+        Panel_TargetWrapper->AddChild(CreateWidget<UJAFGUserWidget>(this, GetDefault<UCommonJAFGSlateDeveloperSettings>()->WaitingForContainerContentWidgetClass));
 
         return;
     }
 
-    if (ScrollBox_TargetWrapper->GetChildrenCount() > 1)
+    if (Panel_TargetWrapper->GetChildrenCount() > 1)
     {
-        const int32 Index = ScrollBox_TargetWrapper->GetChildIndex(TileView_Target);
+        const int32 Index = Panel_TargetWrapper->GetChildIndex(TileView_Target);
         if (Index == INDEX_NONE)
         {
             LOG_FATAL(LogCommonSlate, "TileView not found in ScrollBox. Cannot proceed to build on: %s.", *TileView_Target->GetName())
             return;
         }
 
-        UWidget* Widget = ScrollBox_TargetWrapper->GetChildAt(Index);
+        UWidget* Widget = Panel_TargetWrapper->GetChildAt(Index);
         if (Widget == nullptr)
         {
             LOG_FATAL(LogCommonSlate, "Widget is invalid. Cannot proceed to build on: %s.", *TileView_Target->GetName())
             return;
         }
 
-        ScrollBox_TargetWrapper->ClearChildren();
-        ScrollBox_TargetWrapper->AddChild(Widget);
+        Panel_TargetWrapper->ClearChildren();
+        Panel_TargetWrapper->AddChild(Widget);
     }
 
     TileView_Target->SetVisibility(ESlateVisibility::Visible);

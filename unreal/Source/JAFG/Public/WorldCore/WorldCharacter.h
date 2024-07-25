@@ -3,10 +3,12 @@
 #pragma once
 
 #include "Container.h"
+#include "ContainerCrafter.h"
 #include "MyCore.h"
 #include "GameFramework/Character.h"
 #include "InputTriggers.h"
 #include "Camera/CameraComponent.h"
+#include "Character/CharacterCrafterComponent.h"
 #include "Foundation/JAFGContainer.h"
 #include "Player/WorldPlayerController.h"
 #include "UI/WorldHUD.h"
@@ -16,6 +18,7 @@
 
 JAFG_VOID
 
+class UCharacterCrafterComponent;
 class UCuboidComponent;
 class ACuboid;
 class ACharacterReach;
@@ -86,6 +89,9 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UCuboidComponent> AccumulatedPreview;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    TObjectPtr<UCharacterCrafterComponent> CharacterCrafterComponent;
+
     FORCEINLINE auto GetPlayerController(void) const -> APlayerController* { return Cast<APlayerController>(this->GetController()); }
     template<class T>
     FORCEINLINE auto GetPlayerController(void) const -> T* { return Cast<T>(this->GetController()); }
@@ -153,6 +159,8 @@ public:
     FORCEINLINE auto AsContainer(void) const -> const IContainer* { return this; }
     FORCEINLINE auto AsContainerOwner(void) -> IContainerOwner* { return this; }
     FORCEINLINE auto AsContainerOwner(void) const -> const IContainerOwner* { return this; }
+    FORCEINLINE auto AsContainerCrafter(void) -> IContainerCrafter* { return this->CharacterCrafterComponent->AsContainerCrafter(); }
+    FORCEINLINE auto AsContainerCrafter(void) const -> IContainerCrafter* { return this->CharacterCrafterComponent->AsContainerCrafter(); }
 
     // IContainer interface
     /** Server only. Will handle UI updates, replication, etc. */
@@ -167,14 +175,14 @@ public:
     virtual auto EasyChangeContainer(
         const int32 InIndex,
         IContainerOwner* InOwner,
-        const TFunctionRef<bool(const int32 InLambdaIndex, IContainer* InLambdaTarget, IContainerOwner* InLambdaOwner)>& Alternator,
+        const TFunctionRef<bool(const int32 InLambdaIndex, IContainer* InLambdaTarget, IContainerOwner* InLambdaOwner)>& InAlternator,
         const ELocalContainerChange::Type InReason
     ) -> bool override;
     /** Client only. Will handle UI updates, replication, etc. */
     virtual auto EasyChangeContainerCl(
         const int32 InIndex,
         IContainerOwner* InOwner,
-        const TFunctionRef<bool(const int32 InLambdaIndex, IContainer* InLambdaTarget, IContainerOwner* InLambdaOwner)>& Alternator,
+        const TFunctionRef<bool(const int32 InLambdaIndex, IContainer* InLambdaTarget, IContainerOwner* InLambdaOwner)>& InAlternator,
         const ELocalContainerChange::Type InReason
     ) -> bool override;
     /** Client only. Will handle UI updates, replication, etc. */
@@ -219,9 +227,6 @@ private:
     TArray<FSlot> Container;
     UFUNCTION()
     void OnRep_Container( /* void */ ) const;
-
-    /** Only meaningful for clients. Holds the last update of this container that was authorized by the server. */
-    TArray<FSlot> LastContainerAuth;
 
 #pragma endregion Container
 

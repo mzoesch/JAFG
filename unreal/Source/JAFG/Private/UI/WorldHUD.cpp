@@ -187,7 +187,7 @@ void AWorldHUD::BeginPlay(void)
                     && this->GetOwningPlayerController()->IsLocalController()
                     && this->GetOwningPawn()
                     && Cast<AWorldCharacter>(this->GetOwningPawn())->CursorValue != Accumulated::Null
-                    )
+                )
                 {
                     CreateWidget<UContainerValueCursor>(
                         this->GetWorld(),

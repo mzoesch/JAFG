@@ -57,7 +57,7 @@ protected:
     FORCEINLINE FString GetOtherContainerDisplayName( /* void */ ) const { return this->OtherContainerDisplayName; }
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true"))
-    TObjectPtr<UJAFGScrollBox> ScrollBox_OtherContainerWrapper;
+    TObjectPtr<UPanelWidget> Panel_OtherContainerWrapper;
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true"))
     TObjectPtr<UTileView> TileView_OtherContainer;

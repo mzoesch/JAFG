@@ -3,12 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Foundation/JAFGContainer.h"
+#include "Foundation/Blueprints/CommonJAFGDualContainer.h"
 
 #include "PlayerInventory.generated.h"
 
 UCLASS(Abstract, Blueprintable)
-class JAFG_API UPlayerInventory : public UJAFGContainer
+class JAFG_API UPlayerInventory : public UCommonJAFGDualContainer
 {
     GENERATED_BODY()
 
@@ -17,4 +17,8 @@ public:
     explicit UPlayerInventory(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
     inline static const FString Identifier = TEXT("PlayerInventory");
+
+protected:
+
+    virtual void NativeConstruct(void) override;
 };
