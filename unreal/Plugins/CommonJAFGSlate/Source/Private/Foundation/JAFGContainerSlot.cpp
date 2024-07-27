@@ -23,6 +23,15 @@ void UJAFGContainerSlot::NativeConstruct(void)
 void UJAFGContainerSlot::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
     Super::NativeOnMouseEnter(InGeometry, InMouseEvent);
+
+#if !UE_BUILD_SHIPPING
+    if (this->SlotData == nullptr)
+    {
+        jrelaxedCheckNoEntry()
+        return;
+    }
+#endif /* !UE_BUILD_SHIPPING */
+
     this->Border_Foreground->SetBrushColor(this->HoverColor);
 
     if (this->SlotData->GetSlotValue() != Accumulated::Null)
@@ -48,6 +57,14 @@ FReply UJAFGContainerSlot::NativeOnMouseButtonDown(const FGeometry& InGeometry, 
 
 FReply UJAFGContainerSlot::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
+#if !UE_BUILD_SHIPPING
+    if (this->SlotData == nullptr)
+    {
+        jrelaxedCheckNoEntry()
+        return FReply::Unhandled();
+    }
+#endif /* !UE_BUILD_SHIPPING */
+
     IContainerOwner* ContainerOwner = Cast<IContainerOwner>(this->GetOwningPlayerPawn());
     if (ContainerOwner == nullptr)
     {
@@ -90,12 +107,14 @@ void UJAFGContainerSlot::OnRefresh(void)
 
 void UJAFGContainerSlot::RenderSlot(void)
 {
+#if !UE_BUILD_SHIPPING
     if (this->SlotData == nullptr)
     {
-        LOG_WARNING(LogCommonSlate, "Slot data is invalid. Cannot proceed to render slot.")
+        jrelaxedCheckNoEntry()
         this->SetToolTip(nullptr);
         return;
     }
+#endif /* !UE_BUILD_SHIPPING */
 
     if (this->SlotData->GetSlotValue() != Accumulated::Null)
     {

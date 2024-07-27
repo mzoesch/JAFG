@@ -16,6 +16,8 @@ class UJAFGTextBlock;
 class UJAFGBorder;
 class UJAFGContainer;
 
+DECLARE_MULTICAST_DELEGATE(FContainerSlotChangedSignature)
+
 /** @note Only use for the OSD list entry passes and never to pass actual data around. */
 UCLASS(NotBlueprintable)
 class UJAFGContainerSlotData : public UObject

@@ -71,7 +71,9 @@ void UJAFGContainer::BuildContainerWithCommonLogic(IContainer* Container, UPanel
     {
         TileView_Target->SetVisibility(ESlateVisibility::Collapsed);
 
-        Panel_TargetWrapper->AddChild(CreateWidget<UJAFGUserWidget>(this, GetDefault<UCommonJAFGSlateDeveloperSettings>()->WaitingForContainerContentWidgetClass));
+        Panel_TargetWrapper->AddChild(
+            CreateWidget<UJAFGUserWidget>(this, GetDefault<UCommonJAFGSlateDeveloperSettings>()->WaitingForContainerContentWidgetClass)
+        );
 
         return;
     }

@@ -141,7 +141,6 @@ public:
         const TFunctionRef<bool(const int32 InLambdaIndex, IContainer* InLambdaTarget, IContainerOwner* InLambdaOwner)>& Alternator,
         const ELocalContainerChange::Type InReason
     ) -> bool = 0;
-
     /** Client interpretation of IContainer::EasyChangeContainer. */
     FORCEINLINE virtual auto EasyChangeContainerCl(
         const int32 InIndex,
