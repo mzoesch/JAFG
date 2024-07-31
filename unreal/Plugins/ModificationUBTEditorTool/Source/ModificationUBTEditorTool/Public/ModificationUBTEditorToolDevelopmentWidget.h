@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ModificationUBTEditorToolModificationList.h"
 #include "Widgets/SCompoundWidget.h"
 
 class SModificationUBTEditorToolDevelopmentWidget final : public SCompoundWidget
@@ -16,4 +17,11 @@ public:
 
 private:
 
+    TSharedPtr<IDetailsView> DetailsView;
+    TSharedPtr<SModificationUBTEditorToolModificationList> PluginList;
+
+    auto PackageAllMods(void) const -> FReply;
+    auto CreatePlugin(void) const -> FReply;
+
+    auto IsPackageButtonEnabled(void) const -> bool;
 };
