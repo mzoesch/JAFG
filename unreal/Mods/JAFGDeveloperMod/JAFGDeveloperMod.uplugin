@@ -1,0 +1,37 @@
+﻿{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "JAFGDeveloperMod",
+	"Description": "",
+	"Category": "JAFGPlugin",
+	"CreatedBy": "",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"CanContainContent": false,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "JAFGDeveloperMod",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "ModificationSupervisor",
+			"Enabled": true
+		},
+		{
+			"Name": "JAFGGlobalLogging",
+			"Enabled": true
+		},
+		{
+			"Name": "CommonJAFGSlate",
+			"Enabled": true
+		}
+	]
+}

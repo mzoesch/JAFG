@@ -37,6 +37,8 @@ public class ModificationUBTEditorTool : ModuleRules
             "SlateCore",
             "UnrealEd",
             "PluginBrowser",
+            "Projects",
+            "InputCore",
         }
         );
 

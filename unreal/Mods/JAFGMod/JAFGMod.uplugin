@@ -1,0 +1,43 @@
+﻿{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "JAFGMod",
+	"Description": "",
+	"Category": "JAFGPlugin",
+	"CreatedBy": "",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"CanContainContent": false,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"SupportedTargetPlatforms": [
+		"Win64"
+	],
+	"Modules": [
+		{
+			"Name": "JAFGMod",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [
+				"Win64"
+			]
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "ModificationSupervisor",
+			"Enabled": true
+		},
+		{
+			"Name": "JAFGGlobalLogging",
+			"Enabled": true
+		},
+		{
+			"Name": "CommonJAFGSlate",
+			"Enabled": true
+		}
+	]
+}

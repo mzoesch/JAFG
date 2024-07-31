@@ -93,6 +93,14 @@ void FModificationUBTEditorToolModule::ShutdownModule(void)
     return;
 }
 
+void FModificationUBTEditorToolModule::PackagePluginsDevelopment(TArray<TSharedRef<IPlugin>> Plugins)
+{
+}
+
+void FModificationUBTEditorToolModule::PackagePluginsShipping(TArray<TSharedRef<IPlugin>> Plugins)
+{
+}
+
 // ReSharper disable once CppMemberFunctionMayBeStatic
 void FModificationUBTEditorToolModule::RegisterSettings(void) const
 {
