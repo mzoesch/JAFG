@@ -2,7 +2,7 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "JAFGMod.h"
-
+#include "JAFGLogDefs.h"
 #include "JAFGModSubsystem.h"
 #include "ModificationSupervisorSubsystem.h"
 

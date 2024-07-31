@@ -10,8 +10,8 @@
 
 #include "ModificationSupervisorSubsystem.generated.h"
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FInitializeOptionalVoxelsDelegateSignature, TArray<FVoxelMask>& /* VoxelMasks */)
-DECLARE_MULTICAST_DELEGATE_OneParam(FInitializeOptionalItemsDelegateSignature,  TArray<FItemMask>&  /* ItemMasks  */)
+DECLARE_MULTICAST_DELEGATE_OneParam(FInitializeOptionalVoxelsDelegateSignature, TArray<FVoxelMask>& /* OutVoxelMasks */)
+DECLARE_MULTICAST_DELEGATE_OneParam(FInitializeOptionalItemsDelegateSignature,  TArray<FItemMask>&  /* OutItemMasks  */)
 
 UCLASS(NotBlueprintable)
 class MODIFICATIONSUPERVISOR_API UModificationSupervisorSubsystem final : public UGameInstanceSubsystem

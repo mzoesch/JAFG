@@ -4,7 +4,7 @@
 	"VersionName": "1.0",
 	"FriendlyName": "JAFGExternalCore",
 	"Description": "Defines core types and delegates that plugins can hook into.",
-	"Category": "Other",
+	"Category": "JAFG",
 	"CreatedBy": "mzoesch",
 	"CreatedByURL": "https://www.zoeschinger.com/",
 	"DocsURL": "",
@@ -13,11 +13,17 @@
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
 	"Installed": false,
+	"SupportedTargetPlatforms": [
+		"Win64"
+	],
 	"Modules": [
 		{
 			"Name": "JAFGExternalCore",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [
+				"Win64"
+			]
 		}
 	],
 	"Plugins": [

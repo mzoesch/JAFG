@@ -4,18 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "ExternalModificationSubsystem.h"
-
-#include "JAFGModSubsystem.generated.h"
-
-struct FVoxelMask;
-struct FItemMask;
+#include "JAFGDeveloperModSubsystem.generated.h"
 
 UCLASS(NotBlueprintable)
-class JAFGMOD_API UJAFGModSubsystem : public UExternalModificationSubsystem
+class JAFGDEVELOPERMOD_API UJAFGDeveloperModSubsystem : public UExternalModificationSubsystem
 {
     GENERATED_BODY()
-
-public:
 
     // USubsystem implementation
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;

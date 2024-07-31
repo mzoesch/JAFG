@@ -77,6 +77,7 @@ public class JAFG : ModuleRules
         new string[]
         {
             "EngineSettings",
+            "ChunkDownloader",
         }
         );
 

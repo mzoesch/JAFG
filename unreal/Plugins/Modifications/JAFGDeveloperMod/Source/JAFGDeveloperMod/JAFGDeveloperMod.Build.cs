@@ -3,9 +3,9 @@
 
 using UnrealBuildTool;
 
-public class JAFGMod : ModuleRules
+public class JAFGDeveloperMod : ModuleRules
 {
-    public JAFGMod(ReadOnlyTargetRules Target) : base(Target)
+    public JAFGDeveloperMod(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
@@ -25,7 +25,6 @@ public class JAFGMod : ModuleRules
         new string[]
         {
             "Core",
-            "DeveloperSettings",
         }
         );
 
@@ -46,7 +45,6 @@ public class JAFGMod : ModuleRules
             "Engine",
             "Slate",
             "SlateCore",
-            "UMG",
         }
         );
 

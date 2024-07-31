@@ -2,7 +2,7 @@
 	"FileVersion": 3,
 	"Version": 1,
 	"VersionName": "1.0",
-	"FriendlyName": "JAFGMod",
+	"FriendlyName": "JAFGDeveloperMod",
 	"Description": "",
 	"Category": "JAFGPlugin",
 	"CreatedBy": "",
@@ -13,17 +13,11 @@
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
 	"Installed": false,
-	"SupportedTargetPlatforms": [
-		"Win64"
-	],
 	"Modules": [
 		{
-			"Name": "JAFGMod",
+			"Name": "JAFGDeveloperMod",
 			"Type": "Runtime",
-			"LoadingPhase": "Default",
-			"WhitelistPlatforms": [
-				"Win64"
-			]
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [

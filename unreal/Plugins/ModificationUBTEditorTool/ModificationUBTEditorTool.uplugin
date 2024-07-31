@@ -2,10 +2,10 @@
 	"FileVersion": 3,
 	"Version": 1,
 	"VersionName": "1.0",
-	"FriendlyName": "JAFGMod",
-	"Description": "",
-	"Category": "JAFGPlugin",
-	"CreatedBy": "",
+	"FriendlyName": "ModificationUBTEditorTool",
+	"Description": "Tool for managing JAFG Modifications in the Editor and it gives an abstraction to UBT.",
+	"Category": "JAFGEditor",
+	"CreatedBy": "mzoesch",
 	"CreatedByURL": "",
 	"DocsURL": "",
 	"MarketplaceURL": "",
@@ -13,30 +13,20 @@
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
 	"Installed": false,
-	"SupportedTargetPlatforms": [
-		"Win64"
-	],
 	"Modules": [
 		{
-			"Name": "JAFGMod",
-			"Type": "Runtime",
-			"LoadingPhase": "Default",
-			"WhitelistPlatforms": [
-				"Win64"
-			]
+			"Name": "ModificationUBTEditorTool",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [
 		{
-			"Name": "ModificationSupervisor",
+			"Name": "PluginBrowser",
 			"Enabled": true
 		},
 		{
 			"Name": "JAFGGlobalLogging",
-			"Enabled": true
-		},
-		{
-			"Name": "CommonJAFGSlate",
 			"Enabled": true
 		}
 	]

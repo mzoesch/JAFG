@@ -8,4 +8,21 @@ void UExternalModificationSubsystem::Initialize(FSubsystemCollectionBase& Collec
 {
     Collection.InitializeDependency<UModificationSupervisorSubsystem>();
     Super::Initialize(Collection);
+
+    UModificationSupervisorSubsystem* ModSupervisor = this->GetGameInstance()->GetSubsystem<UModificationSupervisorSubsystem>();
+    jcheck( ModSupervisor )
+
+    ModSupervisor->InitializeOptionalVoxelsDelegate.AddLambda(
+    [this] (TArray<FVoxelMask>& VoxelMasks)
+    {
+        this->OnOptionalVoxelsInitialize(VoxelMasks);
+    });
+
+    ModSupervisor->InitializeOptionalItemsDelegate.AddLambda(
+    [this] (TArray<FItemMask>& ItemMasks)
+    {
+        this->OnOptionalItemsInitialize(ItemMasks);
+    });
+
+    return;
 }
