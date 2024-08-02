@@ -40,7 +40,7 @@ struct MODIFICATIONUBTEDITORTOOL_API FModificationUBTEditorToolTargetSettings
     bool bLaunchGame = false;
 
     UPROPERTY(EditAnywhere, Config, Category = Config, meta = ( EditCondition = bLaunchGame))
-    TEnumAsByte<EModificationUBTEditorToolStartGame::Type> LaunchGameType;
+    TEnumAsByte<EModificationUBTEditorToolStartGame::Type> LaunchGameType = EModificationUBTEditorToolStartGame::Steam;
 
     /** After a successful pack, the Unreal Automation tool will execute this. Usefully for custom scripts. */
     UPROPERTY(EditAnywhere, Config, Category = Config, meta = ( EditCondition = "LaunchGameType == EModificationUBTEditorToolStartGame::Custom", EditConditionHides))
