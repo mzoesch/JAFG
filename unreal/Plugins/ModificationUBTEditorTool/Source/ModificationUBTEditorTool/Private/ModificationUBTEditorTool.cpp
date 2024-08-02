@@ -6,6 +6,8 @@
 #include "ISettingsModule.h"
 #include "ISettingsSection.h"
 #include "LevelEditor.h"
+#include "IPluginBrowser.h"
+#include "JAFGLogDefs.h"
 #include "ModificationUBTEditorToolCommands.h"
 #include "ModificationUBTEditorToolDevelopmentWidget.h"
 #include "ModificationUBTEditorToolSettings.h"
@@ -15,10 +17,12 @@
 
 const FName FModificationUBTEditorToolModule::DevelopmentTabName(TEXT("ModificationUBTEditorToolDevelopment"));
 const FName FModificationUBTEditorToolModule::ShippingTabName(TEXT("ModificationUBTEditorToolShipping"));
+const FName FModificationUBTEditorToolModule::PluginCreatorTabName(TEXT("ModificationUBTEditorToolPluginCreator"));
 
 void FModificationUBTEditorToolModule::StartupModule(void)
 {
     this->RegisterSettings();
+    this->RegisterPluginTemplates();
 
     FModificationUBTEditorToolCommands::Register();
 
@@ -47,10 +51,10 @@ void FModificationUBTEditorToolModule::StartupModule(void)
         TEXT("FileProject"),
         EExtensionHook::After,
         this->PluginCommands,
-        FMenuExtensionDelegate::CreateLambda( [] (FMenuBuilder& Builder)
+        FMenuExtensionDelegate::CreateLambda( [] (FMenuBuilder& InBuilder)
         {
-            Builder.AddMenuEntry(FModificationUBTEditorToolCommands::Get().DevelopmentWidget);
-            Builder.AddMenuEntry(FModificationUBTEditorToolCommands::Get().ShippingWidget);
+            InBuilder.AddMenuEntry(FModificationUBTEditorToolCommands::Get().DevelopmentWidget);
+            InBuilder.AddMenuEntry(FModificationUBTEditorToolCommands::Get().ShippingWidget);
 
             return;
         })
@@ -59,21 +63,30 @@ void FModificationUBTEditorToolModule::StartupModule(void)
 
     FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
         this->DevelopmentTabName,
-        FOnSpawnTab::CreateLambda( [] (const FSpawnTabArgs& Args)
+        FOnSpawnTab::CreateLambda( [] (const FSpawnTabArgs& InArgs)
         {
             const TSharedRef<SModificationUBTEditorToolDevelopmentWidget> Widget = SNew(SModificationUBTEditorToolDevelopmentWidget);
             return SNew(SDockTab).TabRole(ETabRole::NomadTab) [ Widget ];
-        }
-    ));
+        })
+    );
 
     FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
         this->ShippingTabName,
-        FOnSpawnTab::CreateLambda( [] (const FSpawnTabArgs& Args)
+        FOnSpawnTab::CreateLambda( [] (const FSpawnTabArgs& InArgs)
         {
             const TSharedRef<SModificationUBTEditorToolShippingWidget> Widget = SNew(SModificationUBTEditorToolShippingWidget);
             return SNew(SDockTab).TabRole(ETabRole::NomadTab) [ Widget ];
-        }
-    ));
+        })
+    );
+
+    FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
+        this->PluginCreatorTabName,
+        FOnSpawnTab::CreateLambda( [] (const FSpawnTabArgs& InArgs)
+        {
+            IPluginBrowser& PluginBrowser = FModuleManager::Get().GetModuleChecked<IPluginBrowser>(TEXT("PluginBrowser"));
+            return PluginBrowser.SpawnPluginCreatorTab(InArgs, MakeShared<FModificationUBTEditorToolPluginWizardDefinition>());
+        })
+    );
 
     return;
 }
@@ -89,8 +102,25 @@ void FModificationUBTEditorToolModule::ShutdownModule(void)
 
     FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(this->DevelopmentTabName);
     FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(this->ShippingTabName);
+    FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(this->PluginCreatorTabName);
 
     return;
+}
+
+// ReSharper disable once CppMemberFunctionMayBeStatic
+bool FModificationUBTEditorToolModule::IsPluginConsideredAsModification(const IPlugin& Plugin) const
+{
+    if (Plugin.GetType() == EPluginType::Mod)
+    {
+        return true;
+    }
+
+    if (Plugin.GetType() == EPluginType::Project)
+    {
+        return true;
+    }
+
+    return false;
 }
 
 void FModificationUBTEditorToolModule::PackagePluginsDevelopment(TArray<TSharedRef<IPlugin>> Plugins)
@@ -142,6 +172,90 @@ void FModificationUBTEditorToolModule::UnregisterSettings(void) const
     if (ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>(TEXT("Settings")))
     {
         SettingsModule->UnregisterSettings(TEXT("Project"), TEXT("Modification UBT Editor Tool"), TEXT("General"));
+    }
+
+    return;
+}
+
+void FModificationUBTEditorToolModule::RegisterPluginTemplates(void)
+{
+    for (TSharedRef<IPlugin> Plugin : IPluginManager::Get().GetEnabledPlugins())
+    {
+        if (this->IsPluginConsideredAsModification(Plugin.Get()))
+        {
+            this->AddPluginTemplatesFromPlugin(Plugin.Get());
+        }
+    }
+
+    IPluginManager::Get().OnNewPluginMounted().AddLambda( [this] (const IPlugin& Plugin)
+    {
+        if (this->IsPluginConsideredAsModification(Plugin))
+        {
+            this->AddPluginTemplatesFromPlugin(Plugin);
+        }
+    });
+
+    return;
+
+}
+
+void FModificationUBTEditorToolModule::AddPluginTemplatesFromPlugin(const IPlugin& Plugin)
+{
+    const FString TemplatesPath = Plugin.GetBaseDir() / TEXT("Templates");
+    if (FPaths::DirectoryExists(TemplatesPath) == false)
+    {
+        return;
+    }
+
+    const FString TemplatesJSONPath = TemplatesPath / TEXT("templates.json");
+    if (FPaths::FileExists(TemplatesJSONPath) == false)
+    {
+        return;
+    }
+
+    FString TemplatesJSON;
+    if (FFileHelper::LoadFileToString(TemplatesJSON, *TemplatesJSONPath) == false)
+    {
+        return;
+    }
+
+    const TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(TemplatesJSON);
+    TSharedPtr<FJsonObject> TemplatesJSONObj;
+    if (FJsonSerializer::Deserialize(JsonReader, TemplatesJSONObj) == false)
+    {
+        LOG_ERROR(LogModificationUBTEditorTool, "Invalid templates for plugin %s: invalid json.", *Plugin.GetName());
+        return;
+    }
+
+    const TArray<TSharedPtr<FJsonValue>>* TemplatesArrayPtr;
+    if (TemplatesJSONObj->TryGetArrayField(TEXT("templates"), TemplatesArrayPtr) == false)
+    {
+        LOG_ERROR(LogModificationUBTEditorTool, "Invalid templates for plugin %s: \"templates\" not in json.", *Plugin.GetName());
+        return;
+    }
+
+    int i = 0;
+    for (const TSharedPtr<FJsonValue> Item : *TemplatesArrayPtr)
+    {
+        ++i;
+
+        const TSharedPtr<FJsonObject>* ItemObjPtr;
+        if (Item->TryGetObject(ItemObjPtr) == false)
+        {
+            LOG_ERROR(LogModificationUBTEditorTool, "Invalid templates for plugin %s: template %d: not an object.", *Plugin.GetName(), i);
+            continue;
+        }
+
+        FString Error;
+        TSharedPtr<FMyPluginTemplateDescription> ModTemplate =
+            FMyPluginTemplateDescription::Load(*ItemObjPtr, TemplatesPath, Error);
+        if (ModTemplate.IsValid() == false)
+        {
+            LOG_ERROR(LogModificationUBTEditorTool, "Invalid templates for plugin %s: template %d: [%s].", *Plugin.GetName(), i, *Error);
+            continue;
+        }
+
+        this->PluginTemplateDefinitions.Add(ModTemplate.ToSharedRef());
     }
 
     return;

@@ -39,6 +39,7 @@ public class ModificationUBTEditorTool : ModuleRules
             "PluginBrowser",
             "Projects",
             "InputCore",
+            "Json",
         }
         );
 

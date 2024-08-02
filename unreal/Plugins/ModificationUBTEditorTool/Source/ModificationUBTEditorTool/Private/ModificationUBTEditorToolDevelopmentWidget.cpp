@@ -107,7 +107,7 @@ FReply SModificationUBTEditorToolDevelopmentWidget::PackageAllMods(void) const
 // ReSharper disable once CppMemberFunctionMayBeStatic
 FReply SModificationUBTEditorToolDevelopmentWidget::CreatePlugin(void) const
 {
-    LOG_WARNING(LogModificationUBTEditorTool, "Not implemented yet.")
+    FGlobalTabmanager::Get()->TryInvokeTab(FModificationUBTEditorToolModule::PluginCreatorTabName);
     return FReply::Handled();
 }
 
