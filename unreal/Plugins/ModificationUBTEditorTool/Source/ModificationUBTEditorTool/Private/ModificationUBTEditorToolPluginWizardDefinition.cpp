@@ -99,7 +99,7 @@ TSharedPtr<SWidget> FModificationUBTEditorToolPluginWizardDefinition::GetCustomH
 
 FText FModificationUBTEditorToolPluginWizardDefinition::GetInstructions(void) const
 {
-    return FText::FromString(TEXT("Choose template and specifiy a name for the new plugin."));
+    return FText::FromString(TEXT("Choose template and specifiy a name for the new game plugin."));
 }
 
 bool FModificationUBTEditorToolPluginWizardDefinition::GetPluginIconPath(FString& OutIconPath) const
@@ -140,10 +140,9 @@ bool FModificationUBTEditorToolPluginWizardDefinition::GetTemplateIconPath(const
 {
     bool bRequiresDefaultIcon = false;
 
-    FString TemplateFolderName = GetFolderForTemplate(InTemplate);
 
-    OutIconPath = TemplateFolderName / TEXT("Resources/Icon128.png");
-    if (!FPlatformFileManager::Get().GetPlatformFile().FileExists(*OutIconPath))
+    OutIconPath = this->GetFolderForTemplate(InTemplate) / TEXT("Resources/Icon128.png");
+    if (FPlatformFileManager::Get().GetPlatformFile().FileExists(*OutIconPath) == false)
     {
         OutIconPath = PluginBaseDir / TEXT("Resources/DefaultIcon128.png");
         bRequiresDefaultIcon = true;
@@ -185,24 +184,57 @@ void FModificationUBTEditorToolPluginWizardDefinition::PluginCreated(const FStri
     }
 
     FPluginDescriptor Descriptor = NewPlugin->GetDescriptor();
-    if (Descriptor.FriendlyName.IsEmpty())
-    {
-        LOG_VERBOSE(LogModificationUBTEditorTool, "Setting friendly name for plugin %s as it was not defined.", *PluginName)
-        Descriptor.FriendlyName = PluginName;
-    }
-    Descriptor.VersionName = TEXT("1.0.0");
-    Descriptor.Version     = 1;
-    Descriptor.Category    = TEXT("Modding");
 
-    // TSharedPtr<IPlugin> PluginToAdd = IPluginManager::Get().FindPlugin(TEXT("ExternalCore"));
-    // if (PluginToAdd.IsValid() == false)
-    // {
-    //     LOG_ERROR(LogModificationUBTEditorTool, "ExternalCore plugin not found.")
-    // }
-    // else
-    // {
-    //     /* ... */
-    // }
+    Descriptor.Version     = 1;
+    Descriptor.VersionName = TEXT("0.0.1");
+    Descriptor.AdditionalFieldsToWrite.Add(
+        TEXT("JAFGGameVersion"),
+        MakeShared<FJsonValueString>(FModificationUBTEditorToolModule::Get().GetCurrentGameVersion())
+    );
+    Descriptor.EngineVersion = FModificationUBTEditorToolModule::Get().GetEngineVersion();
+
+    Descriptor.AdditionalFieldsToWrite.Add(TEXT("bIsClientOnly"), MakeShared<FJsonValueBoolean>(false));
+    Descriptor.AdditionalFieldsToWrite.Add(TEXT("bIsServerOnly"), MakeShared<FJsonValueBoolean>(false));
+    Descriptor.AdditionalFieldsToWrite.Add(TEXT("RemoteVersionRange"), MakeShared<FJsonValueString>(TEXT("0.0.1")));
+
+    if (Descriptor.FriendlyName.IsEmpty()) { Descriptor.FriendlyName = PluginName; }
+    if (Descriptor.Description.IsEmpty())  { Descriptor.Description  = TEXT("Game plugin for JAFG."); }
+    Descriptor.Category = DEFAULT_JAFG_GAME_PLUGIN_CATEGORY;
+    if (Descriptor.CreatedBy.IsEmpty())    { Descriptor.CreatedBy    = TEXT("Anonymous"); }
+
+    Descriptor.AdditionalFieldsToWrite.Add(TEXT("bIsOptional"), MakeShared<FJsonValueBoolean>(false));
+
+    {
+#define ADD_PLUGIN_DEPENDENCY(PluginNameToAdd)                                                     \
+{                                                                                                  \
+    if (                                                                                           \
+        const TSharedPtr<IPlugin> PluginToAdd = IPluginManager::Get().FindPlugin(PluginNameToAdd); \
+        PluginToAdd.IsValid() == false                                                             \
+    )                                                                                              \
+    {                                                                                              \
+        LOG_ERROR(LogModificationUBTEditorTool, "%s plugin not found.", *PluginNameToAdd)          \
+    }                                                                                              \
+    else                                                                                           \
+    {                                                                                              \
+        FPluginReferenceDescriptor Dependency(PluginNameToAdd, true);                              \
+        Dependency.AdditionalFieldsToWrite.Add(                                                    \
+            TEXT("VersionRange"),                                                                  \
+            MakeShared<FJsonValueString>(                                                          \
+                FModificationUBTEditorToolModule::Get().GetVersionOfCorePlugin(PluginNameToAdd)    \
+            )                                                                                      \
+        );                                                                                         \
+        Descriptor.Plugins.Add(Dependency);                                                        \
+    }                                                                                              \
+}
+
+        ADD_PLUGIN_DEPENDENCY(TEXT("CommonJAFGSlate"))
+        ADD_PLUGIN_DEPENDENCY(TEXT("CommonSettings"))
+        ADD_PLUGIN_DEPENDENCY(TEXT("JAFGExternalCore"))
+        ADD_PLUGIN_DEPENDENCY(TEXT("JAFGGlobalLogging"))
+        ADD_PLUGIN_DEPENDENCY(TEXT("ModificationSupervisor"))
+
+#undef ADD_PLUGIN_DEPENDENCY
+    }
 
     if (FText FailReason; NewPlugin->UpdateDescriptor(Descriptor, FailReason) == false)
     {
@@ -226,7 +258,7 @@ TSharedPtr<FMyPluginTemplateDependency> FMyPluginTemplateDependency::Load(const 
     FString DependencyName;
     if (InJSON->TryGetStringField(TEXT("name"), DependencyName) == false)
     {
-        OutError = TEXT("\"name\" not in dependency.");
+        OutError = TEXT("\"name\" not in dependency");
         return nullptr;
     }
 
@@ -234,7 +266,7 @@ TSharedPtr<FMyPluginTemplateDependency> FMyPluginTemplateDependency::Load(const 
     if (InJSON->TryGetStringField(TEXT("version"), DependencyVersion) == false)
     {
         const TSharedPtr<IPlugin> Plugin = IPluginManager::Get().FindPlugin(DependencyName);
-        if(Plugin.IsValid() == false)
+        if (Plugin.IsValid() == false)
         {
             OutError = TEXT("\"version\" not in dependency and plugin not installed");
             return nullptr;
@@ -246,23 +278,20 @@ TSharedPtr<FMyPluginTemplateDependency> FMyPluginTemplateDependency::Load(const 
     bool bOptional = false;
     InJSON->TryGetBoolField(TEXT("optional"), bOptional);
 
-    bool bBasePlugin = false;
-    InJSON->TryGetBoolField(TEXT("basePlugin"), bBasePlugin);
-
-    return MakeShareable(new FMyPluginTemplateDependency(DependencyName, DependencyVersion, bOptional, bBasePlugin));
+    return MakeShareable(new FMyPluginTemplateDependency(DependencyName, DependencyVersion, bOptional));
 }
 
 TSharedPtr<FMyPluginTemplateDescription> FMyPluginTemplateDescription::Load(const TSharedPtr<FJsonObject>& InJSON, const FString& InTemplatesPath, FString& OutError)
 {
     FString TemplateName;
-    if(InJSON->TryGetStringField(TEXT("name"), TemplateName) == false)
+    if (InJSON->TryGetStringField(TEXT("name"), TemplateName) == false)
     {
         OutError = TEXT("\"name\" not in template");
         return nullptr;
     }
 
     FString TemplateDescription;
-    if(InJSON->TryGetStringField(TEXT("description"), TemplateDescription) == false)
+    if (InJSON->TryGetStringField(TEXT("description"), TemplateDescription) == false)
     {
         OutError = TEXT("\"description\" not in template");
         return nullptr;
@@ -276,22 +305,28 @@ TSharedPtr<FMyPluginTemplateDescription> FMyPluginTemplateDescription::Load(cons
     }
 
     TArray<TSharedPtr<FMyPluginTemplateDependency>> Dependencies;
-    const TArray<TSharedPtr<FJsonValue>>* DependenciesPtr;
-    if (InJSON->TryGetArrayField(TEXT("dependencies"), DependenciesPtr))
+    if (
+        const TArray<TSharedPtr<FJsonValue>>* DependenciesPtr;
+        InJSON->TryGetArrayField(TEXT("dependencies"), DependenciesPtr)
+    )
     {
         int i = 0;
         for (const TSharedPtr<FJsonValue>& Item : *DependenciesPtr)
         {
             ++i;
+
             const TSharedPtr<FJsonObject>* DependencyObjPtr;
-            if(!Item->TryGetObject(DependencyObjPtr)) {
+            if (Item->TryGetObject(DependencyObjPtr) == false)
+            {
                 OutError = FString::Printf(TEXT("dependency %d: not an object"), i);
                 return nullptr;
             }
 
             FString DependencyError;
-            TSharedPtr<FMyPluginTemplateDependency> Dependency = FMyPluginTemplateDependency::Load(*DependencyObjPtr, DependencyError);
-            if (!Dependency.IsValid()) {
+            TSharedPtr<FMyPluginTemplateDependency> Dependency =
+                FMyPluginTemplateDependency::Load(*DependencyObjPtr, DependencyError);
+            if (Dependency.IsValid() == false)
+            {
                 OutError = FString::Printf(TEXT("dependency %d: %s"), i, *DependencyError);
                 return nullptr;
             }

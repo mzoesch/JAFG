@@ -61,13 +61,11 @@ struct FMyPluginTemplateDependency
     FString Name;
     FString Version;
     bool bOptional;
-    bool bBasePlugin;
 
-    explicit FMyPluginTemplateDependency(const FString& InName, const FString& InVersion, const bool bInOptional, const bool bInBasePlugin)
+    explicit FMyPluginTemplateDependency(const FString& InName, const FString& InVersion, const bool bInOptional)
         : Name(InName)
         , Version(InVersion)
         , bOptional(bInOptional)
-        , bBasePlugin(bInBasePlugin)
     {
         return;
     }

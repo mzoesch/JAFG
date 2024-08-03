@@ -2,6 +2,7 @@
 
 #include "ModificationUBTEditorToolModificationList.h"
 #include "JAFGLogDefs.h"
+#include "ModificationUBTEditorToolEditPluginDialogWidget.h"
 #include "ModificationUBTEditorToolSettings.h"
 
 #define LOCTEXT_NAMESPACE "ModificationUBTEditorTool"
@@ -60,13 +61,17 @@ void SModificationUBTEditorToolModificationListEntry::Construct(const FArguments
     this->ChildSlot[
         SNew(SHorizontalBox)
         + SHorizontalBox::Slot().AutoWidth() [ Args._Lead.Widget ]
-        + SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center)[
+        + SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center)
+        [
             SNew(STextBlock)
-            .Text_Lambda([InPlugin] {
-                const FString DisplayText = FString::Printf(TEXT("%s (%s)"), *InPlugin->GetDescriptor().FriendlyName, *InPlugin->GetName());
-                return FText::FromString(DisplayText);
+            .Text_Lambda( [InPlugin]
+            {
+                return FText::FromString(
+                    FString::Printf(TEXT("%s (%s)"), *InPlugin->GetDescriptor().FriendlyName, *InPlugin->GetName())
+                );
             })
-            .HighlightText_Lambda([InOwner] {
+            .HighlightText_Lambda( [InOwner]
+            {
                 return FText::FromString(InOwner->GetMostRecentFilter());
             })
         ]
@@ -78,118 +83,141 @@ void SModificationUBTEditorToolModificationListEntry::Construct(const FArguments
 
 void SModificationUBTEditorToolModificationList::Construct(const FArguments& InArgs)
 {
-    ChildSlot[
-    SNew(SVerticalBox)
-        +SVerticalBox::Slot().AutoHeight().Padding(0, 5)[
+    this->ChildSlot[
+        SNew(SVerticalBox)
+        + SVerticalBox::Slot().AutoHeight().Padding(0, 5)
+        [
             SNew(SHorizontalBox)
-            +SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center)[
+            + SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center)
+            [
                 SNew(SVerticalBox)
-                +SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 5)[
-                    InArgs._BarSlot.Widget
-                ]
-                +SVerticalBox::Slot()[
+                + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 5) [ InArgs._BarSlot.Widget ]
+                + SVerticalBox::Slot()
+                [
                     SNew(SHorizontalBox)
-                    +SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 5, 0)[
+                    + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 5, 0)
+                    [
                         SAssignNew(AllPluginsCheckbox, SCheckBox)
-                        .ToolTipText(LOCTEXT("AllModsCheckboxAlpakit_Tooltip", "Select/deselect all displayed mods. Search can be used to narrow down which are affected"))
-                        .OnCheckStateChanged_Lambda([this](ECheckBoxState InState) {
+                        .OnCheckStateChanged_Lambda( [this] (const ECheckBoxState InState)
+                        {
                             this->SetAllPluginsToACheckState(InState == ECheckBoxState::Checked);
                         })
                     ]
-                    +SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center).Padding(0, 0, 10, 0)[
+                    + SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center).Padding(0, 0, 10, 0)
+                    [
                         SNew(SEditableTextBox)
-                        .ToolTipText(LOCTEXT("SearchHint_Tooltip", "Filter the list based on the text entered here. Friendly name and Mod Reference supported"))
                         .HintText(LOCTEXT("SearchHint", "Search Plugin..."))
-                        .OnTextChanged_Lambda([this](const FText& InText) {
+                        .OnTextChanged_Lambda( [this] (const FText& InText)
+                        {
                             this->FilterModificationsByName(InText.ToString());
                         })
                     ]
-                    +SHorizontalBox::Slot().AutoWidth()[
+                    + SHorizontalBox::Slot().AutoWidth()
+                    [
                         SNew(SCheckBox)
-                        .Content()[
+                        .Content()
+                        [
                             SNew(STextBlock)
-                            .ToolTipText(LOCTEXT("ShowEnginePlugins_Tooltip", "Display all Unreal Engine plugins loaded at the engine level (notably not mods, you usually don't need this enabled)"))
                             .Text(LOCTEXT("ShowEnginePlugins", "Show Engine Plugins"))
                         ]
-                        .OnCheckStateChanged_Lambda([this](ECheckBoxState InState) {
+                        .OnCheckStateChanged_Lambda ( [this] (const ECheckBoxState InState)
+                        {
                             this->SetShowEnginePlugins(InState == ECheckBoxState::Checked);
                         })
                     ]
-                    +SHorizontalBox::Slot().AutoWidth()[
+                    + SHorizontalBox::Slot().AutoWidth()
+                    [
                         SNew(SSpacer)
                         .Size(FVector2D(10.0f, 10.0f))
                     ]
-                    +SHorizontalBox::Slot().AutoWidth()[
+                    + SHorizontalBox::Slot().AutoWidth()
+                    [
                         SNew(SCheckBox)
                         .Content()[
                             SNew(STextBlock)
-                            .ToolTipText(LOCTEXT("ShowProjectPlugins_Tooltip", "Display all Unreal Engine plugins loaded at the project level (such as Plugins folder mods, you usually don't need this enabled)"))
                             .Text(LOCTEXT("ShowProjectPlugins", "Show Project Plugins"))
                         ]
-                        .OnCheckStateChanged_Lambda([this](ECheckBoxState InState) {
+                        .OnCheckStateChanged_Lambda( [this] (const ECheckBoxState InState)
+                        {
                             this->SetShowProjectPlugins(InState == ECheckBoxState::Checked);
                         })
                     ]
                 ]
             ]
-            +SHorizontalBox::Slot().AutoWidth()
+            + SHorizontalBox::Slot().AutoWidth()
             [
                 InArgs._SearchTrail.Widget
             ]
         ]
-        + SVerticalBox::Slot().FillHeight(1.0f)[
+        + SVerticalBox::Slot().FillHeight(1.0f)
+        [
             SNew(SScrollBox)
             .Orientation(Orient_Vertical)
             .ScrollBarAlwaysVisible(true)
-            + SScrollBox::Slot()[
+            + SScrollBox::Slot()
+            [
                 SAssignNew(SlatePluginsList, SListView<TSharedRef<IPlugin>>)
                 .SelectionMode(ESelectionMode::None)
                 .ListItemsSource(&this->FilteredPlugins)
                 .OnGenerateRow_Lambda(
-                    [this, InArgs](TSharedRef<IPlugin> Mod, const TSharedRef<STableViewBase>& List) {
-                        UModificationUBTEditorToolSettings* Settings = UModificationUBTEditorToolSettings::Get();
-                        return SNew(STableRow<TSharedRef<IPlugin>>, List)
-                            .Style(&FAppStyle::Get().GetWidgetStyle<FTableRowStyle>("TableView.AlternatingRow"))
+                [this, InArgs] (TSharedRef<IPlugin> Mod, const TSharedRef<STableViewBase>& List)
+                {
+                    UModificationUBTEditorToolSettings* Settings = UModificationUBTEditorToolSettings::Get();
+                    return
+                        SNew(STableRow<TSharedRef<IPlugin>>, List)
+                        .Style(&FAppStyle::Get().GetWidgetStyle<FTableRowStyle>("TableView.AlternatingRow"))
+                        [
+                            SNew(SModificationUBTEditorToolModificationListEntry, Mod, SharedThis(this))
+                            .Lead()
                             [
-                                SNew(SModificationUBTEditorToolModificationListEntry, Mod, SharedThis(this))
-                                .Lead()[
-                                    SNew(SHorizontalBox)
-                                    +SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 5, 0)
-                                    [
-                                        SNew(SCheckBox)
-                                            .ToolTipText(LOCTEXT("AlpakitModEntryEnabled_Tooltip", "If enabled, this mod will be packaged when the 'Alpakit Dev' or 'Alpakit Release' buttons are pressed"))
-                                            .OnCheckStateChanged_Lambda([this, Mod](ECheckBoxState CheckBoxState){
-                                                this->OnSpecificPluginCheckboxChanged(Mod, CheckBoxState);
-                                            })
-                                            .IsChecked_Lambda([Settings, Mod] { return Settings->SelectedPlugins.FindOrAdd(Mod->GetName(), false) ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
-                                    ]
-                                    +SHorizontalBox::Slot().AutoWidth()
-                                    [
-                                        InArgs._ModEntryLead.IsBound() ? InArgs._ModEntryLead.Execute(Mod) : SNullWidget::NullWidget
-                                    ]
-                                    + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 5, 0).VAlign(VAlign_Center)[
-                                        SNew(SButton)
-                                        .Text(LOCTEXT("EditModAlpakit", "Edit"))
-                                        .OnClicked_Lambda([this, Mod] {
-                                            // const TSharedRef<SAlpakitEditModDialog> EditModDialog = SNew(SAlpakitEditModDialog, Mod);
-                                            // FSlateApplication::Get().AddModalWindow(EditModDialog, SharedThis(this));
-                                            return FReply::Handled();
-                                        })
-                                        .ToolTipText_Lambda([Mod]{
-                                            return FText::FromString(FString::Printf(TEXT("Edit %s via the wizard"), *Mod->GetName()));
-                                        })
-                                    ]
-                                ]
-                                .Trail()
+                                SNew(SHorizontalBox)
+                                + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 5, 0)
                                 [
-                                    InArgs._ModEntryTrail.IsBound() ? InArgs._ModEntryTrail.Execute(Mod) : SNullWidget::NullWidget
+                                    SNew(SCheckBox)
+                                    .OnCheckStateChanged_Lambda( [this, Mod] (const ECheckBoxState CheckBoxState)
+                                    {
+                                        this->OnSpecificPluginCheckboxChanged(Mod, CheckBoxState);
+                                    })
+                                    .IsChecked_Lambda( [Settings, Mod]
+                                    {
+                                        return
+                                            Settings->SelectedPlugins.FindOrAdd(Mod->GetName(), false)
+                                                ? ECheckBoxState::Checked
+                                                : ECheckBoxState::Unchecked;
+                                    })
                                 ]
+                                + SHorizontalBox::Slot().AutoWidth()
+                                [
+                                    InArgs._ModEntryLead.IsBound()
+                                        ? InArgs._ModEntryLead.Execute(Mod)
+                                        : SNullWidget::NullWidget
+                                ]
+                                + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 5, 0).VAlign(VAlign_Center)
+                                [
+                                    SNew(SButton)
+                                    .Text(LOCTEXT("EditMod", "Edit"))
+                                    .OnClicked_Lambda( [this, Mod]
+                                    {
+                                        const TSharedRef<SModificationUBTEditorToolEditPluginDialogWidget> EditModDialog =
+                                            SNew(SModificationUBTEditorToolEditPluginDialogWidget, Mod);
+                                        FSlateApplication::Get().AddModalWindow(EditModDialog, SharedThis(this));
+                                        return FReply::Handled();
+                                    })
+                                    .ToolTipText_Lambda( [Mod]
+                                    {
+                                        return FText::FromString(FString::Printf(TEXT("Edit %s via the wizard."), *Mod->GetName()));
+                                    })
+                                ]
+                            ]
+                            .Trail()
+                            [
+                                InArgs._ModEntryTrail.IsBound() ? InArgs._ModEntryTrail.Execute(Mod) : SNullWidget::NullWidget
+                            ]
                         ];
-                    })
+                })
             ]
         ]
     ];
-
 
     this->UpdatePluginList();
     this->UpdateAllPluginsCheckbox();

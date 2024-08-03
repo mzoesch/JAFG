@@ -24,7 +24,7 @@ public:
         SLATE_NAMED_SLOT(FArguments, Trail)
     SLATE_END_ARGS()
 
-    void Construct(const FArguments& Args, TSharedRef<IPlugin> InPlugin, TSharedRef<SModificationUBTEditorToolModificationList> InOwner);
+    auto Construct(const FArguments& Args, TSharedRef<IPlugin> InPlugin, TSharedRef<SModificationUBTEditorToolModificationList> InOwner) -> void;
 };
 
 class SModificationUBTEditorToolModificationList final : public SCompoundWidget
@@ -41,23 +41,23 @@ public:
         SLATE_EVENT(FOnModEntryTail, ModEntryTrail)
     SLATE_END_ARGS()
 
-    void Construct(const FArguments& InArgs);
+    auto Construct(const FArguments& InArgs) -> void;
 
-    void OnNewPluginCreated(IPlugin& NewPlugin);
-    void UpdatePluginList(void);
-    void FilterModificationsByName(const FString& InFilter);
-    void SetAllPluginsToACheckState(const bool bChecked);
+    auto OnNewPluginCreated(IPlugin& NewPlugin) -> void;
+    auto UpdatePluginList(void) -> void;
+    auto FilterModificationsByName(const FString& InFilter) -> void;
+    auto SetAllPluginsToACheckState(const bool bChecked) -> void;
 
-    void SetShowEnginePlugins(const bool bInShowEnginePlugins);
-    void SetShowProjectPlugins(const bool bInShowProjectPlugins);
+    auto SetShowEnginePlugins(const bool bInShowEnginePlugins) -> void;
+    auto SetShowProjectPlugins(const bool bInShowProjectPlugins) -> void;
 
     FORCEINLINE auto GetMostRecentFilter(void) const -> FString { return this->MostRecentFilter; }
     FORCEINLINE auto GetFilteredPlugins(void) const -> TArray<TSharedRef<IPlugin>> { return this->FilteredPlugins; }
 
 private:
 
-    void OnSpecificPluginCheckboxChanged(const TSharedRef<IPlugin>& Plugin, const ECheckBoxState NewState);
-    void UpdateAllPluginsCheckbox(void);
+    auto OnSpecificPluginCheckboxChanged(const TSharedRef<IPlugin>& Plugin, const ECheckBoxState NewState) -> void;
+    auto UpdateAllPluginsCheckbox(void) -> void;
 
     FString MostRecentFilter;
     bool bShowEnginePlugins  = false;
@@ -67,5 +67,5 @@ private:
     TArray<TSharedRef<IPlugin>> FilteredPlugins;
 
     TSharedPtr<SListView<TSharedRef<IPlugin>>> SlatePluginsList;
-    TSharedPtr<SCheckBox> AllPluginsCheckbox;
+    TSharedPtr<SCheckBox>                      AllPluginsCheckbox;
 };

@@ -40,6 +40,8 @@ public class ModificationUBTEditorTool : ModuleRules
             "Projects",
             "InputCore",
             "Json",
+            "ExternalImagePicker",
+            "EngineSettings",
         }
         );
 

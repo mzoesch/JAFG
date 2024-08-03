@@ -19,7 +19,7 @@ void FModificationUBTEditorToolCommands::RegisterCommands(void)
     UI_COMMAND(
         DevelopmentWidget,
         "Development Widget",
-        "Open the development widget",
+        "Open the development widget.",
         EUserInterfaceActionType::Button,
         FInputChord { }
     );
@@ -27,7 +27,7 @@ void FModificationUBTEditorToolCommands::RegisterCommands(void)
     UI_COMMAND(
         ShippingWidget,
         "Shipping Widget",
-        "Open the shipping widget",
+        "Open the shipping widget.",
         EUserInterfaceActionType::Button,
         FInputChord { }
     );
