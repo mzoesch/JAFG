@@ -1,0 +1,15 @@
+{
+  "$schema": "./templates.schema.json",
+  "templates": [
+    {
+      "name": "Blueprint Only",
+      "description": "Create a mod plugin that contains only Blueprint code.",
+      "path": "T_BP_JAFGMod"
+    },
+    {
+      "name": "C++ and Blueprint",
+      "description": "Create a mod plugin that contains both C++ and Blueprint code.",
+      "path": "T_JAFGMod"
+    }
+  ]
+}
