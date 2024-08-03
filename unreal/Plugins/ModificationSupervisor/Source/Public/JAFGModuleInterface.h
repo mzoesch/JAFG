@@ -1,13 +1,10 @@
-﻿// Copyright Epic Games, Inc. All Rights Reserved.
 // Copyright 2024 mzoesch. All rights reserved.
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "JAFGModuleInterface.h"
-#include "Modules/ModuleManager.h"
+#include "Modules/ModuleInterface.h"
 
-class FJAFGModModule final : public IJAFGModuleInterface
+class MODIFICATIONSUPERVISOR_API IJAFGModuleInterface : public IModuleInterface
 {
 
 public:

@@ -29,7 +29,6 @@ public class JAFG : ModuleRules
             "OnlineSubsystemNull",
             "OnlineSubsystemUtils",
             "OnlineSubsystemSteam",
-
         }
         );
 
