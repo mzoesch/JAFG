@@ -2,6 +2,8 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "ModificationUBTEditorTool.h"
+
+#include "GeneralProjectSettings.h"
 #include "ISettingsContainer.h"
 #include "ISettingsModule.h"
 #include "ISettingsSection.h"
@@ -105,6 +107,51 @@ void FModificationUBTEditorToolModule::ShutdownModule(void)
     FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(this->PluginCreatorTabName);
 
     return;
+}
+
+// ReSharper disable once CppMemberFunctionMayBeStatic
+FString FModificationUBTEditorToolModule::GetCurrentGameVersion(void)
+{
+    /*
+     * This does only work for me, as I have the source code of the game. For distributed builds, we
+     * have to go to the binary version where this plugin is referenced to.
+     * UModificationUBTEditorToolSettings should be used for this.
+     * We have to solve this differently. For example, through the installed
+     * game version (inside steamapps/common/...).
+     */
+    return GetDefault<UGeneralProjectSettings>()->ProjectVersion;
+}
+
+// ReSharper disable once CppMemberFunctionMayBeStatic
+FString FModificationUBTEditorToolModule::GetEngineVersion(void)
+{
+    /*
+     * This does only work for me, as I have the source code of the game. For distributed builds, we
+     * have to go to the binary version where this plugin is referenced to.
+     * UModificationUBTEditorToolSettings should be used for this.
+     * We have to solve this differently. For example, through the installed
+     * game version (inside steamapps/common/...).
+     */
+    FString EngineVersion = FApp::GetBuildVersion();
+    return EngineVersion;
+}
+
+// ReSharper disable once CppMemberFunctionMayBeStatic
+FString FModificationUBTEditorToolModule::GetVersionOfCorePlugin(const FString& CorePluginName)
+{
+    /*
+     * This does only work for me, as I have the source code of the game. For distributed builds, we
+     * have to go to the binary version where this plugin is referenced to.
+     * UModificationUBTEditorToolSettings should be used for this.
+     * We have to solve this differently. For example, through the installed
+     * game version (inside steamapps/common/...).
+     */
+    if (const TSharedPtr<IPlugin> CorePlugin= IPluginManager::Get().FindPlugin(CorePluginName); CorePlugin)
+    {
+        return CorePlugin->GetDescriptor().VersionName;
+    }
+
+    return TEXT("-1");
 }
 
 // ReSharper disable once CppMemberFunctionMayBeStatic

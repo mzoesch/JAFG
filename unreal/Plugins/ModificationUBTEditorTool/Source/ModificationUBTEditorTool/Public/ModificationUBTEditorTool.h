@@ -7,6 +7,8 @@
 #include "ModificationUBTEditorToolPluginWizardDefinition.h"
 #include "Modules/ModuleManager.h"
 
+#define DEFAULT_JAFG_GAME_PLUGIN_CATEGORY TEXT("JAFGGamePlugin")
+
 class FModificationUBTEditorToolModule final : public IModuleInterface
 {
 public:
@@ -20,6 +22,10 @@ public:
     {
         return FModuleManager::GetModuleChecked<FModificationUBTEditorToolModule>("ModificationUBTEditorTool");
     }
+
+    auto GetCurrentGameVersion(void) -> FString;
+    auto GetEngineVersion(void) -> FString;
+    auto GetVersionOfCorePlugin(const FString& CorePluginName) -> FString;
 
     bool IsPluginConsideredAsModification(const IPlugin& Plugin) const;
 

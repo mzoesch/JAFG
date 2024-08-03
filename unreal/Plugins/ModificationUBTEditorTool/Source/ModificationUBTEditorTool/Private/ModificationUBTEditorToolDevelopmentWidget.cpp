@@ -1,8 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "ModificationUBTEditorToolDevelopmentWidget.h"
-
-#include "JAFGLogDefs.h"
 #include "ModificationUBTEditorTool.h"
 #include "ModificationUBTEditorToolSettings.h"
 
@@ -36,7 +34,7 @@ void SModificationUBTEditorToolDevelopmentWidget::Construct(const FArguments& In
     this->ChildSlot
     [
         SNew(SVerticalBox)
-        +SVerticalBox::Slot().AutoHeight()
+        + SVerticalBox::Slot().AutoHeight()
         [
             this->DetailsView.ToSharedRef()
         ]
