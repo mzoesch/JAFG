@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ExternalSubsystem.h"
+#include "ExternalGameInstanceSubsystem.h"
 #include "JAFGLogDefs.h"
 #include "JAFGTypeDefs.h"
 
@@ -74,7 +74,7 @@ DECLARE_NAMED_TEXTURE(HotbarSelector)
 }
 
 UCLASS(NotBlueprintable)
-class JAFGEXTERNALCORE_API UTextureSubsystem : public UExternalSubsystem
+class JAFGEXTERNALCORE_API UTextureSubsystem : public UExternalGameInstanceSubsystem
 {
     GENERATED_BODY()
 

@@ -15,7 +15,7 @@ struct FVoxelMask;
  * initialization behavior.
  */
 UCLASS(NotBlueprintable)
-class JAFG_API UPreInternalInitializationSubsystem : public UGameInstanceSubsystem, public IPreInternalInitializationSubsystemRequirements
+class JAFG_API UPreInternalInitializationSubsystem final : public UGameInstanceSubsystem, public IPreInternalInitializationSubsystemRequirements
 {
     GENERATED_BODY()
 

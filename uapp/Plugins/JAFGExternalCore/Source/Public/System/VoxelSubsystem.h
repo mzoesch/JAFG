@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ExternalSubsystem.h"
+#include "ExternalGameInstanceSubsystem.h"
 #include "JAFGTypeDefs.h"
 #include "VoxelMask.h"
 #include "ItemMask.h"
@@ -13,7 +13,7 @@
 class UMaterialSubsystem;
 
 UCLASS(NotBlueprintable)
-class JAFGEXTERNALCORE_API UVoxelSubsystem : public UExternalSubsystem
+class JAFGEXTERNALCORE_API UVoxelSubsystem : public UExternalGameInstanceSubsystem
 {
     GENERATED_BODY()
 
