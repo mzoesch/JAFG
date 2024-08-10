@@ -1,7 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
-
 #include "WorldCore/ChunkWorldSettings.h"
 #include "RegisteredWorldNames.h"
 #include "WorldCore/Chunk/GreedyChunk.h"
@@ -52,7 +51,7 @@ void UChunkGenerationSubsystem::OnWorldBeginPlay(UWorld& InWorld)
     }
 
 #if WITH_EDITOR
-    if (GEditor->IsSimulateInEditorInProgress())
+    if (GEditor && GEditor->IsSimulateInEditorInProgress())
     {
         this->bHasReceivedReplicatedServerChunkWorldSettings = true;
 

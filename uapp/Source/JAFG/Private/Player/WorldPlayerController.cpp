@@ -472,7 +472,7 @@ int32 AWorldPlayerController::GetCurrentStrikeTime(void) const
 bool AWorldPlayerController::HasSuccessfullySpawnedCharacter(void) const
 {
 #if WITH_EDITOR
-    if (GEditor->IsSimulateInEditorInProgress())
+    if (GEditor && GEditor->IsSimulateInEditorInProgress())
     {
         return true;
     }
@@ -615,7 +615,7 @@ bool AWorldPlayerController::GetPredictedCharacterLocation(FVector& OutLocation)
     }
 
 #if WITH_EDITOR
-    if (GEditor->IsSimulateInEditorInProgress())
+    if (GEditor && GEditor->IsSimulateInEditorInProgress())
     {
         OutLocation = GCurrentLevelEditingViewportClient->ViewTransformPerspective.GetLocation();
         return true;

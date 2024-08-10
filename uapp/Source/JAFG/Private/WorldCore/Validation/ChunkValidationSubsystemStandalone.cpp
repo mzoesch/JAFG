@@ -76,7 +76,7 @@ void UChunkValidationSubsystemStandalone::MyTick(const float DeltaTime)
 
     FVector PredictedLocation;
 #if WITH_EDITOR
-    if (GEditor->IsSimulateInEditorInProgress())
+    if (GEditor && GEditor->IsSimulateInEditorInProgress())
     {
         PredictedLocation = GCurrentLevelEditingViewportClient->ViewTransformPerspective.GetLocation();
     }
