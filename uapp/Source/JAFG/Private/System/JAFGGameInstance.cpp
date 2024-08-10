@@ -1,10 +1,11 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "System/JAFGGameInstance.h"
-
+#include "JAFGExternalCore.h"
 #include "ModificationSupervisorSubsystem.h"
 #include "GameFramework/GameUserSettings.h"
 #include "Net/Core/PushModel/PushModel.h"
+#include "System/PreInternalInitializationSubsystem.h"
 
 UJAFGGameInstance::UJAFGGameInstance(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -13,8 +14,22 @@ UJAFGGameInstance::UJAFGGameInstance(const FObjectInitializer& ObjectInitializer
     return;
 }
 
-void UJAFGGameInstance::Init()
+void UJAFGGameInstance::Init(void)
 {
+    FJAFGExternalCoreModule::Get().OnInitInternalSubsystem.BindLambda( [] (FSubsystemCollectionBase& Collection)
+    {
+        LOG_VERBOSE(LogModSubsystem, "Received broadcast to initialize pre internal subsystem.")
+        Collection.InitializeDependency<UPreInternalInitializationSubsystem>();
+
+#if !UE_BUILD_SHIPPING
+        FJAFGExternalCoreModule::Get().bInternalSubsystemInitialized = true;
+#endif /* !UE_BUILD_SHIPPING */
+
+        FJAFGExternalCoreModule::Get().OnInitInternalSubsystem.Unbind();
+
+        return;
+    });
+
     Super::Init();
 
     if (IS_PUSH_MODEL_ENABLED() == false)
