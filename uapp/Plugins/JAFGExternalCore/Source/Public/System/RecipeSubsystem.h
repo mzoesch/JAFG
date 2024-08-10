@@ -3,12 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ExternalSubsystem.h"
+#include "ExternalGameInstanceSubsystem.h"
 
 #include "RecipeSubsystem.generated.h"
 
 UCLASS(NotBlueprintable)
-class JAFGEXTERNALCORE_API URecipeSubsystem : public UExternalSubsystem
+class JAFGEXTERNALCORE_API URecipeSubsystem : public UExternalGameInstanceSubsystem
 {
     GENERATED_BODY()
 
