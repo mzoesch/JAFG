@@ -262,7 +262,7 @@ FString UDebugScreen::GetSectionFPS(void) const
 FString UDebugScreen::GetSectionNet(void) const
 {
 #if WITH_EDITOR
-    if (GEditor->IsSimulateInEditorInProgress())
+    if (GEditor && GEditor->IsSimulateInEditorInProgress())
     {
         return FString::Printf(TEXT("Net: N/A ms [REASON: Editor Simulation]"));
     }
@@ -339,8 +339,7 @@ FString UDebugScreen::GetSectionClientCharacterLocation(void) const
     }
 
 #if WITH_EDITOR
-    checkSlow( GEditor )
-    if (GEditor->IsSimulateInEditorInProgress())
+    if (GEditor && GEditor->IsSimulateInEditorInProgress())
     {
         checkSlow(GCurrentLevelEditingViewportClient)
         Location = GCurrentLevelEditingViewportClient->ViewTransformPerspective.GetLocation();
@@ -379,8 +378,7 @@ FString UDebugScreen::GetSectionClientCharacterVelocity(void) const
 #if WITH_EDITOR
     static FVector LastTickEditorViewportSimulationVelocity = FVector::ZeroVector;
 
-    checkSlow( GEditor )
-    if (GEditor->IsSimulateInEditorInProgress())
+    if (GEditor && GEditor->IsSimulateInEditorInProgress())
     {
         checkSlow(GCurrentLevelEditingViewportClient)
         Velocity = GCurrentLevelEditingViewportClient->ViewTransformPerspective.GetLocation() - LastTickEditorViewportSimulationVelocity;
@@ -425,8 +423,7 @@ FString UDebugScreen::GetSectionClientCharacterChunkLocation(void) const
     }
 
 #if WITH_EDITOR
-    checkSlow( GEditor )
-    if (GEditor->IsSimulateInEditorInProgress())
+    if (GEditor && GEditor->IsSimulateInEditorInProgress())
     {
         checkSlow(GCurrentLevelEditingViewportClient)
         Location = GCurrentLevelEditingViewportClient->ViewTransformPerspective.GetLocation();
@@ -457,8 +454,7 @@ FString UDebugScreen::GetSectionClientCharacterFacing(void) const
     }
 
 #if WITH_EDITOR
-    checkSlow( GEditor )
-    if (GEditor->IsSimulateInEditorInProgress())
+    if (GEditor && GEditor->IsSimulateInEditorInProgress())
     {
         checkSlow( GCurrentLevelEditingViewportClient )
         Yaw   = GCurrentLevelEditingViewportClient->ViewTransformPerspective.GetRotation().Yaw;

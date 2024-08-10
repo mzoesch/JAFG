@@ -291,7 +291,14 @@ void FModificationUBTEditorToolInstance::SpawnNotification(void)
 
     this->NotificationItem = FSlateNotificationManager::Get().AddNotification(NotificationInfo);
     this->NotificationItem->SetCompletionState( SNotificationItem::CS_Pending );
-    GEditor->PlayEditorSound(TEXT("/Engine/EditorSounds/Notifications/CompileStart_Cue.CompileStart_Cue"));
+    if (GEditor)
+    {
+        GEditor->PlayEditorSound(TEXT("/Engine/EditorSounds/Notifications/CompileStart_Cue.CompileStart_Cue"));
+    }
+    else
+    {
+        LOG_ERROR(LogModificationUBTEditorTool, "Global editor reference not found.")
+    }
 
     return;
 }
@@ -324,7 +331,14 @@ void FModificationUBTEditorToolInstance::MarkNotificationAsSuccess(const double 
         this->NotificationItem.Reset();
     }
 
-    GEditor->PlayEditorSound(TEXT("/Engine/EditorSounds/Notifications/CompileSuccess_Cue.CompileSuccess_Cue"));
+    if (GEditor)
+    {
+        GEditor->PlayEditorSound(TEXT("/Engine/EditorSounds/Notifications/CompileSuccess_Cue.CompileSuccess_Cue"));
+    }
+    else
+    {
+        LOG_ERROR(LogModificationUBTEditorTool, "Global editor reference not found.")
+    }
 
     return;
 }
@@ -344,7 +358,14 @@ void FModificationUBTEditorToolInstance::MarkNotificationAsFail(const int32 Exit
         this->NotificationItem.Reset();
     }
 
-    GEditor->PlayEditorSound(TEXT("/Engine/EditorSounds/Notifications/CompileFailed_Cue.CompileFailed_Cue"));
+    if (GEditor)
+    {
+        GEditor->PlayEditorSound(TEXT("/Engine/EditorSounds/Notifications/CompileFailed_Cue.CompileFailed_Cue"));
+    }
+    else
+    {
+        LOG_ERROR(LogModificationUBTEditorTool, "Global editor reference not found.")
+    }
 
     return;
 }

@@ -1,7 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "ModificationSupervisorSubsystem.h"
-
 #include "JAFGLogDefs.h"
 
 UModificationSupervisorSubsystem::UModificationSupervisorSubsystem(void) : Super()
