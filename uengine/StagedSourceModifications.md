@@ -58,7 +58,7 @@ foreach (FileReference PluginFile in PluginsBase.EnumeratePlugins(ModsFolder))
 
 `./Engine/Source/Programs/UnrealBuildTool/ProjectFiles/ProjectFileGenerator.cs::ProjectFileGenerator::GenerateProjectFiles`
 
-`List<Tuple<ProjectFile, ProjectTarget>> AllProjectTargetFiles = new List<Tuple<ProjectFile, ProjectTarget>>(); { ... }`
+`-> List<Tuple<ProjectFile, ProjectTarget>> AllProjectTargetFiles = new List<Tuple<ProjectFile, ProjectTarget>>(); { ... }`
 
 ```csharp
 // <JAFG> Modification targets
@@ -83,3 +83,15 @@ foreach (ProjectFile ModProject in ModProjects)
 }
 // </JAFG>
 ```
+
+## Launch game (New File / UAT Command)
+
+Allows to directly launch the game after modifications were done (for plugins only of course) in Steam.
+
+`./Engine/Source/Programs/AutomationTool/Scripts/LaunchGame.cs`
+
+## Compile Single Plugins (New File / UAT Command)
+
+Allows to compile single plugins and copy them to the Mods directory in a binary version of the game. Can then automatically launch the game as stated above.
+
+`./Engine/Source/Programs/AutomationTool/Scripts/PackagePlugin.cs`
