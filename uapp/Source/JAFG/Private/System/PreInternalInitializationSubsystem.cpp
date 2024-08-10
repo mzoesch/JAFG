@@ -1,20 +1,19 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "System/PreInternalInitializationSubsystem.h"
-
 #include "System/JAFGGameInstance.h"
 #include "ModificationSupervisorSubsystem.h"
 
 void UPreInternalInitializationSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
-    if (this->GetTemplateGameInstance<UJAFGGameInstance>()->bInitializedExternalMods)
+    if (this->GetTemplateGameInstance<UJAFGGameInstance>()->HasInitializedExternalGamePlugins())
     {
         Super::Initialize(Collection);
         return;
     }
-    this->GetTemplateGameInstance<UJAFGGameInstance>()->bInitializedExternalMods = true;
+    this->GetTemplateGameInstance<UJAFGGameInstance>()->SetInitializedExternalGamePlugins();
 
-    Collection.InitializeDependency(UModificationSupervisorSubsystem::StaticClass());
+    Collection.InitializeDependency<UModificationSupervisorSubsystem>();
 
     Super::Initialize(Collection);
 

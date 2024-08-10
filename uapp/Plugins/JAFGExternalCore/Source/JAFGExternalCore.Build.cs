@@ -42,6 +42,7 @@ public class JAFGExternalCore : ModuleRules
         {
             "CoreUObject",
             "Engine",
+            "Projects",
         }
         );
 

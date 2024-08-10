@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "DiffResults.h"
 #include "MyCore.h"
 #include "Engine/GameInstance.h"
 
@@ -13,7 +12,7 @@ JAFG_VOID
 DECLARE_MULTICAST_DELEGATE(FOnShutdownRequestSignature)
 
 UCLASS(NotBlueprintable)
-class JAFG_API UJAFGGameInstance : public UGameInstance
+class JAFG_API UJAFGGameInstance final : public UGameInstance
 {
     GENERATED_BODY()
 
@@ -21,9 +20,13 @@ public:
 
     explicit UJAFGGameInstance(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
+    // UGameInstance implementation
     virtual void Init(void) override;
+    // ~UGameInstance implementation
 
-    bool bInitializedExternalMods = false;
+    //////////////////////////////////////////////////////////////////////////
+    // Shutdown
+    //////////////////////////////////////////////////////////////////////////
 
     auto SubscribeToShutdownRequest(const FOnShutdownRequestSignature::FDelegate& Delegate) -> FDelegateHandle;
     auto SubscribeToShutdownRequest(
@@ -64,4 +67,23 @@ private:
     TArray<FString> ShutdownHolders;
 
     auto ForwardShutdownToEngine(void) -> void;
+
+public:
+
+    //////////////////////////////////////////////////////////////////////////
+    // Subsystem initialization
+    //////////////////////////////////////////////////////////////////////////
+
+    FORCEINLINE auto HasInitializedExternalGamePlugins(void) const -> bool
+    {
+        return this->bInitializedExternalGamePlugins;
+    }
+    FORCEINLINE auto SetInitializedExternalGamePlugins(void) -> void
+    {
+        this->bInitializedExternalGamePlugins = true;
+    }
+
+private:
+
+    bool bInitializedExternalGamePlugins = false;
 };
