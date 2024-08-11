@@ -95,8 +95,8 @@ public:
      * If this plugin is only needed to be installed on the client. This includes also servers of type "listen server"
      * AND single player games.
      */
-    UPROPERTY(EditAnywhere, Category = "Remote Version", meta = (EditCondition = "!bIsServerOnly"))
-    bool bIsClientOnly { };
+    UPROPERTY(EditAnywhere, Category = "Remote Version", meta = (EditCondition = "!bServerOnly"))
+    bool bClientOnly { };
 
     /**
      * If this plugin is only needed to be installed on the server. This includes also servers of type "listen server"
@@ -105,8 +105,8 @@ public:
      * If this is true, only the remote clients that connect to an authoritative server will not need to have this
      * plugin installed.
      */
-    UPROPERTY(EditAnywhere, Category = "Remote Version", meta = (EditCondition = "!bIsClientOnly"))
-    bool bIsServerOnly { };
+    UPROPERTY(EditAnywhere, Category = "Remote Version", meta = (EditCondition = "!bClientOnly"))
+    bool bServerOnly { };
 
     /**
      * A range of versions (from this plugin only) that this plugin is compatible with.
@@ -114,7 +114,7 @@ public:
      * If a client plugin version is not within this range, the client will not be able to connect to the server and
      * will be forced to disconnect.
      */
-    UPROPERTY(EditAnywhere, Category = "Remote Version", meta = (EditCondition = "!bIsClientOnly && !bIsServerOnly"))
+    UPROPERTY(EditAnywhere, Category = "Remote Version", meta = (EditCondition = "!bClientOnly && !bServerOnly"))
     FString RemoteVersionRange;
 
     /**

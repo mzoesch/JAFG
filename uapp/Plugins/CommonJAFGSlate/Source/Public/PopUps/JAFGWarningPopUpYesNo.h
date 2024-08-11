@@ -9,7 +9,7 @@
 
 struct COMMONJAFGSLATE_API FJAFGWarningPopUpDataYesNo : public FJAFGWarningPopUpData
 {
-    TFunction<void(bool BAccepted)> OnPopUpClosedDelegate;
+    TFunction<void(bool BAccepted)> OnPopUpYesNoClosedDelegate;
 };
 
 UCLASS(Abstract, Blueprintable)
@@ -34,7 +34,7 @@ public:
 protected:
 
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget, OptionalWidget))
-    UButton* B_ConfirmButton;
+    TObjectPtr<UButton> B_ConfirmButton;
 
     virtual void OnYesNoClose(const bool bAccepted);
 
@@ -46,5 +46,5 @@ protected:
 
 private:
 
-    TFunction<void(bool bAccepted)> OnPopupClosedDelegate;
+    TFunction<void(bool bAccepted)> OnPopupYesNoClosedDelegate;
 };

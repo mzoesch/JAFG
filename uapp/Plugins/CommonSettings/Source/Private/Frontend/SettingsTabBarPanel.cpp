@@ -114,7 +114,7 @@ void USettingsTabBarPanel::TryToClose(const TFunction<void(void)>& CallbackIfLat
 
     if (this->CanBeApplied() == false)
     {
-        this->GetCommonHUD()->CreateWarningPopup("You have unsaved changes that can not be applied. Do you want to discard them?", [this, CallbackIfLateAllow] (const bool bAccepted)
+        this->GetCommonHUD()->CreateWarningPopupYesNo("You have unsaved changes that can not be applied. Do you want to discard them?", [this, CallbackIfLateAllow] (const bool bAccepted)
         {
             if (bAccepted == false)
             {
@@ -135,7 +135,7 @@ void USettingsTabBarPanel::TryToClose(const TFunction<void(void)>& CallbackIfLat
         return;
     }
 
-    this->GetCommonHUD()->CreateWarningPopup("You have unsaved changes. Do you want to apply them?", [this, CallbackIfLateAllow] (const bool bAccepted)
+    this->GetCommonHUD()->CreateWarningPopupYesNo("You have unsaved changes. Do you want to apply them?", [this, CallbackIfLateAllow] (const bool bAccepted)
     {
         if (bAccepted == false)
         {
@@ -191,7 +191,7 @@ void USettingsTabBarPanel::CreateCollectionSubPage(const UGameSettingCollection*
 
     UJAFGTextBlock* CollectionHeader = this->WidgetTree->ConstructWidget<UJAFGTextBlock>();
     CollectionHeader->SetText(InCollection->GetDisplayName());
-    CollectionHeader->SetColorScheme(EJAFGFontSize::Header);
+    CollectionHeader->SetNativeColorScheme(EJAFGFontSize::Header);
     VBox->AddChild(CollectionHeader);
 
     for (UGameSetting* Setting : InCollection->GetChildSettings())

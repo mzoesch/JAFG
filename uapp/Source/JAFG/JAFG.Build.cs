@@ -77,6 +77,7 @@ public class JAFG : ModuleRules
         {
             "EngineSettings",
             "ChunkDownloader",
+            "Projects",
         }
         );
 

@@ -1,7 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "Components/JAFGBorder.h"
-
 #include "DefaultColorsSubsystem.h"
 #include "JAFGLogDefs.h"
 #include "JAFGSlateStatics.h"
@@ -18,6 +17,11 @@ void UJAFGBorder::UpdateComponentWithTheirScheme(void)
         return;
     }
 
+    if (this->IsColorLocked())
+    {
+        return;
+    }
+
     this->SetBrushColor(FLinearColor(
         this->GetGameInstance()->GetSubsystem<UDefaultColorsSubsystem>()->GetColorByScheme(this->ColorScheme)
     ));
@@ -27,13 +31,6 @@ void UJAFGBorder::UpdateComponentWithTheirScheme(void)
 
 void UJAFGBorder::AddTemporarilyColor(const FColor Color)
 {
-#if !UE_BUILD_SHIPPING
-    if (this->ColorScheme == EJAFGColorScheme::DontCare)
-    {
-        LOG_FATAL(LogCommonSlate, "This widget must not have the value EJAFGColorScheme::DontCare set to work.")
-    }
-#endif /* !UE_BUILD_SHIPPING */
-
     const FLinearColor TempColor    = FLinearColor(Color);
     const FLinearColor CurrentColor = this->GetBrushColor();
 
@@ -47,7 +44,29 @@ void UJAFGBorder::AddTemporarilyColor(const FColor Color)
     return;
 }
 
+void UJAFGBorder::SetTemporarilyColor(const FColor Color, const bool bKeepCurrentAlpha /* = false */)
+{
+    if (bKeepCurrentAlpha)
+    {
+        this->SetBrushColor(FLinearColor(
+            FLinearColor(Color).R,
+            FLinearColor(Color).G,
+            FLinearColor(Color).B,
+            this->GetBrushColor().A
+        ));
+    }
+    else
+    {
+        this->SetBrushColor(FLinearColor(Color));
+    }
+
+    return;
+}
+
 void UJAFGBorder::ResetToColorScheme(void)
 {
+    this->UnlockColor();
     this->UpdateComponentWithTheirScheme();
+
+    return;
 }

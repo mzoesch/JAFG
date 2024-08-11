@@ -22,3 +22,8 @@ void UJAFGTextBlock::UpdateComponentWithTheirScheme(void)
 
     return;
 }
+
+void UJAFGTextBlock::SetColorScheme(const EJAFGFontSize::Type InColorScheme)
+{
+    this->SetNativeColorScheme(InColorScheme);
+}

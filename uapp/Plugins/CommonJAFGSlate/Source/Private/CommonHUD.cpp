@@ -1,7 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "CommonHUD.h"
-
 #include "CommonJAFGSlateDeveloperSettings.h"
 #include "PopUps/JAFGWarningPopUp.h"
 #include "PopUps/JAFGWarningPopUpYesNo.h"
@@ -13,14 +12,15 @@ ACommonHUD::ACommonHUD(const FObjectInitializer& ObjectInitializer) : Super(Obje
     return;
 }
 
-void ACommonHUD::CreateWarningPopup(const FString& Message, const FString& Header) const
+void ACommonHUD::CreateWarningPopup(const FString& Message, const FString& Header, const TFunction<void()>& OnPopUpClosedDelegate) const
 {
     const UCommonJAFGSlateDeveloperSettings* Settings = GetDefault<UCommonJAFGSlateDeveloperSettings>();
     check( Settings )
 
     FJAFGWarningPopUpData Data;
-    Data.Header  = Header;
-    Data.Message = Message;
+    Data.Header                = Header;
+    Data.Message               = Message;
+    Data.OnPopUpClosedDelegate = OnPopUpClosedDelegate;
 
     check( Settings->WarningPopUpWidgetClass )
 
@@ -32,15 +32,25 @@ void ACommonHUD::CreateWarningPopup(const FString& Message, const FString& Heade
     return;
 }
 
-void ACommonHUD::CreateWarningPopup(const FString& Message, const FString& Header, const TFunction<void(bool bAccepted)>& OnPopUpClosedDelegate) const
+void ACommonHUD::CreateWarningPopup(const FString& Message, const FString& Header) const
+{
+    this->CreateWarningPopup(Message, Header, [] (void) { });
+}
+
+void ACommonHUD::CreateWarningPopup(const FString& Message, const TFunction<void()>& OnPopUpClosedDelegate) const
+{
+    this->CreateWarningPopup(Message, TEXT("Warning"), OnPopUpClosedDelegate);
+}
+
+void ACommonHUD::CreateWarningPopupYesNo(const FString& Message, const FString& Header, const TFunction<void(bool bAccepted)>& OnPopUpClosedDelegate) const
 {
     const UCommonJAFGSlateDeveloperSettings* Settings = GetDefault<UCommonJAFGSlateDeveloperSettings>();
     check( Settings )
 
     FJAFGWarningPopUpDataYesNo Data;
-    Data.Header                = Header;
-    Data.Message               = Message;
-    Data.OnPopUpClosedDelegate = OnPopUpClosedDelegate;
+    Data.Header                     = Header;
+    Data.Message                    = Message;
+    Data.OnPopUpYesNoClosedDelegate = OnPopUpClosedDelegate;
 
     check( Settings->WarningPopUpYesNoWidgetClass )
 
@@ -52,9 +62,9 @@ void ACommonHUD::CreateWarningPopup(const FString& Message, const FString& Heade
     return;
 }
 
-void ACommonHUD::CreateWarningPopup(const FString& Message, const TFunction<void(bool bAccepted)>& OnPopupClosedDelegate) const
+void ACommonHUD::CreateWarningPopupYesNo(const FString& Message, const TFunction<void(bool bAccepted)>& OnPopupClosedDelegate) const
 {
-    this->CreateWarningPopup(Message, TEXT("Warning"), OnPopupClosedDelegate);
+    this->CreateWarningPopupYesNo(Message, TEXT("Warning"), OnPopupClosedDelegate);
 }
 
 void ACommonHUD::CreateLoadingScreen(void)

@@ -22,7 +22,10 @@ public:
     virtual void UpdateComponentWithTheirScheme(void) override;
     // ~IUserJAFGColorScheme interface
 
-    FORCEINLINE auto SetColorScheme(const EJAFGFontSize::Type InColorScheme) -> void { this->ColorScheme = InColorScheme; }
+    UFUNCTION(BlueprintCallable)
+    void SetColorScheme(const EJAFGFontSize::Type InColorScheme);
+
+    FORCEINLINE auto SetNativeColorScheme(const EJAFGFontSize::Type InColorScheme) -> void { this->ColorScheme = InColorScheme; }
 
 protected:
 

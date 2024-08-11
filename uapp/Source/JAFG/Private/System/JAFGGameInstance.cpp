@@ -1,6 +1,7 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "System/JAFGGameInstance.h"
+#include "GamePluginSettings.h"
 #include "JAFGExternalCore.h"
 #include "ModificationSupervisorSubsystem.h"
 #include "GameFramework/GameUserSettings.h"
@@ -16,6 +17,8 @@ UJAFGGameInstance::UJAFGGameInstance(const FObjectInitializer& ObjectInitializer
 
 void UJAFGGameInstance::Init(void)
 {
+    GetMutableDefault<UGamePluginSettings>()->OnGameBootUp();
+
     FJAFGExternalCoreModule::Get().OnInitInternalSubsystem.BindLambda( [] (FSubsystemCollectionBase& Collection)
     {
         LOG_VERBOSE(LogModSubsystem, "Received broadcast to initialize pre internal subsystem.")
@@ -103,7 +106,7 @@ bool UJAFGGameInstance::UnsubscribeFromShutdownRequest(const FDelegateHandle& Ha
 
 void UJAFGGameInstance::RequestControlledShutdown(void)
 {
-    LOG_DISPLAY(LogSystem, "Shutdown requested.")
+    LOG_DISPLAY(LogSystem, "Shutdown requested.%s", this->bShutdownIsRestart ? TEXT(" Will restart.") : TEXT(""))
 
     this->OnShutdownRequestDelegate.Broadcast();
 
@@ -115,6 +118,25 @@ void UJAFGGameInstance::RequestControlledShutdown(void)
     }
 
     return;
+}
+
+void UJAFGGameInstance::RequestControlledRestart(void)
+{
+    this->bShutdownIsRestart = true;
+    this->RequestControlledShutdown();
+
+    return;
+}
+
+// ReSharper disable once CppMemberFunctionMayBeStatic
+bool UJAFGGameInstance::DoesPlatformSupportRestart(void) const
+{
+#if PLATFORM_WINDOWS
+    return false;
+#else /* PLATFORM_WINDOWS */
+    #error "DoesPlatformSupportRestart is not implemented for this platform."
+    return false;
+#endif /* !PLATFORM_WINDOWS */
 }
 
 void UJAFGGameInstance::ForwardShutdownToEngine(void)
@@ -130,6 +152,13 @@ void UJAFGGameInstance::ForwardShutdownToEngine(void)
     {
         ensureAlwaysMsgf(false, TEXT("Shutdown request was forwarded but there are still shutdown holders."));
         checkNoEntry()
+    }
+
+
+    if (this->DoesPlatformSupportRestart() && this->bShutdownIsRestart)
+    {
+        FPlatformMisc::RestartApplication();
+        return;
     }
 
     LOG_DISPLAY(LogSystem, "Forwarding shutdown request to engine.")

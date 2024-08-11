@@ -64,8 +64,8 @@ void UModificationUBTEditorToolMetadataObject::PopulateFromDescriptor(const FPlu
     CachedJson->TryGetStringField(TEXT("JAFGGameVersion"), this->JAFGGameVersion);
     this->EngineVersion = InDescriptor.EngineVersion;
 
-    CachedJson->TryGetBoolField(TEXT("bIsClientOnly"), this->bIsClientOnly);
-    CachedJson->TryGetBoolField(TEXT("bIsServerOnly"), this->bIsServerOnly);
+    CachedJson->TryGetBoolField(TEXT("bClientOnly"), this->bClientOnly);
+    CachedJson->TryGetBoolField(TEXT("bServerOnly"), this->bServerOnly);
     CachedJson->TryGetStringField(TEXT("RemoteVersionRange"), this->RemoteVersionRange);
 
     this->FriendlyName   = InDescriptor.FriendlyName;
@@ -97,8 +97,8 @@ void UModificationUBTEditorToolMetadataObject::CopyIntoDescriptor(FPluginDescrip
     OutDescriptor.AdditionalFieldsToWrite.Add(TEXT("JAFGGameVersion"), MakeShared<FJsonValueString>(this->JAFGGameVersion));
     OutDescriptor.EngineVersion = this->EngineVersion;
 
-    OutDescriptor.AdditionalFieldsToWrite.Add(TEXT("bIsClientOnly"), MakeShared<FJsonValueBoolean>(this->bIsClientOnly));
-    OutDescriptor.AdditionalFieldsToWrite.Add(TEXT("bIsServerOnly"), MakeShared<FJsonValueBoolean>(this->bIsServerOnly));
+    OutDescriptor.AdditionalFieldsToWrite.Add(TEXT("bClientOnly"), MakeShared<FJsonValueBoolean>(this->bClientOnly));
+    OutDescriptor.AdditionalFieldsToWrite.Add(TEXT("bServerOnly"), MakeShared<FJsonValueBoolean>(this->bServerOnly));
     OutDescriptor.AdditionalFieldsToWrite.Add(TEXT("RemoteVersionRange"), MakeShared<FJsonValueString>(this->RemoteVersionRange));
 
     OutDescriptor.FriendlyName   = this->FriendlyName;

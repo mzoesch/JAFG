@@ -49,14 +49,17 @@ public:
     auto UnsubscribeFromShutdownRequest(const FDelegateHandle& Handle, const FString& Holder) -> bool;
 
     auto RequestControlledShutdown(void) -> void;
+    auto RequestControlledRestart(void) -> void;
+
+    auto DoesPlatformSupportRestart(void) const -> bool;
 
 private:
 
     bool bShutdownRequested;
-    /**
-     * Needed for a rare case where all holders can instantly release the shutdown request in the same tick.
-     */
+    /** Needed for a rare case where all holders can instantly release the shutdown request in the same tick. */
     bool bAlreadyForwardedShutdown;
+    /** The application will restart after shutdown. */
+    bool bShutdownIsRestart = false;
 
     /**
      * Event called if a shutdown request is made. But before the request is being forwarded to the engine.

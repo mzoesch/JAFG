@@ -19,7 +19,7 @@ void UJAFGTabBarButtonPopUp::NativeOnThisTabClicked(void)
     {
         if (this->bIsYesNo)
         {
-            HUD->CreateWarningPopup(this->Message, [this] (const bool bAccepted) -> void
+            HUD->CreateWarningPopupYesNo(this->Message, [this] (const bool bAccepted) -> void
             {
                 this->OnPopUpClosed(bAccepted);
             });
@@ -33,7 +33,7 @@ void UJAFGTabBarButtonPopUp::NativeOnThisTabClicked(void)
     {
         if (this->bIsYesNo)
         {
-            HUD->CreateWarningPopup(this->Message, this->Header, [this] (const bool bAccepted) -> void
+            HUD->CreateWarningPopupYesNo(this->Message, this->Header, [this] (const bool bAccepted) -> void
             {
                 this->OnPopUpClosed(bAccepted);
             });

@@ -1,7 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "PopUps/JAFGWarningPopUp.h"
-
 #include "Components/Button.h"
 
 UJAFGWarningPopUp::UJAFGWarningPopUp(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -35,8 +34,9 @@ void UJAFGWarningPopUp::PassDataToWidget(const FWidgetPassData& UncastedData)
 {
     CAST_PASSED_DATA(FJAFGWarningPopUpData)
     {
-        this->Header  = Data->Header;
-        this->Message = Data->Message;
+        this->Header                = Data->Header;
+        this->Message               = Data->Message;
+        this->OnPopUpClosedDelegate = Data->OnPopUpClosedDelegate;
     }
 
     return;
@@ -55,4 +55,11 @@ FString UJAFGWarningPopUp::GetMessage(void) const
 void UJAFGWarningPopUp::OnClose(void)
 {
     this->RemoveFromParent();
+
+    if (this->OnPopUpClosedDelegate)
+    {
+        this->OnPopUpClosedDelegate();
+    }
+
+    return;
 }

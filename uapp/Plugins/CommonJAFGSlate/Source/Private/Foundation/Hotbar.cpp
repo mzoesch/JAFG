@@ -101,7 +101,7 @@ void UHotbar::RenderHotbar(const int32 SlotIndex)
             ImageSlot->SetPadding(FMargin(4.0f));
 
             UJAFGTextBlock* Text_Amount = NewObject<UJAFGTextBlock>(this);
-            Text_Amount->SetColorScheme(EJAFGFontSize::Small);
+            Text_Amount->SetNativeColorScheme(EJAFGFontSize::Small);
             Text_Amount->SetText(Container->GetContainerValue(i).Amount < 2
                 ? FText()
                 : FText::FromString(FString::FromInt(Container->GetContainerValue(i).Amount))

@@ -1,7 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "PopUps/JAFGWarningPopUpYesNo.h"
-
 #include "Components/Button.h"
 
 UJAFGWarningPopUpYesNo::UJAFGWarningPopUpYesNo(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -33,7 +32,7 @@ void UJAFGWarningPopUpYesNo::PassDataToWidget(const FWidgetPassData& UncastedDat
 
     CAST_PASSED_DATA(FJAFGWarningPopUpDataYesNo)
     {
-        this->OnPopupClosedDelegate = Data->OnPopUpClosedDelegate;
+        this->OnPopupYesNoClosedDelegate = Data->OnPopUpYesNoClosedDelegate;
     }
 
     return;
@@ -41,9 +40,9 @@ void UJAFGWarningPopUpYesNo::PassDataToWidget(const FWidgetPassData& UncastedDat
 
 void UJAFGWarningPopUpYesNo::OnYesNoClose(const bool bAccepted)
 {
-    if (this->OnPopupClosedDelegate)
+    if (this->OnPopupYesNoClosedDelegate)
     {
-        this->OnPopupClosedDelegate(bAccepted);
+        this->OnPopupYesNoClosedDelegate(bAccepted);
     }
     else
     {

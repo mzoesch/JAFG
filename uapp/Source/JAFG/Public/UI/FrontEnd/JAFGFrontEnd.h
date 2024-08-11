@@ -33,6 +33,9 @@ protected:
     TSubclassOf<UJAFGTabBarBase> SettingsPanelWidgetClass;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    TSubclassOf<UJAFGTabBarBase> GamePluginOverviewPanelWidgetClass;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
     TSubclassOf<UJAFGTabBarButton> QuitGameButtonWidgetClass;
 
     virtual void RegisterAllTabs(void) override;

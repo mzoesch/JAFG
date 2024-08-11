@@ -193,8 +193,8 @@ void FModificationUBTEditorToolPluginWizardDefinition::PluginCreated(const FStri
     );
     Descriptor.EngineVersion = FModificationUBTEditorToolModule::Get().GetEngineVersion();
 
-    Descriptor.AdditionalFieldsToWrite.Add(TEXT("bIsClientOnly"), MakeShared<FJsonValueBoolean>(false));
-    Descriptor.AdditionalFieldsToWrite.Add(TEXT("bIsServerOnly"), MakeShared<FJsonValueBoolean>(false));
+    Descriptor.AdditionalFieldsToWrite.Add(TEXT("bClientOnly"), MakeShared<FJsonValueBoolean>(false));
+    Descriptor.AdditionalFieldsToWrite.Add(TEXT("bServerOnly"), MakeShared<FJsonValueBoolean>(false));
     Descriptor.AdditionalFieldsToWrite.Add(TEXT("RemoteVersionRange"), MakeShared<FJsonValueString>(TEXT("0.0.1")));
 
     if (Descriptor.FriendlyName.IsEmpty()) { Descriptor.FriendlyName = PluginName; }
