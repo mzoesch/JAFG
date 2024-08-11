@@ -12,7 +12,6 @@ DECLARE_DELEGATE_OneParam(FOnInitInternalSubsystem, FSubsystemCollectionBase& /*
 
 class FJAFGExternalCoreModule final : public IModuleInterface
 {
-
 public:
 
     // IModuleInterface implementation

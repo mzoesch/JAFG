@@ -25,6 +25,7 @@ public class ModificationSupervisor : ModuleRules
         new string[]
         {
             "Core",
+            "DeveloperSettings",
         }
         );
 
