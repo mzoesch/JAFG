@@ -1,0 +1,57 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "0.0.1",
+	"FriendlyName": "JAFG Test Mod Two",
+	"Description": "Game plugin for JAFG.",
+	"Category": "JAFGGamePlugin",
+	"CreatedBy": "Anonymous",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "JAFGTestModTwo",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],
+	"EngineVersion": "UE5-CL-0",
+	"Plugins": [
+		{
+			"Name": "CommonJAFGSlate",
+			"Enabled": true,
+			"VersionRange": "1.0"
+		},
+		{
+			"Name": "CommonSettings",
+			"Enabled": true,
+			"VersionRange": "1.0"
+		},
+		{
+			"Name": "JAFGExternalCore",
+			"Enabled": true,
+			"VersionRange": "1.0"
+		},
+		{
+			"Name": "JAFGGlobalLogging",
+			"Enabled": true,
+			"VersionRange": "1.0"
+		},
+		{
+			"Name": "ModificationSupervisor",
+			"Enabled": true,
+			"VersionRange": "1.0"
+		}
+	],
+	"JAFGGameVersion": "0.0.0.1",
+	"bIsClientOnly": false,
+	"bIsServerOnly": false,
+	"RemoteVersionRange": "0.0.1",
+	"bIsOptional": false
+}
