@@ -10,11 +10,81 @@
 
 JAFG_VOID
 
+class IPlugin;
 class UJAFGButton;
 class UJAFGBorder;
 class UJAFGTextBlock;
 class UJAFGScrollBox;
 class UGamePluginOverviewPanelWidget;
+
+struct FDetailedPluginPassData : public FWidgetPassData
+{
+    explicit FDetailedPluginPassData(const IPlugin* Plugin)
+    : Plugin(Plugin)
+    {
+        return;
+    }
+
+    const IPlugin* Plugin = nullptr;
+};
+
+UCLASS(Abstract, Blueprintable)
+class UDetailedPluginInformation : public UJAFGUserWidget
+{
+    GENERATED_BODY()
+
+public:
+
+    explicit UDetailedPluginInformation(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+    // UUserWidget implementation
+    virtual void NativeConstruct(void) override;
+    // ~UUserWidget implementation
+
+    // UJAFGUserWidget implementation
+    virtual void PassDataToWidget(const FWidgetPassData& UncastedData) override;
+    // ~UJAFGUserWidget implementation
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true"))
+    TObjectPtr<UJAFGTextBlock> TextBlock_PluginFriendlyName;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true"))
+    TObjectPtr<UJAFGTextBlock> TextBlock_EnabledState;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true"))
+    TObjectPtr<UJAFGTextBlock> TextBlock_PluginName;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true"))
+    TObjectPtr<UJAFGTextBlock> TextBlock_PluginVersion;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true"))
+    TObjectPtr<UJAFGTextBlock> TextBlock_RemotePluginVersion;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true"))
+    TObjectPtr<UJAFGTextBlock> TextBlock_PluginCategory;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true"))
+    TObjectPtr<UJAFGTextBlock> TextBlock_Compatible;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true"))
+    TObjectPtr<UJAFGTextBlock> TextBlock_JAFGVersion;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true"))
+    TObjectPtr<UJAFGTextBlock> TextBlock_PluginVersionRange;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true"))
+    TObjectPtr<UJAFGTextBlock> TextBlock_PluginDescription;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true"))
+    TObjectPtr<UJAFGButton> Button_Close;
+
+private:
+
+    UFUNCTION()
+    void OnCloseClicked( /* void */ );
+
+    const IPlugin* Plugin = nullptr;
+};
 
 struct FPluginPassData : public FWidgetPassData
 {
@@ -43,12 +113,17 @@ public:
     virtual void NativeConstruct(void) override;
     // ~UUserWidget implementation
 
+    // UJAFGUserWidget implementation
     virtual void PassDataToWidget(const FWidgetPassData& UncastedData) override;
+    // ~UJAFGUserWidget implementation
 
     UFUNCTION(BlueprintCallable)
     void NativeRefreshWidget( /* void */ );
     UFUNCTION(BlueprintImplementableEvent)
     void RefreshWidget( /* void */ );
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    TSubclassOf<UDetailedPluginInformation> DetailedPluginInformationWidgetClass;
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true", OptionalWidget = "true"))
     TObjectPtr<UJAFGBorder> Border_PluginEntry;
@@ -57,7 +132,16 @@ public:
     TObjectPtr<UJAFGTextBlock> TextBlock_PluginName;
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true"))
+    TObjectPtr<UJAFGTextBlock> TextBlock_EnabledIncompatible;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true"))
+    TObjectPtr<UJAFGTextBlock> TextBlock_PluginVersion;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true"))
     TObjectPtr<UJAFGTextBlock> TextBlock_PluginDescription;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true"))
+    TObjectPtr<UJAFGButton> Button_ShowDetailedInformation;
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true"))
     TObjectPtr<UJAFGButton> Button_TogglePlugin;
@@ -68,21 +152,18 @@ public:
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true"))
     TObjectPtr<UJAFGTextBlock> TextBlock_RestartInfo;
 
-
     UFUNCTION(BlueprintPure)
     bool ShowNonFriendlyName( /* void */ ) const;
 
+    UFUNCTION(BlueprintPure)
+    bool IsGamePlugin( /* void */ ) const;
 
     UFUNCTION(BlueprintPure)
-    bool IsJAFGGamePluginEnabled( /* void */ ) const;
+    bool IsGamePluginDivertedFromDefault( /* void */ ) const;
     UFUNCTION(BlueprintPure)
-    bool IsJAFGGamePluginDisabled( /* void */ ) const;
+    bool WillGamePluginBeEnabled( /* void */ ) const;
     UFUNCTION(BlueprintPure)
-    bool IsJAFGGamePluginDivertedFromDefault( /* void */ ) const;
-    UFUNCTION(BlueprintPure)
-    bool WillJAFGGamePluginBeEnabled( /* void */ ) const;
-    UFUNCTION(BlueprintPure)
-    bool WillJAFGGamePluginBeDisabled( /* void */ ) const;
+    bool WillGamePluginBeDisabled( /* void */ ) const;
 
     UFUNCTION(BlueprintPure)
     bool IsPluginEnabled( /* void */ ) const;
@@ -96,6 +177,9 @@ protected:
     UFUNCTION()
     void OnTogglePluginClicked( /* void */ );
     bool ShouldTogglePluginButtonBeEnabled(void) const;
+
+    UFUNCTION()
+    void OnDetailedInformationClicked( /* void */ );
 
 private:
 
@@ -138,9 +222,6 @@ public:
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true"))
     TObjectPtr<UJAFGButton> Button_ApplyAndRestart;
 
-    UPROPERTY(BlueprintReadWrite)
-    bool bShowNonFriendlyName = true;
-
     /*
      * Most important boolean flags to filter the plugins at the top, the more below we go, the more specific the
      * filtering gets.
@@ -149,16 +230,28 @@ public:
      */
 
     UPROPERTY(BlueprintReadWrite)
-    bool bShowOnlyServerPlugins   = false;
-    UPROPERTY(BlueprintReadWrite)
-    bool bShowOnlyClientPlugins   = false;
-    UPROPERTY(BlueprintReadWrite)
-    bool bShowOnlyOptionalPlugins = false;
+    bool bShowNonFriendlyName = false;
 
     UPROPERTY(BlueprintReadWrite)
-    bool bShowOnlyEnabledGamePlugins  = false;
+    bool bShowCompatibleMods   = true;
     UPROPERTY(BlueprintReadWrite)
-    bool bShowOnlyDisabledGamePlugins = false;
+    bool bShowIncompatibleMods = false;
+
+    UPROPERTY(BlueprintReadWrite)
+    bool bShowServerMods = true;
+    UPROPERTY(BlueprintReadWrite)
+    bool bShowClientMods = true;
+    UPROPERTY(BlueprintReadWrite)
+#if WITH_EDITOR
+    bool bShowTestMods   = true;
+#else /* WITH_EDITOR */
+    bool bShowTestMods   = false;
+#endif /* WITH_EDITOR */
+
+    UPROPERTY(BlueprintReadWrite)
+    bool bShowEnabledMods  = true;
+    UPROPERTY(BlueprintReadWrite)
+    bool bShowDisabledMods = true;
 
     UPROPERTY(BlueprintReadWrite)
     bool bShowProjectPlugins    = false;

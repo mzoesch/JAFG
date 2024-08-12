@@ -1,9 +1,9 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "1.0.2",
-	"FriendlyName": "JAFG Test Mod Three",
-	"Description": "A game plugin for JAFG for testing plugin behavior. Contains no modification or content. This plugin is required on the server.",
+	"VersionName": "1.0.3",
+	"FriendlyName": "JAFG Test Mod Four",
+	"Description": "A game plugin for JAFG for testing plugin behavior. Contains no modification or content. This plugin will never be compatible with any JAFG version.",
 	"Category": "JAFGGamePlugin",
 	"CreatedBy": "mzoesch",
 	"CreatedByURL": "",
@@ -16,7 +16,7 @@
 	"Installed": false,
 	"Modules": [
 		{
-			"Name": "JAFGTestModThree",
+			"Name": "JAFGTestModFour",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}
@@ -43,9 +43,9 @@
 			"Enabled": true
 		}
 	],
-	"JAFGVersionRange": "0.0.0.1",
-	"RemoteVersionRange": "1.0.2",
+	"JAFGVersionRange": "/",
+	"RemoteVersionRange": "1.0.3",
 	"bRequiredOnServer": true,
-	"bRequiredOnClient": false,
+	"bRequiredOnClient": true,
 	"bOptional": false
 }

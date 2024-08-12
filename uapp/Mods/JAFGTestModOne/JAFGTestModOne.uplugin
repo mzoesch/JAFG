@@ -1,11 +1,11 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "0.0.1",
+	"VersionName": "1.0.0",
 	"FriendlyName": "JAFG Test Mod One",
-	"Description": "Game plugin for JAFG.",
+	"Description": "A game plugin for JAFG for testing plugin behavior. Contains no modification or content.",
 	"Category": "JAFGGamePlugin",
-	"CreatedBy": "Anonymous",
+	"CreatedBy": "mzoesch",
 	"CreatedByURL": "",
 	"DocsURL": "",
 	"MarketplaceURL": "",
@@ -21,37 +21,31 @@
 			"LoadingPhase": "Default"
 		}
 	],
-	"EngineVersion": "UE5-CL-0",
 	"Plugins": [
 		{
 			"Name": "CommonJAFGSlate",
-			"Enabled": true,
-			"VersionRange": "1.0"
+			"Enabled": true
 		},
 		{
 			"Name": "CommonSettings",
-			"Enabled": true,
-			"VersionRange": "1.0"
+			"Enabled": true
 		},
 		{
 			"Name": "JAFGExternalCore",
-			"Enabled": true,
-			"VersionRange": "1.0"
+			"Enabled": true
 		},
 		{
 			"Name": "JAFGGlobalLogging",
-			"Enabled": true,
-			"VersionRange": "1.0"
+			"Enabled": true
 		},
 		{
 			"Name": "ModificationSupervisor",
-			"Enabled": true,
-			"VersionRange": "1.0"
+			"Enabled": true
 		}
 	],
-	"JAFGGameVersion": "0.0.0.1",
-	"bIsClientOnly": false,
-	"bIsServerOnly": false,
-	"RemoteVersionRange": "0.0.1",
-	"bIsOptional": false
+	"JAFGVersionRange": "*",
+	"RemoteVersionRange": "1.0.0",
+	"bRequiredOnServer": true,
+	"bRequiredOnClient": false,
+	"bOptional": false
 }

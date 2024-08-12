@@ -61,11 +61,11 @@ void UModificationUBTEditorToolMetadataObject::PopulateFromDescriptor(const FPlu
     this->FileVersion  = 3;
     this->Version      = InDescriptor.Version;
     this->VersionName  = InDescriptor.VersionName;
-    CachedJson->TryGetStringField(TEXT("JAFGGameVersion"), this->JAFGGameVersion);
+    CachedJson->TryGetStringField(TEXT("JAFGVersionRange"), this->JAFGVersionRange);
     this->EngineVersion = InDescriptor.EngineVersion;
 
-    CachedJson->TryGetBoolField(TEXT("bClientOnly"), this->bClientOnly);
-    CachedJson->TryGetBoolField(TEXT("bServerOnly"), this->bServerOnly);
+    CachedJson->TryGetBoolField(TEXT("bClientOnly"), this->bRequiredOnClient);
+    CachedJson->TryGetBoolField(TEXT("bServerOnly"), this->bRequiredOnServer);
     CachedJson->TryGetStringField(TEXT("RemoteVersionRange"), this->RemoteVersionRange);
 
     this->FriendlyName   = InDescriptor.FriendlyName;
@@ -77,7 +77,7 @@ void UModificationUBTEditorToolMetadataObject::PopulateFromDescriptor(const FPlu
     this->MarketplaceURL = InDescriptor.MarketplaceURL;
     this->SupportURL     = InDescriptor.SupportURL;
 
-    CachedJson->TryGetBoolField(TEXT("bIsOptional"), this->bIsOptional);
+    CachedJson->TryGetBoolField(TEXT("bIsOptional"), this->bOptional);
 
     for (const FPluginReferenceDescriptor& PluginReference : InDescriptor.Plugins)
     {
@@ -92,14 +92,15 @@ void UModificationUBTEditorToolMetadataObject::PopulateFromDescriptor(const FPlu
 void UModificationUBTEditorToolMetadataObject::CopyIntoDescriptor(FPluginDescriptor& OutDescriptor) const
 {
     /* OutDescriptor.AdditionalFieldsToWrite.Add(TEXT("FileVersion"), MakeShared<FJsonValueNumber>(this->FileVersion)); */
-    OutDescriptor.Version       = this->Version;
-    OutDescriptor.VersionName   = this->VersionName;
-    OutDescriptor.AdditionalFieldsToWrite.Add(TEXT("JAFGGameVersion"), MakeShared<FJsonValueString>(this->JAFGGameVersion));
-    OutDescriptor.EngineVersion = this->EngineVersion;
+    OutDescriptor.Version            = this->Version;
+    OutDescriptor.VersionName        = this->VersionName;
+    OutDescriptor.JAFGVersionRange   = this->JAFGVersionRange;
+    OutDescriptor.RemoteVersionRange = this->RemoteVersionRange;
+    OutDescriptor.EngineVersion      = this->EngineVersion;
 
-    OutDescriptor.AdditionalFieldsToWrite.Add(TEXT("bClientOnly"), MakeShared<FJsonValueBoolean>(this->bClientOnly));
-    OutDescriptor.AdditionalFieldsToWrite.Add(TEXT("bServerOnly"), MakeShared<FJsonValueBoolean>(this->bServerOnly));
-    OutDescriptor.AdditionalFieldsToWrite.Add(TEXT("RemoteVersionRange"), MakeShared<FJsonValueString>(this->RemoteVersionRange));
+    OutDescriptor.bRequiredOnClient = this->bRequiredOnClient;
+    OutDescriptor.bRequiredOnServer = this->bRequiredOnServer;
+    OutDescriptor.bOptional         = this->bOptional;
 
     OutDescriptor.FriendlyName   = this->FriendlyName;
     OutDescriptor.Description    = this->Description;
@@ -109,8 +110,6 @@ void UModificationUBTEditorToolMetadataObject::CopyIntoDescriptor(FPluginDescrip
     OutDescriptor.DocsURL        = this->DocsURL;
     OutDescriptor.MarketplaceURL = this->MarketplaceURL;
     OutDescriptor.SupportURL     = this->SupportURL;
-
-    OutDescriptor.AdditionalFieldsToWrite.Add(TEXT("bIsOptional"), MakeShared<FJsonValueBoolean>(this->bIsOptional));
 
     TArray<FPluginReferenceDescriptor> RemovedMods = OutDescriptor.Plugins;
     for (const FPluginDependencyDescriptorData& Dependency : this->Dependencies)

@@ -185,24 +185,19 @@ void FModificationUBTEditorToolPluginWizardDefinition::PluginCreated(const FStri
 
     FPluginDescriptor Descriptor = NewPlugin->GetDescriptor();
 
-    Descriptor.Version     = 1;
-    Descriptor.VersionName = TEXT("0.0.1");
-    Descriptor.AdditionalFieldsToWrite.Add(
-        TEXT("JAFGGameVersion"),
-        MakeShared<FJsonValueString>(FModificationUBTEditorToolModule::Get().GetCurrentGameVersion())
-    );
-    Descriptor.EngineVersion = FModificationUBTEditorToolModule::Get().GetEngineVersion();
-
-    Descriptor.AdditionalFieldsToWrite.Add(TEXT("bClientOnly"), MakeShared<FJsonValueBoolean>(false));
-    Descriptor.AdditionalFieldsToWrite.Add(TEXT("bServerOnly"), MakeShared<FJsonValueBoolean>(false));
-    Descriptor.AdditionalFieldsToWrite.Add(TEXT("RemoteVersionRange"), MakeShared<FJsonValueString>(TEXT("0.0.1")));
+    Descriptor.Version            = 1;
+    Descriptor.VersionName        = TEXT("0.0.1");
+    Descriptor.JAFGVersionRange   = FModificationUBTEditorToolModule::Get().GetCurrentGameVersion();
+    Descriptor.RemoteVersionRange = Descriptor.VersionName;
 
     if (Descriptor.FriendlyName.IsEmpty()) { Descriptor.FriendlyName = PluginName; }
     if (Descriptor.Description.IsEmpty())  { Descriptor.Description  = TEXT("Game plugin for JAFG."); }
-    Descriptor.Category = DEFAULT_JAFG_GAME_PLUGIN_CATEGORY;
+    Descriptor.Category     = DEFAULT_JAFG_GAME_PLUGIN_CATEGORY;
     if (Descriptor.CreatedBy.IsEmpty())    { Descriptor.CreatedBy    = TEXT("Anonymous"); }
 
-    Descriptor.AdditionalFieldsToWrite.Add(TEXT("bIsOptional"), MakeShared<FJsonValueBoolean>(false));
+    Descriptor.bRequiredOnClient = false;
+    Descriptor.bRequiredOnServer = false;
+    Descriptor.bOptional         = false;
 
     {
 #define ADD_PLUGIN_DEPENDENCY(PluginNameToAdd)                                                     \
@@ -217,12 +212,6 @@ void FModificationUBTEditorToolPluginWizardDefinition::PluginCreated(const FStri
     else                                                                                           \
     {                                                                                              \
         FPluginReferenceDescriptor Dependency(PluginNameToAdd, true);                              \
-        Dependency.AdditionalFieldsToWrite.Add(                                                    \
-            TEXT("VersionRange"),                                                                  \
-            MakeShared<FJsonValueString>(                                                          \
-                FModificationUBTEditorToolModule::Get().GetVersionOfCorePlugin(PluginNameToAdd)    \
-            )                                                                                      \
-        );                                                                                         \
         Descriptor.Plugins.Add(Dependency);                                                        \
     }                                                                                              \
 }

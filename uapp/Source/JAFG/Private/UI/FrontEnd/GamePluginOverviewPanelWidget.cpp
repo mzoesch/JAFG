@@ -3,6 +3,7 @@
 #include "UI/FrontEnd/GamePluginOverviewPanelWidget.h"
 #include "CommonHUD.h"
 #include "GamePluginSettings.h"
+#include "ModificationSupervisorSubsystem.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/JAFGBorder.h"
 #include "Components/JAFGButton.h"
@@ -10,7 +11,67 @@
 #include "Components/JAFGTextBlock.h"
 #include "Components/Spacer.h"
 #include "Interfaces/IPluginManager.h"
+#include "System/PluginValidationSubsystem.h"
 #include "System/JAFGGameInstance.h"
+
+bool IsPluginEnabled(const IPlugin& Plugin)
+{
+    if (GetDefault<UGamePluginSettings>()->IsPluginEnabled(Plugin.GetName()))
+    {
+        return true;
+    }
+
+    if (Plugin.GetType() == EPluginType::Mod)
+    {
+        return false;
+    }
+
+    return Plugin.IsEnabled();
+}
+
+UDetailedPluginInformation::UDetailedPluginInformation(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+{
+    return;
+}
+
+void UDetailedPluginInformation::NativeConstruct(void)
+{
+    Super::NativeConstruct();
+
+    this->Button_Close->OnClicked.AddDynamic(this, &UDetailedPluginInformation::OnCloseClicked);
+
+    return;
+}
+
+void UDetailedPluginInformation::PassDataToWidget(const FWidgetPassData& UncastedData)
+{
+    CAST_PASSED_DATA(FDetailedPluginPassData)
+    {
+        this->Plugin = Data->Plugin;
+    }
+
+    jcheck( this->Plugin )
+
+    this->TextBlock_PluginFriendlyName->SetText(FText::FromString(this->Plugin->GetFriendlyName()));
+    this->TextBlock_EnabledState->SetText(FText::FromString(IsPluginEnabled(*this->Plugin) ? TEXT("Enabled") : TEXT("Disabled")));
+    this->TextBlock_EnabledState->SetColorAndOpacity(IsPluginEnabled(*this->Plugin) ? FLinearColor::Green : FLinearColor::Red);
+    this->TextBlock_PluginName->SetText(FText::FromString(this->Plugin->GetName()));
+    this->TextBlock_PluginVersion->SetText(FText::FromString(FString::Printf(TEXT("%s [%d]"), *this->Plugin->GetDescriptor().VersionName, this->Plugin->GetDescriptor().Version)));
+    this->TextBlock_RemotePluginVersion->SetText(FText::FromString(this->Plugin->GetDescriptor().RemoteVersionRange));
+    this->TextBlock_PluginCategory->SetText(FText::FromString(this->Plugin->GetDescriptor().Category));
+    this->TextBlock_Compatible->SetText(FText::FromString(this->GetGameInstance()->GetSubsystem<UPluginValidationSubsystem>()->IsGamePluginCompatible(*this->Plugin) ? TEXT("Yes") : TEXT("No")));
+    this->TextBlock_Compatible->SetColorAndOpacity(this->GetGameInstance()->GetSubsystem<UPluginValidationSubsystem>()->IsGamePluginCompatible(*this->Plugin) ? FLinearColor::Green : FLinearColor::Red);
+    this->TextBlock_JAFGVersion->SetText(FText::FromString(this->GetGameInstance()->GetSubsystem<UPluginValidationSubsystem>()->GetCurrentGameVersion()));
+    this->TextBlock_PluginVersionRange->SetText(FText::FromString(this->Plugin->GetDescriptor().JAFGVersionRange));
+    this->TextBlock_PluginDescription->SetText(FText::FromString(this->Plugin->GetDescriptor().Description));
+
+    return;
+}
+
+void UDetailedPluginInformation::OnCloseClicked(void)
+{
+    this->RemoveFromParent();
+}
 
 UGamePluginEntryWidget::UGamePluginEntryWidget(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -20,7 +81,12 @@ UGamePluginEntryWidget::UGamePluginEntryWidget(const FObjectInitializer& ObjectI
 void UGamePluginEntryWidget::NativeConstruct(void)
 {
     Super::NativeConstruct();
+
+    jcheck( this->DetailedPluginInformationWidgetClass )
+
+    this->Button_ShowDetailedInformation->OnClicked.AddDynamic(this, &UGamePluginEntryWidget::OnDetailedInformationClicked);
     this->Button_TogglePlugin->OnClicked.AddDynamic(this, &UGamePluginEntryWidget::OnTogglePluginClicked);
+
     return;
 }
 
@@ -44,12 +110,19 @@ void UGamePluginEntryWidget::NativeRefreshWidget(void)
 {
     check( this->Plugin )
 
+    const UPluginValidationSubsystem* ModSubsystem = this->GetGameInstance()->GetSubsystem<UPluginValidationSubsystem>();
+
     if (this->Border_PluginEntry)
     {
-        if (this->IsJAFGGamePluginEnabled())
+        if (ModSubsystem->SmartIsPluginEnabled(*this->Plugin))
         {
             this->Border_PluginEntry->LockColor();
             this->Border_PluginEntry->SetTemporarilyColor(FColor(0, 255, 0, 16), false);
+        }
+        else if (ModSubsystem->IsGamePluginIncompatible(*this->Plugin))
+        {
+            this->Border_PluginEntry->LockColor();
+            this->Border_PluginEntry->SetTemporarilyColor(FColor(255, 0, 0, 16), false);
         }
         else
         {
@@ -64,24 +137,40 @@ void UGamePluginEntryWidget::NativeRefreshWidget(void)
         this->ShowNonFriendlyName() ? *FString::Printf(TEXT(" (%s)"), *this->Plugin->GetName()) : TEXT("")
     )));
 
+    if (ModSubsystem->SmartIsPluginEnabled(*this->Plugin) && ModSubsystem->IsGamePluginIncompatible(*this->Plugin))
+    {
+        this->TextBlock_EnabledIncompatible->SetVisibility(ESlateVisibility::Visible);
+        if (this->Border_PluginEntry)
+        {
+            this->Border_PluginEntry->LockColor();
+            this->Border_PluginEntry->SetTemporarilyColor(FColor(255, 0, 0, 32), false);
+        }
+    }
+    else
+    {
+        this->TextBlock_EnabledIncompatible->SetVisibility(ESlateVisibility::Hidden);
+    }
+
+    this->TextBlock_PluginVersion->SetText(FText::FromString(FString::Printf(TEXT("%s"), *this->Plugin->GetDescriptor().VersionName)));
+
     this->TextBlock_PluginDescription->SetText(FText::FromString(this->Plugin->GetDescriptor().Description));
 
     this->Button_TogglePlugin->SetIsEnabled(this->ShouldTogglePluginButtonBeEnabled());
 
-    if (this->IsJAFGGamePluginDivertedFromDefault())
+    if (this->IsGamePluginDivertedFromDefault())
     {
         this->Border_RestartInfoWrapper->SetVisibility(ESlateVisibility::Visible);
         this->TextBlock_RestartInfo->SetText(FText::FromString(
-            this->WillJAFGGamePluginBeEnabled()
+            this->WillGamePluginBeEnabled()
                 ? TEXT("Plugin will be enabled after restart.") :
-            this->WillJAFGGamePluginBeDisabled()
+            this->WillGamePluginBeDisabled()
                 ? TEXT("Plugin will be disabled after restart.") :
                 TEXT("?")
         ));
     }
     else
     {
-        this->Border_RestartInfoWrapper->SetVisibility(ESlateVisibility::Collapsed);
+        this->Border_RestartInfoWrapper->SetVisibility(ESlateVisibility::Hidden);
         this->TextBlock_RestartInfo->SetText(FText::FromString(TEXT("")));
     }
 
@@ -96,29 +185,22 @@ bool UGamePluginEntryWidget::ShowNonFriendlyName(void) const
     return this->Owner->bShowNonFriendlyName;
 }
 
-bool UGamePluginEntryWidget::IsJAFGGamePluginEnabled(void) const
+bool UGamePluginEntryWidget::IsGamePlugin() const
 {
-    return
-           this->Plugin->IsEnabled()
-        && GetDefault<UGamePluginSettings>()->IsPluginEnabled(this->Plugin->GetName());
+    return this->GetGameInstance()->GetSubsystem<UPluginValidationSubsystem>()->IsGamePlugin(*this->Plugin);
 }
 
-bool UGamePluginEntryWidget::IsJAFGGamePluginDisabled(void) const
-{
-    return this->IsJAFGGamePluginEnabled() == false;
-}
-
-bool UGamePluginEntryWidget::IsJAFGGamePluginDivertedFromDefault(void) const
+bool UGamePluginEntryWidget::IsGamePluginDivertedFromDefault(void) const
 {
     return GetDefault<UGamePluginSettings>()->IsPluginDivertedFromDefault(this->Plugin->GetName());
 }
 
-bool UGamePluginEntryWidget::WillJAFGGamePluginBeEnabled(void) const
+bool UGamePluginEntryWidget::WillGamePluginBeEnabled(void) const
 {
     return GetDefault<UGamePluginSettings>()->WillPluginBeEnabled(this->Plugin->GetName());
 }
 
-bool UGamePluginEntryWidget::WillJAFGGamePluginBeDisabled(void) const
+bool UGamePluginEntryWidget::WillGamePluginBeDisabled(void) const
 {
     return GetDefault<UGamePluginSettings>()->WillPluginBeDisabled(this->Plugin->GetName());
 }
@@ -189,6 +271,17 @@ bool UGamePluginEntryWidget::ShouldTogglePluginButtonBeEnabled(void) const
     && GetDefault<UGamePluginSettings>()->GetAppliedEnabledGamePlugins().Contains(this->Plugin->GetName()) == false;
 }
 
+/* Do NOT convert to const method, as this is a Rider IDEA false positive error. */
+// ReSharper disable once CppMemberFunctionMayBeConst
+void UGamePluginEntryWidget::OnDetailedInformationClicked(void)
+{
+    UJAFGUserWidget* Widget = CreateWidget<UJAFGUserWidget>(this->GetWorld(), this->DetailedPluginInformationWidgetClass);
+    Widget->PassDataToWidget(FDetailedPluginPassData(this->Plugin));
+    Widget->AddToViewport();
+
+    return;
+}
+
 UGamePluginOverviewPanelWidget::UGamePluginOverviewPanelWidget(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
     return;
@@ -197,6 +290,8 @@ UGamePluginOverviewPanelWidget::UGamePluginOverviewPanelWidget(const FObjectInit
 void UGamePluginOverviewPanelWidget::NativeConstruct(void)
 {
     Super::NativeConstruct();
+
+    jcheck( this->GamePluginEntryWidgetClass )
 
     this->Button_Apply->OnClicked.AddDynamic(this, &UGamePluginOverviewPanelWidget::OnApplyClicked);
     this->Button_ApplyAndRestart->OnClicked.AddDynamic(this, &UGamePluginOverviewPanelWidget::OnApplyAndRestartClicked);
@@ -317,8 +412,30 @@ void UGamePluginOverviewPanelWidget::RefreshRenderedPlugins(void) const
         continue;
     }
 
-    PluginsToRender.Sort( [] (const TSharedRef<IPlugin>& A, const TSharedRef<IPlugin>& B)
+    const UPluginValidationSubsystem* ModSubsystem = this->GetGameInstance()->GetSubsystem<UPluginValidationSubsystem>();
+    PluginsToRender.Sort( [ModSubsystem] (const TSharedRef<IPlugin>& A, const TSharedRef<IPlugin>& B)
     {
+        const bool bAEnabledAndIncompatible = ModSubsystem->SmartIsPluginEnabled(*A) && ModSubsystem->IsGamePluginIncompatible(*A);
+        const bool bBEnabledAndIncompatible = ModSubsystem->SmartIsPluginEnabled(*B) && ModSubsystem->IsGamePluginIncompatible(*B);
+
+        if (bAEnabledAndIncompatible && bBEnabledAndIncompatible == false)
+        {
+            return true;
+        }
+
+        if (bAEnabledAndIncompatible == false && bBEnabledAndIncompatible)
+        {
+            return false;
+        }
+
+        if (bAEnabledAndIncompatible && bBEnabledAndIncompatible)
+        {
+            return
+                (A->GetFriendlyName().IsEmpty() ? A->GetName() : A->GetFriendlyName())
+                    <
+                (B->GetFriendlyName().IsEmpty() ? B->GetName() : B->GetFriendlyName());
+        }
+
         return
             (A->GetFriendlyName().IsEmpty() ? A->GetName() : A->GetFriendlyName())
                 <
@@ -382,16 +499,20 @@ bool DoesPluginHaveRuntime(const IPlugin& Plugin)
 
 bool UGamePluginOverviewPanelWidget::SkipPlugin(const TSharedRef<IPlugin>& Plugin) const
 {
-    if (Plugin->GetType() != EPluginType::Mod)
-    {
-        if (
-                this->bShowOnlyServerPlugins      || this->bShowOnlyClientPlugins       || this->bShowOnlyOptionalPlugins
-            ||  this->bShowOnlyEnabledGamePlugins || this->bShowOnlyDisabledGamePlugins
-        )
-        {
-            return true;
-        }
+    const UGamePluginSettings*        GamePluginSettings = GetDefault<UGamePluginSettings>();
+    const UPluginValidationSubsystem* ModSubsystem       = this->GetGameInstance()->GetSubsystem<UPluginValidationSubsystem>();
 
+    /* Always show game plugins that are enabled and incompatible. */
+    if (
+           ModSubsystem->SmartIsPluginEnabled(*Plugin)
+        && ModSubsystem->IsGamePluginIncompatible(*Plugin)
+    )
+    {
+        return false;
+    }
+
+    if (ModSubsystem->IsGamePlugin(*Plugin) == false)
+    {
         if (
                ( this->bShowProjectPlugins && Plugin->GetType() == EPluginType::Project )
             || ( this->bShowEnginePlugins  && Plugin->GetType() == EPluginType::Engine  )
@@ -411,41 +532,45 @@ bool UGamePluginOverviewPanelWidget::SkipPlugin(const TSharedRef<IPlugin>& Plugi
         return true;
     }
 
-    if (this->bShowOnlyServerPlugins && Plugin->GetDescriptor().bServerOnly == false)
+    if (this->bShowCompatibleMods == false && ModSubsystem->IsGamePluginCompatible(*Plugin))
     {
         return true;
     }
 
-    if (this->bShowOnlyClientPlugins && Plugin->GetDescriptor().bClientOnly == false)
+    if (this->bShowIncompatibleMods == false && ModSubsystem->IsGamePluginIncompatible(*Plugin))
     {
         return true;
     }
 
-    if (this->bShowOnlyOptionalPlugins && Plugin->GetDescriptor().bOptional == false)
+    if (this->bShowServerMods == false && Plugin->GetDescriptor().bRequiredOnServer)
+    {
+        /* Do not hide mods that are server and client sided. */
+        if ((this->bShowClientMods && Plugin->GetDescriptor().bRequiredOnClient) == false)
+        {
+            return true;
+        }
+    }
+
+    if (this->bShowClientMods == false && Plugin->GetDescriptor().bRequiredOnClient)
+    {
+        /* Do not hide mods that are server and client sided. */
+        if ((this->bShowServerMods && Plugin->GetDescriptor().bRequiredOnServer) == false)
+        {
+            return true;
+        }
+    }
+
+    if (this->bShowTestMods == false && ModSubsystem->IsTestGamePlugin(*Plugin))
     {
         return true;
     }
 
-    const UGamePluginSettings* GamePluginSettings = GetDefault<UGamePluginSettings>();
-
-    if (
-           this->bShowOnlyEnabledGamePlugins
-        && (
-               GamePluginSettings->GetEnabledGamePlugins().Contains(Plugin->GetName()) == false
-            || GamePluginSettings->GetEnabledGamePlugins()[Plugin->GetName()] == false
-        )
-    )
+    if (this->bShowEnabledMods == false && GamePluginSettings->IsPluginEnabled(Plugin->GetName()))
     {
         return true;
     }
 
-    if (
-           this->bShowOnlyDisabledGamePlugins
-        && (
-               GamePluginSettings->GetEnabledGamePlugins().Contains(Plugin->GetName())
-            || GamePluginSettings->GetEnabledGamePlugins()[Plugin->GetName()]
-        )
-    )
+    if (this->bShowDisabledMods == false && GamePluginSettings->IsPluginEnabled(Plugin->GetName()) == false)
     {
         return true;
     }

@@ -83,9 +83,9 @@ public:
     UPROPERTY(EditAnywhere, Category = "Version")
     FString VersionName;
 
-    /** Version number of the game this plugin was built (or was tested) against. */
-    UPROPERTY(EditAnywhere, Category = "Version", DisplayName = "JAFG Game Version")
-    FString JAFGGameVersion;
+    /** Version range of the game this plugin was built (or was tested) against. */
+    UPROPERTY(EditAnywhere, Category = "Version", DisplayName = "JAFG Version Range")
+    FString JAFGVersionRange;
 
     /** Version number of the engine this plugin was built against. */
     UPROPERTY(VisibleAnywhere, Category = "Version")
@@ -96,7 +96,7 @@ public:
      * AND single player games.
      */
     UPROPERTY(EditAnywhere, Category = "Remote Version", meta = (EditCondition = "!bServerOnly"))
-    bool bClientOnly { };
+    bool bRequiredOnClient { };
 
     /**
      * If this plugin is only needed to be installed on the server. This includes also servers of type "listen server"
@@ -106,7 +106,7 @@ public:
      * plugin installed.
      */
     UPROPERTY(EditAnywhere, Category = "Remote Version", meta = (EditCondition = "!bClientOnly"))
-    bool bServerOnly { };
+    bool bRequiredOnServer { };
 
     /**
      * A range of versions (from this plugin only) that this plugin is compatible with.
@@ -173,7 +173,7 @@ public:
 
     /** A plugin is optional if it can be removed or added at any time without breaking existing world data. */
     UPROPERTY(EditAnywhere, Category = "Behaviour")
-    bool bIsOptional { };
+    bool bOptional { };
 
     UPROPERTY(EditAnywhere, Category = "Dependencies")
     TArray<FPluginDependencyDescriptorData> Dependencies;

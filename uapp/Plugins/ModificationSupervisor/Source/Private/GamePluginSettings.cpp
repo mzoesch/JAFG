@@ -126,6 +126,11 @@ bool UGamePluginSettings::WillPluginBeDisabled(const FString& PluginName) const
 
 bool UGamePluginSettings::UpdateChangedPluginList(const FString& PluginName)
 {
+    if (this->EnabledGamePluginsAtStartup.Contains(PluginName) == false)
+    {
+        return false;
+    }
+
     if (this->ChangedEnabledGamePlugins[PluginName] == this->EnabledGamePluginsAtStartup[PluginName])
     {
         this->ChangedEnabledGamePlugins.Remove(PluginName);

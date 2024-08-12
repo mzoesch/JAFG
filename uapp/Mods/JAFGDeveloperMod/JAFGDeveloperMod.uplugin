@@ -1,11 +1,11 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "1.0",
+	"VersionName": "1.0.0",
 	"FriendlyName": "JAFG Developer Mod",
 	"Description": "",
-	"Category": "JAFGPlugin",
-	"CreatedBy": "",
+	"Category": "JAFGGamePlugin",
+	"CreatedBy": "mzoesch",
 	"CreatedByURL": "",
 	"DocsURL": "",
 	"MarketplaceURL": "",
@@ -22,25 +22,29 @@
 	],
 	"Plugins": [
 		{
-			"Name": "ModificationSupervisor",
-			"Enabled": true,
-			"VersionRange": ""
+			"Name": "CommonJAFGSlate",
+			"Enabled": true
+		},
+		{
+			"Name": "CommonSettings",
+			"Enabled": true
+		},
+		{
+			"Name": "JAFGExternalCore",
+			"Enabled": true
 		},
 		{
 			"Name": "JAFGGlobalLogging",
-			"Enabled": true,
-			"VersionRange": ""
+			"Enabled": true
 		},
 		{
-			"Name": "CommonJAFGSlate",
-			"Enabled": true,
-			"VersionRange": ""
+			"Name": "ModificationSupervisor",
+			"Enabled": true
 		}
 	],
-	"SupportURL": "",
-	"JAFGGameVersion": "",
-	"bIsClientOnly": false,
-	"bIsServerOnly": false,
-	"RemoteVersionRange": "",
-	"bIsOptional": false
+	"JAFGVersionRange": "*",
+	"RemoteVersionRange": "$PLUGIN_VERSION$",
+	"bRequiredOnServer": false,
+	"bRequiredOnClient": true,
+	"bOptional": true
 }

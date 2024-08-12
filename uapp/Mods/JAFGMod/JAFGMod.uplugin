@@ -1,11 +1,11 @@
 ﻿{
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "1.0",
+	"VersionName": "1.0.0",
 	"FriendlyName": "JAFG Mod",
 	"Description": "",
-	"Category": "JAFGPlugin",
-	"CreatedBy": "",
+	"Category": "JAFGGamePlugin",
+	"CreatedBy": "mzoesch",
 	"CreatedByURL": "",
 	"DocsURL": "",
 	"MarketplaceURL": "",
@@ -13,22 +13,24 @@
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
 	"Installed": false,
-	"SupportedTargetPlatforms": [
-		"Win64"
-	],
 	"Modules": [
 		{
 			"Name": "JAFGMod",
 			"Type": "Runtime",
-			"LoadingPhase": "Default",
-			"WhitelistPlatforms": [
-				"Win64"
-			]
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [
 		{
-			"Name": "ModificationSupervisor",
+			"Name": "CommonJAFGSlate",
+			"Enabled": true
+		},
+		{
+			"Name": "CommonSettings",
+			"Enabled": true
+		},
+		{
+			"Name": "JAFGExternalCore",
 			"Enabled": true
 		},
 		{
@@ -36,8 +38,13 @@
 			"Enabled": true
 		},
 		{
-			"Name": "CommonJAFGSlate",
+			"Name": "ModificationSupervisor",
 			"Enabled": true
 		}
-	]
+	],
+	"JAFGVersionRange": "*",
+	"RemoteVersionRange": "$PLUGIN_VERSION$",
+	"bRequiredOnServer": true,
+	"bRequiredOnClient": true,
+	"bOptional": false
 }

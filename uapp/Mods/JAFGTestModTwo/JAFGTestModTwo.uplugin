@@ -1,11 +1,11 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "0.0.1",
+	"VersionName": "1.0.1",
 	"FriendlyName": "JAFG Test Mod Two",
-	"Description": "Game plugin for JAFG.",
+	"Description": "A game plugin for JAFG for testing plugin behavior. Contains no modification or content. This plugin is required on the client.",
 	"Category": "JAFGGamePlugin",
-	"CreatedBy": "Anonymous",
+	"CreatedBy": "mzoesch",
 	"CreatedByURL": "",
 	"DocsURL": "",
 	"MarketplaceURL": "",
@@ -21,7 +21,6 @@
 			"LoadingPhase": "Default"
 		}
 	],
-	"EngineVersion": "UE5-CL-0",
 	"Plugins": [
 		{
 			"Name": "CommonJAFGSlate",
@@ -49,9 +48,9 @@
 			"VersionRange": "1.0"
 		}
 	],
-	"JAFGGameVersion": "0.0.0.1",
-	"bIsClientOnly": false,
-	"bIsServerOnly": false,
-	"RemoteVersionRange": "0.0.1",
-	"bIsOptional": false
+	"JAFGVersionRange": "0.0.0.1",
+	"RemoteVersionRange": "1.0.1",
+	"bRequiredOnServer": false,
+	"bRequiredOnClient": true,
+	"bOptional": false
 }
