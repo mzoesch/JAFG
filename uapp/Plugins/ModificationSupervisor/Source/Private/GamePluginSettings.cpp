@@ -29,8 +29,12 @@ bool UGamePluginSettings::TogglePluginEnabled(const FString& PluginName)
         if (this->EnabledGamePlugins.Contains(PluginName) == false)
         {
             this->EnabledGamePlugins.Add(PluginName, true);
+            this->ChangedEnabledGamePlugins.Add(PluginName, this->EnabledGamePlugins[PluginName]);
         }
-        this->ChangedEnabledGamePlugins.Add(PluginName, this->EnabledGamePlugins[PluginName] == false);
+        else
+        {
+            this->ChangedEnabledGamePlugins.Add(PluginName, this->EnabledGamePlugins[PluginName] == false);
+        }
     }
 
     this->UpdateChangedPluginList(PluginName);
@@ -128,6 +132,13 @@ bool UGamePluginSettings::UpdateChangedPluginList(const FString& PluginName)
 {
     if (this->EnabledGamePluginsAtStartup.Contains(PluginName) == false)
     {
+        if (this->ChangedEnabledGamePlugins[PluginName] == false)
+        {
+            this->ChangedEnabledGamePlugins.Remove(PluginName);
+            this->EnabledGamePlugins.Remove(PluginName);
+            return true;
+        }
+
         return false;
     }
 
