@@ -65,6 +65,8 @@ public:
     //////////////////////////////////////////////////////////////////////////
     // Smart Plugin Information
     bool SmartIsPluginEnabled(const IPlugin& Plugin) const;
+    bool SmartIsPluginEnabledAndIncompatible(const IPlugin& Plugin) const;
+    bool HasAnyEnabledGamePluginsThatAreIncompatible(TArray<FString>& OutPlugins) const;
 
     auto GetCurrentGameVersion(void) const -> FString;
 };

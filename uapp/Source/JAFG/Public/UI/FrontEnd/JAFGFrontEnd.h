@@ -7,6 +7,7 @@
 
 #include "JAFGFrontEnd.generated.h"
 
+class UVerticalBox;
 JAFG_VOID
 
 class UScrollBox;
@@ -22,6 +23,13 @@ public:
     explicit UJAFGFrontEnd(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 protected:
+
+    // UUserWidget implementation
+    virtual void NativeConstruct(void) override;
+    // ~UUserWidget implementation
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true"))
+    TObjectPtr<UVerticalBox> VerticalBox_ErrorMessages;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
     TSubclassOf<UJAFGTabBarBase> HostSessionPanelWidgetClass;

@@ -373,6 +373,28 @@ bool UPluginValidationSubsystem::SmartIsPluginEnabled(const IPlugin& Plugin) con
     return this->IsGamePlugin(Plugin) ? this->IsGamePluginEnabled(Plugin) : this->IsPluginEnabled(Plugin);
 }
 
+bool UPluginValidationSubsystem::SmartIsPluginEnabledAndIncompatible(const IPlugin& Plugin) const
+{
+    return this->SmartIsPluginEnabled(Plugin) && this->IsGamePluginIncompatible(Plugin);
+}
+
+bool UPluginValidationSubsystem::HasAnyEnabledGamePluginsThatAreIncompatible(TArray<FString>& OutPlugins) const
+{
+    for (const TSharedRef<IPlugin>& Plugin : IPluginManager::Get().GetEnabledPlugins())
+    {
+        if (this->SmartIsPluginEnabledAndIncompatible(*Plugin) == false)
+        {
+            continue;
+        }
+
+        OutPlugins.Add(Plugin->GetName());
+
+        continue;
+    }
+
+    return OutPlugins.IsEmpty() == false;
+}
+
 // ReSharper disable once CppMemberFunctionMayBeStatic
 FString UPluginValidationSubsystem::GetCurrentGameVersion(void) const
 {

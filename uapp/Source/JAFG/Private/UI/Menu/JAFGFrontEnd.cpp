@@ -1,10 +1,56 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "UI/FrontEnd/JAFGFrontEnd.h"
+
+#include "Blueprint/WidgetTree.h"
+#include "Components/JAFGBorder.h"
+#include "Components/JAFGTextBlock.h"
+#include "Components/Spacer.h"
+#include "Components/VerticalBox.h"
+#include "System/PluginValidationSubsystem.h"
 #include "TabBar/JAFGTabBarButton.h"
 
 UJAFGFrontEnd::UJAFGFrontEnd(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
+    return;
+}
+
+void UJAFGFrontEnd::NativeConstruct(void)
+{
+    Super::NativeConstruct();
+
+    const UPluginValidationSubsystem* Subsystem = this->GetGameInstance()->GetSubsystem<UPluginValidationSubsystem>();
+    TArray<FString> MaybeDangerousPlugins; Subsystem->HasAnyEnabledGamePluginsThatAreIncompatible(MaybeDangerousPlugins);
+    for (const FString& Plugin : MaybeDangerousPlugins)
+    {
+        LOG_WARNING(LogModSubsystem, "The mod '%s' is incompatible with the current version of the game. Please disable it to avoid potential issues.", *Plugin);
+
+        UJAFGBorder* Border = WidgetTree->ConstructWidget<UJAFGBorder>(UJAFGBorder::StaticClass());
+        FSlateBrushOutlineSettings OutlineSettings;
+        OutlineSettings.Color        = FLinearColor::Red;
+        OutlineSettings.Width        = 2.0f;
+        OutlineSettings.RoundingType = ESlateBrushRoundingType::Type::FixedRadius;
+        FSlateBrush Brush;
+        Brush.TintColor       = FLinearColor::Red;
+        Brush.OutlineSettings = OutlineSettings;
+        Brush.DrawAs          = ESlateBrushDrawType::Type::RoundedBox;
+        Border->SetBrushColor(FColor(255, 0, 0, 64));
+        Border->SetBrush(Brush);
+
+        UJAFGTextBlock* TextBlock = WidgetTree->ConstructWidget<UJAFGTextBlock>(UJAFGTextBlock::StaticClass());
+        TextBlock->SetColorScheme(EJAFGFontSize::Body);
+        TextBlock->SetColorAndOpacity(FLinearColor(0.3f, 0.0f, 0.0f, 1.0f));
+        TextBlock->SetAutoWrapText(true);
+        TextBlock->SetText(FText::FromString(FString::Printf(TEXT("The mod '%s' is incompatible with the current version of the game. Please disable it to avoid potential issues."), *Plugin)));
+        Border->AddChild(TextBlock);
+
+        this->VerticalBox_ErrorMessages->AddChild(Border);
+
+        USpacer* Spacer = WidgetTree->ConstructWidget<USpacer>(USpacer::StaticClass());
+        Spacer->SetSize(FVector2D(1.0f, 10.0f));
+        this->VerticalBox_ErrorMessages->AddChild(Spacer);
+    }
+
     return;
 }
 

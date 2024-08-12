@@ -137,7 +137,7 @@ void UGamePluginEntryWidget::NativeRefreshWidget(void)
         this->ShowNonFriendlyName() ? *FString::Printf(TEXT(" (%s)"), *this->Plugin->GetName()) : TEXT("")
     )));
 
-    if (ModSubsystem->SmartIsPluginEnabled(*this->Plugin) && ModSubsystem->IsGamePluginIncompatible(*this->Plugin))
+    if (ModSubsystem->SmartIsPluginEnabledAndIncompatible(*Plugin))
     {
         this->TextBlock_EnabledIncompatible->SetVisibility(ESlateVisibility::Visible);
         if (this->Border_PluginEntry)
@@ -415,8 +415,8 @@ void UGamePluginOverviewPanelWidget::RefreshRenderedPlugins(void) const
     const UPluginValidationSubsystem* ModSubsystem = this->GetGameInstance()->GetSubsystem<UPluginValidationSubsystem>();
     PluginsToRender.Sort( [ModSubsystem] (const TSharedRef<IPlugin>& A, const TSharedRef<IPlugin>& B)
     {
-        const bool bAEnabledAndIncompatible = ModSubsystem->SmartIsPluginEnabled(*A) && ModSubsystem->IsGamePluginIncompatible(*A);
-        const bool bBEnabledAndIncompatible = ModSubsystem->SmartIsPluginEnabled(*B) && ModSubsystem->IsGamePluginIncompatible(*B);
+        const bool bAEnabledAndIncompatible = ModSubsystem->SmartIsPluginEnabledAndIncompatible(*A);
+        const bool bBEnabledAndIncompatible = ModSubsystem->SmartIsPluginEnabledAndIncompatible(*B);
 
         if (bAEnabledAndIncompatible && bBEnabledAndIncompatible == false)
         {
@@ -503,10 +503,7 @@ bool UGamePluginOverviewPanelWidget::SkipPlugin(const TSharedRef<IPlugin>& Plugi
     const UPluginValidationSubsystem* ModSubsystem       = this->GetGameInstance()->GetSubsystem<UPluginValidationSubsystem>();
 
     /* Always show game plugins that are enabled and incompatible. */
-    if (
-           ModSubsystem->SmartIsPluginEnabled(*Plugin)
-        && ModSubsystem->IsGamePluginIncompatible(*Plugin)
-    )
+    if (ModSubsystem->SmartIsPluginEnabledAndIncompatible(*Plugin))
     {
         return false;
     }
