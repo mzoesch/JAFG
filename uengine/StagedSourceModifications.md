@@ -95,3 +95,96 @@ Allows to directly launch the game after modifications were done (for plugins on
 Allows to compile single plugins and copy them to the Mods directory in a binary version of the game. Can then automatically launch the game as stated above.
 
 `./Engine/Source/Programs/AutomationTool/Scripts/PackagePlugin.cs`
+
+## JSON .uproject Variable Expansion
+
+Defines new metadata used to determine game plugins (basically mods; but often referred to game plugins) behavior
+and how they should be loaded into the game at startup.
+
+`./Engine/Source/Runtime/Projects/Public/PluginDescriptor.h::FPluginDescriptor`
+
+```cpp
+// <JAFG> Added custom fields for plugin descriptor
+/** The range for which this plugin is compatible with JAFG. */
+FString JAFGVersionRange;
+/** The range for which this plugin is compatible with clients that have different versions. */
+FString RemoteVersionRange;
+/** The client will not be forced to have this plugin installed and enabled. */
+bool bRequiredOnServer;
+/** A client may have this plugin enabled, but the server will not care if bRequireOnServer is false. */
+bool bRequiredOnClient;
+/** May be removed or added at any given time, without destroying existing world data. */
+bool bOptional;
+// </JAFG>
+```
+
+## JSON .uproject Variable Serialization
+
+Describes how the new metadata is serialized and deserialized.
+
+`./Engine/Source/Runtime/Projects/Private/PluginDescriptor.cpp::FPluginDescriptor::Read(const FSjonObject&, FText*)`
+
+Deserialization:
+
+```cpp
+// <JAFG> Deserialize custom fields
+Object.TryGetStringField(TEXT("JAFGVersionRange"), JAFGVersionRange);
+Object.TryGetStringField(TEXT("RemoteVersionRange"), RemoteVersionRange);
+Object.TryGetBoolField(TEXT("bRequiredOnServer"), bRequiredOnServer);
+Object.TryGetBoolField(TEXT("bRequiredOnClient"), bRequiredOnClient);
+Object.TryGetBoolField(TEXT("bOptional"), bOptional);
+// </JAFG>
+```
+
+Serialization:
+
+`./Engine/Source/Runtime/Projects/Private/PluginDescriptor.cpp::FPluginDescriptor::UpdateJson(FSjonObject&) const`
+
+```cpp
+// <JAFG> Serialize custom fields
+if (JAFGVersionRange.IsEmpty() == false)
+{
+    JsonObject.SetStringField(TEXT("JAFGVersionRange"), JAFGVersionRange);
+}
+else
+{
+    JsonObject.RemoveField(TEXT("JAFGVersionRange"));
+}
+
+if (RemoteVersionRange.IsEmpty() == false)
+{
+    JsonObject.SetStringField(TEXT("RemoteVersionRange"), RemoteVersionRange);
+}
+else
+{
+    JsonObject.RemoveField(TEXT("RemoteVersionRange"));
+}
+
+if (bRequiredOnServer)
+{
+    JsonObject.SetBoolField(TEXT("bRequiredOnServer"), bRequiredOnServer);
+}
+else
+{
+    JsonObject.RemoveField(TEXT("bRequiredOnServer"));
+}
+
+if (bRequiredOnClient)
+{
+    JsonObject.SetBoolField(TEXT("bRequiredOnClient"), bRequiredOnClient);
+}
+else
+{
+    JsonObject.RemoveField(TEXT("bRequiredOnClient"));
+}
+
+if (bOptional)
+{
+    JsonObject.SetBoolField(TEXT("bOptional"), bOptional);
+}
+else
+{
+    JsonObject.RemoveField(TEXT("bOptional"));
+}
+// </JAFG>
+```
