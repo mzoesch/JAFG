@@ -1,3 +1,16 @@
+# Warning
+
+Currently there is a bug here in this plugin.
+
+When packaging, the `.dll` file and if developing also the `.pdb` file are not copied to the binary
+directory of their respective plugin in the bin folder of JAFG. You will need to copy them manually to
+the `./$BINARY_JAFG_DIR$/Mods/$PLUGIN_NAME$/Binaries/Win64/` directory. When developing use the generated
+`.dll` and `.pdb` files that follow this naming scheme: `UnrealGame-$PRIMARY_MODULE_NAME$.dll` and
+`UnrealGame-$PRIMARY_MODULE_NAME$.pdb`. When packaging for release use the generated `.dll` with the naming
+scheme: `UnrealGame-$PRIMARY_MODULE_NAME$-Win64-Shipping.dll`. You might also need to copy the
+`UnrealGame.modules` file depending on your configuration.
+
+
 # C# Scripting
 
 To get this plugin's C# files to show up in the Visual Studio project, use the `-dotnet` argument when generating
