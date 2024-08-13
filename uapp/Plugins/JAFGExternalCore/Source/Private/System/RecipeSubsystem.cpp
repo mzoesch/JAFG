@@ -206,7 +206,7 @@ bool UWorldRecipeSubsystem::IsRecipeValidForDelivery_Shaped(const FRecipe& InRec
      *
      * Example:
      *
-     * The Hexadecimal numbers in the grids represent the indices,
+     * The hexadecimal numbers in the grids represent the indices,
      * the symbols are a placeholder for arbitrary accumulated items.
      *
      * The Delivery:            The Recipe:
