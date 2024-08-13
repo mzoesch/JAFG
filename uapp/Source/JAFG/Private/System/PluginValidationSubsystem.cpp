@@ -368,6 +368,30 @@ bool UPluginValidationSubsystem::IsTestGamePlugin(const IPlugin& Plugin) const
     return this->IsGamePlugin(Plugin) && Plugin.GetName().Contains(TEXT("Test"));
 }
 
+TArray<IPlugin*> UPluginValidationSubsystem::GetEnabledGamePlugins(void) const
+{
+    TArray<IPlugin*> Out;
+
+    for (TSharedRef<IPlugin>& Plugin : IPluginManager::Get().GetEnabledPlugins())
+    {
+        if (this->IsGamePlugin(*Plugin) == false)
+        {
+            continue;
+        }
+
+        if (this->IsGamePluginEnabled(*Plugin) == false)
+        {
+            continue;
+        }
+
+        Out.Emplace(&Plugin.Get());
+
+        continue;
+    }
+
+    return Out;
+}
+
 bool UPluginValidationSubsystem::SmartIsPluginEnabled(const IPlugin& Plugin) const
 {
     return this->IsGamePlugin(Plugin) ? this->IsGamePluginEnabled(Plugin) : this->IsPluginEnabled(Plugin);

@@ -34,6 +34,12 @@
 
 #define UNDEF_PRIVATE_LOGS                0
 
+#if WITH_EDITOR
+    #define WITH_LOG_RELAXED_FATAL 1
+#else
+    #define WITH_LOG_RELAXED_FATAL 0
+#endif
+
 
 /*----------------------------------------------------------------------------
     Common extern logging categories.
@@ -195,6 +201,28 @@ inline DEFINE_LOG_CATEGORY(LogWorldController)
 #define LOG_FATAL(CategoryName, Format, ...) \
     UE_LOG(CategoryName, Fatal, TEXT("%s: %s"), *LOG_PRIVATE_TRACE_STR_CUR_CLASS_FUNC_LINE, *FString::Printf(TEXT(Format), ##__VA_ARGS__ ) )
 
+#if WITH_LOG_RELAXED_FATAL
+    /**
+     * A macro that logs a formatted message if the log category is active at FATAL verbosity level and the app was
+     * compiled in a non-editor build. In editor builds, the log will be output at ERROR verbosity level if possible.
+     *
+     * @param CategoryName Name of the log category as provided to DEFINE_LOG_CATEGORY.
+     * @param Format       Format string literal in the style of printf.
+     */
+    #define LOG_RELAXED_FATAL(CategoryName, Format, ...) \
+        UE_LOG(CategoryName, Error, TEXT("%s: %s"), *LOG_PRIVATE_TRACE_STR_CUR_CLASS_FUNC_LINE, *FString::Printf(TEXT(Format), ##__VA_ARGS__ ) )
+#else /* WITH_LOG_RELAXED_FATAL */
+    /**
+     * A macro that logs a formatted message if the log category is active at FATAL verbosity level and the app was
+     * compiled in a non-editor build. In editor builds, the log will be output at ERROR verbosity level if possible.
+     *
+     * @param CategoryName Name of the log category as provided to DEFINE_LOG_CATEGORY.
+     * @param Format       Format string literal in the style of printf.
+     */
+    #define LOG_RELAXED_FATAL(CategoryName, Format, ...) \
+        UE_LOG(CategoryName, Fatal, TEXT("%s: %s"), *LOG_PRIVATE_TRACE_STR_CUR_CLASS_FUNC_LINE, *FString::Printf(TEXT(Format), ##__VA_ARGS__ ) )
+#endif /* !WITH_LOG_RELAXED_FATAL */
+
 #else /* LOG_WITH_LINE_NUMBERS */
 
 /**
@@ -250,6 +278,28 @@ inline DEFINE_LOG_CATEGORY(LogWorldController)
  */
 #define LOG_FATAL(CategoryName, Format, ...) \
     UE_LOG(CategoryName, Fatal, TEXT("%s: %s"), *LOG_PRIVATE_TRACE_STR_CUR_CLASS_FUNC, *FString::Printf(TEXT(Format), ##__VA_ARGS__ ) )
+
+#if WITH_LOG_RELAXED_FATAL
+    /**
+     * A macro that logs a formatted message if the log category is active at FATAL verbosity level and the app was
+     * compiled in a non-editor build. In editor builds, the log will be output at ERROR verbosity level if possible.
+     *
+     * @param CategoryName Name of the log category as provided to DEFINE_LOG_CATEGORY.
+     * @param Format       Format string literal in the style of printf.
+     */
+    #define LOG_RELAXED_FATAL(CategoryName, Format, ...) \
+        UE_LOG(CategoryName, Error, TEXT("%s: %s"), *LOG_PRIVATE_TRACE_STR_CUR_CLASS_FUNC, *FString::Printf(TEXT(Format), ##__VA_ARGS__ ) )
+#else /* WITH_LOG_RELAXED_FATAL */
+    /**
+     * A macro that logs a formatted message if the log category is active at FATAL verbosity level and the app was
+     * compiled in a non-editor build. In editor builds, the log will be output at ERROR verbosity level if possible.
+     *
+     * @param CategoryName Name of the log category as provided to DEFINE_LOG_CATEGORY.
+     * @param Format       Format string literal in the style of printf.
+     */
+    #define LOG_RELAXED_FATAL(CategoryName, Format, ...) \
+        UE_LOG(CategoryName, Fatal, TEXT("%s: %s"), *LOG_PRIVATE_TRACE_STR_CUR_CLASS_FUNC, *FString::Printf(TEXT(Format), ##__VA_ARGS__ ) )
+#endif /* !WITH_LOG_RELAXED_FATAL */
 
 #endif /* !LOG_WITH_LINE_NUMBERS */
 

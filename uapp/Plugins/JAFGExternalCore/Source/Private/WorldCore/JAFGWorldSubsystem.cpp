@@ -1,7 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "WorldCore/JAFGWorldSubsystems.h"
-
 #include "RegisteredWorldNames.h"
 
 bool WorldStatics::IsInGameWorld(const UObject* Outer)

@@ -36,6 +36,7 @@
 #include "VoxelMask.h"
 #include "Accumulated.h"
 #include "RegisteredWorldNames.h"
+#include "System/RecipeSubsystem.h"
 
 /* Internal headers. */
 #include "WorldCore/WorldTypes.h"

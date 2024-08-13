@@ -61,12 +61,14 @@ public:
     bool IsGamePluginCompatible(const IPlugin& Plugin) const;
     bool IsGamePluginIncompatible(const IPlugin& Plugin) const;
     bool IsTestGamePlugin(const IPlugin& Plugin) const;
+    TArray<IPlugin*> GetEnabledGamePlugins(void) const;
 
     //////////////////////////////////////////////////////////////////////////
     // Smart Plugin Information
     bool SmartIsPluginEnabled(const IPlugin& Plugin) const;
     bool SmartIsPluginEnabledAndIncompatible(const IPlugin& Plugin) const;
     bool HasAnyEnabledGamePluginsThatAreIncompatible(TArray<FString>& OutPlugins) const;
+
 
     auto GetCurrentGameVersion(void) const -> FString;
 };

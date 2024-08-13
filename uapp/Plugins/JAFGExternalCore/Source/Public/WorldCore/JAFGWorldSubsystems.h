@@ -10,9 +10,9 @@
 namespace WorldStatics
 {
 
-JAFGCORE_API auto IsInGameWorld(const UObject* Outer) -> bool;
-JAFGCORE_API auto IsInGameWorldExcludingDev(const UObject* Outer) -> bool;
-JAFGCORE_API auto IsInDevWorld(const UObject* Outer) -> bool;
+JAFGEXTERNALCORE_API auto IsInGameWorld(const UObject* Outer) -> bool;
+JAFGEXTERNALCORE_API auto IsInGameWorldExcludingDev(const UObject* Outer) -> bool;
+JAFGEXTERNALCORE_API auto IsInDevWorld(const UObject* Outer) -> bool;
 
 }
 
@@ -25,7 +25,7 @@ JAFGCORE_API auto IsInDevWorld(const UObject* Outer) -> bool;
  * not exist in the development world.
  */
 UCLASS(Abstract)
-class JAFGCORE_API UJAFGWorldSubsystem : public UWorldSubsystem
+class JAFGEXTERNALCORE_API UJAFGWorldSubsystem : public UWorldSubsystem
 {
     GENERATED_BODY()
 
@@ -39,7 +39,7 @@ public:
 };
 
 UCLASS(Abstract)
-class JAFGCORE_API UJAFGWorldSubsystemNoDev : public UJAFGWorldSubsystem
+class JAFGEXTERNALCORE_API UJAFGWorldSubsystemNoDev : public UJAFGWorldSubsystem
 {
     GENERATED_BODY()
 
@@ -61,7 +61,7 @@ public:
  * not exist in the development world.
  */
 UCLASS(Abstract)
-class JAFGCORE_API UJAFGTickableWorldSubsystem : public UTickableWorldSubsystem
+class JAFGEXTERNALCORE_API UJAFGTickableWorldSubsystem : public UTickableWorldSubsystem
 {
     GENERATED_BODY()
 
@@ -101,7 +101,7 @@ private:
 };
 
 UCLASS(Abstract)
-class JAFGCORE_API UJAFGTickableWorldSubsystemNoDev : public UJAFGTickableWorldSubsystem
+class JAFGEXTERNALCORE_API UJAFGTickableWorldSubsystemNoDev : public UJAFGTickableWorldSubsystem
 {
     GENERATED_BODY()
 

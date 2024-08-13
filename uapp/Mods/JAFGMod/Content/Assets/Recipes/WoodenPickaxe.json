@@ -1,0 +1,16 @@
+{
+  "Delivery": {
+    "Contents": [
+      "OakPlanks",
+      "OakPlanks",
+      "OakPlanks",
+      null,
+      "WoodenStick",
+      null,
+      null,
+      "WoodenStick"
+    ],
+    "Width": 3
+  },
+  "Product": "WoodenPickaxe"
+}
