@@ -81,10 +81,18 @@ protected:
     FORCEINLINE virtual auto GetContainerCrafterValue(const int32 Index) const -> FAccumulated override { return this->ContainerCrafter[Index].Content; }
     FORCEINLINE virtual auto GetContainerCrafterValueRef(const int32 Index) -> FAccumulated& override { return this->ContainerCrafter[Index].Content; }
                 virtual bool AddToContainerCrafter(const FAccumulated& Value) override;
+
+                virtual auto GetContainerCrafterContents(void) const -> const TArray<FAccumulated> override;
+                virtual auto GetContainerCrafterContents(const accamount_t AmountOverride) const -> const TArray<FAccumulated> override;
+    FORCEINLINE virtual auto GetContainerCrafterWidth(void) const -> sender_shape_width override { return UCharacterCrafterComponent::ContainerCrafterWidth; }
+                virtual auto GetContainerCrafterAsDelivery(void) const -> FSenderDeliver override;
+                virtual auto GetContainerCrafterProduct(void) const -> FRecipeProduct override;
     // ~IContainerCrafter interface
 
     void OnLocalContainerCrafterChangedEventImpl(const ELocalContainerChange::Type InReason, const int32 InIndex);
 
+    static constexpr int32 ContainerCrafterSize  { 4 };
+    static constexpr int32 ContainerCrafterWidth { 2 };
     UPROPERTY(ReplicatedUsing=OnRep_ContainerCrafter)
     TArray<FSlot> ContainerCrafter;
     UFUNCTION()

@@ -17,6 +17,10 @@ UJAFGGameInstance::UJAFGGameInstance(const FObjectInitializer& ObjectInitializer
 
 void UJAFGGameInstance::Init(void)
 {
+#if UE_BUILD_SHIPPING
+    check( false && "Checks are enabled in shipping builds. Was this intensional?" )
+#endif /* UE_BUILD_SHIPPING */
+
     GetMutableDefault<UGamePluginSettings>()->OnGameBootUp();
 
     FJAFGExternalCoreModule::Get().OnInitInternalSubsystem.BindLambda( [] (FSubsystemCollectionBase& Collection)

@@ -5,6 +5,7 @@
 #include "Net/Core/PushModel/PushModel.h"
 #include "WorldCore/WorldCharacter.h"
 #include "WorldCore/Character/CharacterContainerChangeLogic.h"
+#include "System/RecipeSubsystem.h"
 
 UCharacterCrafterComponent::UCharacterCrafterComponent(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -30,7 +31,7 @@ void UCharacterCrafterComponent::BeginPlay(void)
     if (UNetStatics::IsSafeServer(this))
     {
         LOG_VERY_VERBOSE(LogWorldChar, "Initializing container crafter on server.")
-        this->ContainerCrafter.Init(FSlot(Accumulated::Null), 4);
+        this->ContainerCrafter.Init(FSlot(Accumulated::Null), UCharacterCrafterComponent::ContainerCrafterSize);
         LOG_VERY_VERBOSE(LogWorldChar, "Container crafter initialized with %d slots.", this->GetContainerCrafterSize());
         MARK_PROPERTY_DIRTY_FROM_NAME(UCharacterCrafterComponent, ContainerCrafter, this)
     }
@@ -171,6 +172,50 @@ bool UCharacterCrafterComponent::AddToContainerCrafter(const FAccumulated& Value
     return false;
 }
 
+const TArray<FAccumulated> UCharacterCrafterComponent::GetContainerCrafterContents(void) const
+{
+    TArray<FAccumulated> Contents;
+    for (const FSlot& Slot : this->ContainerCrafter) { Contents.Emplace(Slot.Content); }
+    return Contents;
+}
+
+const TArray<FAccumulated> UCharacterCrafterComponent::GetContainerCrafterContents(const accamount_t AmountOverride) const
+{
+    TArray<FAccumulated> Contents;
+    for (const FSlot& Slot : this->ContainerCrafter)
+    {
+        Contents.Emplace(FAccumulated(Slot.Content.AccumulatedIndex, AmountOverride));
+    }
+    return Contents;
+}
+
+FSenderDeliver UCharacterCrafterComponent::GetContainerCrafterAsDelivery(void) const
+{
+    return FSenderDeliver(this->GetContainerCrafterWidth(), this->GetContainerCrafterContents(1));
+}
+
+FRecipeProduct UCharacterCrafterComponent::GetContainerCrafterProduct(void) const
+{
+#if !UE_BUILD_SHIPPING
+    if (this->IsContainerCrafterInitialized() == false)
+    {
+        LOG_WARNING(LogContainerStuff, "Container crafter is not initialized.")
+        return RecipeProduct::Null;
+    }
+
+    if (this->GetWorld()->GetSubsystem<UWorldRecipeSubsystem>() == nullptr)
+    {
+        LOG_WARNING(LogContainerStuff, "World recipe subsystem is not initialized.")
+        return RecipeProduct::Null;
+    }
+#endif /* !UE_BUILD_SHIPPING */
+
+    FRecipeProduct Product = RecipeProduct::Null;
+    this->GetWorld()->GetSubsystem<UWorldRecipeSubsystem>()->GetProduct(this->GetContainerCrafterAsDelivery(), Product);
+
+    return Product;
+}
+
 void UCharacterCrafterComponent::OnLocalContainerCrafterChangedEventImpl(
     const ELocalContainerChange::Type InReason,
     const int32 InIndex
@@ -194,7 +239,7 @@ void UCharacterCrafterComponent::OnLocalContainerCrafterChangedEventImpl(
         LOG_FATAL(LogWorldChar, "Cannot handle local container changed event on non-locally controlled character.")
         return;
     }
-#endif
+#endif /* !UE_BUILD_SHIPPING */
 
     if (UNetStatics::IsSafeClient(this) && InReason != ELocalContainerChange::Replicated)
     {

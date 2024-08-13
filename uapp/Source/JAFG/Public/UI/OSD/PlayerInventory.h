@@ -8,7 +8,7 @@
 #include "PlayerInventory.generated.h"
 
 class IContainerCrafter;
-class UJAFGContainerCrafterSlot;
+class UJAFGContainerCrafterProductSlot;
 
 UCLASS(Abstract, Blueprintable)
 class JAFG_API UPlayerInventory : public UCommonJAFGDualContainer
@@ -28,7 +28,7 @@ protected:
     // ~UUserWidget implementation
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true"))
-    TObjectPtr<UJAFGContainerCrafterSlot> Slot_InventoryCrafterProduct;
+    TObjectPtr<UJAFGContainerCrafterProductSlot> Slot_InventoryCrafterProduct;
 
     auto GetOtherContainerAsCrafter(void) const -> IContainerCrafter*;
 };

@@ -1,7 +1,7 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "UI/OSD/PlayerInventory.h"
-#include "Foundation/JAFGContainerCrafterSlot.h"
+#include "Foundation/JAFGContainerCrafterProductSlot.h"
 #include "WorldCore/Character/CharacterCrafterComponent.h"
 
 UPlayerInventory::UPlayerInventory(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)

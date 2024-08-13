@@ -5,6 +5,21 @@
 #include "System/PathFinder.h"
 #include "System/VoxelSubsystem.h"
 
+bool FSenderDeliver::IsEmpty(void) const
+{
+    for (const FAccumulated& Accumulated : this->Contents)
+    {
+        if (Accumulated != Accumulated::Null)
+        {
+            return false;
+        }
+
+        continue;
+    }
+
+    return true;
+}
+
 void UWorldRecipeSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 {
     Super::OnWorldBeginPlay(InWorld);
@@ -21,9 +36,15 @@ void UWorldRecipeSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 
     /*
      * TODO: Here then load world-specific recipes and apply them to the cached active recipes.
+     *       Remember to simply recipes with the game instance subsystem of this type.
      */
 
     LOG_VERBOSE(LogRecipeSystem, "Finished initializing world recipes. Found %d recipes that are now active in this world.", this->CachedActiveRecipes.Num())
+
+    for (const FRecipe& Recipe : this->CachedActiveRecipes)
+    {
+        LOG_VERBOSE(LogRecipeSystem, "R: %s", *Recipe.ToString())
+    }
 
     return;
 }
@@ -37,6 +58,255 @@ URecipeSubsystem* UWorldRecipeSubsystem::GetRecipeSubsystem(const UWorld& InWorl
 URecipeSubsystem* UWorldRecipeSubsystem::GetRecipeSubsystem(void) const
 {
     return this->GetWorld()->GetGameInstance()->GetSubsystem<URecipeSubsystem>();
+}
+
+bool UWorldRecipeSubsystem::GetRecipe(const FSenderDeliver& InSenderDelivery, FRecipe& OutRecipe) const
+{
+    if (InSenderDelivery.IsEmpty())
+    {
+        return false;
+    }
+
+    /*
+     * This is currently O(n) and we maybe should optimize this in the future when we have quite a bit of recipes.
+     *  Maybe with some sort of hashing?
+     */
+    for (const FRecipe& Recipe : this->CachedActiveRecipes)
+    {
+        if (this->IsRecipeValidForDelivery(Recipe, InSenderDelivery))
+        {
+            OutRecipe = Recipe;
+            return true;
+        }
+
+        continue;
+    }
+
+    return false;
+}
+
+bool UWorldRecipeSubsystem::GetProduct(const FSenderDeliver& InSenderDelivery, FRecipeProduct& OutProduct) const
+{
+    FRecipe Recipe;
+    if (this->GetRecipe(InSenderDelivery, Recipe) == false)
+    {
+        return false;
+    }
+
+    OutProduct = Recipe.Product;
+
+    return true;
+}
+
+bool UWorldRecipeSubsystem::IsRecipeValidForDelivery(const FRecipe& InRecipe, const FSenderDeliver& InSenderDelivery) const
+{
+    return InRecipe.GetType() == ERecipeType::ShapelessCrafting
+        ? this->IsRecipeValidForDelivery_Shapeless(InRecipe, InSenderDelivery)
+        : this->IsRecipeValidForDelivery_Shaped(InRecipe, InSenderDelivery);
+}
+
+// ReSharper disable once CppMemberFunctionMayBeStatic
+bool UWorldRecipeSubsystem::IsRecipeValidForDelivery_Shapeless(const FRecipe& InRecipe, const FSenderDeliver& InSenderDelivery, const bool bAllowNullInRecipe /* = false */) const
+{
+    /*
+     * Note:
+     *          The amount of FAccumulated is misused to store the amount
+     *          of one unique accumulated item in the delivery. As this is
+     *          shapeless crafting, we must only care about the amounts and
+     *          not the order of the delivery contents.
+     */
+    TArray<FAccumulated> DeliveryContentCounter;
+    for (const FAccumulated& SenderDeliveryContent : InSenderDelivery.Contents)
+    {
+        if (SenderDeliveryContent.IsNull())
+        {
+            continue;
+        }
+
+        if (InRecipe.DeliveryContains(SenderDeliveryContent) == false)
+        {
+            return false;
+        }
+
+        if (DeliveryContentCounter.Contains(SenderDeliveryContent))
+        {
+            ++DeliveryContentCounter[DeliveryContentCounter.Find(SenderDeliveryContent)].Amount;
+            continue;
+        }
+
+        check( SenderDeliveryContent.Amount == 1 )
+        DeliveryContentCounter.Emplace(SenderDeliveryContent);
+        check( DeliveryContentCounter.Last().Amount == 1 )
+
+        continue;
+    }
+
+    if (DeliveryContentCounter.Num() != InRecipe.Delivery.Contents.Num())
+    {
+        return false;
+    }
+
+    for (const FAccumulated& RecipeDeliveryContent : InRecipe.Delivery.Contents)
+    {
+        if (RecipeDeliveryContent.IsNull())
+        {
+            if (bAllowNullInRecipe == false)
+            {
+                LOG_RELAXED_FATAL(
+                    LogRecipeSystem,
+                    "Semantic error: Null found in the shapeless recipe [%s::%s].",
+                    *InRecipe.Namespace, *InRecipe.Name
+                )
+                return false;
+            }
+            continue;
+        }
+
+        if (
+            /* Find will never search for amounts only compares the accumulated indices. */
+            const int32 Index = DeliveryContentCounter.Find(RecipeDeliveryContent);
+            Index == INDEX_NONE || DeliveryContentCounter[Index].Amount != RecipeDeliveryContent.Amount
+        )
+        {
+            return false;
+        }
+
+        continue;
+    }
+
+    return true;
+}
+
+bool UWorldRecipeSubsystem::IsRecipeValidForDelivery_Shaped(const FRecipe& InRecipe, const FSenderDeliver& InSenderDelivery) const
+{
+#define BEGIN_OF_ROW 0
+    /*
+     * If this is a 3x3 recipe, we of course cannot use this in a 2x2 grid.
+     * But we, of course, can use a 2x2 recipe in a 3x3 grid.
+     */
+    if (InRecipe.Delivery.Width > InSenderDelivery.Width)
+    {
+        return false;
+    }
+
+    /*
+     * Check if we have a mismatch from the amounts of each type, basically we treat
+     * the recipe as shapeless and check if it would be a valid recipe.
+     * This only checks for real accumulated items and not the number of nulls.
+     */
+    if (this->IsRecipeValidForDelivery_Shapeless(InRecipe, InSenderDelivery, true) == false)
+    {
+        return false;
+    }
+
+    /*
+     * The index that we currently check if it matches with the recipe delivery.
+     * All indices that are below this value are already checked and are not valid.
+     *
+     *
+     * Example:
+     *
+     * The Hexadecimal numbers in the grids represent the indices,
+     * the symbols are a placeholder for arbitrary accumulated items.
+     *
+     * The Delivery:            The Recipe:
+     * +---+---+---+---+        +---+---+     If DeliveryStartIndexCursor is five:
+     * |0  |1  |2  |3  |        |0  |1@ |       In this example, all indices below five are already
+     * +---+---+---+---+        +---+---+       checked and are invalid.
+     * |4  |5  |6@ |7  |        |2@ |3# |       The first valid index is five.
+     * +---+---+---+---+        +---+---+
+     * |8  |9@ |A# |B  |
+     * +---+---+---+---+
+     * |C  |D  |E  |F  |
+     * +---+---+---+---+
+     * Width: 4                 Width: 2
+     *
+     * Note that if we have any cursor greater than one, we have to add the width of the cursor to the left side
+     * as we progress to the next row. We do not care about stuff outside the currently seeking subgrid of the
+     * sender delivery grid.
+     * The same is true for the recipe grid. If the recipe grid progresses to the next row, we have
+     * to add this also to the sender delivery cursor.
+     * We have to match both grid sizes as there will be size mismatches.
+     */
+    int32 DeliveryStartIndexCursor = 0;
+    while (DeliveryStartIndexCursor < InSenderDelivery.Contents.Num())
+    {
+        int32 SenderDeliveryContentCursor = DeliveryStartIndexCursor;
+        int32 RecipeContentCursor         = BEGIN_OF_ROW;
+
+        while (true)
+        {
+            /*
+             * We have to check this because if a recipe row reached to an end, we add the indices that
+             * we expect to be in the sender delivery content grid cursor. But these can be out of bounds.
+             */
+            if (SenderDeliveryContentCursor >= InSenderDelivery.Contents.Num())
+            {
+                goto NextDeliveryIndex;
+            }
+
+            if (InSenderDelivery.Contents[SenderDeliveryContentCursor] != InRecipe.Delivery.Contents[RecipeContentCursor])
+            {
+                goto NextDeliveryIndex;
+            }
+
+            /*
+             * Both fields are matching. Now we have to carefully go to the next index.
+             * Note that we cannot just add one, as we have to keep track of the width of both grids.
+             */
+            ++SenderDeliveryContentCursor; ++RecipeContentCursor;
+
+            /* We have a winner here, as we reached the end of the recipe without errors :). Yay. */
+            if (RecipeContentCursor >= InRecipe.Delivery.Contents.Num())
+            {
+                break;
+            }
+
+            if (RecipeContentCursor % InRecipe.Delivery.Width == BEGIN_OF_ROW)
+            {
+                if (SenderDeliveryContentCursor % InSenderDelivery.Width == BEGIN_OF_ROW)
+                {
+                    /* Margin */
+                    SenderDeliveryContentCursor += DeliveryStartIndexCursor % InSenderDelivery.Width;
+                }
+                else
+                {
+                    const int32 IndicesLeftToNextRow = InSenderDelivery.Width - (SenderDeliveryContentCursor % InSenderDelivery.Width);
+                    SenderDeliveryContentCursor += IndicesLeftToNextRow;
+                    /* Margin */
+                    SenderDeliveryContentCursor += DeliveryStartIndexCursor % InSenderDelivery.Width;
+                }
+
+                continue;
+            }
+
+            if (SenderDeliveryContentCursor % InSenderDelivery.Width == BEGIN_OF_ROW)
+            {
+                if (RecipeContentCursor % InRecipe.Delivery.Width != BEGIN_OF_ROW)
+                {
+                    goto NextDeliveryIndex;
+                }
+
+                jcheckNoEntry()
+                return false;
+            }
+
+            continue;
+        }
+
+        /* Mashallah this is the right recipe. */
+        if (RecipeContentCursor >= InRecipe.Delivery.Contents.Num())
+        {
+            return true;
+        }
+
+        NextDeliveryIndex:
+            ++DeliveryStartIndexCursor;
+            continue;
+    }
+
+    return false;
+#undef BEGIN_OF_ROW
 }
 
 URecipeSubsystem::URecipeSubsystem(void)
@@ -100,15 +370,18 @@ void URecipeSubsystem::ParseRecipe(const FString& RecipeNamespace, const FString
         return;
     }
 
-    FRecipe Recipe;
-    Recipe.Namespace = RecipeNamespace;
-    Recipe.Name      = RecipeName;
+    FRecipe Recipe = FRecipe(RecipeNamespace, RecipeName);
 
     FString Error;
     if (this->ParseRecipeDelivery(Obj, Recipe.Delivery, Error) == false)
     {
         LOG_RELAXED_FATAL(LogRecipeSystem, "Failed to parse delivery for recipe [%s::%s]. Error: %s", *RecipeNamespace, *RecipeName, *Error)
         return;
+    }
+
+    if (Recipe.IsShapeless())
+    {
+        this->SimplifyDelivery_Shapeless(Recipe.Delivery);
     }
 
     Error.Empty();
@@ -277,11 +550,12 @@ bool URecipeSubsystem::ParseRecipeProduct(const TSharedPtr<FJsonObject>& Obj, FR
         {
             Accumulated = FAccumulated(VoxelSubsystem->GetAccumulatedIndex(Obj->GetObjectField(RecipeJsonTranslation::Product)->GetStringField(RecipeJsonTranslation::ProductContent)));
         }
-        if (Accumulated == Accumulated::Null)
+        if (Accumulated.IsNull())
         {
             OutError = FString::Printf(TEXT("Semantic error: Accumulated [%s] not found."), *Obj->GetObjectField(RecipeJsonTranslation::Product)->GetStringField(RecipeJsonTranslation::ProductContent));
             return false;
         }
+        OutProduct.Product.AccumulatedIndex = Accumulated.AccumulatedIndex;
 
         if (Obj->GetObjectField(RecipeJsonTranslation::Product)->HasTypedField<EJson::Number>(RecipeJsonTranslation::ProductAmount))
         {
@@ -330,4 +604,34 @@ bool URecipeSubsystem::ParseRecipeProduct(const TSharedPtr<FJsonObject>& Obj, FR
     }
 
     return true;
+}
+
+// ReSharper disable once CppMemberFunctionMayBeStatic
+void URecipeSubsystem::SimplifyDelivery_Shapeless(FRecipeDelivery& InOutDelivery) const
+{
+    TArray<FAccumulated> SimplifiedDelivery;
+    for (const FAccumulated& Accumulated : InOutDelivery.Contents)
+    {
+        if (Accumulated.IsNull())
+        {
+            jcheck( false && "Null found in a shapeless delivery." )
+            continue;
+        }
+
+        if (SimplifiedDelivery.Contains(Accumulated))
+        {
+            ++SimplifiedDelivery[SimplifiedDelivery.Find(Accumulated)].Amount;
+            continue;
+        }
+
+        check( Accumulated.Amount == 1 )
+        SimplifiedDelivery.Emplace(Accumulated);
+        check( SimplifiedDelivery.Last().Amount == 1 )
+
+        continue;
+    }
+
+    InOutDelivery.Contents = SimplifiedDelivery;
+
+    return;
 }

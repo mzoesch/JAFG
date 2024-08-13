@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Container.h"
+#include "System/RecipeSubsystem.h"
 
 #include "ContainerCrafter.generated.h"
 
@@ -25,7 +26,9 @@ class JAFGEXTERNALCORE_API IContainerCrafter : public IContainer
 
 public:
 
-    /* These methods should directly modify the source data. And never handle UI or replication updates. */
+    //////////////////////////////////////////////////////////////////////////
+    // These methods should directly modify the source data. And never handle UI or replication updates.
+    //////////////////////////////////////////////////////////////////////////
 
     FORCEINLINE virtual auto IsContainerCrafterInitialized(void) const -> bool                 = 0;
     FORCEINLINE virtual auto GetContainerCrafterSize(void) const -> int32                      = 0;
@@ -37,7 +40,15 @@ public:
     FORCEINLINE virtual auto GetContainerCrafterValueRef(const int32 Index) -> FAccumulated&   = 0;
     FORCEINLINE virtual auto AddToContainerCrafter(const FAccumulated& Value) -> bool          = 0;
 
-    /* These methods should allow for network replication. */
+    FORCEINLINE virtual auto GetContainerCrafterContents(void) const -> const TArray<FAccumulated>                             = 0;
+    FORCEINLINE virtual auto GetContainerCrafterContents(const accamount_t AmountOverride) const -> const TArray<FAccumulated> = 0;
+    FORCEINLINE virtual auto GetContainerCrafterWidth(void) const -> sender_shape_width                                        = 0;
+    FORCEINLINE virtual auto GetContainerCrafterAsDelivery(void) const -> FSenderDeliver                                       = 0;
+    FORCEINLINE virtual auto GetContainerCrafterProduct(void) const -> FRecipeProduct                                          = 0;
+
+    //////////////////////////////////////////////////////////////////////////
+    // These methods should allow for network replication.
+    //////////////////////////////////////////////////////////////////////////
 
     FORCEINLINE virtual auto EasyAddToContainerCrafter(const FAccumulated& Value) -> bool = 0;
     FORCEINLINE virtual auto EasyChangeContainerCrafter(
@@ -82,7 +93,9 @@ public:
 
 private:
 
-    /* Parent redirects. */
+    //////////////////////////////////////////////////////////////////////////
+    // Parent redirects.
+    //////////////////////////////////////////////////////////////////////////
 
     FORCEINLINE virtual auto IsContainerInitialized(void) const -> bool override final { return this->IsContainerCrafterInitialized(); }
     FORCEINLINE virtual auto GetContainerSize(void) const -> int32 override final { return this->GetContainerCrafterSize(); }
@@ -93,7 +106,6 @@ private:
     FORCEINLINE virtual auto GetContainerValue(const int32 Index) const -> FAccumulated override final { return this->GetContainerCrafterValue(Index); }
     FORCEINLINE virtual auto GetContainerValueRef(const int32 Index) -> FAccumulated& override final { return this->GetContainerCrafterValueRef(Index); }
     FORCEINLINE virtual auto AddToContainer(const FAccumulated& Value) -> bool override final { return this->AddToContainerCrafter(Value); }
-
 
     FORCEINLINE virtual auto EasyAddToContainer(const FAccumulated& Value) -> bool override final
     {

@@ -100,6 +100,15 @@ void UJAFGContainerSlot::NativeOnListItemObjectSet(UObject* ListItemObject)
     return;
 }
 
+void UJAFGContainerSlot::SetSlotData(UJAFGContainerSlotData* InSlotData)
+{
+    this->SlotData = InSlotData;
+
+    this->RenderSlot();
+
+    return;
+}
+
 void UJAFGContainerSlot::OnRefresh(void)
 {
     this->RenderSlot();

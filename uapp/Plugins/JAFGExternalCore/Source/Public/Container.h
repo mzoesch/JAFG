@@ -101,7 +101,9 @@ class JAFGEXTERNALCORE_API IContainer
 
 public:
 
-    /* These methods should directly modify the source data. And never handle UI or replication updates. */
+    //////////////////////////////////////////////////////////////////////////
+    // These methods should directly modify the source data. And never handle UI or replication updates.
+    //////////////////////////////////////////////////////////////////////////
 
     FORCEINLINE virtual auto IsContainerInitialized(void) const -> bool                 = 0;
     FORCEINLINE virtual auto GetContainerSize(void) const -> int32                      = 0;
@@ -113,7 +115,9 @@ public:
     FORCEINLINE virtual auto GetContainerValueRef(const int32 Index) -> FAccumulated&   = 0;
     FORCEINLINE virtual auto AddToContainer(const FAccumulated& Value) -> bool          = 0;
 
-    /* These methods should allow for network replication. */
+    //////////////////////////////////////////////////////////////////////////
+    // These methods should allow for network replication.
+    //////////////////////////////////////////////////////////////////////////
 
     FORCEINLINE virtual auto EasyAddToContainer(const FAccumulated& Value) -> bool = 0;
     /** @return True if container was changed at the provided index and side effects were called. */
