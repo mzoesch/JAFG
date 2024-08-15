@@ -9,7 +9,7 @@ ACommonPlayerController::ACommonPlayerController(const FObjectInitializer& Objec
     return;
 }
 
-void ACommonPlayerController::ShowMouseCursor(const bool bShow, const bool bCenter /* = true */ )
+void ACommonPlayerController::ShowMouseCursor(const bool bShow, const bool bCenter /* = true */, const bool bUIOnly /* = false */)
 {
     if (this->IsLocalController() == false)
     {
@@ -23,8 +23,16 @@ void ACommonPlayerController::ShowMouseCursor(const bool bShow, const bool bCent
         this->bEnableClickEvents        = true;
         this->bEnableMouseOverEvents    = true;
 
-        FInputModeGameAndUI InputMode; InputMode.SetHideCursorDuringCapture(false);
-        this->SetInputMode(InputMode);
+        if (bUIOnly)
+        {
+            const FInputModeUIOnly InputMode;
+            this->SetInputMode(InputMode);
+        }
+        else
+        {
+            FInputModeGameAndUI InputMode; InputMode.SetHideCursorDuringCapture(false);
+            this->SetInputMode(InputMode);
+        }
 
         if (bCenter)
         {
@@ -50,7 +58,7 @@ void ACommonPlayerController::ShowMouseCursor(const bool bShow, const bool bCent
     return;
 }
 
-void ACommonPlayerController::ShowMouseCursor_ClientRPC_Implementation(const bool bShow, const bool bCenter)
+void ACommonPlayerController::ShowMouseCursor_ClientRPC_Implementation(const bool bShow, const bool bCenter /* = true */, const bool bUIOnly /* = false */)
 {
-    this->ShowMouseCursor(bShow, bCenter);
+    this->ShowMouseCursor(bShow, bCenter, bUIOnly);
 }

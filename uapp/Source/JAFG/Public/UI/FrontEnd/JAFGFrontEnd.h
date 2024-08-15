@@ -38,6 +38,9 @@ protected:
     TSubclassOf<UJAFGTabBarBase> JoinSessionPanelWidgetClass;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    TSubclassOf<UJAFGTabBarBase> EncyclopediaPanelWidgetClass;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
     TSubclassOf<UJAFGTabBarBase> SettingsPanelWidgetClass;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)

@@ -32,7 +32,14 @@ public:
 
     /** Also includes all common voxels. */
     FORCEINLINE auto GetVoxelNum(void) const -> voxel_t { return this->VoxelMasks.Num(); }
+    /** @note !!!WARNING!!!
+     *            This is the number of items. NEVER use them as indices.
+     *            The accumulated system is a mix of voxels and items where the voxels are always first.
+     *            If you want the range of all items, use GetItemIndexStart() and GetAccumulatedNum().
+     */
     FORCEINLINE auto GetItemNum(void) const -> voxel_t { return this->ItemMasks.Num(); }
+    FORCEINLINE auto GetAccumulatedNum(void) const -> voxel_t { return this->GetVoxelNum() + this->GetItemNum(); }
+    FORCEINLINE auto GetAccumulatedNum_Signed(void) const -> voxel_t_signed { return this->GetVoxelNum() + this->GetItemNum(); }
     /** The index where all other accumulates are items and not voxels anymore. */
     FORCEINLINE auto GetItemIndexStart(void) const -> voxel_t { return this->VoxelMasks.Num(); }
 

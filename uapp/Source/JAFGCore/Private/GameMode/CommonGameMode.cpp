@@ -22,7 +22,7 @@ void ACommonGameMode::PostLogin(APlayerController* NewPlayer)
     {
         if (ACommonPlayerController* CastedNewPlayer = Cast<ACommonPlayerController>(NewPlayer))
         {
-            CastedNewPlayer->ShowMouseCursor_ClientRPC(true);
+            CastedNewPlayer->ShowMouseCursor_ClientRPC(true, true, this->bCanMoveCamera == false);
         }
         else
         {
@@ -37,7 +37,7 @@ void ACommonGameMode::PostLogin(APlayerController* NewPlayer)
     {
         if (ACommonPlayerController* CastedNewPlayer = Cast<ACommonPlayerController>(NewPlayer))
         {
-            CastedNewPlayer->ShowMouseCursor_ClientRPC(false);
+            CastedNewPlayer->ShowMouseCursor_ClientRPC(false, true, this->bCanMoveCamera == false);
         }
         else
         {

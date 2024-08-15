@@ -29,18 +29,18 @@ FString UJAFGContainerSlotTooltip::GetAccumulatedName(void) const
     }
 
     return this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>()
-        ->GetAccumulatedName(this->RepresentedSlot->GetSlotData()->GetSlotValueRef().AccumulatedIndex);
+        ->GetAccumulatedName(this->RepresentedSlot->GetUncastedSlotData()->GetSlotValue().AccumulatedIndex);
 }
 
 FString UJAFGContainerSlotTooltip::GetAccumulatedNamespace(void) const
 {
     return this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>()
-        ->GetAccumulatedNamespace(this->RepresentedSlot->GetSlotData()->GetSlotValueRef().AccumulatedIndex);
+        ->GetAccumulatedNamespace(this->RepresentedSlot->GetUncastedSlotData()->GetSlotValue().AccumulatedIndex);
 }
 
 FString UJAFGContainerSlotTooltip::GetAccumulatedIndex(void) const
 {
-    return FString::FromInt(this->RepresentedSlot->GetSlotData()->GetSlotValueRef().AccumulatedIndex);
+    return FString::FromInt(this->RepresentedSlot->GetUncastedSlotData()->GetSlotValue().AccumulatedIndex);
 }
 
 void UJAFGContainerSlotTooltip::OnRefresh(void)

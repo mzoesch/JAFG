@@ -23,7 +23,7 @@ struct COMMONJAFGSLATE_API FTabBarTabDescriptor final
     /** Optional panel. If not set, an empty non-hit testable overlay will be created as a placeholder. */
     TSubclassOf<UJAFGTabBarBase>   PanelWidgetClass  = nullptr;
     /**
-     * Optional pass data for the panel widget. If set but panel not, the pass data will be ignored.
+     * Optional pass data for the panel widget. If set, but panel not, the pass data will be ignored.
      * @note Be aware of types.
      */
     FWidgetPassData* PanelPassData = nullptr;
@@ -82,6 +82,7 @@ protected:
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
     TObjectPtr<UWidgetSwitcher> WS_PanelContainer;
 
+    /** Override to add custom tabs to the derived tab bar. */
     virtual auto RegisterAllTabs(void) -> void { }
             auto RegisterConcreteTab(const FTabBarTabDescriptor& TabDescriptor) -> void;
 #if !UE_BUILD_SHIPPING

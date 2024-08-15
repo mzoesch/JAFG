@@ -11,6 +11,7 @@ AFrontEndGameMode::AFrontEndGameMode(const FObjectInitializer& ObjectInitializer
     this->PlayerControllerClass = ACommonPlayerController::StaticClass();
 
     this->bStartWithCursorVisible = true;
+    this->bCanMoveCamera          = false;
 
     return;
 }

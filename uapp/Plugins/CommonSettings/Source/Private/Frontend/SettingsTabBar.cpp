@@ -1,7 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "Frontend/SettingsTabBar.h"
-
 #include "CustomSettingsLocalPlayer.h"
 #include "Frontend/SettingsTabBarPanel.h"
 #include "SettingsData/GameSettingCollections.h"

@@ -90,7 +90,7 @@ FReply UJAFGContainerCrafterProductSlot::NativeOnMouseButtonUp(const FGeometry& 
 
 void UJAFGContainerCrafterProductSlot::OnCrafterTargetContainerChanged(const ELocalContainerChange::Type InReason, const int32 InIndex)
 {
-    this->GetSlotData<UThisSlotData>()->InvalidateCachedRecipeProduct();
+    this->GetSlotData<UThisSlotData>().InvalidateCachedRecipeProduct();
     this->RenderSlot();
 
     return;

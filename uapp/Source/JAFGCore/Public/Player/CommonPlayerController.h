@@ -16,8 +16,8 @@ public:
 
     explicit ACommonPlayerController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
-    void ShowMouseCursor(const bool bShow, const bool bCenter = true);
+    void ShowMouseCursor(const bool bShow, const bool bCenter = true, const bool bUIOnly = false);
 
     UFUNCTION(Client, Reliable)
-    void ShowMouseCursor_ClientRPC(const bool bShow, const bool bCenter = true);
+    void ShowMouseCursor_ClientRPC(const bool bShow, const bool bCenter = true, const bool bUIOnly = false);
 };

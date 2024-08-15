@@ -19,6 +19,7 @@ public:
 protected:
 
     bool bStartWithCursorVisible = false;
+    bool bCanMoveCamera          = true;
 
     //~=============================================================================
     // Player joining and leaving

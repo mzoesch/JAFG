@@ -1,7 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "TabBar/JAFGTabBar.h"
-
 #include "CommonJAFGSlateDeveloperSettings.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Overlay.h"
@@ -106,7 +105,7 @@ void UJAFGTabBar::OnNativeMadeCollapsed(void)
         LOG_FATAL(LogCommonSlate, "Tab bar has an active tab when it tryed to close just now.")
 #endif /* !WITH_EDITOR */
     }
-#endif
+#endif /* !UE_BUILD_SHIPPING */
 
     return;
 }

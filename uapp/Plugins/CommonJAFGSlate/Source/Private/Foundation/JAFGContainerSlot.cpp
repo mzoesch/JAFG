@@ -9,18 +9,19 @@
 #include "System/TextureSubsystem.h"
 #include "Foundation/JAFGContainerSlotTooltip.h"
 
-UJAFGContainerSlot::UJAFGContainerSlot(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+UJAFGReadOnlyContainerSlot::UJAFGReadOnlyContainerSlot(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
     return;
 }
 
-void UJAFGContainerSlot::NativeConstruct(void)
+void UJAFGReadOnlyContainerSlot::NativeConstruct(void)
 {
     Super::NativeConstruct();
     this->Border_Foreground->SetBrushColor(FColor::Transparent);
+    return;
 }
 
-void UJAFGContainerSlot::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+void UJAFGReadOnlyContainerSlot::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
     Super::NativeOnMouseEnter(InGeometry, InMouseEvent);
 
@@ -42,7 +43,7 @@ void UJAFGContainerSlot::NativeOnMouseEnter(const FGeometry& InGeometry, const F
     return;
 }
 
-void UJAFGContainerSlot::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
+void UJAFGReadOnlyContainerSlot::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
 {
     Super::NativeOnMouseLeave(InMouseEvent);
     this->Border_Foreground->SetBrushColor(FColor::Transparent);
@@ -50,71 +51,44 @@ void UJAFGContainerSlot::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
     return;
 }
 
-FReply UJAFGContainerSlot::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+FReply UJAFGReadOnlyContainerSlot::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
     return FReply::Handled();
 }
 
-FReply UJAFGContainerSlot::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+FReply UJAFGReadOnlyContainerSlot::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-#if !UE_BUILD_SHIPPING
-    if (this->SlotData == nullptr)
-    {
-        jrelaxedCheckNoEntry()
-        return FReply::Unhandled();
-    }
-#endif /* !UE_BUILD_SHIPPING */
-
-    IContainerOwner* ContainerOwner = Cast<IContainerOwner>(this->GetOwningPlayerPawn());
-    if (ContainerOwner == nullptr)
-    {
-        LOG_FATAL(LogCommonSlate, "Container owner is invalid. Cannot proceed to handle mouse up event.")
-        return FReply::Unhandled();
-    }
-
-    if (this->SlotData->Owner->EasyChangeContainerSoftPredict(
-        this,
-        ContainerOwner,
-        this->SlotData->Index,
-        [] (const int32 InLambdaIndex, IContainer* InLambdaTarget, IContainerOwner* InLambdaOwner) -> bool
-        {
-            return InLambdaTarget->GetContainer(InLambdaIndex).OnPrimaryClicked(InLambdaOwner);
-        },
-        ELocalContainerChange::Primary
-    ))
-    {
-        this->MarkAsDirty();
-    }
-
-    return FReply::Handled();
+    return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
 }
 
-void UJAFGContainerSlot::NativeOnListItemObjectSet(UObject* ListItemObject)
+void UJAFGReadOnlyContainerSlot::NativeOnListItemObjectSet(UObject* ListItemObject)
 {
     IUserObjectListEntry::NativeOnListItemObjectSet(ListItemObject);
 
-    this->SlotData = Cast<UJAFGContainerSlotData>(ListItemObject);
+    const UObject& UncastedData = *ListItemObject;
+    CAST_PASSED_DATA(UJAFGContainerSlotDataBase)
+    {
+        this->SlotData = Cast<UJAFGContainerSlotDataBase>(ListItemObject);
+    }
 
     this->RenderSlot();
 
     return;
 }
 
-void UJAFGContainerSlot::SetSlotData(UJAFGContainerSlotData* InSlotData)
+void UJAFGReadOnlyContainerSlot::OnRefresh(void)
+{
+    this->RenderSlot();
+}
+
+void UJAFGReadOnlyContainerSlot::SetSlotData(UJAFGContainerSlotDataBase* InSlotData)
 {
     this->SlotData = InSlotData;
-
     this->RenderSlot();
-
     return;
 }
 
-void UJAFGContainerSlot::OnRefresh(void)
-{
-    this->RenderSlot();
-}
-
-void UJAFGContainerSlot::RenderSlot(void)
+void UJAFGReadOnlyContainerSlot::RenderSlot(void)
 {
 #if !UE_BUILD_SHIPPING
     if (this->SlotData == nullptr)
@@ -160,7 +134,7 @@ void UJAFGContainerSlot::RenderSlot(void)
     return;
 }
 
-UJAFGContainerSlotTooltip* UJAFGContainerSlot::CreateToolTip(void)
+UJAFGContainerSlotTooltip* UJAFGReadOnlyContainerSlot::CreateToolTip(void)
 {
     UJAFGContainerSlotTooltip* Tooltip = CreateWidget<UJAFGContainerSlotTooltip>(
         this->GetWorld(),
@@ -169,4 +143,63 @@ UJAFGContainerSlotTooltip* UJAFGContainerSlot::CreateToolTip(void)
     Tooltip->PassDataToWidget(FSlotTooltipPassData{ this });
 
     return Tooltip;
+}
+
+UJAFGContainerSlot::UJAFGContainerSlot(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+{
+    return;
+}
+
+void UJAFGContainerSlot::NativeConstruct(void)
+{
+    Super::NativeConstruct();
+}
+
+FReply UJAFGContainerSlot::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+#if !UE_BUILD_SHIPPING
+    if (this->SlotData == nullptr)
+    {
+        jrelaxedCheckNoEntry()
+        return FReply::Unhandled();
+    }
+#endif /* !UE_BUILD_SHIPPING */
+
+    IContainerOwner* ContainerOwner = Cast<IContainerOwner>(this->GetOwningPlayerPawn());
+    if (ContainerOwner == nullptr)
+    {
+        LOG_FATAL(LogCommonSlate, "Container owner is invalid. Cannot proceed to handle mouse up event.")
+        return FReply::Unhandled();
+    }
+
+    if (this->GetSlotData().Owner->EasyChangeContainerSoftPredict(
+        this,
+        ContainerOwner,
+        this->GetSlotData().Index,
+        [] (const int32 InLambdaIndex, IContainer* InLambdaTarget, IContainerOwner* InLambdaOwner) -> bool
+        {
+            return InLambdaTarget->GetContainer(InLambdaIndex).OnPrimaryClicked(InLambdaOwner);
+        },
+        ELocalContainerChange::Primary
+    ))
+    {
+        this->MarkAsDirty();
+    }
+
+    return FReply::Handled();
+}
+
+void UJAFGContainerSlot::NativeOnListItemObjectSet(UObject* ListItemObject)
+{
+    Super::NativeOnListItemObjectSet(ListItemObject);
+
+    const UObject& UncastedData = *ListItemObject;
+    CAST_PASSED_DATA(UJAFGContainerSlotData)
+    {
+        /*
+         * Just to make sure that this child has received the correct derived class.
+         */
+    }
+
+    return;
 }

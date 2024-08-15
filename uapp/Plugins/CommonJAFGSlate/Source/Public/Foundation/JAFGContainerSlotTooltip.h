@@ -12,9 +12,9 @@ class UJAFGTextBlock;
 
 struct COMMONJAFGSLATE_API FSlotTooltipPassData : public FWidgetPassData
 {
-    explicit FSlotTooltipPassData(UJAFGContainerSlot* InSlot) : Slot(InSlot) { return; }
+    explicit FSlotTooltipPassData(UJAFGReadOnlyContainerSlot* InSlot) : Slot(InSlot) { return; }
 
-    UJAFGContainerSlot* Slot;
+    UJAFGReadOnlyContainerSlot* Slot;
 };
 
 UCLASS(Abstract, Blueprintable)
@@ -66,5 +66,5 @@ protected:
 private:
 
     UPROPERTY()
-    TObjectPtr<UJAFGContainerSlot> RepresentedSlot;
+    TObjectPtr<UJAFGReadOnlyContainerSlot> RepresentedSlot;
 };
