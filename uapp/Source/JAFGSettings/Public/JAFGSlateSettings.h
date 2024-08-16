@@ -55,6 +55,9 @@ public:
     UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Slate")
     TSubclassOf<UJAFGUserWidget> QuickSessionPreviewWidgetClass;
 
+    UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Slate")
+    TSubclassOf<UJAFGUserWidget> AccumulatedRecipeSummaryWidgetClass;
+
     UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "FrontEnd")
     TSubclassOf<UJAFGUserWidget> FrontEndWidgetClass;
 

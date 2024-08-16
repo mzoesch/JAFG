@@ -10,7 +10,7 @@
 JAFG_VOID
 
 UCLASS(NotBlueprintable)
-class JAFG_API URecipeSubsystemImpl : public URecipeSubsystem
+class JAFG_API URecipeSubsystemImpl : public UGameRecipeSubsystem
 {
     GENERATED_BODY()
 

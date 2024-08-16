@@ -38,3 +38,8 @@ FAccumulated::FAccumulated(const UObject& Context, const FString& InAccumulatedN
 
     return;
 }
+
+FString FAccumulated::GetDisplayName(const UObject* const Context) const
+{
+    return Context->GetWorld()->GetGameInstance()->GetSubsystem<UVoxelSubsystem>()->GetAccumulatedName(this->AccumulatedIndex);
+}

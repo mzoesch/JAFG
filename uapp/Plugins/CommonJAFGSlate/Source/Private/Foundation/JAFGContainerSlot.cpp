@@ -14,6 +14,13 @@ UJAFGReadOnlyContainerSlot::UJAFGReadOnlyContainerSlot(const FObjectInitializer&
     return;
 }
 
+void UJAFGReadOnlyContainerSlot::SetSlotData(UJAFGContainerSlotDataBase* InSlotData)
+{
+    this->SlotData = InSlotData;
+    this->RenderSlot();
+    return;
+}
+
 void UJAFGReadOnlyContainerSlot::NativeConstruct(void)
 {
     Super::NativeConstruct();
@@ -79,13 +86,6 @@ void UJAFGReadOnlyContainerSlot::NativeOnListItemObjectSet(UObject* ListItemObje
 void UJAFGReadOnlyContainerSlot::OnRefresh(void)
 {
     this->RenderSlot();
-}
-
-void UJAFGReadOnlyContainerSlot::SetSlotData(UJAFGContainerSlotDataBase* InSlotData)
-{
-    this->SlotData = InSlotData;
-    this->RenderSlot();
-    return;
 }
 
 void UJAFGReadOnlyContainerSlot::RenderSlot(void)

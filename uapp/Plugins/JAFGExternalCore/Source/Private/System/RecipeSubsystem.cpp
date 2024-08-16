@@ -9,7 +9,7 @@ bool FSenderDeliver::IsEmpty(void) const
 {
     for (const FAccumulated& Accumulated : this->Contents)
     {
-        if (Accumulated != Accumulated::Null)
+        if (Accumulated != ::Accumulated::Null)
         {
             return false;
         }
@@ -18,6 +18,37 @@ bool FSenderDeliver::IsEmpty(void) const
     }
 
     return true;
+}
+
+IRecipeSubsystem* IRecipeSubsystem::Get(const UObject& Context)
+{
+    if (UWorldRecipeSubsystem* Subsystem = Context.GetWorld()->GetSubsystem<UWorldRecipeSubsystem>(); Subsystem)
+    {
+        return Subsystem;
+    }
+
+    return Context.GetWorld()->GetGameInstance()->GetSubsystem<UGameRecipeSubsystem>();
+}
+
+IRecipeSubsystem* IRecipeSubsystem::Get(const UObject* Context)
+{
+    return IRecipeSubsystem::Get(*Context);
+}
+
+TArray<const FRecipe*> IRecipeSubsystem::GetRecipesForAccumulated(const FAccumulated& InAccumulated) const
+{
+    TArray<const FRecipe*> Out;
+    for (const FRecipe& Recipe : this->GetRecipes())
+    {
+        if (Recipe.ProductContains(InAccumulated))
+        {
+            Out.Emplace(&Recipe);
+        }
+
+        continue;
+    }
+
+    return Out;
 }
 
 void UWorldRecipeSubsystem::OnWorldBeginPlay(UWorld& InWorld)
@@ -50,14 +81,14 @@ void UWorldRecipeSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 }
 
 // ReSharper disable once CppMemberFunctionMayBeStatic
-URecipeSubsystem* UWorldRecipeSubsystem::GetRecipeSubsystem(const UWorld& InWorld)
+UGameRecipeSubsystem* UWorldRecipeSubsystem::GetRecipeSubsystem(const UWorld& InWorld)
 {
-    return InWorld.GetGameInstance()->GetSubsystem<URecipeSubsystem>();
+    return InWorld.GetGameInstance()->GetSubsystem<UGameRecipeSubsystem>();
 }
 
-URecipeSubsystem* UWorldRecipeSubsystem::GetRecipeSubsystem(void) const
+UGameRecipeSubsystem* UWorldRecipeSubsystem::GetRecipeSubsystem(void) const
 {
-    return this->GetWorld()->GetGameInstance()->GetSubsystem<URecipeSubsystem>();
+    return this->GetWorld()->GetGameInstance()->GetSubsystem<UGameRecipeSubsystem>();
 }
 
 bool UWorldRecipeSubsystem::GetRecipe(const FSenderDeliver& InSenderDelivery, FRecipe& OutRecipe) const
@@ -100,7 +131,7 @@ bool UWorldRecipeSubsystem::GetProduct(const FSenderDeliver& InSenderDelivery, F
 
 bool UWorldRecipeSubsystem::IsRecipeValidForDelivery(const FRecipe& InRecipe, const FSenderDeliver& InSenderDelivery) const
 {
-    return InRecipe.GetType() == ERecipeType::ShapelessCrafting
+    return InRecipe.GetType() == ERecipeType::ShapelessRecipe
         ? this->IsRecipeValidForDelivery_Shapeless(InRecipe, InSenderDelivery)
         : this->IsRecipeValidForDelivery_Shaped(InRecipe, InSenderDelivery);
 }
@@ -112,7 +143,7 @@ bool UWorldRecipeSubsystem::IsRecipeValidForDelivery_Shapeless(const FRecipe& In
      * Note:
      *          The amount of FAccumulated is misused to store the amount
      *          of one unique accumulated item in the delivery. As this is
-     *          shapeless crafting, we must only care about the amounts and
+     *          a shapeless recipe, we must only care about the amounts and
      *          not the order of the delivery contents.
      */
     TArray<FAccumulated> DeliveryContentCounter;
@@ -309,12 +340,12 @@ bool UWorldRecipeSubsystem::IsRecipeValidForDelivery_Shaped(const FRecipe& InRec
 #undef BEGIN_OF_ROW
 }
 
-URecipeSubsystem::URecipeSubsystem(void)
+UGameRecipeSubsystem::UGameRecipeSubsystem(void)
 {
     return;
 }
 
-void URecipeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+void UGameRecipeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     Collection.InitializeDependency<UVoxelSubsystem>();
     Super::Initialize(Collection);
@@ -328,12 +359,12 @@ void URecipeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     return;
 }
 
-void URecipeSubsystem::Deinitialize(void)
+void UGameRecipeSubsystem::Deinitialize(void)
 {
     Super::Deinitialize();
 }
 
-void URecipeSubsystem::ParseRecipe(const IPlugin* InPlugin, const FString& RecipeName)
+void UGameRecipeSubsystem::ParseRecipe(const IPlugin* InPlugin, const FString& RecipeName)
 {
     const TSharedPtr<FJsonObject> Obj = PathFinder::LoadJSONFromDisk(InPlugin, EPathType::Recipes, RecipeName);
     if (Obj.IsValid() == false)
@@ -347,7 +378,7 @@ void URecipeSubsystem::ParseRecipe(const IPlugin* InPlugin, const FString& Recip
     return;
 }
 
-void URecipeSubsystem::ParseRecipe(const FString& RecipeNamespace, const FString& RecipeName, const TSharedPtr<FJsonObject>& Obj)
+void UGameRecipeSubsystem::ParseRecipe(const FString& RecipeNamespace, const FString& RecipeName, const TSharedPtr<FJsonObject>& Obj)
 {
     if (this->Recipes.ContainsByPredicate( [RecipeNamespace, RecipeName] (const FRecipe& Recipe) -> bool
     {
@@ -447,7 +478,7 @@ bool ParseDeliveryArray(const UObject& Context, const TArray<TSharedPtr<FJsonVal
     return true;
 }
 
-bool URecipeSubsystem::ParseRecipeDelivery(const TSharedPtr<FJsonObject>& Obj, FRecipeDelivery& OutDelivery, FString& OutError) const
+bool UGameRecipeSubsystem::ParseRecipeDelivery(const TSharedPtr<FJsonObject>& Obj, FRecipeDelivery& OutDelivery, FString& OutError) const
 {
     const UVoxelSubsystem* VoxelSubsystem = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>();
     check( VoxelSubsystem )
@@ -527,7 +558,7 @@ bool URecipeSubsystem::ParseRecipeDelivery(const TSharedPtr<FJsonObject>& Obj, F
     return true;
 }
 
-bool URecipeSubsystem::ParseRecipeProduct(const TSharedPtr<FJsonObject>& Obj, FRecipeProduct& OutProduct, FString& OutError) const
+bool UGameRecipeSubsystem::ParseRecipeProduct(const TSharedPtr<FJsonObject>& Obj, FRecipeProduct& OutProduct, FString& OutError) const
 {
     const UVoxelSubsystem* VoxelSubsystem = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>();
     check( VoxelSubsystem )
@@ -607,7 +638,7 @@ bool URecipeSubsystem::ParseRecipeProduct(const TSharedPtr<FJsonObject>& Obj, FR
 }
 
 // ReSharper disable once CppMemberFunctionMayBeStatic
-void URecipeSubsystem::SimplifyDelivery_Shapeless(FRecipeDelivery& InOutDelivery) const
+void UGameRecipeSubsystem::SimplifyDelivery_Shapeless(FRecipeDelivery& InOutDelivery) const
 {
     TArray<FAccumulated> SimplifiedDelivery;
     for (const FAccumulated& Accumulated : InOutDelivery.Contents)

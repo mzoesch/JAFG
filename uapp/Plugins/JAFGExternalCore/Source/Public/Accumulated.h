@@ -167,15 +167,21 @@ struct JAFGEXTERNALCORE_API FAccumulated
 
     /** Does not compare amount. */
     FORCEINLINE        auto operator==(const FAccumulated& O) const -> bool { return this->AccumulatedIndex == O.AccumulatedIndex; }
-    /** Does not compare amount. */
     FORCEINLINE        auto operator!=(const FAccumulated& O) const -> bool { return !(*this == O); }
-    /** Does not compare amount. */
+    FORCEINLINE        auto operator==(const ECommonVoxels::Type CommonVoxels) const -> bool { return this->AccumulatedIndex == CommonVoxels; }
+    FORCEINLINE        auto operator!=(const ECommonVoxels::Type CommonVoxels) const -> bool { return !(*this == CommonVoxels); }
+
+    /** Does compare amount. */
     FORCEINLINE static auto Equals(const FAccumulated& A, const FAccumulated& B) -> bool { return A == B; }
     FORCEINLINE static auto DeepEquals(const FAccumulated& A, const FAccumulated& B) -> bool { return A == B && A.Amount == B.Amount; }
+
     FORCEINLINE        auto IsNull(void) const -> bool { return *this == FAccumulated(ACCUMULATED_PRIVATE_NULL_IDX, ACCUMULATED_PRIVATE_NULL_AMT); }
+    FORCEINLINE        auto IsAir(void) const -> bool { return *this == ECommonVoxels::Air; }
+
     FORCEINLINE        auto IsVoxel(void) const -> bool { return this->AccumulatedIndex < GAccumulatedItemIndexStart; }
     FORCEINLINE static auto IsVoxel(const FAccumulated& A) -> bool { return A.IsVoxel(); }
     FORCEINLINE static auto IsVoxel(const voxel_t InAccumulatedIndex) -> bool { return InAccumulatedIndex < GAccumulatedItemIndexStart; }
+
     FORCEINLINE        auto ToString(void) const -> FString
     {
         return FString::Printf(TEXT("FAccumulated{AccumulatedIndex:%d, Amount:%d}"), this->AccumulatedIndex, this->Amount);
@@ -184,6 +190,12 @@ struct JAFGEXTERNALCORE_API FAccumulated
     {
         return FString::Printf(TEXT("{%d,%d}"), this->AccumulatedIndex, this->Amount);
     }
+
+    //////////////////////////////////////////////////////////////////////////
+    // Slow operations
+    //////////////////////////////////////////////////////////////////////////
+
+    auto GetDisplayName(const UObject* const Context) const -> FString;
 };
 
 namespace Accumulated

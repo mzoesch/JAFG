@@ -81,6 +81,8 @@ public:
 
     FORCEINLINE auto GetUncastedSlotData(void) const -> UJAFGContainerSlotDataBase* { return this->SlotData.Get(); }
 
+    auto SetSlotData(UJAFGContainerSlotDataBase* InSlotData) -> void;
+
 protected:
 
     // UUserWidget implementation
@@ -99,7 +101,6 @@ protected:
     virtual auto OnRefresh(void) -> void override;
     // ~UJAFGDirtyUserWidget implementation
 
-    auto SetSlotData(UJAFGContainerSlotDataBase* InSlotData) -> void;
     auto RenderSlot(void) -> void;
     auto CreateToolTip(void) -> UJAFGContainerSlotTooltip*;
 

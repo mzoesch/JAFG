@@ -9,7 +9,7 @@
 #include "RecipeSubsystem.generated.h"
 
 class IPlugin;
-class URecipeSubsystem;
+class UGameRecipeSubsystem;
 
 /**
  * For the Delivery fields, the following JavaScript Object Notation (JSON) is valid.
@@ -18,10 +18,10 @@ class URecipeSubsystem;
  *   // Single accumulated delivery
  *   "Delivery": "Name"
  *
- *   // Multiple accumulated delivery as shapeless crafting
+ *   // Multiple accumulated delivery as a shapeless recipe
  *   "Delivery": ["Name1", "Name2"]
  *
- *   // Multiple accumulated delivery as shaped crafting
+ *   // Multiple accumulated delivery as a shaped recipe
  *   "Delivery":
  *   {
  *     "Contents": ["Name1", null, "Name2"],
@@ -66,8 +66,8 @@ namespace ERecipeType
 enum Type : uint8
 {
     Invalid = 0,
-    ShapedCrafting,
-    ShapelessCrafting,
+    ShapedRecipe,
+    ShapelessRecipe,
 };
 
 }
@@ -76,13 +76,13 @@ FORCEINLINE auto LexToString(const ERecipeType::Type InType) -> FString
 {
     switch (InType)
     {
-    case ERecipeType::ShapedCrafting:
+    case ERecipeType::ShapedRecipe:
     {
-        return TEXT("ShapedCrafting");
+        return TEXT("ShapedRecipe");
     }
-    case ERecipeType::ShapelessCrafting:
+    case ERecipeType::ShapelessRecipe:
     {
-        return TEXT("ShapelessCrafting");
+        return TEXT("ShapelessRecipe");
     }
     default:
     {
@@ -91,7 +91,7 @@ FORCEINLINE auto LexToString(const ERecipeType::Type InType) -> FString
     }
 }
 
-#define PRIVATE_SHAPELESS_WIDTH -1
+#define RECIPE_SHAPELESS_WIDTH -1
 
 // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
 typedef int8  recipe_shape_width;
@@ -136,19 +136,19 @@ struct FRecipeDelivery
     //////////////////////////////////////////////////////////////////////////
     // Constructors
     FORCEINLINE explicit FRecipeDelivery(void)
-        : Contents(), Width(PRIVATE_SHAPELESS_WIDTH) { return; }
+        : Contents(), Width(RECIPE_SHAPELESS_WIDTH) { return; }
 
     FORCEINLINE explicit FRecipeDelivery(const recipe_shape_width InWidth)
         : Contents(), Width(InWidth) { return; }
 
     FORCEINLINE explicit FRecipeDelivery(const FAccumulated& InContent)
-        : Contents({ InContent }), Width(PRIVATE_SHAPELESS_WIDTH) { return; }
+        : Contents({ InContent }), Width(RECIPE_SHAPELESS_WIDTH) { return; }
 
     FORCEINLINE explicit FRecipeDelivery(const FAccumulated& InContent, const recipe_shape_width InWidth)
         : Contents({ InContent }), Width(InWidth) { return; }
 
     FORCEINLINE explicit FRecipeDelivery(const TArray<FAccumulated>& InContents)
-        : Contents(InContents), Width(PRIVATE_SHAPELESS_WIDTH) { return; }
+        : Contents(InContents), Width(RECIPE_SHAPELESS_WIDTH) { return; }
 
     FORCEINLINE explicit FRecipeDelivery(const TArray<FAccumulated>& InContents, const recipe_shape_width InWidth)
         : Contents(InContents), Width(InWidth) { return; }
@@ -176,16 +176,22 @@ struct FRecipeProduct
 
     FAccumulated Product;
 
+    /** @return True, if product contents has InAccumulated. */
+    FORCEINLINE auto Contains(const FAccumulated& InAccumulated) const -> bool
+    {
+        return this->Product == InAccumulated;
+    }
+
     /** Does not compare amount. */
     FORCEINLINE        auto operator==(const FRecipeProduct& O) const -> bool { return this->Product == O.Product; }
-    /** Does not compare amount. */
     FORCEINLINE        auto operator!=(const FRecipeProduct& O) const -> bool { return !(*this == O); }
-    /** Does not compare amount. */
     FORCEINLINE static auto Equals(const FRecipeProduct& A, const FRecipeProduct& B) -> bool { return A == B; }
+
     FORCEINLINE        auto IsNull(void) const -> bool { return this->Product.IsNull(); }
     FORCEINLINE        auto ToString(void) const -> FString { return FString::Printf(TEXT("%s"), *this->Product.ToString()); }
 };
 
+/** Represents a generic recipe inside JAFG. */
 struct FRecipe
 {
     //////////////////////////////////////////////////////////////////////////
@@ -205,25 +211,31 @@ struct FRecipe
 
     FORCEINLINE auto GetType(void) const -> ERecipeType::Type
     {
-        return this->Delivery.Width == PRIVATE_SHAPELESS_WIDTH
-            ? ERecipeType::ShapelessCrafting
-            : ERecipeType::ShapedCrafting;
+        return this->Delivery.Width == RECIPE_SHAPELESS_WIDTH
+            ? ERecipeType::ShapelessRecipe
+            : ERecipeType::ShapedRecipe;
     }
 
     FORCEINLINE auto IsShapeless(void) const -> bool
     {
-        return this->GetType() == ERecipeType::ShapelessCrafting;
+        return this->GetType() == ERecipeType::ShapelessRecipe;
     }
 
     FORCEINLINE auto IsShaped(void) const -> bool
     {
-        return this->GetType() == ERecipeType::ShapedCrafting;
+        return this->GetType() == ERecipeType::ShapedRecipe;
     }
 
-    /** @return True, if Accumulated is null or if delivery contents has InAccumulated. */
+    /** @return True, if InAccumulated is null or if delivery contents has InAccumulated. */
     FORCEINLINE auto DeliveryContains(const FAccumulated& InAccumulated) const -> bool
     {
         return this->Delivery.Contains(InAccumulated);
+    }
+
+    /** @return True, if product contents has InAccumulated. */
+    FORCEINLINE auto ProductContains(const FAccumulated& InAccumulated) const -> bool
+    {
+        return this->Product.Contains(InAccumulated);
     }
 
     FORCEINLINE auto ToString(void) const -> FString
@@ -235,8 +247,8 @@ struct FRecipe
 namespace RecipeDelivery
 {
 
-static const FRecipeDelivery Null           = FRecipeDelivery();
-static constexpr recipe_shape_width ShapelessWidth = PRIVATE_SHAPELESS_WIDTH;
+static const FRecipeDelivery        Null           = FRecipeDelivery();
+static constexpr recipe_shape_width ShapelessWidth = RECIPE_SHAPELESS_WIDTH;
 
 }
 
@@ -248,12 +260,37 @@ static const FRecipeProduct Null = FRecipeProduct(Accumulated::Null);
 }
 
 /**
+ * Always is the recipe subsystem with the highest priority.
+ */
+UINTERFACE()
+class JAFGEXTERNALCORE_API URecipeSubsystem : public UInterface
+{
+    GENERATED_BODY()
+};
+
+class JAFGEXTERNALCORE_API IRecipeSubsystem
+{
+    GENERATED_BODY()
+
+public:
+
+    /** Get the currently most respected recipe subsystem based on context. */
+    static auto Get(const UObject& Context) -> IRecipeSubsystem*;
+    static auto Get(const UObject* Context) -> IRecipeSubsystem*;
+
+    /** Get all recipes that may be used to create the accumulated. */
+    auto GetRecipesForAccumulated(const FAccumulated& InAccumulated) const -> TArray<const FRecipe*>;
+
+    FORCEINLINE virtual auto GetRecipes(void) const -> const TArray<FRecipe>& = 0;
+};
+
+/**
  * Apart from initialization, only this subsystem should be used to access recipes.
  * The URecipeSubsystem holds all recipes that are available in the game, but a world has the power
  * to override these recipes.
  */
 UCLASS(NotBlueprintable)
-class JAFGEXTERNALCORE_API UWorldRecipeSubsystem : public UJAFGWorldSubsystem
+class JAFGEXTERNALCORE_API UWorldRecipeSubsystem : public UJAFGWorldSubsystem, public IRecipeSubsystem
 {
     GENERATED_BODY()
 
@@ -262,10 +299,10 @@ public:
     virtual void OnWorldBeginPlay(UWorld& InWorld) override;
 
     /** The recipes from the base game with the modifications of the current opened world. */
-    auto GetRecipes(void) -> const TArray<FRecipe>& { return this->CachedActiveRecipes; }
+    virtual auto GetRecipes(void) const -> const TArray<FRecipe>& override { return this->CachedActiveRecipes; }
 
-    auto GetRecipeSubsystem(const UWorld& InWorld) -> URecipeSubsystem*;
-    auto GetRecipeSubsystem(void) const -> URecipeSubsystem*;
+    auto GetRecipeSubsystem(const UWorld& InWorld) -> UGameRecipeSubsystem*;
+    auto GetRecipeSubsystem(void) const -> UGameRecipeSubsystem*;
 
     /** @return True, if found. */
     auto GetRecipe(const FSenderDeliver& InSenderDelivery, FRecipe& OutRecipe) const -> bool;
@@ -286,7 +323,7 @@ protected:
  * Holds the recipes that are available from the base game. May be modified by any world. See UWorldRecipeSubsystem.
  */
 UCLASS(Abstract, NotBlueprintable)
-class JAFGEXTERNALCORE_API URecipeSubsystem : public UExternalGameInstanceSubsystem
+class JAFGEXTERNALCORE_API UGameRecipeSubsystem : public UExternalGameInstanceSubsystem, public IRecipeSubsystem
 {
     GENERATED_BODY()
 
@@ -294,7 +331,7 @@ class JAFGEXTERNALCORE_API URecipeSubsystem : public UExternalGameInstanceSubsys
 
 public:
 
-    URecipeSubsystem();
+    UGameRecipeSubsystem();
 
     // Subsystem implementation
     virtual auto Initialize(FSubsystemCollectionBase& Collection) -> void override;
@@ -302,7 +339,7 @@ public:
     // ~Subsystem implementation
 
     /** The recipes that are available from the base game. */
-    FORCEINLINE auto GetRecipes(void) const -> const TArray<FRecipe>& { return this->Recipes; }
+    FORCEINLINE virtual auto GetRecipes(void) const -> const TArray<FRecipe>& override { return this->Recipes; }
 
 protected:
 
@@ -324,5 +361,3 @@ protected:
 
     TArray<FRecipe> Recipes;
 };
-
-#undef DELIVERY_PRIVATE_SHAPELESS_WIDTH
