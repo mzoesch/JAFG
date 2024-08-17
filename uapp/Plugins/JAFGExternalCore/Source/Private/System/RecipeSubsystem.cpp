@@ -132,11 +132,6 @@ bool IRecipeSubsystem::IsRecipeValidForDelivery_Shapeless(const FRecipe& InRecip
         continue;
     }
 
-    if (DeliveryContentCounter.Num() != InRecipe.Delivery.Contents.Num())
-    {
-        return false;
-    }
-
     for (const FAccumulated& RecipeDeliveryContent : InRecipe.Delivery.Contents)
     {
         if (RecipeDeliveryContent.IsNull())
@@ -153,19 +148,33 @@ bool IRecipeSubsystem::IsRecipeValidForDelivery_Shapeless(const FRecipe& InRecip
             continue;
         }
 
-        if (
-            /* Find will never search for amounts only compares the accumulated indices. */
-            const int32 Index = DeliveryContentCounter.Find(RecipeDeliveryContent);
-            Index == INDEX_NONE || DeliveryContentCounter[Index].Amount != RecipeDeliveryContent.Amount
-        )
+        /* Find will never search for amounts only compares the accumulated indices. */
+        const int32 Index = DeliveryContentCounter.Find(RecipeDeliveryContent);
+        if (Index == INDEX_NONE)
         {
             return false;
+        }
+
+        if (DeliveryContentCounter[Index].Amount < 1)
+        {
+            /* Should have been removed. */
+            checkNoEntry()
+            return false;
+        }
+
+        if (DeliveryContentCounter[Index].Amount == 1)
+        {
+            DeliveryContentCounter.RemoveAt(Index);
+        }
+        else
+        {
+            --DeliveryContentCounter[Index].Amount;
         }
 
         continue;
     }
 
-    return true;
+    return DeliveryContentCounter.IsEmpty();
 }
 
 bool IRecipeSubsystem::IsRecipeValidForDelivery_Shaped(const FRecipe& InRecipe, const FSenderDeliver& InSenderDelivery) const
