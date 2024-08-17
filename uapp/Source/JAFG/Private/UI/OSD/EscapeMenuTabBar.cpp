@@ -1,7 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "UI/OSD/EscapeMenuTabBar.h"
-
 #include "Player/WorldPlayerController.h"
 #include "TabBar/JAFGTabBarButton.h"
 
@@ -109,11 +108,17 @@ void UEscapeMenuTabBar::RegisterAllTabs(void)
     Achievements.DisplayName       = "Achievements";
     Achievements.Padding           = FMargin(0.0f, 200.0f, 0.0f, 0.0f);
 
+    check( this->EncyclopediaPanelWidgetClass && "Encyclopedia Panel Widget Class is not set." )
+    FTabBarTabDescriptor Encyclopedia = UJAFGTabBar::GetDefaultTabDescriptor();
+    Encyclopedia.Identifier       = "Encyclopedia";
+    Encyclopedia.DisplayName      = "Encyclopedia";
+    Encyclopedia.PanelWidgetClass = this->EncyclopediaPanelWidgetClass;
+
     check( this->SettingsPanelWidgetClass && "Settings Panel Widget Class is not set." )
     FTabBarTabDescriptor Settings = UJAFGTabBar::GetDefaultTabDescriptor();
-    Settings.Identifier        = "Settings";
-    Settings.DisplayName       = "Settings";
-    Settings.PanelWidgetClass  = this->SettingsPanelWidgetClass;
+    Settings.Identifier       = "Settings";
+    Settings.DisplayName      = "Settings";
+    Settings.PanelWidgetClass = this->SettingsPanelWidgetClass;
 
     FTabBarTabDescriptor SessionOptions = UJAFGTabBar::GetDefaultTabDescriptor();
     SessionOptions.Identifier        = "SessionOptions";
@@ -134,6 +139,7 @@ void UEscapeMenuTabBar::RegisterAllTabs(void)
 
     this->RegisterConcreteTab(Resume);
     this->RegisterConcreteTab(Achievements);
+    this->RegisterConcreteTab(Encyclopedia);
     this->RegisterConcreteTab(Settings);
     this->RegisterConcreteTab(SessionOptions);
     this->RegisterConcreteTab(ExitToMenu);

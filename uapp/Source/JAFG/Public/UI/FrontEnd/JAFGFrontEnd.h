@@ -49,5 +49,7 @@ protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
     TSubclassOf<UJAFGTabBarButton> QuitGameButtonWidgetClass;
 
+    // UJAFGTabBar implementation
     virtual void RegisterAllTabs(void) override;
+    // ~UJAFGTabBar implementation
 };

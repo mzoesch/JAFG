@@ -37,6 +37,9 @@ protected:
     TSubclassOf<UJAFGTabBarButton> ResumeEntryButtonWidgetClass;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    TSubclassOf<UJAFGTabBarBase> EncyclopediaPanelWidgetClass;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
     TSubclassOf<UJAFGTabBarBase> SettingsPanelWidgetClass;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
@@ -45,5 +48,7 @@ protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
     TSubclassOf<UJAFGTabBarButton> ExitToDesktopEntryButtonWidgetClass;
 
+    // UJAFGTabBar implementation
     virtual void RegisterAllTabs(void) override;
+    // ~UJAFGTabBar implementation
 };
