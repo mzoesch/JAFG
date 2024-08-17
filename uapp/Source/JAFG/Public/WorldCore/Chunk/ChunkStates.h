@@ -49,6 +49,22 @@ enum Type : uint8
      */
     Active,
 
+    /*----------------------------------------------------------------------------
+        Special states below here.
+        These entries have nothing to do with generation and are considered
+        special as they will not interfere with the subsystem.
+        A chunk must never have this state as it is only used to classify
+        states together - like a barrier.
+    ----------------------------------------------------------------------------*/
+
+    /*----------------------------------------------------------------------------
+    ----------------------------------------------------------------------------*/
+
+    Special,
+
+    /*----------------------------------------------------------------------------
+    ----------------------------------------------------------------------------*/
+
     /**
      * Chunk has been marked as a pending kill and is no longer visible to the player and the UWorld (the mesh
      * has been cleared to save memory).
@@ -99,6 +115,10 @@ FORCEINLINE auto LexToString(const EChunkState::Type ChunkState) -> FString
     case EChunkState::Active:
     {
         return TEXT("Active");
+    }
+    case EChunkState::Special:
+    {
+        return TEXT("Special");
     }
     case EChunkState::PendingKill:
     {

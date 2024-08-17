@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "JAFGTypes.h"
 
-namespace ChunkStatics
+namespace WorldStatics
 {
 
 /** Transforms an unreal vector to a chunk key. */
@@ -76,7 +76,7 @@ FORCEINLINE auto WorldToVerticalChunkKey(const FVector2D& WorldLocation) -> FChu
 /** Transforms an unreal vector to a vertical chunk key. */
 FORCEINLINE auto WorldToVerticalChunkKey(const FVector& WorldLocation) -> FChunkKey2
 {
-    return ChunkStatics::WorldToVerticalChunkKey(FVector2D(WorldLocation.X, WorldLocation.Y));
+    return WorldStatics::WorldToVerticalChunkKey(FVector2D(WorldLocation.X, WorldLocation.Y));
 }
 
 /** Transforms an unreal vector to a local voxel key. */
@@ -174,7 +174,7 @@ FORCEINLINE auto WorldToJCoordinate(const FVector& WorldLocation) -> FJCoordinat
 
 FORCEINLINE auto WorldToGrid(const FVector& WorldLocation) -> FVector
 {
-    return FVector(ChunkStatics::WorldToJCoordinate(WorldLocation)) * WorldStatics::JToUScale;
+    return FVector(WorldStatics::WorldToJCoordinate(WorldLocation)) * WorldStatics::JToUScale;
 }
 
 /** Transforms an unreal vector to a vertical j coordinate. */
@@ -197,6 +197,22 @@ FORCEINLINE auto JCoordinateToWorldLocation(const FJCoordinate& JCoordinate) -> 
 FORCEINLINE auto JCoordinateToUniqueString(const FJCoordinate& JCoordinate) -> FString
 {
     return FString::Printf(TEXT("%d_%d_%d"), JCoordinate.X, JCoordinate.Y, JCoordinate.Z);
+}
+
+FORCEINLINE TArray<FChunkKey2> GetNeighboringChunks(const FChunkKey2& Target)
+{
+    TArray<FChunkKey2> Out;
+
+    Out.Emplace(Target.X - 1, Target.Y - 1);
+    Out.Emplace(Target.X - 1, Target.Y);
+    Out.Emplace(Target.X - 1, Target.Y + 1);
+    Out.Emplace(Target.X, Target.Y - 1);
+    Out.Emplace(Target.X, Target.Y + 1);
+    Out.Emplace(Target.X + 1, Target.Y - 1);
+    Out.Emplace(Target.X + 1, Target.Y);
+    Out.Emplace(Target.X + 1, Target.Y + 1);
+
+    return Out;
 }
 
 }

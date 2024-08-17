@@ -160,6 +160,24 @@ protected:
     UPROPERTY()
     TObjectPtr<UServerChunkWorldSettings> ServerChunkWorldSettings = nullptr;
 
+    /*
+     * Kinda annoying these warning. But with the generation subsystem, we keep track of deleted chunks.
+     * We definitely do not want to have any ownership of these chunks in any way.
+     */
+
+    // ReSharper disable once CppUE4ProbableMemoryIssuesWithUObject
+    ACommonChunk* NNorth;
+    // ReSharper disable once CppUE4ProbableMemoryIssuesWithUObject
+    ACommonChunk* NEast;
+    // ReSharper disable once CppUE4ProbableMemoryIssuesWithUObject
+    ACommonChunk* NSouth;
+    // ReSharper disable once CppUE4ProbableMemoryIssuesWithUObject
+    ACommonChunk* NWest;
+    // ReSharper disable once CppUE4ProbableMemoryIssuesWithUObject
+    ACommonChunk* NUp;
+    // ReSharper disable once CppUE4ProbableMemoryIssuesWithUObject
+    ACommonChunk* NDown;
+
 #pragma endregion MISC
 
 #pragma region Procedural Mesh

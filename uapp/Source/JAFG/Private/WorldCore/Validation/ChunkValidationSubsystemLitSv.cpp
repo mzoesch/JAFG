@@ -105,7 +105,7 @@ void UChunkValidationSubsystemLitSv::LoadUnloadMyAndTheirChunks(void) const
             for (
                 FChunkKey2 Key
                 :
-                Validation::GetAllChunksInDistance(ChunkStatics::WorldToVerticalChunkKey(PredictedLocation), RenderDistance)
+                Validation::GetAllChunksInDistance(WorldStatics::WorldToVerticalChunkKey(PredictedLocation), RenderDistance)
             )
             {
                 PreferredChunks.AddUnique(Key);
@@ -172,7 +172,7 @@ void UChunkValidationSubsystemLitSv::LoadUnloadMyAndTheirChunks(void) const
                     continue;
                 }
 
-                if (this->ChunkGenerationSubsystem->HasPersistentVerticalChunk(FChunkKey2(ChunkStatics::WorldToVerticalChunkKey(PredictedLocation))) == false)
+                if (this->ChunkGenerationSubsystem->HasPersistentVerticalChunk(FChunkKey2(WorldStatics::WorldToVerticalChunkKey(PredictedLocation))) == false)
                 {
                     return;
                 }

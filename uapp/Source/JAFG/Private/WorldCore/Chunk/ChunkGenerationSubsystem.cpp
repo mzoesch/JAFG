@@ -176,8 +176,8 @@ bool UChunkGenerationSubsystem::FindAppropriateLocationForCharacterSpawn(const F
         return true;
     }
 
-    const FChunkKey2    TargetVKey = ChunkStatics::WorldToVerticalChunkKey(InApproximateLocation);
-    const FJCoordinate2 TargetJKey = ChunkStatics::WorldToVerticalJCoordinate(InApproximateLocation);
+    const FChunkKey2    TargetVKey = WorldStatics::WorldToVerticalChunkKey(InApproximateLocation);
+    const FJCoordinate2 TargetJKey = WorldStatics::WorldToVerticalJCoordinate(InApproximateLocation);
 
     if (this->HasPersistentVerticalChunk(TargetVKey) == false)
     {
@@ -203,7 +203,7 @@ bool UChunkGenerationSubsystem::FindAppropriateLocationForCharacterSpawn(const F
                 continue;
             }
 
-            OutLocation = ChunkStatics::JCoordinateToWorldLocation(FJCoordinate(
+            OutLocation = WorldStatics::JCoordinateToWorldLocation(FJCoordinate(
                 TargetJKey.X,
                 TargetJKey.Y,
                 /*
@@ -292,9 +292,15 @@ void UChunkGenerationSubsystem::SafeLoadVerticalChunk(
     const TArray<FChunkKey>& Chunks,
     const bool bGenerateMesh /* = true */,
     const EChunkPersistency::Type Persistency /* = EChunkPersistency::Persistent */,
-    const float TimeToLive /* = 0.0f */
+    const float TimeToLive /* = 0.0f */,
+    const EChunkState::Type TargetState /* = EChunkState::Active */
 )
 {
+    /* We can only generate chunks between those states. The other are special. */
+    check( EChunkState::Invalid < TargetState && TargetState < EChunkState::Special )
+
+    struct FEntry { FChunkKey ChunkKey; ACommonChunk* ChunkPtr; };
+    TArray<FEntry> Iterator;
     for (const FChunkKey& Chunk : Chunks)
     {
         const TObjectPtr<ACommonChunk>* MapPtr = this->ChunkMap.Find(Chunk);
@@ -308,25 +314,43 @@ void UChunkGenerationSubsystem::SafeLoadVerticalChunk(
         else
         {
             ChunkPtr = *MapPtr;
-            /*
-             * If the chunk is in a persistent state. We may never set it back to a temporary state.
-             */
+            /* If the chunk is in a persistent state. We may never set it back to a temporary state. */
             if (ChunkPtr->GetChunkPersistency() == EChunkPersistency::Temporary)
             {
                 ChunkPtr->SetChunkPersistency(Persistency, TimeToLive);
             }
         }
 
-        if (ChunkPtr->GetChunkState() < EChunkState::Spawned)         { ChunkPtr->SetChunkState(EChunkState::Spawned);         }
-        if (ChunkPtr->GetChunkState() < EChunkState::Shaped)          { ChunkPtr->SetChunkState(EChunkState::Shaped);          }
-        if (ChunkPtr->GetChunkState() < EChunkState::SurfaceReplaced) { ChunkPtr->SetChunkState(EChunkState::SurfaceReplaced); }
+        Iterator.Emplace(FEntry{ Chunk, ChunkPtr });
 
+        continue;
+    }
+
+    if (TargetState < EChunkState::Spawned) { return; }
+    if (Iterator[0].ChunkPtr->GetChunkState() < EChunkState::Spawned)
+    { this->PrepareWorldForChunkTransit_Spawned(FChunkKey2(Chunks[0].X, Chunks[0].Y)); }
+    for (const auto& [ChunkKey, ChunkPtr] : Iterator)
+    { if (ChunkPtr->GetChunkState() < EChunkState::Spawned) { ChunkPtr->SetChunkState(EChunkState::Spawned); } }
+
+    if (TargetState < EChunkState::Shaped) { return; }
+    if (Iterator[0].ChunkPtr->GetChunkState() < EChunkState::Shaped)
+    { this->PrepareWorldForChunkTransit_Shaped(FChunkKey2(Chunks[0].X, Chunks[0].Y)); }
+    for (const auto& [ChunkKey, ChunkPtr] : Iterator)
+    { if (ChunkPtr->GetChunkState() < EChunkState::Shaped) { ChunkPtr->SetChunkState(EChunkState::Shaped); } }
+
+    if (TargetState < EChunkState::SurfaceReplaced) { return; }
+    if (Iterator[0].ChunkPtr->GetChunkState() < EChunkState::SurfaceReplaced)
+    { this->PrepareWorldForChunkTransit_SurfaceReplaced(FChunkKey2(Chunks[0].X, Chunks[0].Y)); }
+    for (const auto& [ChunkKey, ChunkPtr] : Iterator)
+    { if (ChunkPtr->GetChunkState() < EChunkState::SurfaceReplaced) { ChunkPtr->SetChunkState(EChunkState::SurfaceReplaced); } }
+
+    if (TargetState < EChunkState::Active) { return; }
+    for (const auto& [ChunkKey, ChunkPtr] : Iterator)
+    {
         if (bGenerateMesh && ChunkPtr->GetChunkState() < EChunkState::Active)
         {
             ChunkPtr->SetChunkState(EChunkState::Active);
         }
-
-        continue;
     }
 
     return;
@@ -425,6 +449,44 @@ ACommonChunk* UChunkGenerationSubsystem::SpawnChunk(const FChunkKey& ChunkKey) c
     return Chunk;
 }
 
+void UChunkGenerationSubsystem::PrepareWorldForChunkTransit_Spawned(const FChunkKey2& Chunk)
+{
+    for (const FChunkKey2& Neighbor : WorldStatics::GetNeighboringChunks(Chunk))
+    {
+        this->SafeLoadVerticalChunk(
+            this->GetAllChunksFromVerticalChunk(Neighbor),
+            false,
+            EChunkPersistency::Persistent,
+            10.0f,
+            EChunkState::PreSpawned
+        );
+    }
+
+    return;
+}
+
+// ReSharper disable once CppMemberFunctionMayBeStatic
+void UChunkGenerationSubsystem::PrepareWorldForChunkTransit_Shaped(const FChunkKey2& Chunk)
+{
+    /* Shaping currently does not require any additional states more than spawned. */
+}
+
+void UChunkGenerationSubsystem::PrepareWorldForChunkTransit_SurfaceReplaced(const FChunkKey2& Chunk)
+{
+    for (const FChunkKey2& Neighbor : WorldStatics::GetNeighboringChunks(Chunk))
+    {
+        this->SafeLoadVerticalChunk(
+            this->GetAllChunksFromVerticalChunk(Neighbor),
+            false,
+            EChunkPersistency::Persistent,
+            10.0f,
+            EChunkState::Spawned
+        );
+    }
+
+    return;
+}
+
 void UChunkGenerationSubsystem::GetAllChunksFromVerticalChunk(const FChunkKey2& ChunkKey, TArray<FChunkKey>& Out) const
 {
     check( Out.IsEmpty() )
@@ -436,6 +498,13 @@ void UChunkGenerationSubsystem::GetAllChunksFromVerticalChunk(const FChunkKey2& 
     }
 
     return;
+}
+
+TArray<FChunkKey> UChunkGenerationSubsystem::GetAllChunksFromVerticalChunk(const FChunkKey2& ChunkKey) const
+{
+    TArray<FChunkKey> Out;
+    this->GetAllChunksFromVerticalChunk(ChunkKey, Out);
+    return Out;
 }
 
 void UChunkGenerationSubsystem::GetAllChunksFromVerticalChunkReversed(const FChunkKey2& ChunkKey, TArray<FChunkKey>& Out) const

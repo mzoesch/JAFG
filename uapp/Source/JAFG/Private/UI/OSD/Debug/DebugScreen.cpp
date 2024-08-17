@@ -432,7 +432,7 @@ FString UDebugScreen::GetSectionClientCharacterChunkLocation(void) const
 
     if (Location != FVector::ZeroVector)
     {
-        const FChunkKey ChunkKey = ChunkStatics::WorldToChunkKey(Location);
+        const FChunkKey ChunkKey = WorldStatics::WorldToChunkKey(Location);
         return FString::Printf(TEXT("Chunk: %d %d %d"), ChunkKey.X, ChunkKey.Y, ChunkKey.Z);
     }
 
@@ -496,6 +496,14 @@ FString UDebugScreen::GetSectionClientCharacterFacing(void) const
 
     return FString::Printf(TEXT("Facing: NA (NA / NA)"));
 #undef UNDEFINED_ROT_FLT
+}
+
+FString UDebugScreen::GetMultiNoiseDebugInfo(void) const
+{
+
+
+
+    return FString();
 }
 
 /* Do NOT convert to const method, as this is a Rider IDEA false positive error. */

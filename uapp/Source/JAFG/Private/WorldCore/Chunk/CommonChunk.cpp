@@ -1,7 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "WorldCore/Chunk/CommonChunk.h"
-
 #include "HyperlaneComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Network/ChunkMulticasterInfo.h"
@@ -59,6 +58,14 @@ void ACommonChunk::EndPlay(const EEndPlayReason::Type EndPlayReason)
         this->RawVoxelData = nullptr;
     }
 
+    /* Make sure we do not have any dangling pointers. */
+    if (this->NNorth) { this->NNorth->NSouth = nullptr; } this->NNorth = nullptr;
+    if (this->NEast)  { this->NEast->NWest   = nullptr; } this->NEast  = nullptr;
+    if (this->NSouth) { this->NSouth->NNorth = nullptr; } this->NSouth = nullptr;
+    if (this->NWest)  { this->NWest->NEast   = nullptr; } this->NWest  = nullptr;
+    if (this->NUp)    { this->NUp->NDown     = nullptr; } this->NUp    = nullptr;
+    if (this->NDown)  { this->NDown->NUp     = nullptr; } this->NDown  = nullptr;
+
     if (this->bUncontrolledKill)
     {
         return;
@@ -106,6 +113,15 @@ void ACommonChunk::InitializeCommonStuff(void)
         LOG_FATAL(LogChunkGeneration, "Could not get Server Chunk World Settings.")
         return;
     }
+
+    this->NNorth = this->ChunkGenerationSubsystem->FindChunkByKey(FChunkKey(this->ChunkKey.X + 1, this->ChunkKey.Y    , this->ChunkKey.Z    ));
+    this->NEast  = this->ChunkGenerationSubsystem->FindChunkByKey(FChunkKey(this->ChunkKey.X    , this->ChunkKey.Y + 1, this->ChunkKey.Z    ));
+    this->NSouth = this->ChunkGenerationSubsystem->FindChunkByKey(FChunkKey(this->ChunkKey.X - 1, this->ChunkKey.Y    , this->ChunkKey.Z    ));
+    this->NWest  = this->ChunkGenerationSubsystem->FindChunkByKey(FChunkKey(this->ChunkKey.X    , this->ChunkKey.Y - 1, this->ChunkKey.Z    ));
+    this->NUp    = this->ChunkGenerationSubsystem->FindChunkByKey(FChunkKey(this->ChunkKey.X    , this->ChunkKey.Y    , this->ChunkKey.Z + 1));
+    this->NDown  = this->ChunkGenerationSubsystem->FindChunkByKey(FChunkKey(this->ChunkKey.X    , this->ChunkKey.Y    , this->ChunkKey.Z - 1));
+    check( this->NNorth ) check( this->NEast ) check( this->NSouth ) check( this->NWest  )
+    /* We do not check up and down, as this might be to most top or the most bottom chunk that will never have adjacent chunks in this direction. */
 
     return;
 }

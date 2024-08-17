@@ -113,6 +113,10 @@ protected:
     // ReSharper disable once CppUEBlueprintCallableFunctionUnused
     FString GetSectionClientCharacterFacing( /* void */ ) const;
 
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "JAFG|DebugScreen")
+    // ReSharper disable once CppUEBlueprintCallableFunctionUnused
+    FString GetMultiNoiseDebugInfo( /* void */ ) const;
+
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "JAFG|DebugScreen")
     // ReSharper disable once CppUEBlueprintCallableFunctionUnused

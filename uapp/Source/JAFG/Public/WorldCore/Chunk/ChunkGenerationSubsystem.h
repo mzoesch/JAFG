@@ -129,7 +129,8 @@ private:
         const TArray<FChunkKey>& Chunks,
         const bool bGenerateMesh = true,
         const EChunkPersistency::Type Persistency = EChunkPersistency::Persistent,
-        const float TimeToLive = 10.0f
+        const float TimeToLive = 10.0f,
+        const EChunkState::Type TargetState = EChunkState::Active
     ) -> void;
 
     TMyQueue<FClientChunk> ClientQueue;
@@ -147,11 +148,21 @@ private:
     auto SpawnChunk(const FChunkKey& ChunkKey) const -> ACommonChunk*;
 
     //////////////////////////////////////////////////////////////////////////
+    // Helper methods.
+    //////////////////////////////////////////////////////////////////////////
+
+    void PrepareWorldForChunkTransit_Spawned(const FChunkKey2& Chunk);
+    void PrepareWorldForChunkTransit_Shaped(const FChunkKey2& Chunk);
+    void PrepareWorldForChunkTransit_SurfaceReplaced(const FChunkKey2& Chunk);
+
+
+    //////////////////////////////////////////////////////////////////////////
     // Useful common getters.
     //////////////////////////////////////////////////////////////////////////
 
     /** @param Out Order is from bottom to top. */
     auto GetAllChunksFromVerticalChunk(const FChunkKey2& ChunkKey, TArray<FChunkKey>& Out) const -> void;
+    auto GetAllChunksFromVerticalChunk(const FChunkKey2& ChunkKey) const -> TArray<FChunkKey>;
     /** @param Out Order is from top to bottom. */
     auto GetAllChunksFromVerticalChunkReversed(const FChunkKey2& ChunkKey, TArray<FChunkKey>& Out) const -> void;
 };

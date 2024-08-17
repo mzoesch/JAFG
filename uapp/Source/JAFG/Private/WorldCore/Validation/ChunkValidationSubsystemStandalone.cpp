@@ -101,7 +101,7 @@ void UChunkValidationSubsystemStandalone::MyTick(const float DeltaTime)
         return;
     }
 
-    if (this->ChunkGenerationSubsystem->HasPersistentVerticalChunk(FChunkKey2(ChunkStatics::WorldToVerticalChunkKey(PredictedLocation))) == false)
+    if (this->ChunkGenerationSubsystem->HasPersistentVerticalChunk(FChunkKey2(WorldStatics::WorldToVerticalChunkKey(PredictedLocation))) == false)
     {
         return;
     }
@@ -123,7 +123,7 @@ void UChunkValidationSubsystemStandalone::LoadUnloadChunks(const FVector& LocalP
 
     this->ChunkGenerationSubsystem->ClearVerticalChunkQueue();
 
-    TArray<FChunkKey2> PreferredChunks = Validation::GetAllChunksInDistance(ChunkStatics::WorldToVerticalChunkKey(LocalPlayerLocation), RenderDistance);
+    TArray<FChunkKey2> PreferredChunks = Validation::GetAllChunksInDistance(WorldStatics::WorldToVerticalChunkKey(LocalPlayerLocation), RenderDistance);
 
     // Loading
     //////////////////////////////////////////////////////////////////////////

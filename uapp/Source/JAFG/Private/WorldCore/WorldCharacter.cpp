@@ -1235,7 +1235,7 @@ void AWorldCharacter::OnStartedSecondary(const FInputActionValue& Value)
         if (LocalHitVoxelMask->OnCustomSecondaryActionDelegate.Execute(
             FCustomSecondaryActionDelegateParams(
                 this,
-                ChunkStatics::WorldToJCoordinate(WorldHitLocation),
+                WorldStatics::WorldToJCoordinate(WorldHitLocation),
                 this->AsContainer(),
                 this->AsContainerOwner(),
                 this->GetHUD<IWorldHUDBaseInterface>()
@@ -1762,7 +1762,7 @@ void AWorldCharacter::GetPOVTargetedData(
 
         OutWorldHitLocation       = FixedVector;
         OutWorldNormalHitLocation = HitResult.Normal.GetSafeNormal();
-        OutLocalHitVoxelKey       = ChunkStatics::WorldToLocalVoxelLocation(OutWorldHitLocation);
+        OutLocalHitVoxelKey       = WorldStatics::WorldToLocalVoxelLocation(OutWorldHitLocation);
     }
 
     return;

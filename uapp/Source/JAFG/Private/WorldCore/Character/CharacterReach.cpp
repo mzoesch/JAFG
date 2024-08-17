@@ -70,7 +70,7 @@ void ACharacterReach::Update(const FVector& WorldLocation) const
         this->DynamicDestructionMaterial->SetScalarParameterValue(TEXT("Progress"), 0.0f);
     }
 
-    this->BoxComponent->SetWorldLocation(ChunkStatics::WorldToGrid(WorldLocation) + FVector(50.0f), false);
+    this->BoxComponent->SetWorldLocation(WorldStatics::WorldToGrid(WorldLocation) + FVector(50.0f), false);
     this->BoxComponent->SetWorldRotation(FRotator::ZeroRotator);
 
     return;

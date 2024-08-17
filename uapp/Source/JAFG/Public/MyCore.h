@@ -40,7 +40,7 @@
 
 /* Internal headers. */
 #include "WorldCore/WorldTypes.h"
-#include "WorldCore/Chunk/ChunkStatics.h"
+#include "WorldCore/Chunk/WorldStatics.h"
 #include "WorldCore/Validation/CommonValidation.h"
 
 
