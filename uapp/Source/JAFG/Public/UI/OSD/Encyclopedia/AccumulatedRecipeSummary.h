@@ -7,9 +7,9 @@
 
 #include "AccumulatedRecipeSummary.generated.h"
 
-class UJAFGButton;
 JAFG_VOID
 
+class UJAFGButton;
 class URecipeContainerSlot;
 class UCanvasPanel;
 class UOverlay;
@@ -29,7 +29,7 @@ struct FAccumulatedRecipeSummaryPassData : public FWidgetPassData
 
 /**
  * Summary of one accumulated and possible recipes for it.
- * Hast the ability to travel back in time.
+ * Has the ability to travel back in time.
  */
 UCLASS(Abstract, Blueprintable)
 class JAFG_API UAccumulatedRecipeSummary : public UJAFGUserWidget, public TSharedFromThis<UAccumulatedRecipeSummary>

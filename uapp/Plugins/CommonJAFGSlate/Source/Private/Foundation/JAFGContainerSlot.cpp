@@ -176,10 +176,7 @@ FReply UJAFGContainerSlot::NativeOnMouseButtonUp(const FGeometry& InGeometry, co
         this,
         ContainerOwner,
         this->GetSlotData().Index,
-        [] (const int32 InLambdaIndex, IContainer* InLambdaTarget, IContainerOwner* InLambdaOwner) -> bool
-        {
-            return InLambdaTarget->GetContainer(InLambdaIndex).OnPrimaryClicked(InLambdaOwner);
-        },
+        ELocalContainerChange::ToFunction(ELocalContainerChange::Primary),
         ELocalContainerChange::Primary
     ))
     {

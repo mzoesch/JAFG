@@ -194,26 +194,57 @@ FSenderDeliver UCharacterCrafterComponent::GetContainerCrafterAsDelivery(void) c
     return FSenderDeliver(this->GetContainerCrafterWidth(), this->GetContainerCrafterContents(1));
 }
 
+FRecipeDelivery UCharacterCrafterComponent::GetContainerCrafterDelivery(void) const
+{
+    return this->GetContainerCrafterRecipe().Delivery;
+}
+
 FRecipeProduct UCharacterCrafterComponent::GetContainerCrafterProduct(void) const
+{
+    return this->GetContainerCrafterRecipe().Product;
+}
+
+FRecipe UCharacterCrafterComponent::GetContainerCrafterRecipe(void) const
 {
 #if !UE_BUILD_SHIPPING
     if (this->IsContainerCrafterInitialized() == false)
     {
         LOG_WARNING(LogContainerStuff, "Container crafter is not initialized.")
-        return RecipeProduct::Null;
-    }
-
-    if (this->GetWorld()->GetSubsystem<UWorldRecipeSubsystem>() == nullptr)
-    {
-        LOG_WARNING(LogContainerStuff, "World recipe subsystem is not initialized.")
-        return RecipeProduct::Null;
+        return Recipe::Null;
     }
 #endif /* !UE_BUILD_SHIPPING */
 
-    FRecipeProduct Product = RecipeProduct::Null;
-    this->GetWorld()->GetSubsystem<UWorldRecipeSubsystem>()->GetProduct(this->GetContainerCrafterAsDelivery(), Product);
+    FRecipe Recipe = Recipe::Null;
+    IRecipeSubsystem::Get(this)->GetRecipe(this->GetContainerCrafterAsDelivery(), Recipe);
 
-    return Product;
+    return Recipe;
+}
+
+bool UCharacterCrafterComponent::OnGetContainerCrafterProduct(IContainerOwner* InOwner)
+{
+    const FRecipe Recipe = this->GetContainerCrafterRecipe();
+    if (Recipe.IsNull())
+    {
+        return false;
+    }
+
+    if (Recipe.Product.Product != InOwner->CursorValue && InOwner->CursorValue.IsNull() == false)
+    {
+        return false;
+    }
+
+    if (InOwner->CursorValue == Recipe.Product.Product)
+    {
+        InOwner->CursorValue.SafeAddAmount(Recipe.Product.Product.Amount);
+    }
+    else
+    {
+        InOwner->CursorValue = Recipe.Product.Product;
+    }
+
+    this->ReduceContainerByOne();
+
+    return true;
 }
 
 void UCharacterCrafterComponent::OnLocalContainerCrafterChangedEventImpl(
@@ -276,22 +307,19 @@ bool UCharacterCrafterComponent::OnContainerCrafterChangedEvent_ServerRPC_Valida
     }
 #endif /* !UE_BUILD_SHIPPING */
 
-    switch (InReason)
+    if (ELocalContainerChange::IsValidClientAction(InReason))
     {
-    case ELocalContainerChange::Invalid:
-    {
-        return false;
+        return
+            ELocalContainerChange::ToFunction(InReason)
+            (InIndex, this->AsContainerCrafter(), this->GetOwnerAsCharacter()->AsContainerOwner());
     }
-    case ELocalContainerChange::Primary:
-    {
-        return this->GetContainerCrafter(InIndex).OnPrimaryClicked(this->GetOwnerAsCharacter()->AsContainerOwner());
-    }
-    default:
-    {
-        LOG_ERROR(LogWorldChar, "Unhandled container change reason.")
-        return false;
-    }
-    }
+
+    LOG_ERROR(LogWorldChar, "Invalid container change reason: %s.", *LexToString(InReason))
+#if WITH_STRIKE_SUBSYSTEM
+    #error Strike here is not implemented.
+#endif /* WITH_STRIKE_SUBSYSTEM */
+
+    return false;
 }
 
 void UCharacterCrafterComponent::OnContainerCrafterChangedEvent_ServerRPC_Implementation(const ELocalContainerChange::Type InReason, const int32 InIndex)

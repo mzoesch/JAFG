@@ -44,7 +44,10 @@ public:
     FORCEINLINE virtual auto GetContainerCrafterContents(const accamount_t AmountOverride) const -> const TArray<FAccumulated> = 0;
     FORCEINLINE virtual auto GetContainerCrafterWidth(void) const -> sender_shape_width                                        = 0;
     FORCEINLINE virtual auto GetContainerCrafterAsDelivery(void) const -> FSenderDeliver                                       = 0;
+    FORCEINLINE virtual auto GetContainerCrafterDelivery(void) const -> FRecipeDelivery                                        = 0;
     FORCEINLINE virtual auto GetContainerCrafterProduct(void) const -> FRecipeProduct                                          = 0;
+    FORCEINLINE virtual auto GetContainerCrafterRecipe(void) const -> FRecipe                                                  = 0;
+    FORCEINLINE virtual auto OnGetContainerCrafterProduct(IContainerOwner* InOwner) -> bool                                    = 0;
 
     //////////////////////////////////////////////////////////////////////////
     // These methods should allow for network replication.
@@ -90,6 +93,15 @@ public:
     }
 
     virtual auto ToString_ContainerCrafter(void) const -> FString = 0;
+
+protected:
+
+    //////////////////////////////////////////////////////////////////////////
+    // Helper methods.
+    //////////////////////////////////////////////////////////////////////////
+
+    void ReduceContainerByOne(void);
+    void ReduceContainerBy(const int32 InAmount);
 
 private:
 

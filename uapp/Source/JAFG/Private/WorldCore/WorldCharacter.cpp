@@ -442,30 +442,6 @@ bool AWorldCharacter::EasyChangeContainer(
     }
 
     return false;
-    //
-    // if (UNetStatics::IsSafeClient(this))
-    // {
-    //     LOG_FATAL(LogWorldChar, "Cannot change container on client.")
-    //     return false;
-    // }
-    //
-    // if (this->GetContainerValueRef(InIndex).SafeAddAmountRet(InAmount))
-    // {
-    //     if (this->IsLocallyControlled())
-    //     {
-    //         this->OnCursorValueChangedDelegate.Broadcast();
-    //         this->OnContainerChangedDelegate.Broadcast(InReason, InIndex);
-    //     }
-    //     else
-    //     {
-    //         MARK_PROPERTY_DIRTY_FROM_NAME(AWorldCharacter, Container, this)
-    //     }
-    //     return true;
-    // }
-    //
-    // LOG_WARNING(LogWorldChar, "Failed to change container [%d with delta %d]." , InIndex, InAmount)
-    //
-    // return false;
 }
 
 bool AWorldCharacter::EasyChangeContainer(
@@ -475,42 +451,6 @@ bool AWorldCharacter::EasyChangeContainer(
     const ELocalContainerChange::Type InReason
 )
 {
-//     if (UNetStatics::IsSafeClient(this))
-//     {
-//         LOG_FATAL(LogWorldChar, "Cannot change container on client.")
-//         return false;
-//     }
-//
-// #if !UE_BUILD_SHIPPING
-//     if (InOwner != this)
-//     {
-//         jcheckNoEntry()
-//         return false;
-//     }
-// #endif /* !UE_BUILD_SHIPPING */
-//
-//     if (Alternator(InIndex, this, InOwner))
-//     {
-//         if (this->IsLocallyControlled())
-//         {
-//             this->OnCursorValueChangedDelegate.Broadcast();
-//             this->OnContainerChangedDelegate.Broadcast(InReason, InIndex);
-//         }
-//         else
-//         {
-//             MARK_PROPERTY_DIRTY_FROM_NAME(AWorldCharacter, Container, this)
-//         }
-//
-//         return true;
-//     }
-//
-//     if (this->IsLocallyControlled() == false)
-//     {
-//         LOG_ERROR(LogContainerStuff, "Enclosing block should never be called.")
-//     }
-//
-//     return false;
-
     if (CharacterContainerChangeLogic::EasyChangeContainer(
         this,
         this->AsContainer(),
@@ -548,20 +488,6 @@ bool AWorldCharacter::EasyChangeContainerCl(
         InAlternator,
         InReason
     );
-    // if (UNetStatics::IsSafeClient(this) == false)
-    // {
-    //     LOG_FATAL(LogWorldChar, "Cannot change container on server.")
-    //     return false;
-    // }
-    //
-    // if (Alternator(InIndex, this, InOwner))
-    // {
-    //     this->OnCursorValueChangedDelegate.Broadcast();
-    //     this->OnContainerChangedDelegate.Broadcast(InReason, InIndex);
-    //     return true;
-    // }
-    //
-    // return false;
 }
 
 bool AWorldCharacter::EasyOverrideContainerOnCl(
@@ -578,16 +504,6 @@ bool AWorldCharacter::EasyOverrideContainerOnCl(
         InContent,
         InReason
     );
-
-    // if (UNetStatics::IsSafeClient(this) == false)
-    // {
-    //     LOG_FATAL(LogWorldChar, "Cannot change container on server.")
-    //     return false;
-    // }
-    //
-    // this->OnContainerChangedDelegate.Broadcast(InReason, InIndex);
-    //
-    // return true;
 }
 
 FString AWorldCharacter::ToString_Container(void) const
@@ -608,22 +524,19 @@ bool AWorldCharacter::OnContainerChangedEvent_ServerRPC_Validate(const ELocalCon
     }
 #endif /* !UE_BUILD_SHIPPING */
 
-    switch (InReason)
+    if (ELocalContainerChange::IsValidClientAction(InReason))
     {
-    case ELocalContainerChange::Invalid:
-    {
-        return false;
+        return
+            ELocalContainerChange::ToFunction(InReason)
+            (InIndex, this->AsContainer(), this->AsContainerOwner());
     }
-    case ELocalContainerChange::Primary:
-    {
-        return this->GetContainer(InIndex).OnPrimaryClicked(this->AsContainerOwner());
-    }
-    default:
-    {
-        LOG_ERROR(LogWorldChar, "Unhandled container change reason.")
-        return false;
-    }
-    }
+
+    LOG_ERROR(LogWorldChar, "Invalid container change reason: %s.", *LexToString(InReason))
+#if WITH_STRIKE_SUBSYSTEM
+    #error Strike here is not implemented.
+#endif /* WITH_STRIKE_SUBSYSTEM */
+
+    return false;
 }
 
 void AWorldCharacter::OnContainerChangedEvent_ServerRPC_Implementation(const ELocalContainerChange::Type InReason, const int32 InIndex)
@@ -656,7 +569,7 @@ void AWorldCharacter::OnLocalContainerChangedEventImpl(const ELocalContainerChan
         LOG_FATAL(LogWorldChar, "Cannot handle local container changed event on non-locally controlled character.")
         return;
     }
-#endif
+#endif /* !UE_BUILD_SHIPPING */
 
     if (UNetStatics::IsSafeClient(this) && InReason != ELocalContainerChange::Replicated)
     {

@@ -32,6 +32,7 @@ void UContainerValueCursor::NativeConstruct(void)
         LOG_FATAL(LogCommonSlate, "Cursor value is invalid on owning container owner.")
         return;
     }
+    this->ValueAtStart = this->ContainerOwner->CursorValue;
 
     this->Text_Amount->SetText(
         this->ContainerOwner->CursorValue.Amount != 1
@@ -57,7 +58,7 @@ void UContainerValueCursor::NativeTick(const FGeometry& MyGeometry, float InDelt
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
 
-    if (this->ContainerOwner->CursorValue == Accumulated::Null)
+    if (FAccumulated::DeepEquals(this->ContainerOwner->CursorValue, this->ValueAtStart) == false)
     {
         this->RemoveFromParent();
         return;

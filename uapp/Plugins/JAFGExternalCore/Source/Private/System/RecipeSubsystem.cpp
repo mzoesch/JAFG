@@ -51,47 +51,7 @@ TArray<const FRecipe*> IRecipeSubsystem::GetRecipesForAccumulated(const FAccumul
     return Out;
 }
 
-void UWorldRecipeSubsystem::OnWorldBeginPlay(UWorld& InWorld)
-{
-    Super::OnWorldBeginPlay(InWorld);
-
-    LOG_VERBOSE(LogRecipeSystem, "Called. Initializing base game recipes if not already done and applying them to the world with their rules.")
-
-    if (this->GetRecipeSubsystem(InWorld)->GetRecipes().IsEmpty())
-    {
-        /* Note that the array may still be empty if no recipes are loaded. */
-        this->GetRecipeSubsystem(InWorld)->ReloadLocalRecipes();
-    }
-
-    this->CachedActiveRecipes = this->GetRecipeSubsystem(InWorld)->GetRecipes();
-
-    /*
-     * TODO: Here then load world-specific recipes and apply them to the cached active recipes.
-     *       Remember to simply recipes with the game instance subsystem of this type.
-     */
-
-    LOG_VERBOSE(LogRecipeSystem, "Finished initializing world recipes. Found %d recipes that are now active in this world.", this->CachedActiveRecipes.Num())
-
-    for (const FRecipe& Recipe : this->CachedActiveRecipes)
-    {
-        LOG_VERBOSE(LogRecipeSystem, "R: %s", *Recipe.ToString())
-    }
-
-    return;
-}
-
-// ReSharper disable once CppMemberFunctionMayBeStatic
-UGameRecipeSubsystem* UWorldRecipeSubsystem::GetRecipeSubsystem(const UWorld& InWorld)
-{
-    return InWorld.GetGameInstance()->GetSubsystem<UGameRecipeSubsystem>();
-}
-
-UGameRecipeSubsystem* UWorldRecipeSubsystem::GetRecipeSubsystem(void) const
-{
-    return this->GetWorld()->GetGameInstance()->GetSubsystem<UGameRecipeSubsystem>();
-}
-
-bool UWorldRecipeSubsystem::GetRecipe(const FSenderDeliver& InSenderDelivery, FRecipe& OutRecipe) const
+bool IRecipeSubsystem::GetRecipe(const FSenderDeliver& InSenderDelivery, FRecipe& OutRecipe) const
 {
     if (InSenderDelivery.IsEmpty())
     {
@@ -102,7 +62,7 @@ bool UWorldRecipeSubsystem::GetRecipe(const FSenderDeliver& InSenderDelivery, FR
      * This is currently O(n) and we maybe should optimize this in the future when we have quite a bit of recipes.
      *  Maybe with some sort of hashing?
      */
-    for (const FRecipe& Recipe : this->CachedActiveRecipes)
+    for (const FRecipe& Recipe : this->GetRecipes())
     {
         if (this->IsRecipeValidForDelivery(Recipe, InSenderDelivery))
         {
@@ -116,7 +76,7 @@ bool UWorldRecipeSubsystem::GetRecipe(const FSenderDeliver& InSenderDelivery, FR
     return false;
 }
 
-bool UWorldRecipeSubsystem::GetProduct(const FSenderDeliver& InSenderDelivery, FRecipeProduct& OutProduct) const
+bool IRecipeSubsystem::GetProduct(const FSenderDeliver& InSenderDelivery, FRecipeProduct& OutProduct) const
 {
     FRecipe Recipe;
     if (this->GetRecipe(InSenderDelivery, Recipe) == false)
@@ -129,7 +89,7 @@ bool UWorldRecipeSubsystem::GetProduct(const FSenderDeliver& InSenderDelivery, F
     return true;
 }
 
-bool UWorldRecipeSubsystem::IsRecipeValidForDelivery(const FRecipe& InRecipe, const FSenderDeliver& InSenderDelivery) const
+bool IRecipeSubsystem::IsRecipeValidForDelivery(const FRecipe& InRecipe, const FSenderDeliver& InSenderDelivery) const
 {
     return InRecipe.GetType() == ERecipeType::ShapelessRecipe
         ? this->IsRecipeValidForDelivery_Shapeless(InRecipe, InSenderDelivery)
@@ -137,7 +97,7 @@ bool UWorldRecipeSubsystem::IsRecipeValidForDelivery(const FRecipe& InRecipe, co
 }
 
 // ReSharper disable once CppMemberFunctionMayBeStatic
-bool UWorldRecipeSubsystem::IsRecipeValidForDelivery_Shapeless(const FRecipe& InRecipe, const FSenderDeliver& InSenderDelivery, const bool bAllowNullInRecipe /* = false */) const
+bool IRecipeSubsystem::IsRecipeValidForDelivery_Shapeless(const FRecipe& InRecipe, const FSenderDeliver& InSenderDelivery, const bool bAllowNullInRecipe) const
 {
     /*
      * Note:
@@ -208,7 +168,7 @@ bool UWorldRecipeSubsystem::IsRecipeValidForDelivery_Shapeless(const FRecipe& In
     return true;
 }
 
-bool UWorldRecipeSubsystem::IsRecipeValidForDelivery_Shaped(const FRecipe& InRecipe, const FSenderDeliver& InSenderDelivery) const
+bool IRecipeSubsystem::IsRecipeValidForDelivery_Shaped(const FRecipe& InRecipe, const FSenderDeliver& InSenderDelivery) const
 {
 #define BEGIN_OF_ROW 0
     /*
@@ -338,6 +298,46 @@ bool UWorldRecipeSubsystem::IsRecipeValidForDelivery_Shaped(const FRecipe& InRec
 
     return false;
 #undef BEGIN_OF_ROW
+}
+
+void UWorldRecipeSubsystem::OnWorldBeginPlay(UWorld& InWorld)
+{
+    Super::OnWorldBeginPlay(InWorld);
+
+    LOG_VERBOSE(LogRecipeSystem, "Called. Initializing base game recipes if not already done and applying them to the world with their rules.")
+
+    if (this->GetRecipeSubsystem(InWorld)->GetRecipes().IsEmpty())
+    {
+        /* Note that the array may still be empty if no recipes are loaded. */
+        this->GetRecipeSubsystem(InWorld)->ReloadLocalRecipes();
+    }
+
+    this->CachedActiveRecipes = this->GetRecipeSubsystem(InWorld)->GetRecipes();
+
+    /*
+     * TODO: Here then load world-specific recipes and apply them to the cached active recipes.
+     *       Remember to simply recipes with the game instance subsystem of this type.
+     */
+
+    LOG_VERBOSE(LogRecipeSystem, "Finished initializing world recipes. Found %d recipes that are now active in this world.", this->CachedActiveRecipes.Num())
+
+    for (const FRecipe& Recipe : this->CachedActiveRecipes)
+    {
+        LOG_VERBOSE(LogRecipeSystem, "R: %s", *Recipe.ToString())
+    }
+
+    return;
+}
+
+// ReSharper disable once CppMemberFunctionMayBeStatic
+UGameRecipeSubsystem* UWorldRecipeSubsystem::GetRecipeSubsystem(const UWorld& InWorld)
+{
+    return InWorld.GetGameInstance()->GetSubsystem<UGameRecipeSubsystem>();
+}
+
+UGameRecipeSubsystem* UWorldRecipeSubsystem::GetRecipeSubsystem(void) const
+{
+    return this->GetWorld()->GetGameInstance()->GetSubsystem<UGameRecipeSubsystem>();
 }
 
 UGameRecipeSubsystem::UGameRecipeSubsystem(void)

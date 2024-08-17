@@ -52,7 +52,9 @@ public:
 
 protected:
 
+    // UUserWidget implementation
     virtual auto NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) -> FReply override;
+    // ~UUserWidget implementation
 
 private:
 

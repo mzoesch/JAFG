@@ -226,6 +226,12 @@ struct FRecipe
         return this->GetType() == ERecipeType::ShapedRecipe;
     }
 
+    FORCEINLINE auto IsNull(void) const -> bool
+    {
+        /* Everything must always have a name. So we can just check this. */
+        return this->Name.IsEmpty();
+    }
+
     /** @return True, if InAccumulated is null or if delivery contents has InAccumulated. */
     FORCEINLINE auto DeliveryContains(const FAccumulated& InAccumulated) const -> bool
     {
@@ -259,6 +265,13 @@ static const FRecipeProduct Null = FRecipeProduct(Accumulated::Null);
 
 }
 
+namespace Recipe
+{
+
+static const FRecipe Null = FRecipe();
+
+}
+
 /**
  * Always is the recipe subsystem with the highest priority.
  */
@@ -282,6 +295,17 @@ public:
     auto GetRecipesForAccumulated(const FAccumulated& InAccumulated) const -> TArray<const FRecipe*>;
 
     FORCEINLINE virtual auto GetRecipes(void) const -> const TArray<FRecipe>& = 0;
+
+    /** @return True, if found. */
+    auto GetRecipe(const FSenderDeliver& InSenderDelivery, FRecipe& OutRecipe) const -> bool;
+    /** @return True, if found. */
+    auto GetProduct(const FSenderDeliver& InSenderDelivery, FRecipeProduct& OutProduct) const -> bool;
+
+protected:
+
+    bool IsRecipeValidForDelivery(const FRecipe& InRecipe, const FSenderDeliver& InSenderDelivery) const;
+    bool IsRecipeValidForDelivery_Shapeless(const FRecipe& InRecipe, const FSenderDeliver& InSenderDelivery, const bool bAllowNullInRecipe = false) const;
+    bool IsRecipeValidForDelivery_Shaped(const FRecipe& InRecipe, const FSenderDeliver& InSenderDelivery) const;
 };
 
 /**
@@ -304,16 +328,7 @@ public:
     auto GetRecipeSubsystem(const UWorld& InWorld) -> UGameRecipeSubsystem*;
     auto GetRecipeSubsystem(void) const -> UGameRecipeSubsystem*;
 
-    /** @return True, if found. */
-    auto GetRecipe(const FSenderDeliver& InSenderDelivery, FRecipe& OutRecipe) const -> bool;
-    /** @return True, if found. */
-    auto GetProduct(const FSenderDeliver& InSenderDelivery, FRecipeProduct& OutProduct) const -> bool;
-
 protected:
-
-    bool IsRecipeValidForDelivery(const FRecipe& InRecipe, const FSenderDeliver& InSenderDelivery) const;
-    bool IsRecipeValidForDelivery_Shapeless(const FRecipe& InRecipe, const FSenderDeliver& InSenderDelivery, const bool bAllowNullInRecipe = false) const;
-    bool IsRecipeValidForDelivery_Shaped(const FRecipe& InRecipe, const FSenderDeliver& InSenderDelivery) const;
 
     TArray<FRecipe> WorldRecipes;
     TArray<FRecipe> CachedActiveRecipes;

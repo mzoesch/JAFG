@@ -84,14 +84,39 @@ void UJAFGContainerCrafterProductSlot::SetCrafterTargetContainer(IContainerCraft
 
 FReply UJAFGContainerCrafterProductSlot::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-    LOG_WARNING(LogTemp, "Called. Not implementec yet.")
+#if !UE_BUILD_SHIPPING
+    if (this->SlotData == nullptr)
+    {
+        jrelaxedCheckNoEntry()
+        return FReply::Unhandled();
+    }
+#endif /* !UE_BUILD_SHIPPING */
+
+    IContainerOwner* ContainerOwner = Cast<IContainerOwner>(this->GetOwningPlayerPawn());
+    if (ContainerOwner == nullptr)
+    {
+        LOG_FATAL(LogCommonSlate, "Container owner is invalid. Cannot proceed to handle mouse up event.")
+        return FReply::Unhandled();
+    }
+
+    if (this->GetSlotData().Owner->EasyChangeContainerSoftPredict(
+        this,
+        ContainerOwner,
+        INDEX_NONE,
+        ELocalContainerChange::ToFunction(ELocalContainerChange::GetProduct),
+        ELocalContainerChange::GetProduct
+    ))
+    {
+        this->MarkAsDirty();
+    }
+
     return FReply::Handled();
 }
 
 void UJAFGContainerCrafterProductSlot::OnCrafterTargetContainerChanged(const ELocalContainerChange::Type InReason, const int32 InIndex)
 {
     this->GetSlotData<UThisSlotData>().InvalidateCachedRecipeProduct();
-    this->RenderSlot();
+    this->MarkAsDirty();
 
     return;
 }

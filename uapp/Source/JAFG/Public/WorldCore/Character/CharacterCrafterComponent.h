@@ -86,7 +86,10 @@ protected:
                 virtual auto GetContainerCrafterContents(const accamount_t AmountOverride) const -> const TArray<FAccumulated> override;
     FORCEINLINE virtual auto GetContainerCrafterWidth(void) const -> sender_shape_width override { return UCharacterCrafterComponent::ContainerCrafterWidth; }
                 virtual auto GetContainerCrafterAsDelivery(void) const -> FSenderDeliver override;
+                virtual auto GetContainerCrafterDelivery(void) const -> FRecipeDelivery override;
                 virtual auto GetContainerCrafterProduct(void) const -> FRecipeProduct override;
+                virtual auto GetContainerCrafterRecipe(void) const -> FRecipe override;
+                virtual auto OnGetContainerCrafterProduct(IContainerOwner* InOwner) -> bool override;
     // ~IContainerCrafter interface
 
     void OnLocalContainerCrafterChangedEventImpl(const ELocalContainerChange::Type InReason, const int32 InIndex);

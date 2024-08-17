@@ -32,6 +32,7 @@ enum Type : uint8
     Replicated,
     Primary,
     Secondary,
+    GetProduct,
     Custom,
 };
 
@@ -46,8 +47,20 @@ namespace ELocalContainerChange
  */
 FORCEINLINE auto IsValidClientAction(const ELocalContainerChange::Type InType) -> bool
 {
-    return InType == ELocalContainerChange::Primary || InType == ELocalContainerChange::Secondary;
+    return
+           InType == ELocalContainerChange::Primary
+        || InType == ELocalContainerChange::Secondary
+        || InType == ELocalContainerChange::GetProduct;
 }
+
+auto JAFGEXTERNALCORE_API ToFunction(const ELocalContainerChange::Type InType)
+    -> TFunction<bool
+    (
+        const int32 InLambdaIndex,
+        IContainer* InLambdaTarget,
+        IContainerOwner* InLambdaOwner
+    )>
+    ;
 
 }
 
@@ -70,6 +83,10 @@ FORCEINLINE auto LexToString(const ELocalContainerChange::Type InType) -> FStrin
         case ELocalContainerChange::Secondary:
         {
             return TEXT("Secondary");
+        }
+        case ELocalContainerChange::GetProduct:
+        {
+            return TEXT("GetProduct");
         }
         case ELocalContainerChange::Custom:
         {
@@ -178,38 +195,6 @@ public:
 
     FOnContainerChangedDelegateSignature OnContainerChangedDelegate;
 };
-
-namespace ELocalContainerChange
-{
-
-FORCEINLINE auto ToFunction(const ELocalContainerChange::Type InType)
-    -> TFunction<bool(
-        const int32 InLambdaIndex,
-        IContainer* InLambdaTarget,
-        IContainerOwner* InLambdaOwner
-    )>
-{
-    switch (InType)
-    {
-    case ELocalContainerChange::Primary:
-    {
-        return [] (const int32 InLambdaIndex, IContainer* InLambdaTarget, IContainerOwner* InLambdaOwner)
-        {
-            return InLambdaTarget->GetContainer(InLambdaIndex).OnPrimaryClicked(InLambdaOwner);
-        };
-    }
-    default:
-    {
-        LOG_WARNING(LogContainerStuff, "No function for change type %s. Returning empty lambda.", *LexToString(InType))
-        return [] (const int32 InLambdaIndex, IContainer* InLambdaTarget, IContainerOwner* InLambdaOwner) -> bool
-        {
-            return false;
-        };
-    }
-    }
-}
-
-}
 
 /**
  * A container that does not use the unreal's push model replication subsystem but instead relies on a more

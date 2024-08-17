@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "JAFGExternalCoreIncludes.h"
 #include "JAFGUserWidget.h"
 
 #include "ContainerValueCursor.generated.h"
@@ -47,4 +47,6 @@ private:
 
     UPROPERTY()
     TScriptInterface<IContainerOwner> ContainerOwner;
+
+    FAccumulated ValueAtStart;
 };
