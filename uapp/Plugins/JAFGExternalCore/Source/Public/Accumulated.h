@@ -139,7 +139,6 @@ struct JAFGEXTERNALCORE_API FAccumulated
 
         return;
     }
-
     FORCEINLINE bool SafeAddAmountRet(const accamount_t_signed InAmount)
     {
         bool bCouldProcess = false;
@@ -147,7 +146,6 @@ struct JAFGEXTERNALCORE_API FAccumulated
 
         return bCouldProcess;
     }
-
     FORCEINLINE void SafeAddAmount(const accamount_t_signed InAmount)
     {
         bool bCouldProcess = false;
@@ -164,6 +162,10 @@ struct JAFGEXTERNALCORE_API FAccumulated
 
         return;
     }
+
+    /** Meaningless if the amount is zero. */
+    FORCEINLINE auto GetHalfAmount(void) const -> int32 { return this->Amount / 2 == 0 ? 1 : this->Amount / 2; }
+    FORCEINLINE void SubtractHalfAmount(void) { this->SafeAddAmount(-this->GetHalfAmount()); }
 
     /** Does not compare amount. */
     FORCEINLINE        auto operator==(const FAccumulated& O) const -> bool { return this->AccumulatedIndex == O.AccumulatedIndex; }

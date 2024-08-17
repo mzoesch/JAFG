@@ -45,6 +45,7 @@ public class CommonJAFGSlate : ModuleRules
         {
             "CoreUObject",
             "Engine",
+            "InputCore",
         }
         );
 

@@ -10,7 +10,7 @@
 
 /**
  * A fully working container interface system that allows for crafting. Heavily relies on the implementor to handle
- * replication and the definitions of methods and declaration of necessary variables. This is the most basic form
+ * replication, the definitions of methods and declaration of necessary variables. This is the most basic form
  * of a container interface.
  * @note *Must* be used with a push model implementation.
  */

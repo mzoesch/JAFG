@@ -47,8 +47,37 @@ bool FSlot::OnPrimaryClicked(IContainerOwner* Owner)
 
 bool FSlot::OnSecondaryClicked(IContainerOwner* Owner)
 {
-    LOG_WARNING(LogSystem, "Called. But not implemented.")
-    return false;
+    if (Owner->CursorValue == Accumulated::Null && this->Content == Accumulated::Null)
+    {
+        return false;
+    }
+
+    if (Owner->CursorValue.IsNull())
+    {
+        Owner->CursorValue = FAccumulated(this->Content.AccumulatedIndex, this->Content.GetHalfAmount());
+        this->Content.SubtractHalfAmount();
+        return true;
+    }
+
+    if (this->Content.IsNull())
+    {
+        this->Content = FAccumulated(Owner->CursorValue.AccumulatedIndex);
+        Owner->CursorValue.SafeAddAmount(-1);
+        return true;
+    }
+
+    if (this->Content == Owner->CursorValue)
+    {
+        this->Content.SafeAddAmount(1);
+        Owner->CursorValue.SafeAddAmount(-1);
+        return true;
+    }
+
+    const FAccumulated Temp = this->Content;
+    this->Content           = Owner->CursorValue;
+    Owner->CursorValue      = Temp;
+
+    return true;
 }
 
 bool FSlot::AddToFirstSuitableSlot(TArray<FSlot>& Container, const FAccumulated& Value)

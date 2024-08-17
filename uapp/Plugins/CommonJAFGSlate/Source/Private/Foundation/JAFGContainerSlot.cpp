@@ -165,6 +165,16 @@ FReply UJAFGContainerSlot::NativeOnMouseButtonUp(const FGeometry& InGeometry, co
     }
 #endif /* !UE_BUILD_SHIPPING */
 
+    ELocalContainerChange::Type ChangeType = ELocalContainerChange::Invalid;
+    if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
+    {
+        ChangeType = ELocalContainerChange::Primary;
+    }
+    else if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
+    {
+        ChangeType = ELocalContainerChange::Secondary;
+    }
+
     IContainerOwner* ContainerOwner = Cast<IContainerOwner>(this->GetOwningPlayerPawn());
     if (ContainerOwner == nullptr)
     {
@@ -176,8 +186,8 @@ FReply UJAFGContainerSlot::NativeOnMouseButtonUp(const FGeometry& InGeometry, co
         this,
         ContainerOwner,
         this->GetSlotData().Index,
-        ELocalContainerChange::ToFunction(ELocalContainerChange::Primary),
-        ELocalContainerChange::Primary
+        ELocalContainerChange::ToFunction(ChangeType),
+        ChangeType
     ))
     {
         this->MarkAsDirty();

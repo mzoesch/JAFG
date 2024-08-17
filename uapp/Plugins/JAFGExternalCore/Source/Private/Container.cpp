@@ -22,6 +22,13 @@ TFunction<bool
             return InLambdaTarget->GetContainer(InLambdaIndex).OnPrimaryClicked(InLambdaOwner);
         };
     }
+    case ELocalContainerChange::Secondary:
+    {
+        return [] (const int32 InLambdaIndex, IContainer* InLambdaTarget, IContainerOwner* InLambdaOwner) -> bool
+        {
+            return InLambdaTarget->GetContainer(InLambdaIndex).OnSecondaryClicked(InLambdaOwner);
+        };
+    }
     case ELocalContainerChange::GetProduct:
     {
         return [] (const int32 InLambdaIndex, IContainer* InLambdaTarget, IContainerOwner* InLambdaOwner) -> bool

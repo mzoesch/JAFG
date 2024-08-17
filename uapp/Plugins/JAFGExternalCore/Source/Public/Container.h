@@ -101,7 +101,7 @@ FORCEINLINE auto LexToString(const ELocalContainerChange::Type InType) -> FStrin
 }
 
 /**
- * A fully working container interface system. Heavily relies on the implementor to handle replication and the
+ * A fully working container interface system. Heavily relies on the implementor to handle replication, the
  * definitions of methods and declaration of necessary variables. This is the most basic form of a container
  * interface.
  * @note *Must* be used with a push model implementation.
