@@ -155,7 +155,6 @@ private:
     void PrepareWorldForChunkTransit_Shaped(const FChunkKey2& Chunk);
     void PrepareWorldForChunkTransit_SurfaceReplaced(const FChunkKey2& Chunk);
 
-
     //////////////////////////////////////////////////////////////////////////
     // Useful common getters.
     //////////////////////////////////////////////////////////////////////////

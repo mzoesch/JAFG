@@ -266,6 +266,8 @@ void UChunkGenerationSubsystem::SafeLoadClientVerticalChunkAsync(const TArray<FC
     }
 #endif /* WITH_EDITOR */
 
+    struct FEntry { FChunkKey ChunkKey; ACommonChunk* ChunkPtr; };
+    TArray<FEntry> Iterator;
     for (const FChunkKey& Chunk : Chunks)
     {
         const TObjectPtr<ACommonChunk>* MapPtr = this->ChunkMap.Find(Chunk);
@@ -280,9 +282,18 @@ void UChunkGenerationSubsystem::SafeLoadClientVerticalChunkAsync(const TArray<FC
             ChunkPtr = *MapPtr;
         }
 
-        ChunkPtr->SetChunkState(EChunkState::BlockedByHyperlane);
+        Iterator.Emplace(FEntry{ Chunk, ChunkPtr });
 
         continue;
+    }
+
+    this->PrepareWorldForChunkTransit_Spawned(FChunkKey2(Chunks[0].X, Chunks[0].Y));
+    for (const auto& [ChunkKey, ChunkPtr] : Iterator)
+    {
+        if (ChunkPtr->GetChunkState() < EChunkState::Spawned)
+        {
+            ChunkPtr->SetChunkState(EChunkState::BlockedByHyperlane);
+        }
     }
 
     return;
