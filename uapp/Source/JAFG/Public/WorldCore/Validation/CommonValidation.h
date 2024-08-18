@@ -4,8 +4,13 @@
 
 // ReSharper disable once CppUnusedIncludeDirective
 #include "MyCore.h"
+#include "WorldCore/JAFGWorldSubsystems.h"
+
+#include "CommonValidation.generated.h"
 
 JAFG_VOID
+
+class UChunkGenerationSubsystem;
 
 namespace Validation
 {
@@ -71,3 +76,54 @@ FORCEINLINE TArray<FChunkKey2> GetAllChunksInDistance(const FChunkKey2& Center, 
 }
 
 }
+
+struct FChunkLoadingParams
+{
+    int32 RenderDistance;
+};
+
+/** Base class for all validation subsystems. */
+UCLASS(Abstract, NotBlueprintable)
+class JAFG_API UChunkValidationSubsystemCommon : public UJAFGTickableWorldSubsystemNoDev
+{
+    GENERATED_BODY()
+
+public:
+
+    UChunkValidationSubsystemCommon();
+
+    // WorldSubsystem implementation
+    virtual auto Initialize(FSubsystemCollectionBase& Collection) -> void override;
+    virtual auto ShouldCreateSubsystem(UObject* Outer) const -> bool override;
+    virtual auto OnWorldBeginPlay(UWorld& InWorld) -> void override;
+    // ~WorldSubsystem implementation
+
+    // FTickableGameObject implementation
+    FORCEINLINE virtual auto GetStatId(void) const -> TStatId override
+    {
+        RETURN_QUICK_DECLARE_CYCLE_STAT(UChunkValidationSubsystem, STATGROUP_Tickables)
+    }
+    // ~FTickableGameObject implementation
+
+    // UJAFGTickableWorldSubsystem implementation
+    virtual auto MyTick(const float DeltaTime) -> void override;
+    // ~UJAFGTickableWorldSubsystem implementation
+
+protected:
+
+    /** Copied for faster access. */
+    UPROPERTY()
+    TObjectPtr<UChunkGenerationSubsystem> ChunkGenerationSubsystem;
+
+    void LoadUnloadChunks(const TArray<FVector>& WorldLocations, const FChunkLoadingParams& Params) const;
+
+    void TrySpawnLocalCharacter(void) const;
+    void TrySpawnRemoteCharacters(void) const;
+
+    /** @return True, if meaningful. */
+    bool GetPredictedLocalPlayerLocation(FVector& Out) const;
+    TArray<FVector> GetAllPredictedPlayerLocations(void) const;
+
+    template<class T>
+    auto GetLocalPlayerController(void) const -> T*;
+};

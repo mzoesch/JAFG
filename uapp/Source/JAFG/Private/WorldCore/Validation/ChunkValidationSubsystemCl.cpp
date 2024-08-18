@@ -1,10 +1,8 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "WorldCore/Validation/ChunkValidationSubsystemCl.h"
-
 #include "Network/MyHyperlaneComponent.h"
 #include "Player/WorldPlayerController.h"
-#include "WorldCore/ChunkWorldSettings.h"
 #include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
 #include "WorldCore/Validation/ChunkValidationSubsystemDedSv.h"
 #include "WorldCore/Validation/ChunkValidationSubsystemLitSv.h"
@@ -12,18 +10,6 @@
 
 UChunkValidationSubsystemCl::UChunkValidationSubsystemCl() : Super()
 {
-    return;
-}
-
-void UChunkValidationSubsystemCl::Initialize(FSubsystemCollectionBase& Collection)
-{
-    Collection.InitializeDependency<ULocalChunkWorldSettings>();
-    Super::Initialize(Collection);
-
-    LOG_DISPLAY(LogChunkValidation, "Called.")
-
-    this->SetTickInterval(2.0f);
-
     return;
 }
 
@@ -54,9 +40,6 @@ void UChunkValidationSubsystemCl::OnWorldBeginPlay(UWorld& InWorld)
         LOG_FATAL(LogChunkValidation, "Found other validation subsystem. Disallowed. Faulty subsystem: Standalone.")
     }
 
-    this->ChunkGenerationSubsystem = this->GetWorld()->GetSubsystem<UChunkGenerationSubsystem>();
-    check( this->ChunkGenerationSubsystem )
-
     return;
 }
 
@@ -76,91 +59,26 @@ void UChunkValidationSubsystemCl::MyTick(const float DeltaTime)
         return;
     }
 
-    FVector PredictedLocation;
-    if (LocalController->GetPredictedCharacterLocation(PredictedLocation) == false)
-    {
-        return;
-    }
-
-    this->LoadUnLoadChunks(PredictedLocation);
-
-    return;
-}
-
-void UChunkValidationSubsystemCl::LoadUnLoadChunks(const FVector& LocalPlayerLocation) const
-{
-    constexpr int RenderDistance { 2 /*10*/ };
-
     if (this->ChunkGenerationSubsystem->IsReady() == false)
     {
         return;
     }
 
-    if (this->ChunkGenerationSubsystem->GetPendingKillVerticalChunkQueue().IsEmpty() == false)
-    {
-        LOG_ERROR(LogChunkValidation, "Pending kill vertical chunks is not empty.")
-    }
-
-    this->ChunkGenerationSubsystem->ClearVerticalChunkQueue();
-
-    TArray<FChunkKey2> PreferredChunks = Validation::GetAllChunksInDistance(WorldStatics::WorldToVerticalChunkKey(LocalPlayerLocation), RenderDistance);
-
-    // Loading
-    //////////////////////////////////////////////////////////////////////////
-    int32 NewChunksCounter = 0;
-    for (const FChunkKey2& Preferred : PreferredChunks)
-    {
-        if (this->ChunkGenerationSubsystem->GetVerticalChunks().Contains(Preferred) == false)
-        {
-            this->ChunkGenerationSubsystem->GenerateVerticalChunkAsync(Preferred);
-            NewChunksCounter++;
-        }
-    }
-
-    // Unloading
-    //////////////////////////////////////////////////////////////////////////
-    int32 UnloadedChunksCounter = 0;
-    for (const FChunkKey2& ActiveChunk : this->ChunkGenerationSubsystem->GetVerticalChunks())
-    {
-        if (PreferredChunks.Contains(ActiveChunk) == false)
-        {
-            this->ChunkGenerationSubsystem->AddVerticalChunkToPendingKillQueue(ActiveChunk);
-            UnloadedChunksCounter++;
-        }
-    }
-
-#if !UE_BUILD_SHIPPING
-    if ((NewChunksCounter == 0 && UnloadedChunksCounter == 0) == false)
-    {
-        LOG_VERY_VERBOSE(LogChunkValidation, "Decided to load %d and unload %d chunks.", NewChunksCounter, UnloadedChunksCounter)
-    }
-#endif
-
-    AWorldPlayerController* PlayerController = this->GetLocalPlayerController<AWorldPlayerController>();
-
-    if (PlayerController->IsClientReadyForCharacterSpawn())
-    {
-        return;
-    }
-
     FVector PredictedLocation;
-    if (PlayerController->GetPredictedCharacterLocation(PredictedLocation) == false)
+    if (this->GetPredictedLocalPlayerLocation(PredictedLocation) == false)
     {
         return;
     }
 
-    if (this->ChunkGenerationSubsystem->HasPersistentVerticalChunk(FChunkKey2(WorldStatics::WorldToVerticalChunkKey(PredictedLocation))) == false)
+    FChunkLoadingParams Params; Params.RenderDistance = 5;
+    this->LoadUnloadChunks({PredictedLocation}, Params);
+
+    /* Already sent request. */
+    if (LocalController->IsClientReadyForCharacterSpawn())
     {
         return;
     }
-
-    PlayerController->SetClientReadyForCharacterSpawn();
+    this->TrySpawnLocalCharacter();
 
     return;
-}
-
-template<class T>
-T* UChunkValidationSubsystemCl::GetLocalPlayerController(void) const
-{
-    return Cast<T>(this->GetWorld()->GetFirstPlayerController());
 }

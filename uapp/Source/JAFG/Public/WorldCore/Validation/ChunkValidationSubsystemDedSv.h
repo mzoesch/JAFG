@@ -3,7 +3,7 @@
 #pragma once
 
 #include "MyCore.h"
-#include "WorldCore/JAFGWorldSubsystems.h"
+#include "WorldCore/Validation/CommonValidation.h"
 
 #include "ChunkValidationSubsystemDedSv.generated.h"
 
@@ -21,10 +21,10 @@ class UChunkGenerationSubsystem;
  *
  * This is so that a client can have a disgusting render distance, but the server only has to handle the surrounding
  * chunks from the players. A server cannot possibly load all loaded chunks from all players (even harder if the
- * players are spread out and each player has completly different chunks loaded).
+ * players are spread out and each player has completely different chunks loaded).
  */
 UCLASS(NotBlueprintable)
-class JAFG_API UChunkValidationSubsystemDedSv : public UJAFGTickableWorldSubsystemNoDev
+class JAFG_API UChunkValidationSubsystemDedSv : public UChunkValidationSubsystemCommon
 {
     GENERATED_BODY()
 
@@ -33,27 +33,11 @@ public:
     UChunkValidationSubsystemDedSv();
 
     // WorldSubsystem implementation
-    virtual auto Initialize(FSubsystemCollectionBase& Collection) -> void override;
     virtual auto ShouldCreateSubsystem(UObject* Outer) const -> bool override;
     virtual auto OnWorldBeginPlay(UWorld& InWorld) -> void override;
     // ~WorldSubsystem implementation
 
-    // FTickableGameObject implementation
-    FORCEINLINE virtual auto GetStatId(void) const -> TStatId override
-    {
-        RETURN_QUICK_DECLARE_CYCLE_STAT(UChunkValidationSubsystem, STATGROUP_Tickables)
-    }
-    // ~FTickableGameObject implementation
-
     // UJAFGTickableWorldSubsystem implementation
     virtual auto MyTick(const float DeltaTime) -> void override;
     // ~UJAFGTickableWorldSubsystem implementation
-
-private:
-
-    /** Copied for faster access. */
-    UPROPERTY()
-    TObjectPtr<UChunkGenerationSubsystem> ChunkGenerationSubsystem;
-
-    auto LoadUnloadTheirChunks(void) const -> void;
 };

@@ -3,13 +3,11 @@
 #pragma once
 
 #include "MyCore.h"
-#include "WorldCore/JAFGWorldSubsystems.h"
+#include "WorldCore/Validation/CommonValidation.h"
 
 #include "ChunkValidationSubsystemStandalone.generated.h"
 
 JAFG_VOID
-
-class UChunkGenerationSubsystem;
 
 /**
  * Handles the validation of chunks.
@@ -18,7 +16,7 @@ class UChunkGenerationSubsystem;
  * the editor simulation mode as well.
  */
 UCLASS(NotBlueprintable)
-class JAFG_API UChunkValidationSubsystemStandalone final : public UJAFGTickableWorldSubsystemNoDev
+class JAFG_API UChunkValidationSubsystemStandalone final : public UChunkValidationSubsystemCommon
 {
     GENERATED_BODY()
 
@@ -27,30 +25,11 @@ public:
     UChunkValidationSubsystemStandalone();
 
     // WorldSubsystem implementation
-    virtual auto Initialize(FSubsystemCollectionBase& Collection) -> void override;
     virtual auto ShouldCreateSubsystem(UObject* Outer) const -> bool override;
     virtual auto OnWorldBeginPlay(UWorld& InWorld) -> void override;
     // ~WorldSubsystem implementation
 
-    // FTickableGameObject implementation
-    FORCEINLINE virtual auto GetStatId(void) const -> TStatId override
-    {
-        RETURN_QUICK_DECLARE_CYCLE_STAT(UChunkValidationSubsystem, STATGROUP_Tickables)
-    }
-    // ~FTickableGameObject implementation
-
     // UJAFGTickableWorldSubsystem implementation
     virtual auto MyTick(const float DeltaTime) -> void override;
     // ~UJAFGTickableWorldSubsystem implementation
-
-private:
-
-    /** Copied for faster access. */
-    UPROPERTY()
-    TObjectPtr<UChunkGenerationSubsystem> ChunkGenerationSubsystem;
-
-    void LoadUnloadChunks(const FVector& LocalPlayerLocation) const;
-
-    template<class T>
-    T* GetLocalPlayerController(void) const;
 };
