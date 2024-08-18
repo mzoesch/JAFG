@@ -1,8 +1,9 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "WorldCore/Validation/ChunkValidationSubsystemLitSv.h"
+#include "JAFGSettingsLocal.h"
+#include "Player/JAFGLocalPlayer.h"
 #include "Player/WorldPlayerController.h"
-#include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
 #include "WorldCore/Validation/ChunkValidationSubsystemCl.h"
 #include "WorldCore/Validation/ChunkValidationSubsystemDedSv.h"
 #include "WorldCore/Validation/ChunkValidationSubsystemStandalone.h"
@@ -46,7 +47,8 @@ void UChunkValidationSubsystemLitSv::MyTick(const float DeltaTime)
 {
     Super::MyTick(DeltaTime);
 
-    FChunkLoadingParams Params; Params.RenderDistance = 5;
+    FChunkLoadingParams Params;
+    Params.RenderDistance = Cast<UJAFGLocalPlayer>(this->GetLocalPlayerController()->GetLocalPlayer())->GetLocalSettings()->GetServerRenderDistance();
     this->LoadUnloadChunks(this->GetAllPredictedPlayerLocations(), Params);
 
     this->TrySpawnRemoteCharacters();

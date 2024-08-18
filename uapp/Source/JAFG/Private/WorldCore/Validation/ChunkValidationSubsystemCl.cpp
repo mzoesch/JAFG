@@ -1,7 +1,9 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "WorldCore/Validation/ChunkValidationSubsystemCl.h"
+#include "JAFGSettingsLocal.h"
 #include "Network/MyHyperlaneComponent.h"
+#include "Player/JAFGLocalPlayer.h"
 #include "Player/WorldPlayerController.h"
 #include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
 #include "WorldCore/Validation/ChunkValidationSubsystemDedSv.h"
@@ -70,7 +72,8 @@ void UChunkValidationSubsystemCl::MyTick(const float DeltaTime)
         return;
     }
 
-    FChunkLoadingParams Params; Params.RenderDistance = 5;
+    FChunkLoadingParams Params;
+    Params.RenderDistance = Cast<UJAFGLocalPlayer>(LocalController->GetLocalPlayer())->GetLocalSettings()->GetClientRenderDistance();
     this->LoadUnloadChunks({PredictedLocation}, Params);
 
     /* Already sent request. */
