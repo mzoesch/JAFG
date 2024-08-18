@@ -20,5 +20,7 @@ public:
 
 protected:
 
+    // UUserWidget implementation
     virtual void NativeConstruct(void) override;
+    // ~UUserWidget implementation
 };

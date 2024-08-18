@@ -252,4 +252,33 @@ private:
 
     // ~User Interface
     //////////////////////////////////////////////////////////////////////////
+
+    //////////////////////////////////////////////////////////////////////////
+    // Video
+
+public:
+
+    UFUNCTION()
+    int32 GetClientRenderDistance( /* void */ ) const;
+    UFUNCTION()
+    void SetClientRenderDistance(const int32 InClientRenderDistance);
+
+    UFUNCTION()
+    int32 GetServerRenderDistance( /* void */ ) const;
+    UFUNCTION()
+    void SetServerRenderDistance(const int32 InServerRenderDistance);
+
+    inline static constexpr int32 DefaultClientRenderDistance = 12;
+    inline static constexpr int32 DefaultServerRenderDistance = 6;
+
+private:
+
+    UPROPERTY(Config)
+    int32 ClientRenderDistance = UJAFGSettingsLocal::DefaultClientRenderDistance;
+
+    UPROPERTY(Config)
+    int32 ServerRenderDistance = UJAFGSettingsLocal::DefaultServerRenderDistance;
+
+    // ~Video
+    //////////////////////////////////////////////////////////////////////////
 };

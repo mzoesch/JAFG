@@ -43,7 +43,7 @@ protected:
      * Called down from the children to the top parents after the setting has been initialized and
      * UGameSetting#Initialize was called and executed.
      */
-    virtual void OnInitialized(void) { }
+    FORCEINLINE virtual auto OnInitialized(void) -> void { }
 
     UPROPERTY(Transient)
     TObjectPtr<UCustomSettingsLocalPlayer> OwningPlayer;
@@ -51,7 +51,7 @@ protected:
     UPROPERTY(Transient)
     TObjectPtr<UGameSettingRegistry> OwningRegistry;
 
-    /** Must always unique inside a registry. */
+    /** Must always be unique inside a registry. */
     FString Identifier  = L"";
     FText   DisplayName = FText::GetEmpty();
 };

@@ -304,3 +304,23 @@ void UJAFGSettingsLocal::SetTinyFontSize(const int32 InTinyFontSize)
 {
     this->TinyFontSize = InTinyFontSize;
 }
+
+int32 UJAFGSettingsLocal::GetClientRenderDistance(void) const
+{
+    return this->ClientRenderDistance;
+}
+
+void UJAFGSettingsLocal::SetClientRenderDistance(const int32 InClientRenderDistance)
+{
+    this->ClientRenderDistance = InClientRenderDistance;
+}
+
+int32 UJAFGSettingsLocal::GetServerRenderDistance(void) const
+{
+    return this->ServerRenderDistance;
+}
+
+void UJAFGSettingsLocal::SetServerRenderDistance(const int32 InServerRenderDistance)
+{
+    this->ServerRenderDistance = InServerRenderDistance;
+}

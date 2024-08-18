@@ -1,7 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "Frontend/JAFGSettingsTabBar.h"
-
 #include "JAFGGameSettingRegistry.h"
 
 UJAFGSettingsTabBar::UJAFGSettingsTabBar(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
