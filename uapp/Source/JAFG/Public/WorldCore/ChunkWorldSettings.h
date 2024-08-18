@@ -173,12 +173,22 @@ class JAFG_API AEditorChunkWorldSettings : public AWorldSettings
     GENERATED_BODY()
 
 public:
+
     explicit AEditorChunkWorldSettings(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
+    // AActor implementation
+    virtual void BeginPlay(void) override;
+    // ~AActor implementation
 
     //////////////////////////////////////////////////////////////////////////
     // Settings - Player
     //////////////////////////////////////////////////////////////////////////
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Simulation")
+    bool bShowDebugScreenWhenSimulating = false;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Simulation")
+    int32 SimulationRenderDistance = 12;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player")
     TSubclassOf<APawn> PendingPawn = nullptr;

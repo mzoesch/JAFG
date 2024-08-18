@@ -1,7 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "WorldCore/ChunkWorldSettings.h"
-
 #include "Player/WorldPlayerController.h"
 
 ULocalChunkWorldSettings::ULocalChunkWorldSettings(void) : Super()
@@ -258,5 +257,22 @@ void UServerChunkWorldSettings::ReflectChangesFromEditorOnlySettings(const AEdit
 
 AEditorChunkWorldSettings::AEditorChunkWorldSettings(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
+    return;
+}
+
+void AEditorChunkWorldSettings::BeginPlay(void)
+{
+    Super::BeginPlay();
+
+#if WITH_EDITOR
+    if (this->bShowDebugScreenWhenSimulating && GEditor && GEditor->IsSimulateInEditorInProgress())
+    {
+        AsyncTask(ENamedThreads::GameThread, [this] (void)
+        {
+            this->GetWorld()->GetFirstPlayerController()->ConsoleCommand(TEXT("j.ToggleDebugScreen"), true);
+        });
+    }
+#endif /* WITH_EDITOR */
+
     return;
 }
