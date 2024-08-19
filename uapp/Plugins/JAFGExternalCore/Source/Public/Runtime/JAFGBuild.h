@@ -21,4 +21,15 @@
     #define DO_RELAXED_JCHECKS 0
 #endif /* !WITH_EDITOR */
 
+/**
+ * If true, the application will throw an error when a very relaxed jcheck or jcheck-like macro fails.
+ * Only the error-reporter will be notified.
+ * If false, the compiler will purge the very relaxed checks from the code.
+ */
+#if UE_BUILD_SHIPPING
+    #define DO_VERY_RELAXED_JCHECKS 0
+#else
+    #define DO_VERY_RELAXED_JCHECKS 1
+#endif /* !UE_BUILD_SHIPPING */
+
 #define WITH_STRIKE_SUBSYSTEM 0
