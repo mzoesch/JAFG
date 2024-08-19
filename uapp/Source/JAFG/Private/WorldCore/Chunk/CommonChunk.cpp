@@ -199,6 +199,11 @@ void ACommonChunk::SubscribeWithPrivateStateDelegate(void)
                 this->OnSurfaceReplaced();
                 break;
             }
+            case EChunkState::ShapedCaves:
+            {
+                this->OnShapedCaves();
+                break;
+            }
             case EChunkState::Active:
             {
                 this->OnActive();
@@ -221,6 +226,7 @@ void ACommonChunk::SubscribeWithPrivateStateDelegate(void)
             }
             default:
             {
+                LOG_ERROR(LogChunkMisc, "Unsupported chunk state %s.", *LexToString(NewChunkState))
                 checkNoEntry()
                 break;
             }
@@ -233,7 +239,7 @@ void ACommonChunk::SubscribeWithPrivateStateDelegate(void)
     return;
 }
 
-bool ACommonChunk::IsStateChangeValid(const EChunkState::Type NewChunkState)
+bool ACommonChunk::IsStateChangeValid(const EChunkState::Type NewChunkState) const
 {
     switch (NewChunkState)
     {
@@ -257,9 +263,13 @@ bool ACommonChunk::IsStateChangeValid(const EChunkState::Type NewChunkState)
     {
         return this->ChunkState == EChunkState::Shaped;
     }
-    case EChunkState::Active:
+    case EChunkState::ShapedCaves:
     {
         return this->ChunkState == EChunkState::SurfaceReplaced;
+    }
+    case EChunkState::Active:
+    {
+        return this->ChunkState == EChunkState::ShapedCaves;
     }
     case EChunkState::PendingKill:
     {
@@ -296,13 +306,20 @@ void ACommonChunk::OnSurfaceReplaced(void)
     this->ReplaceSurface();
 }
 
+void ACommonChunk::OnShapedCaves(void)
+{
+    this->ShapeCaves();
+}
+
 void ACommonChunk::OnActive(void)
 {
     this->RegenerateProceduralMesh();
 }
 
+// ReSharper disable once CppMemberFunctionMayBeStatic
 void ACommonChunk::OnPendingKill(void)
 {
+    return;
 }
 
 void ACommonChunk::OnKill(void)
@@ -310,7 +327,7 @@ void ACommonChunk::OnKill(void)
     this->KillControlled();
 }
 
-void ACommonChunk::OnBlockedByHyperlane(void)
+void ACommonChunk::OnBlockedByHyperlane(void) const
 {
     Cast<UHyperlaneComponent>(
         GEngine->GetFirstLocalPlayerController(this->GetWorld())
@@ -488,12 +505,12 @@ void ACommonChunk::Shape(void)
     {
     case EWorldGenerationType::Default:
     {
-        this->GenerateDefaultWorld();
+        this->Shape_Default();
         break;
     }
     case EWorldGenerationType::Superflat:
     {
-        this->GenerateSuperFlatWorld();
+        this->Shape_SuperFlat();
         break;
     }
     default:
@@ -506,7 +523,7 @@ void ACommonChunk::Shape(void)
     return;
 }
 
-void ACommonChunk::GenerateSuperFlatWorld(void)
+void ACommonChunk::Shape_SuperFlat(void)
 {
     /*
      * We should make this modular with some params that maybe even the user can provide.
@@ -556,7 +573,7 @@ void ACommonChunk::GenerateSuperFlatWorld(void)
     return;
 }
 
-void ACommonChunk::GenerateDefaultWorld(void)
+void ACommonChunk::Shape_Default(void)
 {
     for (int X = 0; X < WorldStatics::ChunkSize; ++X)
     {
@@ -566,24 +583,23 @@ void ACommonChunk::GenerateDefaultWorld(void)
         {
             const float WorldY = this->JChunkPosition.Y + Y;
 
-            const float ContinentalnessNoiseValue = this->ServerChunkWorldSettings->NoiseContinentalness.GetNoise(WorldX, WorldY);
-
-            const float ContinentalnessTargetHeight = NoiseSpline::GetTargetHeight(this->ServerChunkWorldSettings->ContinentalnessSpline, ContinentalnessNoiseValue);
+            const float Noise_Continentalness   = this->ServerChunkWorldSettings->NoiseContinentalness.GetNoise(WorldX, WorldY);
+            const float Density_Continentalness = NoiseSpline::GetTargetHeight(this->ServerChunkWorldSettings->ContinentalnessSpline, Noise_Continentalness) * 2.0f - 1.0f;
 
             for (int Z = 0; Z < WorldStatics::ChunkSize; ++Z)
             {
                 const float WorldZ = this->JChunkPosition.Z + Z;
-                const float CurrentPercentageWorldZ = WorldZ / this->ServerChunkWorldSettings->GetFakeHighestPoint();
 
-                const float Density = CurrentPercentageWorldZ < ContinentalnessTargetHeight ? 1.0f : -1.0f;
+                const float HeightInPercent = (WorldZ / this->ServerChunkWorldSettings->GetHighestPoint()) * this->ServerChunkWorldSettings->FakeHeightMultiplier;
+                const float Density         = (Density_Continentalness + 1) * HeightInPercent - 1;
 
                 this->ModifyRawVoxelData(
                     FVoxelKey(X, Y, Z),
-                      this->ServerChunkWorldSettings->NoiseWorld.GetNoise(WorldX, WorldY, WorldZ)
-                    >
-                      Density
+                    this->ServerChunkWorldSettings->NoiseWorld.GetNoise(WorldX, WorldY, WorldZ) < Density
                         ? ECommonVoxels::Air : ECommonVoxels::GetBaseVoxel()
                 );
+
+                continue;
             }
 
             continue;
@@ -601,15 +617,12 @@ void ACommonChunk::ReplaceSurface(void)
     {
     case EWorldGenerationType::Default:
     {
-        this->GenerateSurface();
+        this->ReplaceSurface_Default();
         break;
     }
     case EWorldGenerationType::Superflat:
     {
-        /*
-         * As the superflat world does not require neighbors chunks to shape themselves and then create the surface
-         * of this chunk based on them, we can just skip this step.
-         */
+        this->ReplaceSurface_SuperFlat();
         break;
     }
     default:
@@ -622,7 +635,13 @@ void ACommonChunk::ReplaceSurface(void)
     return;
 }
 
-void ACommonChunk::GenerateSurface(void)
+// ReSharper disable once CppMemberFunctionMayBeStatic
+void ACommonChunk::ReplaceSurface_SuperFlat(void)
+{
+    return;
+}
+
+void ACommonChunk::ReplaceSurface_Default(void)
 {
     constexpr int32 SurfaceVoxel    { 4 };
     constexpr int32 SubsurfaceVoxel { 3 };
@@ -681,6 +700,69 @@ void ACommonChunk::GenerateSurface(void)
 
         continue;
     }
+}
+
+void ACommonChunk::ShapeCaves(void)
+{
+    switch (this->ServerChunkWorldSettings->GetWorldGenerationType())
+    {
+    case EWorldGenerationType::Default:
+    {
+        this->ShapeCaves_Default();
+        break;
+    }
+    case EWorldGenerationType::Superflat:
+    {
+        this->ShapeCaves_SuperFlat();
+        break;
+    }
+    default:
+    {
+        checkNoEntry()
+        break;
+    }
+    }
+
+    return;
+}
+
+// ReSharper disable once CppMemberFunctionMayBeStatic
+void ACommonChunk::ShapeCaves_SuperFlat(void)
+{
+    return;
+}
+
+void ACommonChunk::ShapeCaves_Default(void)
+{
+    for (int X = 0; X < WorldStatics::ChunkSize; ++X)
+    {
+        const float WorldX = this->JChunkPosition.X + X;
+
+        for (int Y = 0; Y < WorldStatics::ChunkSize; ++Y)
+        {
+            const float WorldY = this->JChunkPosition.Y + Y;
+
+            for (int Z = 0; Z < WorldStatics::ChunkSize; ++Z)
+            {
+                if (this->ServerChunkWorldSettings->NoiseCheeseCave.GetNoise(
+                    WorldX,
+                    WorldY,
+                    static_cast<float>(this->JChunkPosition.Z + Z)
+                ) < -0.5f)
+                {
+                    this->ModifyRawVoxelData(FVoxelKey(X, Y, Z), ECommonVoxels::Air);
+                }
+
+                continue;
+            }
+
+            continue;
+        }
+
+        continue;
+    }
+
+    return;
 }
 
 void ACommonChunk::ModifySingleVoxel(const FVoxelKey& LocalVoxelKey, const voxel_t NewVoxel)

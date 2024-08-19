@@ -360,6 +360,12 @@ void UChunkGenerationSubsystem::SafeLoadVerticalChunk(
     for (const auto& [ChunkKey, ChunkPtr] : Iterator)
     { if (ChunkPtr->GetChunkState() < EChunkState::SurfaceReplaced) { ChunkPtr->SetChunkState(EChunkState::SurfaceReplaced); } }
 
+    if (TargetState < EChunkState::ShapedCaves) { return; }
+    if (Iterator[0].ChunkPtr->GetChunkState() < EChunkState::ShapedCaves)
+    { this->PrepareWorldForChunkTransit_ShapedCaves(FChunkKey2(Chunks[0].X, Chunks[0].Y)); }
+    for (const auto& [ChunkKey, ChunkPtr] : Iterator)
+    { if (ChunkPtr->GetChunkState() < EChunkState::ShapedCaves) { ChunkPtr->SetChunkState(EChunkState::ShapedCaves); } }
+
     if (TargetState < EChunkState::Active) { return; }
     for (const auto& [ChunkKey, ChunkPtr] : Iterator)
     {
@@ -501,6 +507,10 @@ void UChunkGenerationSubsystem::PrepareWorldForChunkTransit_SurfaceReplaced(cons
     }
 
     return;
+}
+
+void UChunkGenerationSubsystem::PrepareWorldForChunkTransit_ShapedCaves(const FChunkKey2& Chunk)
+{
 }
 
 void UChunkGenerationSubsystem::GetAllChunksFromVerticalChunk(const FChunkKey2& ChunkKey, TArray<FChunkKey>& Out) const

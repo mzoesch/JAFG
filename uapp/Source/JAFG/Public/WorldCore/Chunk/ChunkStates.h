@@ -44,6 +44,12 @@ enum Type : uint8
     SurfaceReplaced,
 
     /**
+     * Caves have now been generated in the chunk.
+     * This state requires no more conditions than the previous state.
+     */
+    ShapedCaves,
+
+    /**
      * The chunk is now complete-active, and the local player can interact with it.
      * This is the first time that the mesh of the chunks is actually generated.
      */
@@ -111,6 +117,10 @@ FORCEINLINE auto LexToString(const EChunkState::Type ChunkState) -> FString
     case EChunkState::SurfaceReplaced:
     {
         return TEXT("SurfaceReplaced");
+    }
+    case EChunkState::ShapedCaves:
+    {
+        return TEXT("ShapedCaves");
     }
     case EChunkState::Active:
     {

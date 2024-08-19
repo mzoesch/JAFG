@@ -1,7 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "Editor/EditorWorldCommandsDedSv.h"
-
 #include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
 
 void UEditorWorldCommandsDedSv::Initialize(FSubsystemCollectionBase& Collection)
@@ -89,7 +88,7 @@ void UEditorWorldCommandsDedSv::ShowPersistentVerticalChunksOnDedicatedServer(vo
 
 void UEditorWorldCommandsDedSv::RegisterConsoleCommands(void)
 {
-    LOG_DISPLAY(LogEditorCommands, "Registering console commands")
+    LOG_DISPLAY(LogEditorCommands, "Registering console commands.")
 
     this->ShowVerticalChunksOnDedicatedServerCommand = IConsoleManager::Get().RegisterConsoleCommand(
         TEXT("j.ShowVerticalChunksOnDedicatedServer"),

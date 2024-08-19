@@ -131,12 +131,19 @@ public:
                 FNoiseSplinePoint( 1.0f, 100.0f),
             };
 
+        // Cheese Cave
+        //////////////////////////////////////////////////////////////////////////
+        double             CheeseCaveFrequency   = 0.006;
+        ENoiseType::Type   CheeseCaveNoiseType   = ENoiseType::Perlin;
+        EFractalType::Type CheeseCaveFractalType = EFractalType::FBm;
+
     //////////////////////////////////////////////////////////////////////////
     // Auto generated
     //////////////////////////////////////////////////////////////////////////
 
     FFastNoiseLite NoiseWorld           = NULL;
     FFastNoiseLite NoiseContinentalness = NULL;
+    FFastNoiseLite NoiseCheeseCave      = NULL;
 
     //////////////////////////////////////////////////////////////////////////
     // Fast Common Getters
@@ -150,11 +157,6 @@ public:
 private:
 
 #if WITH_EDITOR
-    /**
-     * Should always be set manually in the code directly.
-     * Useful setting for testing loading or saving.
-     */
-    bool bNeverReflectChangesFromEditorOnlySettings = false;
     /** Always call last, after all settings have already been set. */
     void ReflectChangesFromEditorOnlySettings(const AEditorChunkWorldSettings& EditorChunkWorldSettings);
 #endif /* WITH_EDITOR */
@@ -202,6 +204,10 @@ public:
 
     // General
     //////////////////////////////////////////////////////////////////////////
+    /** Editor only. */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Generation")
+    bool bReflectSettingsToGenerator = true;
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Generation")
     bool bOverrideWorldGenerationType = false;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Generation", meta = (EditCondition = "bOverrideWorldGenerationType"))
@@ -289,4 +295,27 @@ public:
             };
         FORCEINLINE auto HasContinentalnessSplineOverride(void) const -> bool { return this->bOverrideContinentalnessSpline; }
         FORCEINLINE auto GetContinentalnessSpline(void) const -> TArray<FNoiseSplinePoint> { return this->ContinentalnessSpline; }
+
+        // Cheese Cave
+        //////////////////////////////////////////////////////////////////////////
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Generation")
+        bool bOverrideCheeseCaveFrequency = false;
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Generation", meta = (EditCondition = "bOverrideCheeseCaveFrequency"))
+        double CheeseCaveFrequency = 0.006;
+        FORCEINLINE auto HasCheeseCaveFrequencyOverride(void) const -> bool { return this->bOverrideCheeseCaveFrequency; }
+        FORCEINLINE auto GetCheeseCaveFrequency(void) const -> double { return this->CheeseCaveFrequency; }
+
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Generation")
+        bool bOverrideCheeseCaveNoiseType = false;
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Generation", meta = (EditCondition = "bOverrideCheeseCaveNoiseType"))
+        TEnumAsByte<ENoiseType::Type> CheeseCaveNoiseType = ENoiseType::Perlin;
+        FORCEINLINE auto HasCheeseCaveNoiseTypeOverride(void) const -> bool { return this->bOverrideCheeseCaveNoiseType; }
+        FORCEINLINE auto GetCheeseCaveNoiseType(void) const -> ENoiseType::Type { return this->CheeseCaveNoiseType; }
+
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Generation")
+        bool bOverrideCheeseCaveFractalType = false;
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Generation", meta = (EditCondition = "bOverrideCheeseCaveFractalType"))
+        TEnumAsByte<EFractalType::Type> CheeseCaveFractalType = EFractalType::FBm;
+        FORCEINLINE auto HasCheeseCaveFractalTypeOverride(void) const -> bool { return this->bOverrideCheeseCaveFractalType; }
+        FORCEINLINE auto GetCheeseCaveFractalType(void) const -> EFractalType::Type { return this->CheeseCaveFractalType; }
 };

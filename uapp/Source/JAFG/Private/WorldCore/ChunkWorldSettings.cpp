@@ -113,16 +113,16 @@ void UServerChunkWorldSettings::OnWorldBeginPlay(UWorld& InWorld)
     Super::OnWorldBeginPlay(InWorld);
 
 #if WITH_EDITOR
-    if (this->bNeverReflectChangesFromEditorOnlySettings == false)
+    if (
+        const AEditorChunkWorldSettings* EditorChunkWorldSettings = Cast<AEditorChunkWorldSettings>(InWorld.GetWorldSettings());
+        EditorChunkWorldSettings != nullptr
+    )
     {
-        if (const AEditorChunkWorldSettings* EditorChunkWorldSettings = Cast<AEditorChunkWorldSettings>(InWorld.GetWorldSettings()); EditorChunkWorldSettings != nullptr)
-        {
-            this->ReflectChangesFromEditorOnlySettings(*EditorChunkWorldSettings);
-        }
-        else
-        {
-            LOG_ERROR(LogChunkMisc, "Could not cast world settings to Editor Chunk World Settings.")
-        }
+        this->ReflectChangesFromEditorOnlySettings(*EditorChunkWorldSettings);
+    }
+    else
+    {
+        LOG_ERROR(LogChunkMisc, "Could not cast world settings to Editor Chunk World Settings.")
     }
 #endif /* WITH_EDITOR */
 
@@ -136,12 +136,23 @@ void UServerChunkWorldSettings::OnWorldBeginPlay(UWorld& InWorld)
     this->NoiseContinentalness.SetFrequency(this->ContinentalnessFrequency);
     this->NoiseContinentalness.SetFractalType(this->ContinentalnessFractalType);
 
+    this->NoiseCheeseCave = FFastNoiseLite();
+    this->NoiseCheeseCave.SetSeed(this->Seed);
+    this->NoiseCheeseCave.SetFrequency(this->CheeseCaveFrequency);
+    this->NoiseCheeseCave.SetFractalType(this->CheeseCaveFractalType);
+
     return;
 }
 
 #if WITH_EDITOR
 void UServerChunkWorldSettings::ReflectChangesFromEditorOnlySettings(const AEditorChunkWorldSettings& EditorChunkWorldSettings)
 {
+    if (EditorChunkWorldSettings.bReflectSettingsToGenerator == false)
+    {
+        LOG_DISPLAY(LogChunkMisc, "Editor Chunk World Settings is not set to reflect changes to generator.")
+        return;
+    }
+
     if (EditorChunkWorldSettings.HasWorldGenerationTypeOverride())
     {
         LOG_WARNING(
@@ -249,6 +260,36 @@ void UServerChunkWorldSettings::ReflectChangesFromEditorOnlySettings(const AEdit
             "Found override for continentalness spline. Value: [???]."
         )
         this->ContinentalnessSpline = EditorChunkWorldSettings.GetContinentalnessSpline();
+    }
+
+    if (EditorChunkWorldSettings.HasCheeseCaveFrequencyOverride())
+    {
+        LOG_WARNING(
+            LogChunkMisc,
+            "Found override for cheese cave frequency. Value: [%f].",
+            EditorChunkWorldSettings.GetCheeseCaveFrequency()
+        )
+        this->CheeseCaveFrequency = EditorChunkWorldSettings.GetCheeseCaveFrequency();
+    }
+
+    if (EditorChunkWorldSettings.HasCheeseCaveNoiseTypeOverride())
+    {
+        LOG_WARNING(
+            LogChunkMisc,
+            "Found override for cheese cave noise type. Value: [%s].",
+            *ENoiseType::LexToString(EditorChunkWorldSettings.GetCheeseCaveNoiseType())
+        )
+        this->CheeseCaveNoiseType = EditorChunkWorldSettings.GetCheeseCaveNoiseType();
+    }
+
+    if (EditorChunkWorldSettings.HasCheeseCaveFractalTypeOverride())
+    {
+        LOG_WARNING(
+            LogChunkMisc,
+            "Found override for cheese cave fractal type. Value: [%s].",
+            *EFractalType::LexToString(EditorChunkWorldSettings.GetCheeseCaveFractalType())
+        )
+        this->CheeseCaveFractalType = EditorChunkWorldSettings.GetCheeseCaveFractalType();
     }
 
     return;

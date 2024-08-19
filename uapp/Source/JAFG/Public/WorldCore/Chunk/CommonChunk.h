@@ -102,15 +102,16 @@ private:
 
 protected:
 
-    virtual bool IsStateChangeValid(const EChunkState::Type NewChunkState);
+    bool IsStateChangeValid(const EChunkState::Type NewChunkState) const;
 
-    virtual auto OnSpawned(void) -> void;
-    virtual auto OnShaped(void) -> void;
-    virtual auto OnSurfaceReplaced(void) -> void;
-    virtual auto OnActive(void) -> void;
-    virtual auto OnPendingKill(void) -> void;
-    virtual auto OnKill(void) -> void;
-    virtual auto OnBlockedByHyperlane(void) -> void;
+    auto OnSpawned(void) -> void;
+    auto OnShaped(void) -> void;
+    auto OnSurfaceReplaced(void) -> void;
+    auto OnShapedCaves(void) -> void;
+    auto OnActive(void) -> void;
+    auto OnPendingKill(void) -> void;
+    auto OnKill(void) -> void;
+    auto OnBlockedByHyperlane(void) const -> void;
 
     /** @return True, if state change was accepted. */
     virtual auto SetChunkState(const EChunkState::Type NewChunkState, const bool bForce = false) -> bool;
@@ -266,11 +267,16 @@ private:
     //////////////////////////////////////////////////////////////////////////
 
     void Shape(void);
-    void GenerateSuperFlatWorld(void);
-    void GenerateDefaultWorld(void);
+    void Shape_SuperFlat(void);
+    void Shape_Default(void);
 
     void ReplaceSurface(void);
-    void GenerateSurface(void);
+    void ReplaceSurface_SuperFlat(void);
+    void ReplaceSurface_Default(void);
+
+    void ShapeCaves(void);
+    void ShapeCaves_SuperFlat(void);
+    void ShapeCaves_Default(void);
 
 #pragma endregion Chunk World Generation
 
