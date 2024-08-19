@@ -443,6 +443,11 @@ public:
         }
     }
 
+    float GetNoise(const FVector2D& InVector) const
+    {
+        return GetNoise(InVector.X, InVector.Y);
+    }
+
     /// <summary>
     /// 3D noise at given position using current settings
     /// </summary>
@@ -467,6 +472,11 @@ public:
         case EFractalType::PingPong:
             return GenFractalPingPong(x, y, z);
         }
+    }
+
+    float GetNoise(const FVector& InVector) const
+    {
+        return GetNoise(InVector.X, InVector.Y, InVector.Z);
     }
 
 

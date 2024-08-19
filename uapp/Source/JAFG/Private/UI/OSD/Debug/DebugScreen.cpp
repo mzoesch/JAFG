@@ -18,6 +18,7 @@
 #include "WorldCore/WorldCharacter.h"
 #include "MISC/App.h"
 #include "System/VoxelSubsystem.h"
+#include "WorldCore/ChunkWorldSettings.h"
 #include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
 #include "WorldCore/Chunk/CommonChunk.h"
 #if WITH_EDITOR
@@ -508,12 +509,62 @@ FString UDebugScreen::GetSectionClientCharacterFacing(void) const
 #undef UNDEFINED_ROT_FLT
 }
 
-FString UDebugScreen::GetMultiNoiseDebugInfo(void) const
+FString UDebugScreen::GetSectionGenerationMisc(void) const
 {
-
-
-
     return FString();
+}
+
+FString UDebugScreen::GetSectionMultiNoiseDebugInfo(void) const
+{
+    const UServerChunkWorldSettings* ChunkSettings = this->GetWorld()->GetSubsystem<UServerChunkWorldSettings>();
+
+    FVector Location;
+
+    if (this->GetMostRespectedLocalPlayerLocation(Location) == false || ChunkSettings == nullptr)
+    {
+        return FString::Printf(
+            TEXT("NoiseRouter: N/A [REASON: %s]"),
+            WorldStatics::IsInGameWorld(this)
+                ? TEXT("Not L_World")
+                : UNetStatics::IsSafeServer(this)
+                    ? TEXT("Unknown")
+                    : TEXT("Not Auth")
+        );
+    }
+
+    Location *= WorldStatics::UToJScale;
+
+    return FString::Printf(
+        TEXT("NoiseRouter: W: %f C: %f"),
+        ChunkSettings->NoiseWorld.GetNoise(Location),
+        ChunkSettings->NoiseCheeseCave.GetNoise(Location)
+    );
+}
+
+FString UDebugScreen::GetSectionMultiNoiseDebugInfo2() const
+{
+    const UServerChunkWorldSettings* ChunkSettings = this->GetWorld()->GetSubsystem<UServerChunkWorldSettings>();
+
+    FVector2D Location;
+
+    if (this->GetMostRespectedLocalPlayerLocation(Location) == false || ChunkSettings == nullptr)
+    {
+        return FString::Printf(
+            TEXT("NoiseRouter2: N/A [REASON: %s]"),
+            WorldStatics::IsInGameWorld(this)
+                ? TEXT("Not L_World")
+                : UNetStatics::IsSafeServer(this)
+                    ? TEXT("Unknown")
+                    : TEXT("Not Auth")
+        );
+    }
+
+    Location *= WorldStatics::UToJScale;
+
+    return FString::Printf(
+        TEXT("NoiseRouter2: C: %f"),
+        ChunkSettings->NoiseContinentalness.GetNoise(Location)
+    );
 }
 
 /* Do NOT convert to const method, as this is a Rider IDEA false positive error. */
@@ -600,6 +651,17 @@ bool UDebugScreen::GetMostRespectedLocalPlayerLocation(FVector& OutLocation) con
         return true;
     }
 #endif /* WITH_EDITOR */
+
+    return false;
+}
+
+bool UDebugScreen::GetMostRespectedLocalPlayerLocation(FVector2D& OutLocation) const
+{
+    if (FVector Location; this->GetMostRespectedLocalPlayerLocation(Location))
+    {
+        OutLocation = FVector2D(Location.X, Location.Y);
+        return true;
+    }
 
     return false;
 }

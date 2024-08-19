@@ -120,7 +120,14 @@ protected:
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "JAFG|DebugScreen")
     // ReSharper disable once CppUEBlueprintCallableFunctionUnused
-    FString GetMultiNoiseDebugInfo( /* void */ ) const;
+    FString GetSectionGenerationMisc( /* void */ ) const;
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "JAFG|DebugScreen")
+    // ReSharper disable once CppUEBlueprintCallableFunctionUnused
+    FString GetSectionMultiNoiseDebugInfo( /* void */ ) const;
+    // ReSharper disable once CppUEBlueprintCallableFunctionUnused
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "JAFG|DebugScreen")
+    FString GetSectionMultiNoiseDebugInfo2( /* void */ ) const;
 
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "JAFG|DebugScreen")
@@ -150,6 +157,7 @@ protected:
     UFUNCTION(BlueprintCallable, Category = "JAFG|DebugScreen")
     // ReSharper disable once CppUEBlueprintCallableFunctionUnused
     bool GetMostRespectedLocalPlayerLocation(FVector& OutLocation) const;
+    bool GetMostRespectedLocalPlayerLocation(FVector2D& OutLocation) const;
 
     UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true"))
     TObjectPtr<USizeBox> SizeBox_ChunkPreview = nullptr;
