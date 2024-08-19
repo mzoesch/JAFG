@@ -82,7 +82,7 @@ void UDebugScreen::NativeTick(const FGeometry& MyGeometry, const float InDeltaTi
         this->LastUpdateTime = 0.0f;
     }
 
-    if (CVarShowChunkPreview->GetBool())
+    if (UShippedWorldCommands::Get(this)->ShowChunkPreview())
     {
         if (this->SizeBox_ChunkPreview->GetVisibility() != ESlateVisibility::Visible)
         {
