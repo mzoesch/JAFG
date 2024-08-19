@@ -256,8 +256,13 @@ TArray<FVector> UChunkValidationSubsystemCommon::GetAllPredictedPlayerLocations(
     return Out;
 }
 
+APlayerController* UChunkValidationSubsystemCommon::GetLocalPlayerController(void) const
+{
+    return this->GetWorld()->GetFirstPlayerController();
+}
+
 template<class T>
 T* UChunkValidationSubsystemCommon::GetLocalPlayerController(void) const
 {
-    return Cast<T>(this->GetWorld()->GetFirstPlayerController());
+    return Cast<T>(this->GetLocalPlayerController());
 }

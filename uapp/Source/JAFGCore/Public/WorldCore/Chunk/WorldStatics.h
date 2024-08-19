@@ -11,38 +11,14 @@ namespace WorldStatics
 /** Transforms an unreal vector to a chunk key. */
 FORCEINLINE auto WorldToChunkKey(const FVector& WorldLocation) -> FChunkKey
 {
-    constexpr double Factor { WorldStatics::ChunkSize * WorldStatics::JToUScaleDouble };
+    FJCoordinate JCoordinate = FJCoordinate(
+        /* We have to round here to make up on some IEEE 754 floating point precision errors. */
+        FMath::RoundToFloat( WorldLocation.X * WorldStatics::UToJScale ),
+        FMath::RoundToFloat( WorldLocation.Y * WorldStatics::UToJScale ),
+        FMath::RoundToFloat( WorldLocation.Z * WorldStatics::UToJScale )
+    );
 
-    FChunkKey ChunkKey;
-
-    if (WorldLocation.X < 0)
-    {
-        ChunkKey.X = static_cast<int>(WorldLocation.X / Factor) - 1;
-    }
-    else
-    {
-        ChunkKey.X = static_cast<int>(WorldLocation.X / Factor);
-    }
-
-    if (WorldLocation.Y < 0)
-    {
-        ChunkKey.Y = static_cast<int>(WorldLocation.Y / Factor) - 1;
-    }
-    else
-    {
-        ChunkKey.Y = static_cast<int>(WorldLocation.Y / Factor);
-    }
-
-    if (WorldLocation.Z < 0)
-    {
-        ChunkKey.Z = static_cast<int>(WorldLocation.Z / Factor) - 1;
-    }
-    else
-    {
-        ChunkKey.Z = static_cast<int>(WorldLocation.Z / Factor);
-    }
-
-    return ChunkKey;
+    return FChunkKey(JCoordinate / WorldStatics::ChunkSize);
 }
 
 /** Transforms an unreal vector to a vertical chunk key. */

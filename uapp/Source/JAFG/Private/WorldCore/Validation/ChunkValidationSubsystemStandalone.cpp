@@ -4,9 +4,13 @@
 #include "JAFGSettingsLocal.h"
 #include "Player/JAFGLocalPlayer.h"
 #include "Player/WorldPlayerController.h"
+#include "WorldCore/ChunkWorldSettings.h"
 #include "WorldCore/Validation/ChunkValidationSubsystemCl.h"
 #include "WorldCore/Validation/ChunkValidationSubsystemDedSv.h"
 #include "WorldCore/Validation/ChunkValidationSubsystemLitSv.h"
+#if WITH_EDITOR
+    #include "Editor.h"
+#endif /* WITH_EDITOR */
 
 UChunkValidationSubsystemStandalone::UChunkValidationSubsystemStandalone() : Super()
 {

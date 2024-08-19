@@ -128,7 +128,7 @@ protected:
      * The chunk position in the world based on the J coordinate system.
      * Meaning the Chunk Key multiplied by the Chunk Size.
      * This should actually be a FIntVector, but FVector is more convenient to work with because we often
-     * use this in calculations with floats. Use the ACommonChunk#ChunkPosition when calculating with other integers.
+     * use this in calculations with floats.
      * Be aware:
      * Always, when converting to any kind of J-Coordinate, be aware of flooring. IEEE 754 floating point precision
      * errors are no joke, they exist, never deny their unwanted existence, and there is definitely no fun in debugging
@@ -136,13 +136,12 @@ protected:
      * (This variable is based on the actual AActor location that's why we have some float precision errors here.)
      */
     FVector      JChunkPosition = FVector::ZeroVector;
-    FJCoordinate ChunkPosition  = FJCoordinate::ZeroValue;
     FChunkKey    ChunkKey       = FChunkKey::ZeroValue;
     /**
      * Generate the Chunk Key on the fly.
      * Usefully if this chunk is in the state of PreSpawned but the Chunk Key is needed.
      */
-    auto GetChunkKeyOnTheFly(void) const -> FChunkKey;
+    auto GetChunkKeyOnTheFly(const bool bAllowNonZeroOnMember = false) const -> FChunkKey;
 
     UPROPERTY()
     TObjectPtr<UVoxelSubsystem> VoxelSubsystem = nullptr;

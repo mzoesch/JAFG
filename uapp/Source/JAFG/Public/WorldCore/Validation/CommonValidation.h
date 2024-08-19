@@ -124,6 +124,7 @@ protected:
     bool GetPredictedLocalPlayerLocation(FVector& Out) const;
     TArray<FVector> GetAllPredictedPlayerLocations(void) const;
 
+    auto GetLocalPlayerController(void) const -> APlayerController*;
     template<class T>
     auto GetLocalPlayerController(void) const -> T*;
 };

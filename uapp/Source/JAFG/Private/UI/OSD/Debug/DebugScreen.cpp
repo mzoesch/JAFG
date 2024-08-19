@@ -4,6 +4,12 @@
 
 #include "GeneralProjectSettings.h"
 #include "ModificationSupervisorSubsystem.h"
+#include "Blueprint/WidgetTree.h"
+#include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
+#include "Components/JAFGBorder.h"
+#include "Components/SizeBox.h"
+#include "Editor/ShippedWorldCommands.h"
 #include "Engine/UserInterfaceSettings.h"
 #include "GameFramework/GameUserSettings.h"
 #include "GenericPlatform/GenericPlatformDriver.h"
@@ -74,6 +80,22 @@ void UDebugScreen::NativeTick(const FGeometry& MyGeometry, const float InDeltaTi
     {
         this->UpdateCachedSections();
         this->LastUpdateTime = 0.0f;
+    }
+
+    if (CVarShowChunkPreview->GetBool())
+    {
+        if (this->SizeBox_ChunkPreview->GetVisibility() != ESlateVisibility::Visible)
+        {
+            this->SizeBox_ChunkPreview->SetVisibility(ESlateVisibility::Visible);
+        }
+        this->UpdateChunkPreviewCanvas();
+    }
+    else
+    {
+        if (this->SizeBox_ChunkPreview->GetVisibility() != ESlateVisibility::Collapsed)
+        {
+            this->SizeBox_ChunkPreview->SetVisibility(ESlateVisibility::Collapsed);
+        }
     }
 
     return;
@@ -305,6 +327,7 @@ FString UDebugScreen::GetSectionChunks(void) const
     int32 PendingChunks       = -1;
     int32 PendingKillChunks   = -1;
     int32 PendingClientChunks = -1;
+    int32 PurgeInterval       = -1;
 
     if (const UChunkGenerationSubsystem* const GenSubsystem = this->GetWorld()->GetSubsystem<UChunkGenerationSubsystem>(); GenSubsystem)
     {
@@ -315,38 +338,25 @@ FString UDebugScreen::GetSectionChunks(void) const
         PendingChunks       = GenSubsystem->VerticalChunkQueue.Num();
         PendingKillChunks   = GenSubsystem->GetPendingKillVerticalChunkQueue().Num();
         PendingClientChunks = GenSubsystem->ClientQueue.Num();
+        PurgeInterval       = GenSubsystem->GetCurrentPureInterval_Inverted();
     }
 
     return FString::Printf(
-        TEXT("Chunks (%s): %d%%, D: %d, VC %d[%d], p: %d, pk: %d, pcl: %d"),
+        TEXT("Chunks (%s): %d%%, D: %d, VC %d[%d], p: %d, pk: %d, pcl: %d, purge: %d"),
         bChunksMeaningful ? TEXT("Strong") : TEXT("Weak"),
-        static_cast<int32>(100.0f * (static_cast<float>(ActorCommonChunkCountCache) / static_cast<float>(ActorCountCache))),
+        static_cast<int32>(100.0f * (static_cast<float>(this->ActorCommonChunkCountCache) / static_cast<float>(this->ActorCountCache))),
         -1,
         VerticalChunks, TotalChunks,
         PendingChunks,
         PendingKillChunks,
-        PendingClientChunks
+        PendingClientChunks,
+        PurgeInterval
     );
 }
 
 FString UDebugScreen::GetSectionClientCharacterLocation(void) const
 {
-    FVector Location = FVector::ZeroVector;
-
-    if (const AWorldCharacter* Character = OWNING_CHARACTER)
-    {
-        Location = Character->GetFeetLocation();
-    }
-
-#if WITH_EDITOR
-    if (GEditor && GEditor->IsSimulateInEditorInProgress())
-    {
-        checkSlow(GCurrentLevelEditingViewportClient)
-        Location = GCurrentLevelEditingViewportClient->ViewTransformPerspective.GetLocation();
-    }
-#endif /* WITH_EDITOR */
-
-    if (Location != FVector::ZeroVector)
+    if (FVector Location; this->GetMostRespectedLocalPlayerLocation(Location))
     {
         FString X =
             SANITIZED_FLT(Location.X * WorldStatics::UToJScale, 3)
@@ -572,6 +582,109 @@ FString UDebugScreen::GetSectionDisplayMisc(void) const
 FString UDebugScreen::GetSectionTargetVoxelData(void) const
 {
     return FString::Printf(TEXT("Targeted Voxel: N/A [REASON: Unknown]"));
+}
+
+bool UDebugScreen::GetMostRespectedLocalPlayerLocation(FVector& OutLocation) const
+{
+    if (const AWorldCharacter* Character = OWNING_CHARACTER)
+    {
+        OutLocation = Character->GetFeetLocation();
+        return true;
+    }
+
+#if WITH_EDITOR
+    if (GEditor && GEditor->IsSimulateInEditorInProgress())
+    {
+        checkSlow(GCurrentLevelEditingViewportClient)
+        OutLocation = GCurrentLevelEditingViewportClient->ViewTransformPerspective.GetLocation();
+        return true;
+    }
+#endif /* WITH_EDITOR */
+
+    return false;
+}
+
+void UDebugScreen::UpdateChunkPreviewCanvas(void) const
+{
+    check( this->SizeBox_ChunkPreview->GetHeightOverride() == this->SizeBox_ChunkPreview->GetWidthOverride() )
+
+    UChunkGenerationSubsystem* ChunkGenerationSubsystem = this->GetWorld()->GetSubsystem<UChunkGenerationSubsystem>();
+
+    this->CanvasPanel_ChunkPreview->ClearChildren();
+    const float SingleChunkSize = this->SizeBox_ChunkPreview->GetHeightOverride() / static_cast<float>(this->ChunkPreviewSize);
+
+    FVector Pivot;
+    if (this->GetMostRespectedLocalPlayerLocation(Pivot) == false)
+    {
+        return;
+    }
+    const FChunkKey2 VerticalChunkKey = WorldStatics::WorldToVerticalChunkKey(Pivot);
+
+    for (int32 X = -this->ChunkPreviewSize / 2; X < this->ChunkPreviewSize / 2; ++X)
+    {
+        for (int32 Y = -this->ChunkPreviewSize / 2; Y < this->ChunkPreviewSize / 2; ++Y)
+        {
+            FColor Color = FColor::Red;
+            if (ChunkGenerationSubsystem)
+            {
+                if (const ACommonChunk* Chunk = ChunkGenerationSubsystem->FindChunkByKey(FChunkKey(VerticalChunkKey.X + X, VerticalChunkKey.Y + Y, 0)); Chunk)
+                {
+                    const EChunkState::Type State = Chunk->GetChunkState();
+                    if (State == EChunkState::PreSpawned)
+                    {
+                        Color = FColor::Purple;
+                    }
+                    else if (State == EChunkState::Spawned)
+                    {
+                        Color = FColor::Turquoise;
+                    }
+                    else if (State == EChunkState::Shaped)
+                    {
+                        Color = FColor::Emerald;
+                    }
+                    else if (State == EChunkState::Active)
+                    {
+                        Color = FColor::Green;
+                    }
+                    else if (State == EChunkState::PendingKill || State == EChunkState::Kill)
+                    {
+                        Color = FColor::Black;
+                    }
+                    else if (State == EChunkState::BlockedByHyperlane)
+                    {
+                        Color = FColor::Silver;
+                    }
+                    else
+                    {
+                        Color = FColor::Transparent;
+                    }
+                }
+            }
+            else
+            {
+                Color = FColor::Cyan;
+            }
+
+            UJAFGBorder* Border = WidgetTree->ConstructWidget<UJAFGBorder>(UJAFGBorder::StaticClass());
+            FSlateBrushOutlineSettings OutlineSettings;
+            OutlineSettings.Color        = X == 0 && Y == 0 ? FColor::White : FColor::Black;
+            OutlineSettings.Width        = 1.0f;
+            OutlineSettings.RoundingType = ESlateBrushRoundingType::Type::FixedRadius;
+            FSlateBrush Brush;
+            Brush.OutlineSettings = OutlineSettings;
+            Brush.DrawAs          = ESlateBrushDrawType::Type::RoundedBox;
+            Border->SetBrushColor(Color);
+            Border->SetBrush(Brush);
+
+            UCanvasPanelSlot* CSlot = this->CanvasPanel_ChunkPreview->AddChildToCanvas(Border);
+            CSlot->SetSize(FVector2D(SingleChunkSize, SingleChunkSize));
+            CSlot->SetPosition(FVector2D(SingleChunkSize * (X + this->ChunkPreviewSize / 2), SingleChunkSize * (Y + this->ChunkPreviewSize / 2)));
+        }
+
+        continue;
+    }
+
+    return;
 }
 
 #undef SANITIZED_FLT

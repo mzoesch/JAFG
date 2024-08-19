@@ -87,13 +87,7 @@ void ACommonChunk::InitializeCommonStuff(void)
 
     this->RawVoxelData   = new voxel_t[WorldStatics::ChunkSize * WorldStatics::ChunkSize * WorldStatics::ChunkSize];
     this->JChunkPosition = this->GetActorLocation() * WorldStatics::UToJScale;
-    this->ChunkPosition  = FJCoordinate(
-        /* We have to round here to make up on some IEEE 754 floating point precision errors. */
-        FMath::RoundToFloat( this->GetActorLocation().X * WorldStatics::UToJScale ),
-        FMath::RoundToFloat( this->GetActorLocation().Y * WorldStatics::UToJScale ),
-        FMath::RoundToFloat( this->GetActorLocation().Z * WorldStatics::UToJScale )
-    );
-    this->ChunkKey       = FChunkKey(this->ChunkPosition / WorldStatics::ChunkSize);
+    this->ChunkKey       = WorldStatics::WorldToChunkKey(this->GetActorLocation());
 
     this->VoxelSubsystem = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>();
     check( this->VoxelSubsystem )
@@ -136,8 +130,18 @@ void ACommonChunk::KillUncontrolled(void)
 
 void ACommonChunk::KillControlled(void)
 {
-    this->GetWorld()->GetSubsystem<UChunkGenerationSubsystem>()->OnChunkWasKilledExternally(this->ChunkKey);
-    this->Destroy();
+    if (this->GetChunkKeyOnTheFly(true) != WorldStatics::WorldToChunkKey(this->GetActorLocation()))
+    {
+        LOG_WARNING(LogChunkGeneration, "Mismatch: %s != %s.",
+            *this->ChunkKey.ToString(), *WorldStatics::WorldToChunkKey(this->GetActorLocation()).ToString())
+    }
+
+    const FChunkKey SavedChunkKey = this->GetChunkKeyOnTheFly(true);
+    this->GetWorld()->GetSubsystem<UChunkGenerationSubsystem>()->OnChunkWasKilledExternally(this->GetChunkKeyOnTheFly(true));
+    if (this->Destroy() == false)
+    {
+        LOG_RELAXED_FATAL(LogChunkGeneration, "Could not destroy chunk: %s.", *SavedChunkKey.ToString())
+    }
 
     return;
 }
@@ -339,23 +343,17 @@ bool ACommonChunk::SetChunkState(const EChunkState::Type NewChunkState, const bo
 
 #pragma region MISC
 
-FChunkKey ACommonChunk::GetChunkKeyOnTheFly(void) const
+FChunkKey ACommonChunk::GetChunkKeyOnTheFly(const bool bAllowNonZeroOnMember /* = false */) const
 {
-    /*
-     * Bad habit to use this method if the chunk is already in Spawned state.
-     */
-    check( this->ChunkKey == FChunkKey::ZeroValue )
+    if (bAllowNonZeroOnMember == false)
+    {
+        /*
+         * Bad habit to use this method if the chunk is already in Spawned state.
+         */
+        jveryRelaxedCheck( this->ChunkKey == FChunkKey::ZeroValue )
+    }
 
-    return FChunkKey(
-        FJCoordinate(
-            /* We have to round here to make up on some IEEE 754 floating point precision errors. */
-            FMath::RoundToFloat( this->GetActorLocation().X * WorldStatics::UToJScale ),
-            FMath::RoundToFloat( this->GetActorLocation().Y * WorldStatics::UToJScale ),
-            FMath::RoundToFloat( this->GetActorLocation().Z * WorldStatics::UToJScale )
-        )
-        /
-        WorldStatics::ChunkSize
-    );
+    return WorldStatics::WorldToChunkKey(this->GetActorLocation());
 }
 
 #pragma endregion MISC
@@ -801,7 +799,12 @@ void ACommonChunk::SetInitializationDataFromAuthority(voxel_t* Voxels)
 #if !UE_BUILD_SHIPPING
     if (this->ChunkState != EChunkState::BlockedByHyperlane)
     {
-        LOG_FATAL(LogChunkValidation, "Chunk %s is not in BlockedByHyperlane state.", *this->ChunkKey.ToString())
+        LOG_FATAL(
+            LogChunkValidation,
+            "Chunk %s is not in BlockedByHyperlane state. Found: %s.",
+            *this->ChunkKey.ToString(),
+            *LexToString(this->ChunkState)
+        )
         return;
     }
 #endif /* !UE_BUILD_SHIPPING */

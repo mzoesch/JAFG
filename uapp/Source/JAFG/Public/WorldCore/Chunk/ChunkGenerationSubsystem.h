@@ -81,6 +81,8 @@ public:
 
     [[nodiscard]] FORCEINLINE auto FindChunkByKey(const FChunkKey& ChunkKey) const -> ACommonChunk*
     { if (const TObjectPtr<ACommonChunk>* T = this->ChunkMap.Find(ChunkKey); T) { return *T; } return nullptr; }
+    [[nodiscard]] FORCEINLINE auto FindVerticalChunkByKey(const FChunkKey2& ChunkKey) const -> const FChunkKey2*
+    { return this->VerticalChunks.Find(ChunkKey); }
 
     FORCEINLINE auto AddClientChunk(const FClientChunk& ClientChunk) -> void { this->ClientQueue.Enqueue(ClientChunk); }
 
@@ -101,7 +103,14 @@ public:
     /** @return True, if OutLocation is meaningful. */
     auto FindAppropriateLocationForCharacterSpawn(const FVector& InApproximateLocation, FVector& OutLocation) const -> bool;
 
+    FORCEINLINE auto GetCurrentPureInterval(void) const -> int32 { return this->CurrentPureInterval; }
+    FORCEINLINE auto GetCurrentPureInterval_Inverted(void) const -> int32 { return this->PurgeInterval - this->CurrentPureInterval; }
+
 private:
+
+    /** After how many MyTicks iterations, we should purge dangling chunks. */
+    const int32 PurgeInterval                     = 8;
+          int32 CurrentPureInterval               = 0;
 
     const float ChunkGenerationInterval            = 0.1f;
     const int32 MaxVerticalChunksToGeneratePerTick = 20;

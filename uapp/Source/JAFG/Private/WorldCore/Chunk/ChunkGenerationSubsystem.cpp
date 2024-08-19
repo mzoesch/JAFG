@@ -133,20 +133,25 @@ void UChunkGenerationSubsystem::MyTick(const float DeltaTime)
         }
     }
 
-    // Check for the end of life in temporary chunks
-    //////////////////////////////////////////////////////////////////////////
-    TArray<ACommonChunk*> ChunksToKill = TArray<ACommonChunk*>();
-    for (const TTuple<FChunkKey, TObjectPtr<ACommonChunk>>& Pair : this->ChunkMap)
+    if (++this->CurrentPureInterval > this->PurgeInterval)
     {
-        if (Pair.Value->ShouldBeKilled())
+        this->CurrentPureInterval = 0;
+
+        // Check for the end of life in temporary chunks
+        //////////////////////////////////////////////////////////////////////////
+        TArray<ACommonChunk*> ChunksToKill = TArray<ACommonChunk*>();
+        for (const TTuple<FChunkKey, TObjectPtr<ACommonChunk>>& Pair : this->ChunkMap)
         {
-            ChunksToKill.Add(Pair.Value);
+            if (Pair.Value->ShouldBeKilled())
+            {
+                ChunksToKill.Add(Pair.Value);
+            }
         }
-    }
-    for (ACommonChunk* Chunk : ChunksToKill)
-    {
-        LOG_DISPLAY(LogChunkMisc, "Chunk %s will kill itself due to persistency.", *Chunk->ToString())
-        Chunk->SetChunkState(EChunkState::Kill);
+        for (ACommonChunk* Chunk : ChunksToKill)
+        {
+            LOG_VERY_VERBOSE(LogChunkMisc, " Killing chunk %s due to persistency.", *Chunk->GetChunkKeyOnTheFly(true).ToString())
+            Chunk->SetChunkState(EChunkState::Kill);
+        }
     }
 
     return;
@@ -467,8 +472,8 @@ void UChunkGenerationSubsystem::PrepareWorldForChunkTransit_Spawned(const FChunk
         this->SafeLoadVerticalChunk(
             this->GetAllChunksFromVerticalChunk(Neighbor),
             false,
-            EChunkPersistency::Persistent,
-            10.0f,
+            EChunkPersistency::Temporary,
+            40.0f,
             EChunkState::PreSpawned
         );
     }
@@ -489,8 +494,8 @@ void UChunkGenerationSubsystem::PrepareWorldForChunkTransit_SurfaceReplaced(cons
         this->SafeLoadVerticalChunk(
             this->GetAllChunksFromVerticalChunk(Neighbor),
             false,
-            EChunkPersistency::Persistent,
-            10.0f,
+            EChunkPersistency::Temporary,
+            40.0f,
             EChunkState::Spawned
         );
     }

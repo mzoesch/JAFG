@@ -7,8 +7,10 @@
 
 #include "DebugScreen.generated.h"
 
+class USizeBox;
 JAFG_VOID
 
+class UCanvasPanel;
 class UEditorWorldCommandsSimulation;
 
 namespace DebugScreen
@@ -58,6 +60,9 @@ protected:
 
     FDelegateHandle DebugScreenVisibilityChangedDelegateHandle;
     virtual auto OnDebugScreenVisibilityChanged(const bool bVisible) -> void;
+
+    //////////////////////////////////////////////////////////////////////////
+    // Bindings
 
     /*
      * We get the unused warnings here because all these functions are pure and currently only used as bindings
@@ -139,7 +144,22 @@ protected:
     // ReSharper disable once CppUEBlueprintCallableFunctionUnused
     FString GetSectionTargetVoxelData( /* void */ ) const;
 
+    // ~Bindings
+    //////////////////////////////////////////////////////////////////////////
+
+    UFUNCTION(BlueprintCallable, Category = "JAFG|DebugScreen")
+    // ReSharper disable once CppUEBlueprintCallableFunctionUnused
+    bool GetMostRespectedLocalPlayerLocation(FVector& OutLocation) const;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true"))
+    TObjectPtr<USizeBox> SizeBox_ChunkPreview = nullptr;
+    UPROPERTY(BlueprintReadOnly, meta = (BindWidget, BlueprintProtected = "true", AllowPrivateAccess = "true"))
+    TObjectPtr<UCanvasPanel> CanvasPanel_ChunkPreview = nullptr;
+
 private:
+
+    const int32 ChunkPreviewSize { 32 };
+    void UpdateChunkPreviewCanvas(void) const;
 
     mutable int32 ActorCountCache = 0;
     mutable int32 ActorCommonChunkCountCache = 0;
