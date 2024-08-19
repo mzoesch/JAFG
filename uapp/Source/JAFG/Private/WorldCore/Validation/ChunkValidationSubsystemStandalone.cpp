@@ -62,7 +62,20 @@ void UChunkValidationSubsystemStandalone::MyTick(const float DeltaTime)
     }
 
     FChunkLoadingParams Params;
+
+#if WITH_EDITOR
+    if (GEditor && GEditor->IsSimulateInEditorInProgress())
+    {
+        Params.RenderDistance = Cast<AEditorChunkWorldSettings>(this->GetWorld()->GetWorldSettings())->SimulationRenderDistance;
+    }
+    else
+    {
+        Params.RenderDistance = Cast<UJAFGLocalPlayer>(this->GetLocalPlayerController()->GetLocalPlayer())->GetLocalSettings()->GetClientRenderDistance();
+    }
+#else /* WITH_EDITOR */
     Params.RenderDistance = Cast<UJAFGLocalPlayer>(this->GetLocalPlayerController()->GetLocalPlayer())->GetLocalSettings()->GetClientRenderDistance();
+#endif /* !WITH_EDITOR */
+
     this->LoadUnloadChunks({PredictedLocation}, Params);
 
     this->TrySpawnLocalCharacter();
