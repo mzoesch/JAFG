@@ -627,10 +627,16 @@ void UDebugScreen::UpdateChunkPreviewCanvas(void) const
             FColor Color = FColor::Red;
             if (ChunkGenerationSubsystem)
             {
-                if (const ACommonChunk* Chunk = ChunkGenerationSubsystem->FindChunkByKey(FChunkKey(VerticalChunkKey.X + X, VerticalChunkKey.Y + Y, 0)); Chunk)
+                if (
+                    const ACommonChunk* Chunk =
+                        ChunkGenerationSubsystem->FindChunkByKey(FChunkKey(VerticalChunkKey.X + X, VerticalChunkKey.Y + Y, 0));
+                    Chunk
+                )
                 {
-                    const EChunkState::Type State = Chunk->GetChunkState();
-                    if (State == EChunkState::PreSpawned)
+                    if (
+                        const EChunkState::Type State = Chunk->GetChunkState();
+                        State == EChunkState::PreSpawned
+                    )
                     {
                         Color = FColor::Purple;
                     }
@@ -678,7 +684,10 @@ void UDebugScreen::UpdateChunkPreviewCanvas(void) const
 
             UCanvasPanelSlot* CSlot = this->CanvasPanel_ChunkPreview->AddChildToCanvas(Border);
             CSlot->SetSize(FVector2D(SingleChunkSize, SingleChunkSize));
-            CSlot->SetPosition(FVector2D(SingleChunkSize * (X + this->ChunkPreviewSize / 2), SingleChunkSize * (Y + this->ChunkPreviewSize / 2)));
+            CSlot->SetPosition(FVector2D(
+                SingleChunkSize * (Y + this->ChunkPreviewSize / 2),
+                SingleChunkSize * (this->ChunkPreviewSize - (X + this->ChunkPreviewSize / 2))
+            ));
         }
 
         continue;
