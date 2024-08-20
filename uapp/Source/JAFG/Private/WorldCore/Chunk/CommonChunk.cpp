@@ -77,7 +77,7 @@ void ACommonChunk::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void ACommonChunk::InitializeCommonStuff(void)
 {
 #if WITH_EDITOR
-    /* PIE May not always clean up correctly. */
+    /* PIE may not always clean up correctly. */
     if (this->RawVoxelData)
     {
         delete[] this->RawVoxelData;
@@ -85,7 +85,9 @@ void ACommonChunk::InitializeCommonStuff(void)
     }
 #endif /* WITH_EDITOR */
 
-    this->RawVoxelData   = new voxel_t[WorldStatics::ChunkSize * WorldStatics::ChunkSize * WorldStatics::ChunkSize];
+    this->RawVoxelData = new voxel_t[WorldStatics::ChunkSizeCubed];
+    FMemory::Memset(this->RawVoxelData, ECommonVoxels::Null, WorldStatics::ChunkSizeCubed * sizeof(voxel_t));
+
     this->JChunkPosition = this->GetActorLocation() * WorldStatics::UToJScale;
     this->ChunkKey       = WorldStatics::WorldToChunkKey(this->GetActorLocation());
 
