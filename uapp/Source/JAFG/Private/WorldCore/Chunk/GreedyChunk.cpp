@@ -1,13 +1,11 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "WorldCore/Chunk/GreedyChunk.h"
-
 #include "System/VoxelSubsystem.h"
 
 AGreedyChunk::AGreedyChunk(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
     this->PrimaryActorTick.bCanEverTick = false;
-
     this->bReplicates = false;
 
     return;
@@ -17,16 +15,16 @@ void AGreedyChunk::GenerateProceduralMesh(void)
 {
     Super::GenerateProceduralMesh();
 
-    // Sweep over each axis (X, Y, Z)
+    /* Sweep over each axis XYZ. */
     for (int Axis = 0; Axis < 3; ++Axis)
     {
-        // 2 Perpendicular axis
+        /* 2 Perpendicular axis. */
         const int Axis1 = (Axis + 1) % 3;
         const int Axis2 = (Axis + 2) % 3;
 
         constexpr int MainAxisLimit = WorldStatics::ChunkSize;
-        constexpr int Axis1Limit = WorldStatics::ChunkSize;
-        constexpr int Axis2Limit = WorldStatics::ChunkSize;
+        constexpr int Axis1Limit    = WorldStatics::ChunkSize;
+        constexpr int Axis2Limit    = WorldStatics::ChunkSize;
 
         auto DeltaAxis1 = FIntVector::ZeroValue;
         auto DeltaAxis2 = FIntVector::ZeroValue;
@@ -39,27 +37,27 @@ void AGreedyChunk::GenerateProceduralMesh(void)
         TArray<FMask> Mask;
         Mask.SetNum(Axis1Limit * Axis2Limit, false);
 
-        // Check each slice of the chunk
+        /* Check each slice of the chunk. */
         for (ChunkItr[Axis] = -1; ChunkItr[Axis] < MainAxisLimit;)
         {
             int N = 0;
 
-            // Compute Mask
+            /* Compute mask. */
             for (ChunkItr[Axis2] = 0; ChunkItr[Axis2] < Axis2Limit; ++ChunkItr[Axis2])
             {
                 for (ChunkItr[Axis1] = 0; ChunkItr[Axis1] < Axis1Limit; ++ChunkItr[Axis1])
                 {
-                    const auto CurrentBlock = this->GetLocalVoxelOnly(ChunkItr);
-                    const auto CompareBlock = this->GetLocalVoxelOnly(ChunkItr + AxisMask);
+                    const voxel_t CurrentBlock = this->GetFastLocalAndAdjacentVoxel(ChunkItr);
+                    const voxel_t CompareBlock = this->GetFastLocalAndAdjacentVoxel(ChunkItr + AxisMask);
 
-                    const bool CurrentBlockOpaque = CurrentBlock != ECommonVoxels::Air;
-                    const bool CompareBlockOpaque = CompareBlock != ECommonVoxels::Air;
+                    const bool bCurrentBlockOpaque = CurrentBlock > ECommonVoxels::Max;
+                    const bool bCompareBlockOpaque = CompareBlock > ECommonVoxels::Max;
 
-                    if (CurrentBlockOpaque == CompareBlockOpaque)
+                    if (bCurrentBlockOpaque == bCompareBlockOpaque)
                     {
                         Mask[N++] = FMask{ECommonVoxels::Null, 0};
                     }
-                    else if (CurrentBlockOpaque)
+                    else if (bCurrentBlockOpaque)
                     {
                         Mask[N++] = FMask{CurrentBlock, 1};
                     }
@@ -71,75 +69,90 @@ void AGreedyChunk::GenerateProceduralMesh(void)
             }
 
             ++ChunkItr[Axis];
-            N = 0;
 
-            // Generate Mesh From Mask
+            N = 0;
+            /* Generate Mesh From Mask. */
             for (int j = 0; j < Axis2Limit; ++j)
             {
                 for (int i = 0; i < Axis1Limit;)
                 {
-                    if (Mask[N].Normal != 0)
+                    if (Mask[N].Normal == 0)
                     {
-                        const auto CurrentMask = Mask[N];
-                        ChunkItr[Axis1] = i;
-                        ChunkItr[Axis2] = j;
+                        ++i;
+                        ++N;
 
-                        int Width;
+                        continue;
+                    }
 
-                        for (Width = 1; i + Width < Axis1Limit && AGreedyChunk::Equals(
-                                 Mask[N + Width], CurrentMask); ++Width)
+                    const FMask CurrentMask = Mask[N];
+                    ChunkItr[Axis1] = i;
+                    ChunkItr[Axis2] = j;
+
+                    int Width;
+
+                    for (Width = 1; i + Width < Axis1Limit && AGreedyChunk::Equals(Mask[N + Width], CurrentMask); ++Width)
+                    {
+                    }
+
+                    int  Height;
+                    bool Done = false;
+
+                    for (Height = 1; j + Height < Axis2Limit; ++Height)
+                    {
+                        for (int k = 0; k < Width; ++k)
                         {
-                        }
-
-                        int Height;
-                        bool Done = false;
-
-                        for (Height = 1; j + Height < Axis2Limit; ++Height)
-                        {
-                            for (int k = 0; k < Width; ++k)
+                            if (AGreedyChunk::Equals(Mask[N + k + Height * Axis1Limit], CurrentMask))
                             {
-                                if (AGreedyChunk::Equals(Mask[N + k + Height * Axis1Limit], CurrentMask)) continue;
-
-                                Done = true;
-                                break;
+                                continue;
                             }
 
-                            if (Done) break;
+                            Done = true;
+                            break;
                         }
 
-                        DeltaAxis1[Axis1] = Width;
-                        DeltaAxis2[Axis2] = Height;
-
-                        this->CreateQuadrilateral(
-                            CurrentMask, AxisMask, Width, Height,
-                            ChunkItr,
-                            ChunkItr + DeltaAxis1,
-                            ChunkItr + DeltaAxis2,
-                            ChunkItr + DeltaAxis1 + DeltaAxis2
-                        );
-
-                        DeltaAxis1 = FIntVector::ZeroValue;
-                        DeltaAxis2 = FIntVector::ZeroValue;
-
-                        for (int l = 0; l < Height; ++l)
+                        if (Done)
                         {
-                            for (int k = 0; k < Width; ++k)
-                            {
-                                Mask[N + k + l * Axis1Limit] = FMask{ECommonVoxels::Null, 0};
-                            }
+                            break;
                         }
 
-                        i += Width;
-                        N += Width;
+                        continue;
                     }
-                    else
+
+                    DeltaAxis1[Axis1] = Width;
+                    DeltaAxis2[Axis2] = Height;
+
+                    this->CreateQuadrilateral(
+                        CurrentMask, AxisMask, Width, Height,
+                        ChunkItr,
+                        ChunkItr + DeltaAxis1,
+                        ChunkItr + DeltaAxis2,
+                        ChunkItr + DeltaAxis1 + DeltaAxis2
+                    );
+
+                    DeltaAxis1 = FIntVector::ZeroValue;
+                    DeltaAxis2 = FIntVector::ZeroValue;
+
+                    for (int l = 0; l < Height; ++l)
                     {
-                        i++;
-                        N++;
+                        for (int k = 0; k < Width; ++k)
+                        {
+                            Mask[N + k + l * Axis1Limit] = FMask{ECommonVoxels::Null, 0};
+                        }
                     }
+
+                    i += Width;
+                    N += Width;
+
+                    continue;
                 }
+
+                continue;
             }
+
+            continue;
         }
+
+        continue;
     }
 
     return;
