@@ -352,16 +352,14 @@ public:
 
     /**
      * Does not check for out of bounds. The callee must ensure that the
-     * LocalVoxelPosition is within the bounds of the chunk.
+     * input is within the bounds of the chunk.
      */
-    [[nodiscard]]
-    FORCEINLINE voxel_t GetLocalVoxelOnly(const FVoxelKey& LocalVoxelPosition) const
+    FORCEINLINE auto GetLocalVoxelOnly(const FVoxelKey& LocalVoxelPosition) const -> voxel_t
     {
+#if WITH_EDITOR
         /*
-         * TODO
-         *      We should not have this if statement because of performance reasons. But currently we have to keep
-         *      this as the greedy algorithm will often call this method with out of bounds values.
-         *      This is a temporary solution.
+         * Compiling this out as this method heavily impacts performance
+         * (One of the most important methods when generating the meshes).
          */
         if (
                LocalVoxelPosition.X >= WorldStatics::ChunkSize
@@ -372,10 +370,68 @@ public:
             || LocalVoxelPosition.Z < 0
         )
         {
+            jrelaxedCheckNoEntry()
             return ECommonVoxels::Air;
         }
+#endif /* WITH_EDITOR */
 
-        return this->RawVoxelData[ACommonChunk::GetVoxelIndex(LocalVoxelPosition)];
+        if (this->RawVoxelData)
+        {
+            const voxel_t Out = this->RawVoxelData[ACommonChunk::GetVoxelIndex(LocalVoxelPosition)];
+            return Out == ECommonVoxels::Null ? ECommonVoxels::Air : Out;
+        }
+
+        return ECommonVoxels::Air;
+    }
+
+    /**
+     * Allows for one single one-off out-of-bounds direction.
+     */
+    FORCEINLINE auto GetFastLocalAndAdjacentVoxel(const FVoxelKey& VoxelKey) const -> voxel_t
+    {
+        if (VoxelKey.X < 0)
+        {
+            return this->NSouth
+                ? this->NSouth->GetLocalVoxelOnly(FVoxelKey(VoxelKey.X + WorldStatics::ChunkSize, VoxelKey.Y, VoxelKey.Z))
+                : ECommonVoxels::Air;
+        }
+
+        if (VoxelKey.X >= WorldStatics::ChunkSize)
+        {
+            return this->NNorth
+                ? this->NNorth->GetLocalVoxelOnly(FVoxelKey(VoxelKey.X - WorldStatics::ChunkSize, VoxelKey.Y, VoxelKey.Z))
+                : ECommonVoxels::Air;
+        }
+
+        if (VoxelKey.Y < 0)
+        {
+            return this->NWest
+                ? this->NWest->GetLocalVoxelOnly(FVoxelKey(VoxelKey.X, VoxelKey.Y + WorldStatics::ChunkSize, VoxelKey.Z))
+                : ECommonVoxels::Air;
+        }
+
+        if (VoxelKey.Y >= WorldStatics::ChunkSize)
+        {
+            return this->NEast
+                ? this->NEast->GetLocalVoxelOnly(FVoxelKey(VoxelKey.X, VoxelKey.Y - WorldStatics::ChunkSize, VoxelKey.Z))
+                : ECommonVoxels::Air;
+        }
+
+        if (VoxelKey.Z < 0)
+        {
+            return this->NDown
+                ? this->NDown->GetLocalVoxelOnly(FVoxelKey(VoxelKey.X, VoxelKey.Y, VoxelKey.Z + WorldStatics::ChunkSize))
+                : ECommonVoxels::Air;
+        }
+
+        if (VoxelKey.Z >= WorldStatics::ChunkSize)
+        {
+            return this->NUp
+                ? this->NUp->GetLocalVoxelOnly(FVoxelKey(VoxelKey.X, VoxelKey.Y, VoxelKey.Z - WorldStatics::ChunkSize))
+                : ECommonVoxels::Air;
+        }
+
+        return this->GetLocalVoxelOnly(VoxelKey);
     }
 
     /**
