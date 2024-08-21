@@ -1,6 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
-#include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
+#include "WorldCore/Validation/ChunkGenerationSubsystem.h"
 #include "WorldCore/ChunkWorldSettings.h"
 #include "RegisteredWorldNames.h"
 #include "WorldCore/Chunk/GreedyChunk.h"

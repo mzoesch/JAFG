@@ -7,7 +7,7 @@
 #include "System/MaterialSubsystem.h"
 #include "System/VoxelSubsystem.h"
 #include "WorldCore/ChunkWorldSettings.h"
-#include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
+#include "WorldCore/Validation/ChunkGenerationSubsystem.h"
 
 ACommonChunk::ACommonChunk(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {

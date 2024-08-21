@@ -9,8 +9,6 @@
 
 JAFG_VOID
 
-class UChunkGenerationSubsystem;
-
 /**
  * Only spawned on the dedicated server.
  * Handles the validation of chunks based on all player positions.

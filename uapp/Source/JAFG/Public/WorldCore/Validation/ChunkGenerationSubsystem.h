@@ -3,8 +3,8 @@
 #pragma once
 
 #include "MyCore.h"
-#include "ChunkStates.h"
-#include "CommonChunk.h"
+#include "WorldCore/Chunk/ChunkStates.h"
+#include "WorldCore/Chunk/CommonChunk.h"
 #include "Containers/MyQueue.h"
 #include "WorldCore/JAFGWorldSubsystems.h"
 

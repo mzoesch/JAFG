@@ -5,7 +5,7 @@
 #include "Network/MyHyperlaneComponent.h"
 #include "Player/JAFGLocalPlayer.h"
 #include "Player/WorldPlayerController.h"
-#include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
+#include "WorldCore/Validation/ChunkGenerationSubsystem.h"
 #include "WorldCore/Validation/ChunkValidationSubsystemDedSv.h"
 #include "WorldCore/Validation/ChunkValidationSubsystemLitSv.h"
 #include "WorldCore/Validation/ChunkValidationSubsystemStandalone.h"

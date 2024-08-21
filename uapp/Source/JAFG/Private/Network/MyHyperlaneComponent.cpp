@@ -2,7 +2,7 @@
 
 #include "Network/MyHyperlaneComponent.h"
 
-#include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
+#include "WorldCore/Validation/ChunkGenerationSubsystem.h"
 #include "TransmittableData.h"
 #include "WorldCore/JAFGWorldSubsystems.h"
 

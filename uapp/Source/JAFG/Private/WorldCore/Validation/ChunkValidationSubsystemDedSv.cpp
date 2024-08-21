@@ -3,7 +3,7 @@
 #include "WorldCore/Validation/ChunkValidationSubsystemDedSv.h"
 #include "UJAFGDedicatedServerSettings.h"
 #include "Player/WorldPlayerController.h"
-#include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
+#include "WorldCore/Validation/ChunkGenerationSubsystem.h"
 #include "WorldCore/Validation/ChunkValidationSubsystemCl.h"
 #include "WorldCore/Validation/ChunkValidationSubsystemLitSv.h"
 #include "WorldCore/Validation/ChunkValidationSubsystemStandalone.h"

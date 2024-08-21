@@ -12,7 +12,7 @@
 #include "WorldCore/WorldGameState.h"
 #include "WorldCore/WorldPawn.h"
 #include "WorldCore/WorldPlayerState.h"
-#include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
+#include "WorldCore/Validation/ChunkGenerationSubsystem.h"
 
 AWorldGameMode::AWorldGameMode(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {

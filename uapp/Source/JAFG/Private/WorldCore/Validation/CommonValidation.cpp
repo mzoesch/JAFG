@@ -3,7 +3,7 @@
 #include "WorldCore/Validation/CommonValidation.h"
 #include "Player/WorldPlayerController.h"
 #include "WorldCore/ChunkWorldSettings.h"
-#include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
+#include "WorldCore/Validation/ChunkGenerationSubsystem.h"
 #if WITH_EDITOR
     #include "Editor.h"
     #include "LevelEditorViewport.h"

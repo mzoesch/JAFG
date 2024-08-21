@@ -1,8 +1,7 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "Network/ChunkMulticasterInfo.h"
-
-#include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
+#include "WorldCore/Validation/ChunkGenerationSubsystem.h"
 #include "WorldCore/Chunk/CommonChunk.h"
 
 AChunkMulticasterInfo::AChunkMulticasterInfo(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)

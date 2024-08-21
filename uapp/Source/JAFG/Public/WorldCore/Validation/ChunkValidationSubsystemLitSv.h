@@ -9,8 +9,6 @@
 
 JAFG_VOID
 
-class UChunkGenerationSubsystem;
-
 /**
  * Handles the validation of chunks.
  * Based on the local player location, the connected clients locations and chunk world generation distance.

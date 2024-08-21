@@ -1,7 +1,7 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "Editor/EditorWorldCommandsDedSv.h"
-#include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
+#include "WorldCore/Validation/ChunkGenerationSubsystem.h"
 
 void UEditorWorldCommandsDedSv::Initialize(FSubsystemCollectionBase& Collection)
 {

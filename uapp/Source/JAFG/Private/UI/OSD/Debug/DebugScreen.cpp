@@ -19,7 +19,7 @@
 #include "MISC/App.h"
 #include "System/VoxelSubsystem.h"
 #include "WorldCore/ChunkWorldSettings.h"
-#include "WorldCore/Chunk/ChunkGenerationSubsystem.h"
+#include "WorldCore/Validation/ChunkGenerationSubsystem.h"
 #include "WorldCore/Chunk/CommonChunk.h"
 #if WITH_EDITOR
     #include "LevelEditorViewport.h"
