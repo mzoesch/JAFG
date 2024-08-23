@@ -7,9 +7,9 @@
 
 #include "DebugScreen.generated.h"
 
-class USizeBox;
 JAFG_VOID
 
+class USizeBox;
 class UCanvasPanel;
 class UEditorWorldCommandsSimulation;
 

@@ -1,7 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "UI/OSD/Debug/DebugScreen.h"
-
 #include "GeneralProjectSettings.h"
 #include "ModificationSupervisorSubsystem.h"
 #include "Blueprint/WidgetTree.h"
@@ -657,7 +656,7 @@ bool UDebugScreen::GetMostRespectedLocalPlayerLocation(FVector& OutLocation) con
 #if WITH_EDITOR
     if (GEditor && GEditor->IsSimulateInEditorInProgress())
     {
-        checkSlow(GCurrentLevelEditingViewportClient)
+        checkSlow( GCurrentLevelEditingViewportClient )
         OutLocation = GCurrentLevelEditingViewportClient->ViewTransformPerspective.GetLocation();
         return true;
     }

@@ -9,6 +9,9 @@
 
 JAFG_VOID
 
+#define CV_CHUNK_PREVIEW TEXT("j.ShowChunkPreview")
+#define CV_CHUNK_BORDERS TEXT("j.ShowChunkBorders")
+
 /**
  * Console commands that are being shipped.
  */
@@ -30,6 +33,11 @@ public:
     static auto Get(const UObject* Context) -> UShippedWorldCommands*;
 
     auto ShowChunkPreview(void) const -> bool;
+    auto ShowChunkBorders(void) const -> bool;
+
+    /** For JAFG variables only. */
+    auto AttachToConsoleVariable(const FString& ConsoleVariableName, const FConsoleVariableDelegate& Delegate) -> FDelegateHandle;
+    auto DetachFromConsoleVariable(const FString& ConsoleVariableName, const FDelegateHandle& Handle) -> bool;
 
 private:
 

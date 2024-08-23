@@ -55,6 +55,11 @@ FORCEINLINE auto WorldToVerticalChunkKey(const FVector& WorldLocation) -> FChunk
     return WorldStatics::WorldToVerticalChunkKey(FVector2D(WorldLocation.X, WorldLocation.Y));
 }
 
+FORCEINLINE auto VerticalChunkKeyToWorldLocation(const FChunkKey2& ChunkKey) -> FVector
+{
+    return FVector(ChunkKey.X, ChunkKey.Y, 0) * WorldStatics::ChunkSize * WorldStatics::JToUScale;
+}
+
 /** Transforms an unreal vector to a local voxel key. */
 FORCEINLINE auto WorldToLocalVoxelLocation(const FVector& WorldLocation) -> FVoxelKey
 {
