@@ -2,10 +2,12 @@
 
 #pragma once
 
+#include "ChunkArena.h"
 #include "MyCore.h"
 #include "ChunkMeshData.h"
 #include "GameFramework/Actor.h"
 #include "WorldCore/Chunk/ChunkStates.h"
+#include "WorldCore/Chunk/CommonChunkParmas.h"
 
 #include "CommonChunk.generated.h"
 
@@ -21,7 +23,7 @@ class UChunkGenerationSubsystem;
 DECLARE_MULTICAST_DELEGATE_OneParam(FChunkStateChangeSignature, const EChunkState::Type /* NewChunkState */)
 
 UCLASS(Abstract, NotBlueprintable)
-class JAFG_API ACommonChunk : public AActor
+class JAFG_API ACommonChunk : public AActor, public IChunkArenaGladiator
 {
     GENERATED_BODY()
 
@@ -37,21 +39,20 @@ protected:
     virtual auto EndPlay(const EEndPlayReason::Type EndPlayReason) -> void override;
     // ~AActor implementation
 
+    // IChunkArenaGladiator interface
+                virtual auto OnAllocate(const FChunkKey& InChunkKey) -> void override;
+                virtual auto OnFree(void) -> void override;
+                virtual auto OnObliterate(void) -> void override;
+    FORCEINLINE virtual auto GetChunkKeyOnTheFly_Gladiator(void) const -> FChunkKey override { return this->GetChunkKeyOnTheFly(true); }
+    FORCEINLINE virtual auto AsChunk(void) const -> const ACommonChunk* override { return this; }
+    FORCEINLINE virtual auto AsChunk(void) -> ACommonChunk* override { return this; }
+    // ~IChunkArenaGladiator interface
+
     /**
      * Sets up data that is valid throughout the lifetime of a chunk and needed for the chunk to be able to
      * generate itself.
      */
     virtual auto InitializeCommonStuff(void) -> void;
-
-    /**
-     * Use as a last resort only.
-     * Will delete without any pity this chunk from the UWorld.
-     * No cleanup will be done.
-     * It will probably result in an application crash in the very near future.
-     */
-    virtual auto KillUncontrolled(void) -> void;
-    virtual auto KillControlled(void) -> void;
-    bool bUncontrolledKill = false;
 
 #pragma region Chunk State
 
@@ -144,21 +145,14 @@ protected:
      */
     auto GetChunkKeyOnTheFly(const bool bAllowNonZeroOnMember = false) const -> FChunkKey;
 
-    UPROPERTY()
-    TObjectPtr<UVoxelSubsystem> VoxelSubsystem = nullptr;
-
-    UPROPERTY()
-    TObjectPtr<UChunkGenerationSubsystem> ChunkGenerationSubsystem = nullptr;
-
-    UPROPERTY()
-    TObjectPtr<AChunkMulticasterInfo> ChunkMulticasterInfo = nullptr;
-
-    UPROPERTY()
-    TObjectPtr<UMaterialSubsystem> MaterialSubsystem = nullptr;
-
-    /** As the name suggests only valid on the server or in a standalone game. */
-    UPROPERTY()
-    TObjectPtr<UServerChunkWorldSettings> ServerChunkWorldSettings = nullptr;
+    FSharedChunkParams* ChunkParams = nullptr;
+    FORCEINLINE auto GetChunkParams(void) const -> FSharedChunkParams* { return this->ChunkParams; }
+    FORCEINLINE auto GetChunkParamsChecked(void) const -> FSharedChunkParams* { jcheck(this->ChunkParams); return this->ChunkParams; }
+    FORCEINLINE auto GetVoxelSubsystem(void) const -> UVoxelSubsystem* { return this->ChunkParams->VoxelSubsystem; }
+    FORCEINLINE auto GetChunkGenerationSubsystem(void) const -> UChunkGenerationSubsystem* { return this->ChunkParams->ChunkGenerationSubsystem; }
+    FORCEINLINE auto GetChunkMulticasterInfo(void) const -> AChunkMulticasterInfo* { return this->ChunkParams->ChunkMulticasterInfo; }
+    FORCEINLINE auto GetMaterialSubsystem(void) const -> UMaterialSubsystem* { return this->ChunkParams->MaterialSubsystem; }
+    FORCEINLINE auto GetServerChunkWorldSettings(void) const -> UServerChunkWorldSettings* { return this->ChunkParams->ServerChunkWorldSettings; }
 
     /*
      * Kinda annoying these warning. But with the generation subsystem, we keep track of deleted chunks.

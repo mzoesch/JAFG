@@ -3,10 +3,15 @@
 #include "WorldCore/Validation/ChunkGenerationSubsystem.h"
 #include "WorldCore/ChunkWorldSettings.h"
 #include "RegisteredWorldNames.h"
+#include "Kismet/GameplayStatics.h"
+#include "Network/ChunkMulticasterInfo.h"
+#include "WorldCore/Chunk/ChunkArena.h"
 #include "WorldCore/Chunk/GreedyChunk.h"
 #include "WorldCore/Chunk/ChunkStates.h"
+#include "System/VoxelSubsystem.h"
+#include "System/MaterialSubsystem.h"
 
-UChunkGenerationSubsystem::UChunkGenerationSubsystem(void) : Super()
+UChunkGenerationSubsystem::UChunkGenerationSubsystem(void) : Super(), CommonChunkParams()
 {
     return;
 }
@@ -29,6 +34,8 @@ void UChunkGenerationSubsystem::OnWorldBeginPlay(UWorld& InWorld)
     this->VerticalChunkQueue.Empty();
     this->ChunkMap.Empty();
     this->VerticalChunks.Empty();
+
+    this->ChunkArena = InWorld.GetSubsystem<UChunkArena>();
 
     if (UNetStatics::IsSafeDedicatedServer(&InWorld) == false)
     {
@@ -59,6 +66,17 @@ void UChunkGenerationSubsystem::OnWorldBeginPlay(UWorld& InWorld)
         this->CopiedChunksAboveZero = this->ServerChunkWorldSettings->ChunksAboveZero;
     }
 #endif /* WITH_EDITOR */
+
+    this->CommonChunkParams.VoxelSubsystem           = InWorld.GetGameInstance()->GetSubsystem<UVoxelSubsystem>();
+    this->CommonChunkParams.ChunkGenerationSubsystem = this;
+    this->CommonChunkParams.ChunkMulticasterInfo     = Cast<AChunkMulticasterInfo>(UGameplayStatics::GetActorOfClass(&InWorld, AChunkMulticasterInfo::StaticClass()));
+    this->CommonChunkParams.MaterialSubsystem        = InWorld.GetGameInstance()->GetSubsystem<UMaterialSubsystem>();
+    this->CommonChunkParams.ServerChunkWorldSettings = this->ServerChunkWorldSettings;
+
+    jcheck( this->CommonChunkParams.VoxelSubsystem )
+    jcheck( this->CommonChunkParams.ChunkGenerationSubsystem )
+    jcheck( this->CommonChunkParams.ChunkMulticasterInfo )
+    jcheck( this->CommonChunkParams.MaterialSubsystem )
 
     return;
 }
@@ -98,6 +116,15 @@ void UChunkGenerationSubsystem::MyTick(const float DeltaTime)
     while (this->PendingKillVerticalChunkQueue.IsEmpty() == false)
     {
         this->DequeueNextVerticalChunkToKill();
+    }
+
+    // Reserving and Freeing
+    //////////////////////////////////////////////////////////////////////////
+    if (this->ChunkArena->GetFreeChunkCount() < this->MaxVerticalChunksToGeneratePerTick * this->CopiedChunksAboveZero * 1.5f)
+    {
+        this->ChunkArena->ReserveGladiators(
+            this->MaxVerticalChunksToGeneratePerTick * this->CopiedChunksAboveZero * 2
+        );
     }
 
     // Loading
@@ -149,6 +176,8 @@ void UChunkGenerationSubsystem::MyTick(const float DeltaTime)
         }
         for (ACommonChunk* Chunk : ChunksToKill)
         {
+            check( Chunk->GetChunkState() != EChunkState::Freed )
+
             LOG_VERY_VERBOSE(LogChunkMisc, " Killing chunk %s due to persistency.", *Chunk->GetChunkKeyOnTheFly(true).ToString())
             Chunk->SetChunkState(EChunkState::Kill);
         }
@@ -169,6 +198,17 @@ void UChunkGenerationSubsystem::AddVerticalChunkToPendingKillQueue(const FChunkK
     {
         this->ChunkMap[FChunkKey(ChunkKey.X, ChunkKey.Y, Z)]->SetChunkState(EChunkState::PendingKill);
     }
+
+    return;
+}
+
+void UChunkGenerationSubsystem::FreeMe(ACommonChunk& Chunk)
+{
+    this->ChunkArena->Free(Chunk);
+
+    const FChunkKey Key = Chunk.GetChunkKeyOnTheFly(true);
+    this->ChunkMap.Remove(Key);
+    this->VerticalChunks.Remove(FChunkKey2(Key.X, Key.Y));
 
     return;
 }
@@ -313,7 +353,7 @@ void UChunkGenerationSubsystem::SafeLoadVerticalChunk(
 )
 {
     /* We can only generate chunks between those states. The other are special. */
-    check( EChunkState::Invalid < TargetState && TargetState < EChunkState::Special )
+    check( EChunkState::Freed < TargetState && TargetState < EChunkState::Special )
 
     struct FEntry { FChunkKey ChunkKey; ACommonChunk* ChunkPtr; };
     TArray<FEntry> Iterator;
@@ -426,7 +466,7 @@ void UChunkGenerationSubsystem::DequeueNextVerticalChunkToKill(void)
 
     for (int32 Z = 0; Z < this->CopiedChunksAboveZero; ++Z)
     {
-        this->ChunkMap.FindAndRemoveChecked(FChunkKey(NewKillKey.X, NewKillKey.Y, Z))->KillUncontrolled();
+        this->ChunkArena->Free(*this->ChunkMap.FindAndRemoveChecked(FChunkKey(NewKillKey.X, NewKillKey.Y, Z)));
     }
 
     if (this->VerticalChunks.Remove(NewKillKey) != 1)
@@ -441,34 +481,12 @@ void UChunkGenerationSubsystem::DequeueNextVerticalChunkToKill(void)
     return;
 }
 
-ACommonChunk* UChunkGenerationSubsystem::SpawnChunk(const FChunkKey& ChunkKey) const
+ACommonChunk* UChunkGenerationSubsystem::SpawnChunk(const FChunkKey& ChunkKey)
 {
-#if LOG_PERFORMANCE_CRITICAL_SECTIONS
-    LOG_VERY_VERBOSE(LogChunkGeneration, "Spawning chunk at %s.", *ChunkKey.ToString())
-#endif /* LOG_PERFORMANCE_CRITICAL_SECTIONS */
-
-    const FTransform TargetedChunkTransform = FTransform(
-        FRotator::ZeroRotator,
-        FVector(
-            ChunkKey.X * WorldStatics::ChunkSize * WorldStatics::JToUScale,
-            ChunkKey.Y * WorldStatics::ChunkSize * WorldStatics::JToUScale,
-            ChunkKey.Z * WorldStatics::ChunkSize * WorldStatics::JToUScale
-        ),
-        FVector::OneVector
-    );
-
-    ACommonChunk* Chunk = this->GetWorld()->SpawnActor<ACommonChunk>(
-        this->LocalChunkWorldSettings ?
-            this->LocalChunkWorldSettings->LocalChunkType == EChunkType::Greedy
-                ? AGreedyChunk::StaticClass()
-                : ACommonChunk::StaticClass()
-            : AGreedyChunk::StaticClass()
-        ,
-
-        TargetedChunkTransform
-    );
-
-    return Chunk;
+    IChunkArenaGladiator* Gladiator;
+    this->ChunkArena->Alloc(ChunkKey, Gladiator);
+    Gladiator->AsChunk()->ChunkParams = &this->CommonChunkParams;
+    return Gladiator->AsChunk();
 }
 
 void UChunkGenerationSubsystem::PrepareWorldForChunkTransit_Spawned(const FChunkKey2& Chunk)

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "MyCore.h"
+#include "WorldCore/Chunk/CommonChunkParmas.h"
 #include "WorldCore/Chunk/ChunkStates.h"
 #include "WorldCore/Chunk/CommonChunk.h"
 #include "Containers/MyQueue.h"
@@ -12,6 +13,7 @@
 
 JAFG_VOID
 
+class UChunkArena;
 class UDebugScreen;
 class ULocalChunkWorldSettings;
 class UServerChunkWorldSettings;
@@ -73,6 +75,8 @@ public:
         return Out;
     }
 
+    void FreeMe(ACommonChunk& Chunk);
+
     [[nodiscard]] FORCEINLINE auto HasPersistentVerticalChunk(const FChunkKey2& ChunkKey) const -> bool
     {
         if (const TObjectPtr<ACommonChunk>* T = this->ChunkMap.Find(FChunkKey(ChunkKey.X, ChunkKey.Y, 0)); T)
@@ -106,6 +110,8 @@ public:
     FORCEINLINE auto GetCurrentPureInterval(void) const -> int32 { return this->CurrentPureInterval; }
     FORCEINLINE auto GetCurrentPureInterval_Inverted(void) const -> int32 { return this->PurgeInterval - this->CurrentPureInterval; }
 
+    FSharedChunkParams CommonChunkParams;
+
 private:
 
     /** After how many MyTicks iterations, we should purge dangling chunks. */
@@ -129,6 +135,10 @@ private:
     /** Copied for faster access. */
     UPROPERTY()
     TObjectPtr<UServerChunkWorldSettings> ServerChunkWorldSettings;
+
+    /** Copied for faster access. */
+    UPROPERTY()
+    TObjectPtr<UChunkArena> ChunkArena;
 
     TMyQueue<FChunkKey2> VerticalChunkQueue;
     auto DequeueNextVerticalChunk(void) -> void;
@@ -154,7 +164,7 @@ private:
     TSet<FChunkKey2> VerticalChunks;
 
     /** Spawns a chunk in the EChunkState#PreSpawned state. */
-    auto SpawnChunk(const FChunkKey& ChunkKey) const -> ACommonChunk*;
+    auto SpawnChunk(const FChunkKey& ChunkKey) -> ACommonChunk*;
 
     //////////////////////////////////////////////////////////////////////////
     // Helper methods.

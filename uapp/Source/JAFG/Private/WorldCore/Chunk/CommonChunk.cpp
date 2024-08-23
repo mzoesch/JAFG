@@ -2,7 +2,6 @@
 
 #include "WorldCore/Chunk/CommonChunk.h"
 #include "HyperlaneComponent.h"
-#include "Kismet/GameplayStatics.h"
 #include "Network/ChunkMulticasterInfo.h"
 #include "System/MaterialSubsystem.h"
 #include "System/VoxelSubsystem.h"
@@ -42,7 +41,8 @@ void ACommonChunk::BeginPlay(void)
 {
     Super::BeginPlay();
 
-    this->SetChunkState(EChunkState::PreSpawned);
+    /* Intentional. Never call side effects on first state change. */
+    this->ChunkState = EChunkState::Freed;
 
     return;
 }
@@ -50,8 +50,38 @@ void ACommonChunk::BeginPlay(void)
 void ACommonChunk::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
     Super::EndPlay(EndPlayReason);
+}
 
-    /* Minimal cleanup which should always happen, of course. */
+void ACommonChunk::OnAllocate(const FChunkKey& InChunkKey)
+{
+    check( this->GetChunkState() == EChunkState::Freed )
+
+#if LOG_PERFORMANCE_CRITICAL_SECTIONS
+    LOG_VERY_VERBOSE(LogChunkGeneration, "Spawning chunk at %s.", *ChunkKey.ToString())
+#endif /* LOG_PERFORMANCE_CRITICAL_SECTIONS */
+
+    const FTransform TargetedChunkTransform = FTransform(
+        FRotator::ZeroRotator,
+        FVector(
+            InChunkKey.X * WorldStatics::ChunkSize * WorldStatics::JToUScale,
+            InChunkKey.Y * WorldStatics::ChunkSize * WorldStatics::JToUScale,
+            InChunkKey.Z * WorldStatics::ChunkSize * WorldStatics::JToUScale
+        ),
+        FVector::OneVector
+    );
+
+    this->SetActorTransform(TargetedChunkTransform, false, nullptr, ETeleportType::ResetPhysics);
+
+    this->SetChunkState(EChunkState::PreSpawned);
+
+    return;
+}
+
+void ACommonChunk::OnFree(void)
+{
+    this->ClearProceduralMesh();
+    this->ApplyProceduralMesh();
+
     if (this->RawVoxelData)
     {
         delete[] this->RawVoxelData;
@@ -66,10 +96,20 @@ void ACommonChunk::EndPlay(const EEndPlayReason::Type EndPlayReason)
     if (this->NUp)    { this->NUp->NDown     = nullptr; } this->NUp    = nullptr;
     if (this->NDown)  { this->NDown->NUp     = nullptr; } this->NDown  = nullptr;
 
-    if (this->bUncontrolledKill)
-    {
-        return;
-    }
+    this->ChunkKey       = FChunkKey::ZeroValue;
+    this->JChunkPosition = FVector::ZeroVector;
+
+    this->SetChunkState(EChunkState::Freed);
+
+    return;
+}
+
+void ACommonChunk::OnObliterate(void)
+{
+    check( this->GetChunkState() == EChunkState::Freed )
+
+    this->GetWorld()->GetSubsystem<UChunkGenerationSubsystem>()->OnChunkWasKilledExternally(this->GetChunkKeyOnTheFly(true));
+    this->Destroy();
 
     return;
 }
@@ -91,59 +131,14 @@ void ACommonChunk::InitializeCommonStuff(void)
     this->JChunkPosition = this->GetActorLocation() * WorldStatics::UToJScale;
     this->ChunkKey       = WorldStatics::WorldToChunkKey(this->GetActorLocation());
 
-    this->VoxelSubsystem = this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>();
-    check( this->VoxelSubsystem )
-
-    this->ChunkGenerationSubsystem = this->GetWorld()->GetSubsystem<UChunkGenerationSubsystem>();
-    check( this->ChunkGenerationSubsystem )
-
-    this->ChunkMulticasterInfo = Cast<AChunkMulticasterInfo>(UGameplayStatics::GetActorOfClass(this, AChunkMulticasterInfo::StaticClass()));
-    check( this->ChunkMulticasterInfo )
-
-    this->MaterialSubsystem = this->GetGameInstance()->GetSubsystem<UMaterialSubsystem>();
-    check( this->MaterialSubsystem )
-
-    this->ServerChunkWorldSettings = this->GetWorld()->GetSubsystem<UServerChunkWorldSettings>();
-    if (this->ServerChunkWorldSettings == nullptr && UNetStatics::IsSafeServer(this))
-    {
-        LOG_FATAL(LogChunkGeneration, "Could not get Server Chunk World Settings.")
-        return;
-    }
-
-    this->NNorth = this->ChunkGenerationSubsystem->FindChunkByKey(FChunkKey(this->ChunkKey.X + 1, this->ChunkKey.Y    , this->ChunkKey.Z    ));
-    this->NEast  = this->ChunkGenerationSubsystem->FindChunkByKey(FChunkKey(this->ChunkKey.X    , this->ChunkKey.Y + 1, this->ChunkKey.Z    ));
-    this->NSouth = this->ChunkGenerationSubsystem->FindChunkByKey(FChunkKey(this->ChunkKey.X - 1, this->ChunkKey.Y    , this->ChunkKey.Z    ));
-    this->NWest  = this->ChunkGenerationSubsystem->FindChunkByKey(FChunkKey(this->ChunkKey.X    , this->ChunkKey.Y - 1, this->ChunkKey.Z    ));
-    this->NUp    = this->ChunkGenerationSubsystem->FindChunkByKey(FChunkKey(this->ChunkKey.X    , this->ChunkKey.Y    , this->ChunkKey.Z + 1));
-    this->NDown  = this->ChunkGenerationSubsystem->FindChunkByKey(FChunkKey(this->ChunkKey.X    , this->ChunkKey.Y    , this->ChunkKey.Z - 1));
+    this->NNorth = this->GetChunkGenerationSubsystem()->FindChunkByKey(FChunkKey(this->ChunkKey.X + 1, this->ChunkKey.Y    , this->ChunkKey.Z    ));
+    this->NEast  = this->GetChunkGenerationSubsystem()->FindChunkByKey(FChunkKey(this->ChunkKey.X    , this->ChunkKey.Y + 1, this->ChunkKey.Z    ));
+    this->NSouth = this->GetChunkGenerationSubsystem()->FindChunkByKey(FChunkKey(this->ChunkKey.X - 1, this->ChunkKey.Y    , this->ChunkKey.Z    ));
+    this->NWest  = this->GetChunkGenerationSubsystem()->FindChunkByKey(FChunkKey(this->ChunkKey.X    , this->ChunkKey.Y - 1, this->ChunkKey.Z    ));
+    this->NUp    = this->GetChunkGenerationSubsystem()->FindChunkByKey(FChunkKey(this->ChunkKey.X    , this->ChunkKey.Y    , this->ChunkKey.Z + 1));
+    this->NDown  = this->GetChunkGenerationSubsystem()->FindChunkByKey(FChunkKey(this->ChunkKey.X    , this->ChunkKey.Y    , this->ChunkKey.Z - 1));
     check( this->NNorth ) check( this->NEast ) check( this->NSouth ) check( this->NWest  )
     /* We do not check up and down, as this might be to most top or the most bottom chunk that will never have adjacent chunks in this direction. */
-
-    return;
-}
-
-void ACommonChunk::KillUncontrolled(void)
-{
-    this->bUncontrolledKill = true;
-    this->Destroy();
-
-    return;
-}
-
-void ACommonChunk::KillControlled(void)
-{
-    if (this->GetChunkKeyOnTheFly(true) != WorldStatics::WorldToChunkKey(this->GetActorLocation()))
-    {
-        LOG_WARNING(LogChunkGeneration, "Mismatch: %s != %s.",
-            *this->ChunkKey.ToString(), *WorldStatics::WorldToChunkKey(this->GetActorLocation()).ToString())
-    }
-
-    const FChunkKey SavedChunkKey = this->GetChunkKeyOnTheFly(true);
-    this->GetWorld()->GetSubsystem<UChunkGenerationSubsystem>()->OnChunkWasKilledExternally(this->GetChunkKeyOnTheFly(true));
-    if (this->Destroy() == false)
-    {
-        LOG_RELAXED_FATAL(LogChunkGeneration, "Could not destroy chunk: %s.", *SavedChunkKey.ToString())
-    }
 
     return;
 }
@@ -172,69 +167,46 @@ void ACommonChunk::SetChunkPersistency(const EChunkPersistency::Type NewPersiste
 
 void ACommonChunk::SubscribeWithPrivateStateDelegate(void)
 {
+    if (this->PrivateStateHandle.IsValid())
+    {
+        return;
+    }
+
     this->PrivateStateHandle = this->SubscribeToChunkStateChange(FChunkStateChangeSignature::FDelegate::CreateLambda(
         [this] (const EChunkState::Type NewChunkState)
         {
-            switch (NewChunkState)
-            {
-            case EChunkState::Invalid:
-            {
-                checkNoEntry()
-                break;
-            }
-            case EChunkState::PreSpawned:
-            {
-                break;
-            }
-            case EChunkState::Spawned:
+            if (this->GetChunkState() == EChunkState::Spawned)
             {
                 this->OnSpawned();
-                break;
             }
-            case EChunkState::Shaped:
+            else if (this->GetChunkState() == EChunkState::Shaped)
             {
                 this->OnShaped();
-                break;
             }
-            case EChunkState::SurfaceReplaced:
+            else if (this->GetChunkState() == EChunkState::SurfaceReplaced)
             {
                 this->OnSurfaceReplaced();
-                break;
             }
-            case EChunkState::ShapedCaves:
+            else if (this->GetChunkState() == EChunkState::ShapedCaves)
             {
                 this->OnShapedCaves();
-                break;
             }
-            case EChunkState::Active:
+            else if (this->GetChunkState() == EChunkState::Active)
             {
                 this->OnActive();
-                break;
             }
-            case EChunkState::PendingKill:
+            else if (this->GetChunkState() == EChunkState::PendingKill)
             {
                 this->OnPendingKill();
-                break;
             }
-            case EChunkState::Kill:
+            else if (this->GetChunkState() == EChunkState::Kill)
             {
                 this->OnKill();
-                break;
             }
-            case EChunkState::BlockedByHyperlane:
+            else if (this->GetChunkState() == EChunkState::BlockedByHyperlane)
             {
                 this->OnBlockedByHyperlane();
-                break;
             }
-            default:
-            {
-                LOG_ERROR(LogChunkMisc, "Unsupported chunk state %s.", *LexToString(NewChunkState))
-                checkNoEntry()
-                break;
-            }
-            }
-
-            return;
         }
     ));
 
@@ -249,9 +221,13 @@ bool ACommonChunk::IsStateChangeValid(const EChunkState::Type NewChunkState) con
     {
         return false;
     }
+    case EChunkState::Freed:
+    {
+        return true;
+    }
     case EChunkState::PreSpawned:
     {
-        return this->ChunkState == EChunkState::Invalid;
+        return this->ChunkState == EChunkState::Freed;
     }
     case EChunkState::Spawned:
     {
@@ -318,15 +294,14 @@ void ACommonChunk::OnActive(void)
     this->RegenerateProceduralMesh();
 }
 
-// ReSharper disable once CppMemberFunctionMayBeStatic
 void ACommonChunk::OnPendingKill(void)
 {
-    return;
+    this->ClearProceduralMesh();
 }
 
 void ACommonChunk::OnKill(void)
 {
-    this->KillControlled();
+    this->GetChunkGenerationSubsystem()->FreeMe(*this);
 }
 
 void ACommonChunk::OnBlockedByHyperlane(void) const
@@ -343,12 +318,11 @@ bool ACommonChunk::SetChunkState(const EChunkState::Type NewChunkState, const bo
 {
     if (bForce == false && this->IsStateChangeValid(NewChunkState) == false)
     {
-        LOG_ERROR(
+        LOG_FATAL(
             LogChunkValidation,
             "Invalid state change from %s to %s in chunk %s.",
             *LexToString(this->ChunkState), *LexToString(NewChunkState), *this->ChunkKey.ToString()
         )
-        this->KillControlled();
         return false;
     }
 
@@ -470,7 +444,7 @@ void ACommonChunk::GenerateCollisionConvexMesh(void)
 void ACommonChunk::ApplyProceduralMesh(void)
 {
 #if WITH_EDITOR
-    if (this->MaterialSubsystem == nullptr)
+    if (this->GetMaterialSubsystem() == nullptr)
     {
         LOG_FATAL(LogChunkMisc, "Could not get Material Subsystem.")
         return;
@@ -479,7 +453,7 @@ void ACommonChunk::ApplyProceduralMesh(void)
 
     for (int i = 0; i < this->MeshData.Num(); ++i)
     {
-        this->ProceduralMeshComponent->SetMaterial(i, this->MaterialSubsystem->MDynamicGroups[i]);
+        this->ProceduralMeshComponent->SetMaterial(i, this->GetMaterialSubsystem()->MDynamicGroups[i]);
         this->ProceduralMeshComponent->CreateMeshSection(
             i,
             this->MeshData[i].Vertices,
@@ -503,7 +477,7 @@ void ACommonChunk::ApplyProceduralMesh(void)
 
 void ACommonChunk::Shape(void)
 {
-    switch (this->ServerChunkWorldSettings->GetWorldGenerationType())
+    switch (this->GetServerChunkWorldSettings()->GetWorldGenerationType())
     {
     case EWorldGenerationType::Default:
     {
@@ -585,19 +559,19 @@ void ACommonChunk::Shape_Default(void)
         {
             const float WorldY = this->JChunkPosition.Y + Y;
 
-            const float Noise_Continentalness   = this->ServerChunkWorldSettings->NoiseContinentalness.GetNoise(WorldX, WorldY);
-            const float Density_Continentalness = NoiseSpline::GetTargetHeight(this->ServerChunkWorldSettings->ContinentalnessSpline, Noise_Continentalness) * 2.0f - 1.0f;
+            const float Noise_Continentalness   = this->GetServerChunkWorldSettings()->NoiseContinentalness.GetNoise(WorldX, WorldY);
+            const float Density_Continentalness = NoiseSpline::GetTargetHeight(this->GetServerChunkWorldSettings()->ContinentalnessSpline, Noise_Continentalness) * 2.0f - 1.0f;
 
             for (int Z = 0; Z < WorldStatics::ChunkSize; ++Z)
             {
                 const float WorldZ = this->JChunkPosition.Z + Z;
 
-                const float HeightInPercent = (WorldZ / this->ServerChunkWorldSettings->GetHighestPoint()) * this->ServerChunkWorldSettings->FakeHeightMultiplier;
+                const float HeightInPercent = (WorldZ / this->GetServerChunkWorldSettings()->GetHighestPoint()) * this->GetServerChunkWorldSettings()->FakeHeightMultiplier;
                 const float Density         = (Density_Continentalness + 1) * HeightInPercent - 1;
 
                 this->ModifyRawVoxelData(
                     FVoxelKey(X, Y, Z),
-                    this->ServerChunkWorldSettings->NoiseWorld.GetNoise(WorldX, WorldY, WorldZ) < Density
+                    this->GetServerChunkWorldSettings()->NoiseWorld.GetNoise(WorldX, WorldY, WorldZ) < Density
                         ? ECommonVoxels::Air : ECommonVoxels::GetBaseVoxel()
                 );
 
@@ -615,7 +589,7 @@ void ACommonChunk::Shape_Default(void)
 
 void ACommonChunk::ReplaceSurface(void)
 {
-    switch (this->ServerChunkWorldSettings->GetWorldGenerationType())
+    switch (this->GetServerChunkWorldSettings()->GetWorldGenerationType())
     {
     case EWorldGenerationType::Default:
     {
@@ -706,7 +680,7 @@ void ACommonChunk::ReplaceSurface_Default(void)
 
 void ACommonChunk::ShapeCaves(void)
 {
-    switch (this->ServerChunkWorldSettings->GetWorldGenerationType())
+    switch (this->GetServerChunkWorldSettings()->GetWorldGenerationType())
     {
     case EWorldGenerationType::Default:
     {
@@ -746,7 +720,7 @@ void ACommonChunk::ShapeCaves_Default(void)
 
             for (int Z = 0; Z < WorldStatics::ChunkSize; ++Z)
             {
-                if (this->ServerChunkWorldSettings->NoiseCheeseCave.GetNoise(
+                if (this->GetServerChunkWorldSettings()->NoiseCheeseCave.GetNoise(
                     WorldX,
                     WorldY,
                     static_cast<float>(this->JChunkPosition.Z + Z)
@@ -805,7 +779,7 @@ void ACommonChunk::ModifySingleVoxel(const FVoxelKey& LocalVoxelKey, const voxel
     }
 
     TargetChunk->ModifyRawVoxelData(TransformedLocalVoxelLocation, NewVoxel);
-    this->ChunkMulticasterInfo->BroadcastChunkModification_NetMulticastRPC(TargetChunk->ChunkKey, TransformedLocalVoxelLocation, NewVoxel);
+    this->GetChunkMulticasterInfo()->BroadcastChunkModification_NetMulticastRPC(TargetChunk->ChunkKey, TransformedLocalVoxelLocation, NewVoxel);
     TargetChunk->RegenerateProceduralMesh();
 
     return;
@@ -960,7 +934,7 @@ ACommonChunk* ACommonChunk::GetChunkByNonZeroOrigin_Implementation(const FVoxelK
     )
 #endif /* LOG_PERFORMANCE_CRITICAL_SECTIONS */
 
-    ACommonChunk* TargetChunk = this->ChunkGenerationSubsystem->FindChunkByKey(TransformedChunkKey);
+    ACommonChunk* TargetChunk = this->GetChunkGenerationSubsystem()->FindChunkByKey(TransformedChunkKey);
 
     if (TargetChunk == nullptr)
     {

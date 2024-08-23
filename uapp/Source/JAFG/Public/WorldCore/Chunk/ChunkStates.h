@@ -17,9 +17,15 @@ enum Type : uint8
     Invalid,
 
     /**
-     * A chunk is in the UWorld present with its most minimal variables set.
+     * The chunk exists in the UWorld but is free und unbound to any responsibilities. A chunk must never be
+     * interacted with when in this state.
      * The ACommonChunk#BeginPlay method has been called.
-     * It does not require any additional things to be spawned or set.
+     */
+    Freed,
+
+    /**
+     * A chunk is in the UWorld present with its most minimal variables set.
+     * This state requires no more conditions than the previous state.
      */
     PreSpawned,
 
@@ -34,6 +40,7 @@ enum Type : uint8
     /**
      * The chunk has been shaped. The chunk-raw-data must now consist of two different voxels.
      * The air voxel and the base voxel.
+     * This state requires no more conditions than the previous state.
      */
     Shaped,
 
@@ -52,6 +59,7 @@ enum Type : uint8
     /**
      * The chunk is now complete-active, and the local player can interact with it.
      * This is the first time that the mesh of the chunks is actually generated.
+     * This state requires no more conditions than the previous state.
      */
     Active,
 

@@ -164,8 +164,8 @@ void AGreedyChunk::CreateQuadrilateral(
 )
 {
     const FVector Normal = FVector(AxisMask * Mask.Normal);
-    const FColor Color = FColor(0, 96, 0, this->VoxelSubsystem->GetTextureIndex(Mask.Voxel, Normal));
-    const int TextureGroup = this->VoxelSubsystem->GetVoxelTextureGroup(Mask.Voxel, Normal);
+    const FColor Color = FColor(0, 96, 0, this->GetVoxelSubsystem()->GetTextureIndex(Mask.Voxel, Normal));
+    const int TextureGroup = this->GetVoxelSubsystem()->GetVoxelTextureGroup(Mask.Voxel, Normal);
 
     if (TextureGroup > this->VertexCounts.Num() - 1)
     {
