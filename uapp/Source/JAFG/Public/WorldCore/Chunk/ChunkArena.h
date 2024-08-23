@@ -54,7 +54,7 @@ public:
  * be reused instead of being destroyed and new ones being spawned inside the UWorld.
  */
 UCLASS(NotBlueprintable)
-class JAFG_API UChunkArena : public UJAFGWorldSubsystem
+class JAFG_API UChunkArena : public UJAFGWorldSubsystemNoDev
 {
     GENERATED_BODY()
 
