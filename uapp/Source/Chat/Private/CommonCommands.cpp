@@ -88,7 +88,7 @@ FString CommandStatics::SafePrefixClientCommand(const FString& Command)
 {
     if (Command.IsEmpty())
     {
-        return L"";
+        return TEXT("");
     }
 
     if (Command.StartsWith(CommandStatics::ClientCommandPrefix) == false)

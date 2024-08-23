@@ -104,7 +104,7 @@ void UServerCommandSubsystem::ExecuteCommand(UChatComponent* Owner, const FServe
 
     if (this->IsRegisteredCommand(Command) == false)
     {
-        OutReturnCode = ECommandReturnCodes::Unknown;
+        OutReturnCode = ECommandReturnCode::Unknown;
         OutResponse   = L"";
 
         return;
@@ -134,11 +134,11 @@ UChatComponent* UServerCommandSubsystem::GetTargetBasedOnArgs(const TArray<FStri
 {
     if (Args.IsValidIndex(Index) == false)
     {
-        OutReturnCode = ECommandReturnCodes::MissingArgs;
+        OutReturnCode = ECommandReturnCode::MissingArgs;
         return nullptr;
     }
 
-    OutReturnCode = ECommandReturnCodes::Success;
+    OutReturnCode = ECommandReturnCode::Success;
 
     const FString TargetName = Args[Index];
     const AWorldPlayerController* Target = OWNING_SESSION->GetPlayerControllerFromDisplayName(TargetName);
@@ -150,10 +150,10 @@ void UServerCommandSubsystem::OnHelpCommand(SERVER_COMMAND_SIG) const
 {
     for (const TPair<FServerCommand, FServerCommandCallback>& Pair : this->ServerCommands)
     {
-        Owner->AddMessageToChatLog_ClientRPC(ChatStatics::AuthorityName, FText::FromString(Pair.Key));
+        Owner->AddMessageToChatLog_ClientRPC(FChatMessage(EChatMessageType::Authority, ChatStatics::AuthorityName, FText::FromString(Pair.Key)));
     }
 
-    OutReturnCode = ECommandReturnCodes::SuccessNoResponse;
+    OutReturnCode = ECommandReturnCode::SuccessNoResponse;
     OutResponse   = L"";
 
     return;
@@ -163,7 +163,7 @@ void UServerCommandSubsystem::OnBroadcastCommand(SERVER_COMMAND_SIG) const
 {
     if (InArgs.IsEmpty())
     {
-        OutReturnCode = ECommandReturnCodes::MissingArgs;
+        OutReturnCode = ECommandReturnCode::MissingArgs;
         OutResponse   = TEXT("At least one argument is required.");
         return;
     }
@@ -183,13 +183,13 @@ void UServerCommandSubsystem::OnBroadcastCommand(SERVER_COMMAND_SIG) const
             check( PlayerController )
 
             UChatComponent* Target = PlayerController->GetComponentByClass<UChatComponent>();
-            Target->AddMessageToChatLog_ClientRPC(ChatStatics::AuthorityName, FText::FromString(FString::Join(InArgs, TEXT(" "))));
+            Target->AddMessageToChatLog_ClientRPC(FChatMessage(EChatMessageType::Authority, ChatStatics::AuthorityName, FText::FromString(FString::Join(InArgs, TEXT(" ")))));
 
             continue;
         }
     }
 
-    OutReturnCode = ECommandReturnCodes::SuccessNoResponse;
+    OutReturnCode = ECommandReturnCode::SuccessNoResponse;
     OutResponse  = L"";
 
     return;
@@ -208,7 +208,7 @@ void UServerCommandSubsystem::OnFlyCommand(SERVER_COMMAND_SIG) const
 
     Target->ToggleFly();
 
-    OutReturnCode = ECommandReturnCodes::Success;
+    OutReturnCode = ECommandReturnCode::Success;
     OutResponse   = Target->IsFlying() ? TEXT("Flying enabled.") : TEXT("Flying disabled.");
 
     return;
@@ -227,7 +227,7 @@ void UServerCommandSubsystem::OnAllowInputFlyCommand(SERVER_COMMAND_SIG) const
 
     Target->ToggleInputFly();
 
-    OutReturnCode = ECommandReturnCodes::Success;
+    OutReturnCode = ECommandReturnCode::Success;
     OutResponse   = Target->IsInputFlyEnabled() ? TEXT("Input fly enabled.") : TEXT("Input fly disabled.");
 
     return;
@@ -247,15 +247,15 @@ void UServerCommandSubsystem::OnShowOnlinePlayersCommand(SERVER_COMMAND_SIG) con
             continue;
         }
 
-        Owner->AddMessageToChatLog_ClientRPC(ChatStatics::AuthorityName, FText::FromString(OutResponse));
+        Owner->AddMessageToChatLog_ClientRPC(FChatMessage(EChatMessageType::Authority, ChatStatics::AuthorityName, FText::FromString(OutResponse)));
 
-        OutReturnCode = ECommandReturnCodes::SuccessNoResponse;
+        OutReturnCode = ECommandReturnCode::SuccessNoResponse;
         OutResponse   = L"";
 
         return;
     }
 
-    OutReturnCode = ECommandReturnCodes::Failure;
+    OutReturnCode = ECommandReturnCode::Failure;
     OutResponse   = TEXT("No players online.");
 
     return;
@@ -265,7 +265,7 @@ void UServerCommandSubsystem::OnKickCommand(SERVER_COMMAND_SIG) const
 {
     const UChatComponent* Target = this->GetTargetBasedOnArgs(InArgs, OutReturnCode);
 
-    if (OutReturnCode == ECommandReturnCodes::MissingArgs)
+    if (OutReturnCode == ECommandReturnCode::MissingArgs)
     {
         OutResponse   = TEXT("At least one argument is required.");
         return;
@@ -273,14 +273,14 @@ void UServerCommandSubsystem::OnKickCommand(SERVER_COMMAND_SIG) const
 
     if (Target == nullptr)
     {
-        OutReturnCode = ECommandReturnCodes::Failure;
+        OutReturnCode = ECommandReturnCode::Failure;
         OutResponse   = FString::Printf(TEXT("Target [%s] not found."), *InArgs[0]);
         return;
     }
 
     if (Target->GetPredictedOwner()->IsLocalController())
     {
-        OutReturnCode = ECommandReturnCodes::Forbidden;
+        OutReturnCode = ECommandReturnCode::Forbidden;
         OutResponse   = TEXT("Server operator cannot be kicked.");
         return;
     }
@@ -291,7 +291,7 @@ void UServerCommandSubsystem::OnKickCommand(SERVER_COMMAND_SIG) const
         OWNING_SESSION->KickPlayer(Target->GetPredictedOwner(), FText::FromString(TEXT("Kicked by operator.")));
     });
 
-    OutReturnCode = ECommandReturnCodes::Success;
+    OutReturnCode = ECommandReturnCode::Success;
     OutResponse   = FString::Printf(TEXT("Kicked [%s]."), *Target->GetPlayerDisplayName());
 
     return;
@@ -302,7 +302,7 @@ void UServerCommandSubsystem::OnChangeDisplayNameCommand(SERVER_COMMAND_SIG) con
 {
     if (InArgs.Num() != 1)
     {
-        OutReturnCode = InArgs.Num() < 1 ? ECommandReturnCodes::MissingArgs : ECommandReturnCodes::TooManyArgs;
+        OutReturnCode = InArgs.Num() < 1 ? ECommandReturnCode::MissingArgs : ECommandReturnCode::TooManyArgs;
         OutResponse   = TEXT("One argument is required.");
         return;
     }
@@ -312,7 +312,7 @@ void UServerCommandSubsystem::OnChangeDisplayNameCommand(SERVER_COMMAND_SIG) con
     const FString OldName = Target->GetDisplayName();
     this->GetWorld()->GetAuthGameMode()->ChangeName(Target, InArgs[0], true);
 
-    OutReturnCode = ECommandReturnCodes::SuccessBroadcastWithAuthority;
+    OutReturnCode = ECommandReturnCode::SuccessBroadcastWithAuthority;
     OutResponse   = FString::Printf(TEXT("[%s] is now known as [%s]."), *OldName, *InArgs[0]);
 
     return;
@@ -322,7 +322,7 @@ void UServerCommandSubsystem::OnGiveAccumulatedCommand(SERVER_COMMAND_SIG) const
 {
     const UChatComponent* Target = this->GetTargetBasedOnArgs(InArgs, OutReturnCode);
 
-    if (OutReturnCode == ECommandReturnCodes::MissingArgs || InArgs.Num() < 2)
+    if (OutReturnCode == ECommandReturnCode::MissingArgs || InArgs.Num() < 2)
     {
         OutResponse   = TEXT("At least two arguments are required.");
         return;
@@ -330,7 +330,7 @@ void UServerCommandSubsystem::OnGiveAccumulatedCommand(SERVER_COMMAND_SIG) const
 
     if (Target == nullptr)
     {
-        OutReturnCode = ECommandReturnCodes::Failure;
+        OutReturnCode = ECommandReturnCode::Failure;
         OutResponse   = FString::Printf(TEXT("Target [%s] not found."), *InArgs[0]);
         return;
     }
@@ -339,7 +339,7 @@ void UServerCommandSubsystem::OnGiveAccumulatedCommand(SERVER_COMMAND_SIG) const
 
     if (TargetContainer == nullptr)
     {
-        OutReturnCode = ECommandReturnCodes::Failure;
+        OutReturnCode = ECommandReturnCode::Failure;
         OutResponse   = FString::Printf(TEXT("Target [%s] is not a container."), *InArgs[0]);
         return;
     }
@@ -350,19 +350,19 @@ void UServerCommandSubsystem::OnGiveAccumulatedCommand(SERVER_COMMAND_SIG) const
 
     if (AccumulatedIndex < ECommonVoxels::Num)
     {
-        OutReturnCode = ECommandReturnCodes::Failure;
+        OutReturnCode = ECommandReturnCode::Failure;
         OutResponse   = FString::Printf(TEXT("Accumulated [%s] not found or is not obtainable."), *AccumulatedName);
         return;
     }
 
     if (TargetContainer->EasyAddToContainer(FAccumulated(AccumulatedIndex)) == false)
     {
-        OutReturnCode = ECommandReturnCodes::Failure;
+        OutReturnCode = ECommandReturnCode::Failure;
         OutResponse   = FString::Printf(TEXT("Failed to add [%s] to [%s]."), *AccumulatedName, *InArgs[0]);
         return;
     }
 
-    OutReturnCode = ECommandReturnCodes::Success;
+    OutReturnCode = ECommandReturnCode::Success;
     OutResponse   = FString::Printf(TEXT("Added [%s] to [%s]."), *AccumulatedName, *InArgs[0]);
 
     return;
@@ -372,7 +372,7 @@ void UServerCommandSubsystem::OnShowReadOnlyPlayerInventoryCommand(SERVER_COMMAN
 {
     const UChatComponent* Target = this->GetTargetBasedOnArgs(InArgs, OutReturnCode);
 
-    if (OutReturnCode == ECommandReturnCodes::MissingArgs || InArgs.Num() < 1)
+    if (OutReturnCode == ECommandReturnCode::MissingArgs || InArgs.Num() < 1)
     {
         OutResponse   = TEXT("At least one arguments are required.");
         return;
@@ -380,7 +380,7 @@ void UServerCommandSubsystem::OnShowReadOnlyPlayerInventoryCommand(SERVER_COMMAN
 
     if (Target == nullptr)
     {
-        OutReturnCode = ECommandReturnCodes::Failure;
+        OutReturnCode = ECommandReturnCode::Failure;
         OutResponse   = FString::Printf(TEXT("Target [%s] not found."), *InArgs[0]);
         return;
     }
@@ -389,14 +389,14 @@ void UServerCommandSubsystem::OnShowReadOnlyPlayerInventoryCommand(SERVER_COMMAN
 
     if (TargetContainer == nullptr)
     {
-        OutReturnCode = ECommandReturnCodes::Failure;
+        OutReturnCode = ECommandReturnCode::Failure;
         OutResponse   = FString::Printf(TEXT("Target [%s] is not a container."), *InArgs[0]);
         return;
     }
 
     const FString InventoryString = TargetContainer->ToString_Container();
 
-    OutReturnCode = ECommandReturnCodes::Success;
+    OutReturnCode = ECommandReturnCode::Success;
     OutResponse   = FString::Printf(TEXT("Inventory of [%s]: %s"), *InArgs[0], *InventoryString);
 
     return;

@@ -11,7 +11,7 @@
 
 typedef uint8 CommandReturnCode;
 
-namespace ECommandReturnCodes
+namespace ECommandReturnCode
 {
 
 enum Type : CommandReturnCode
@@ -66,79 +66,79 @@ enum Type : CommandReturnCode
     PlatformError,
 };
 
-FORCEINLINE bool IsSuccess(const ECommandReturnCodes::Type& InType)
+FORCEINLINE bool IsSuccess(const ECommandReturnCode::Type& InType)
 {
     return
-           InType == ECommandReturnCodes::Success
-        || InType == ECommandReturnCodes::SuccessNoResponse
-        || InType == ECommandReturnCodes::SuccessBroadcast
-        || InType == ECommandReturnCodes::SuccessBroadcastWithAuthority;
+           InType == ECommandReturnCode::Success
+        || InType == ECommandReturnCode::SuccessNoResponse
+        || InType == ECommandReturnCode::SuccessBroadcast
+        || InType == ECommandReturnCode::SuccessBroadcastWithAuthority;
 }
 
 FORCEINLINE bool IsSuccess(const CommandReturnCode& InType)
 {
-    return ECommandReturnCodes::IsSuccess(static_cast<ECommandReturnCodes::Type>(InType));
+    return ECommandReturnCode::IsSuccess(static_cast<ECommandReturnCode::Type>(InType));
 }
 
-FORCEINLINE bool IsFailure(const ECommandReturnCodes::Type& InType)
+FORCEINLINE bool IsFailure(const ECommandReturnCode::Type& InType)
 {
-    return InType >= ECommandReturnCodes::Failure;
+    return InType >= ECommandReturnCode::Failure;
 }
 
 FORCEINLINE bool IsFailure(const CommandReturnCode& InType)
 {
-    return ECommandReturnCodes::IsFailure(static_cast<ECommandReturnCodes::Type>(InType));
+    return ECommandReturnCode::IsFailure(static_cast<ECommandReturnCode::Type>(InType));
 }
 
-FORCEINLINE FString LexToString(const ECommandReturnCodes::Type& InType)
+FORCEINLINE FString LexToString(const ECommandReturnCode::Type& InType)
 {
     switch (InType)
     {
-    case ECommandReturnCodes::Invalid:
+    case ECommandReturnCode::Invalid:
     {
         return TEXT("Invalid");
     }
-    case ECommandReturnCodes::Success:
+    case ECommandReturnCode::Success:
     {
         return TEXT("Success");
     }
-    case ECommandReturnCodes::SuccessNoResponse:
+    case ECommandReturnCode::SuccessNoResponse:
     {
         return TEXT("SuccessNoResponse");
     }
-    case ECommandReturnCodes::SuccessBroadcast:
+    case ECommandReturnCode::SuccessBroadcast:
     {
         return TEXT("SuccessBroadcast");
     }
-    case ECommandReturnCodes::SuccessBroadcastWithAuthority:
+    case ECommandReturnCode::SuccessBroadcastWithAuthority:
     {
         return TEXT("SuccessBroadcastWithAuthority");
     }
-    case ECommandReturnCodes::Failure:
+    case ECommandReturnCode::Failure:
     {
         return TEXT("Failure");
     }
-    case ECommandReturnCodes::Unknown:
+    case ECommandReturnCode::Unknown:
     {
         return TEXT("Unknown");
     }
-    case ECommandReturnCodes::Forbidden:
+    case ECommandReturnCode::Forbidden:
     {
         return TEXT("Forbidden");
     }
-    case ECommandReturnCodes::MissingArgs:
+    case ECommandReturnCode::MissingArgs:
     {
         return TEXT("MissingArgs");
     }
-    case ECommandReturnCodes::TooManyArgs:
+    case ECommandReturnCode::TooManyArgs:
     {
         return TEXT("TooManyArgs");
     }
-    case ECommandReturnCodes::SyntaxError:
+    case ECommandReturnCode::SyntaxError:
     {
         return TEXT("SyntaxError");
     }
-    case ECommandReturnCodes::PlatformError:
+    case ECommandReturnCode::PlatformError:
     {
         return TEXT("PlatformError");
     }
@@ -152,7 +152,7 @@ FORCEINLINE FString LexToString(const ECommandReturnCodes::Type& InType)
 
 FORCEINLINE FString LexToString(const CommandReturnCode& InType)
 {
-    return ECommandReturnCodes::LexToString(static_cast<ECommandReturnCodes::Type>(InType));
+    return ECommandReturnCode::LexToString(static_cast<ECommandReturnCode::Type>(InType));
 }
 
 }

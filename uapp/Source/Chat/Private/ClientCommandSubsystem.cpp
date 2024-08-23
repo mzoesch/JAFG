@@ -89,7 +89,7 @@ void UClientCommandSubsystem::ExecuteCommand(const FClientCommand& Command, cons
 
     if (this->IsRegisteredClientCommand(Command) == false)
     {
-        OutReturnCode = ECommandReturnCodes::Unknown;
+        OutReturnCode = ECommandReturnCode::Unknown;
         OutResponse   = L"";
 
         return;
@@ -113,10 +113,10 @@ void UClientCommandSubsystem::OnHelpCommand(CLIENT_COMMAND_SIG) const
 {
     for (const TPair<FClientCommand, FClientCommandCallback>& Pair : this->ClientCommands)
     {
-        OWNING_CHAT_COMPONENT->AddMessageToChatLog(ChatStatics::InternalName, FText::FromString(Pair.Key));
+        OWNING_CHAT_COMPONENT->AddMessageToChatLog(FChatMessage(EChatMessageType::Client, ChatStatics::InternalName, FText::FromString(Pair.Key)));
     }
 
-    OutReturnCode = ECommandReturnCodes::SuccessNoResponse;
+    OutReturnCode = ECommandReturnCode::SuccessNoResponse;
     OutResponse   = L"";
 
     return;
@@ -126,7 +126,7 @@ void UClientCommandSubsystem::OnChatClearCommand(CLIENT_COMMAND_SIG) const
 {
     OWNING_CHAT_COMPONENT->GetSafeChatMenu()->ClearAllChatEntries();
 
-    OutReturnCode = ECommandReturnCodes::SuccessNoResponse;
+    OutReturnCode = ECommandReturnCode::SuccessNoResponse;
     OutResponse   = L"";
 
     return;
@@ -137,7 +137,7 @@ void UClientCommandSubsystem::OnQuitCommand(CLIENT_COMMAND_SIG) const
     ULocalSessionSupervisorSubsystem* LSSSS = this->GetWorld()->GetGameInstance()->GetSubsystem<ULocalSessionSupervisorSubsystem>();
     LSSSS->LeaveSession();
 
-    OutReturnCode = ECommandReturnCodes::SuccessNoResponse;
+    OutReturnCode = ECommandReturnCode::SuccessNoResponse;
     OutResponse   = L"";
 
     return;

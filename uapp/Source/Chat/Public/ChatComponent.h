@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ChatMessage.h"
 #include "Components/ActorComponent.h"
 
 #include "ChatComponent.generated.h"
@@ -11,12 +12,6 @@ class UChatMenu;
 class AWorldPlayerController;
 class UClientCommandSubsystem;
 class UServerCommandSubsystem;
-
-struct FPrivateMessagePreConstruct final
-{
-    FString Sender;
-    FText   Message;
-};
 
 UCLASS(NotBlueprintable)
 class CHAT_API UChatComponent : public UActorComponent
@@ -55,7 +50,7 @@ public:
      * If the client receives a message from the server, but has just logged in. Their widgets might not yet have
      * been initialized by the time the message arrives.
      */
-    TQueue<FPrivateMessagePreConstruct> PreChatWidgetConstructionQueue = TQueue<FPrivateMessagePreConstruct>();
+    TQueue<FChatMessage> PreChatWidgetConstructionQueue = TQueue<FChatMessage>();
 
     static constexpr int32 MaxChatStdInLogBuffered = 0xFF;
     /** Sorted chronology from most recent to least. */
@@ -66,10 +61,10 @@ private:
     FString GetPlayerDisplayName(void) const;
 
     UFUNCTION(Server, Reliable, WithValidation)
-    void QueueMessage_ServerRPC(const FText& Message);
+    void QueueMessage_ServerRPC(const FChatMessage& Message);
 
-    void BroadcastMessage(const FText& Message, const bool bAsAuthority = false) const;
+    void BroadcastMessage(const FChatMessage& Message) const;
     UFUNCTION(Client, Reliable)
-    void AddMessageToChatLog_ClientRPC(const FString& Sender, const FText& Message);
-    void AddMessageToChatLog(const FString& Sender, const FText& Message);
+    void AddMessageToChatLog_ClientRPC(const FChatMessage& Message);
+    void AddMessageToChatLog(const FChatMessage& Message);
 };

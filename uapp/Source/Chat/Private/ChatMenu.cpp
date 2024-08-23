@@ -1,20 +1,19 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "ChatMenu.h"
-
 #include "ChatComponent.h"
 #include "CommonChatStatics.h"
 #include "EnhancedInputSubsystems.h"
 #include "JAFGSlateSettings.h"
 #include "Components/EditableText.h"
 #include "Components/ScrollBox.h"
-#include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
 #include "Input/CustomInputNames.h"
 #include "Input/JAFGEditableText.h"
 #include "SettingsData/JAFGInputSubsystem.h"
 #include "Player/WorldPlayerController.h"
 #include "JAFGLogDefs.h"
+#include "Components/JAFGTextBlock.h"
 
 #define OWNING_PLAYER_CONTROLLER                             \
     Cast<AWorldPlayerController>(this->GetOwningPlayer())
@@ -25,7 +24,7 @@
 
 void UChatMenuEntry::PassDataToWidget(const FWidgetPassData& UncastedData)
 {
-    CAST_PASSED_DATA(FChatMessageData)
+    CAST_PASSED_DATA(FChatMessagePassData)
     {
         this->MessageData = *Data;
     }
@@ -37,11 +36,11 @@ void UChatMenuEntry::PassDataToWidget(const FWidgetPassData& UncastedData)
 
 void UChatMenuEntry::ConstructMessage(void)
 {
-    this->TB_Message->SetText(
+    this->TextBlock_Message->SetText(
         FText::FromString(
             FString::Printf(
                 TEXT("<%s> %s"),
-                *this->MessageData.Sender, *this->MessageData.Message.ToString()
+                *this->MessageData.Message.Sender, *this->MessageData.Message.Message.ToString()
             )
         )
     );
@@ -80,11 +79,7 @@ void UChatMenu::NativeConstruct(void)
 
     if (OWNING_CHAT_COMPONENT == nullptr)
     {
-#if WITH_EDITOR
-        LOG_ERROR(LogJAFGChat, "Chat component is not attached to the owning player controller.")
-#else /* WITH_EDITOR */
-        LOG_FATAL(LogJAFGChat, "Chat component is not attached to the owning player controller.")
-#endif /* !WITH_EDITOR */
+        LOG_RELAXED_FATAL(LogJAFGChat, "Chat component is not attached to the owning player controller.")
     }
 
     this->PreviewEntries.Empty();
@@ -92,19 +87,19 @@ void UChatMenu::NativeConstruct(void)
     this->ChatMenuVisibilityChangedHandle = Owner->SubscribeToChatVisibilityChanged(ADD_SLATE_VIS_DELG(UChatMenu::OnChatMenuVisibilityChanged));
     this->ChatHistoryLookupHandle         = Owner->SubscribeToChatHistoryLookup(FChatHistoryLookupSignature::FDelegate::CreateUObject(this, &UChatMenu::OnHistoryLookUp));
 
-    this->ET_StdIn->SetCustomEventToKeyDown(this->GetOnStdInKeyDownHandler());
-    this->ET_StdIn->OnTextChanged.AddDynamic(this, &UChatMenu::OnChatTextChanged);
-    this->ET_StdIn->OnTextCommitted.AddDynamic(this, &UChatMenu::OnChatTextCommitted);
+    this->EditableText_StdIn->SetCustomEventToKeyDown(this->GetOnStdInKeyDownHandler());
+    this->EditableText_StdIn->OnTextChanged.AddDynamic(this, &UChatMenu::OnChatTextChanged);
+    this->EditableText_StdIn->OnTextCommitted.AddDynamic(this, &UChatMenu::OnChatTextCommitted);
 
     this->ChangeChatMenuVisibility(EChatMenuVisibility::Collapsed);
 
     /* For messages that have arrived while this widget has not yet been constructed. */
     while (OWNING_CHAT_COMPONENT->PreChatWidgetConstructionQueue.IsEmpty() == false)
     {
-        FPrivateMessagePreConstruct PreConstruct;
+        FChatMessage PreConstruct;
         OWNING_CHAT_COMPONENT->PreChatWidgetConstructionQueue.Dequeue(PreConstruct);
 
-        this->AddMessageToChatLog(PreConstruct.Sender, PreConstruct.Message);
+        this->AddMessageToChatLog(PreConstruct);
     }
 
     return;
@@ -145,19 +140,24 @@ void UChatMenu::NativeTick(const FGeometry& MyGeometry, const float InDeltaTime)
     return;
 }
 
-void UChatMenu::AddMessageToChatLog(const FString& Sender, const FText& Message)
+void UChatMenu::AddMessageToChatLog(const EChatMessageType::Type Type, const FString& Sender, const FText& Message)
 {
-    this->SB_StdOut->AddChild(this->ConstructChatMenuEntry(Sender, Message));
-    this->SafeAddToPreviewOut(Sender, Message);
+    this->AddMessageToChatLog(FChatMessage(Type, Sender, Message));
+}
+
+void UChatMenu::AddMessageToChatLog(const FChatMessage& Message)
+{
+    this->ScrollBox_StdOut->AddChild(this->ConstructChatMenuEntry(Message));
+    this->SafeAddToPreviewOut(Message);
 
     if (this->GetChatMenuVisibility() == EChatMenuVisibility::Full)
     {
-        if (this->SB_StdOut->GetScrollOffsetOfEnd() - this->SB_StdOut->GetScrollOffset() < this->StdOutScrollOffsetOfEndIgnoreDelta)
+        if (this->ScrollBox_StdOut->GetScrollOffsetOfEnd() - this->ScrollBox_StdOut->GetScrollOffset() < this->StdOutScrollOffsetOfEndIgnoreDelta)
         {
-            /** Give the scroll bar time to render. And exectue on the next tick. */
+            /* Give the scroll bar time to render. And execute on the next tick. */
             AsyncTask(ENamedThreads::GameThread, [this] (void) -> void
             {
-                this->SB_StdOut->ScrollToEnd();
+                this->ScrollBox_StdOut->ScrollToEnd();
             });
         }
         return;
@@ -170,8 +170,8 @@ void UChatMenu::AddMessageToChatLog(const FString& Sender, const FText& Message)
 
 void UChatMenu::ClearAllChatEntries(void)
 {
-    this->SB_StdOut->ClearChildren();
-    this->VB_PreviewOut->ClearChildren();
+    this->ScrollBox_StdOut->ClearChildren();
+    this->VerticalBox_PreviewOut->ClearChildren();
     this->PreviewEntries.Empty();
 
     return;
@@ -225,7 +225,7 @@ void UChatMenu::ChangeChatMenuVisibility(const EChatMenuVisibility::Type InVisib
         }
 
         this->SetVisibility(ESlateVisibility::Collapsed);
-        this->VB_PreviewOut->ClearChildren();
+        this->VerticalBox_PreviewOut->ClearChildren();
         this->PreviewEntries.Empty();
         this->ClearStdIn();
         this->CurrentCursorInHistory = UChatMenu::InvalidCursorInHistory;
@@ -234,9 +234,9 @@ void UChatMenu::ChangeChatMenuVisibility(const EChatMenuVisibility::Type InVisib
     case EChatMenuVisibility::Preview:
     {
         this->SetVisibility(ESlateVisibility::Visible);
-        this->PW_StdOutWrapper->SetVisibility(ESlateVisibility::Collapsed);
-        this->PW_PreviewOutWrapper->SetVisibility(ESlateVisibility::Visible);
-        this->PW_StdInWrapper->SetVisibility(ESlateVisibility::Hidden);
+        this->PanelWidget_StdOutWrapper->SetVisibility(ESlateVisibility::Collapsed);
+        this->PanelWidget_PreviewOutWrapper->SetVisibility(ESlateVisibility::Visible);
+        this->PanelWidget_StdInWrapper->SetVisibility(ESlateVisibility::Hidden);
 
         this->ClearStdIn();
         this->CurrentCursorInHistory = UChatMenu::InvalidCursorInHistory;
@@ -246,11 +246,11 @@ void UChatMenu::ChangeChatMenuVisibility(const EChatMenuVisibility::Type InVisib
     case EChatMenuVisibility::Full:
     {
         this->SetVisibility(ESlateVisibility::Visible);
-        this->PW_StdOutWrapper->SetVisibility(ESlateVisibility::Visible);
-        this->PW_PreviewOutWrapper->SetVisibility(ESlateVisibility::Collapsed);
-        this->PW_StdInWrapper->SetVisibility(ESlateVisibility::Visible);
+        this->PanelWidget_StdOutWrapper->SetVisibility(ESlateVisibility::Visible);
+        this->PanelWidget_PreviewOutWrapper->SetVisibility(ESlateVisibility::Collapsed);
+        this->PanelWidget_StdInWrapper->SetVisibility(ESlateVisibility::Visible);
 
-        this->SB_StdOut->ScrollToEnd();
+        this->ScrollBox_StdOut->ScrollToEnd();
         this->ClearStdIn();
         this->FocusStdIn();
         this->CurrentCursorInHistory = UChatMenu::InvalidCursorInHistory;
@@ -274,7 +274,7 @@ EChatMenuVisibility::Type UChatMenu::GetChatMenuVisibility(void) const
         return EChatMenuVisibility::Collapsed;
     }
 
-    if (this->PW_PreviewOutWrapper->GetVisibility() == ESlateVisibility::Visible)
+    if (this->PanelWidget_PreviewOutWrapper->GetVisibility() == ESlateVisibility::Visible)
     {
         return EChatMenuVisibility::Preview;
     }
@@ -282,10 +282,10 @@ EChatMenuVisibility::Type UChatMenu::GetChatMenuVisibility(void) const
     return EChatMenuVisibility::Full;
 }
 
-void UChatMenu::SafeAddToPreviewOut(const FString& Sender, const FText& Message)
+void UChatMenu::SafeAddToPreviewOut(const FChatMessage& Message)
 {
-    UUserWidget* Entry = this->ConstructChatMenuEntry(Sender, Message);
-    this->VB_PreviewOut->AddChild(Entry);
+    UUserWidget* Entry = this->ConstructChatMenuEntry(Message);
+    this->VerticalBox_PreviewOut->AddChild(Entry);
 
     FPrivatePreviewEntryData Data;
     Data.CreationTimeInSeconds = this->GetWorld()->GetTimeSeconds();
@@ -293,16 +293,16 @@ void UChatMenu::SafeAddToPreviewOut(const FString& Sender, const FText& Message)
 
     this->PreviewEntries.Emplace(Data);
 
-    while (this->VB_PreviewOut->GetChildrenCount() > this->MaxEntriesInPreviewOut)
+    while (this->VerticalBox_PreviewOut->GetChildrenCount() > this->MaxEntriesInPreviewOut)
     {
-        UUserWidget* EntryToRemove = Cast<UUserWidget>(this->VB_PreviewOut->GetChildAt(0));
+        UUserWidget* EntryToRemove = Cast<UUserWidget>(this->VerticalBox_PreviewOut->GetChildAt(0));
         this->PreviewEntries.RemoveAll(
             [EntryToRemove] (const FPrivatePreviewEntryData& ExistingData) -> bool
             {
                 return ExistingData.Entry == EntryToRemove;
             }
         );
-        this->VB_PreviewOut->RemoveChildAt(0);
+        this->VerticalBox_PreviewOut->RemoveChildAt(0);
     }
 
     return;
@@ -320,7 +320,7 @@ void UChatMenu::RemoveOutdatedPreviewEntries(void)
                     return true;
                 }
 
-                this->VB_PreviewOut->RemoveChild(Data.Entry);
+                this->VerticalBox_PreviewOut->RemoveChild(Data.Entry);
                 return true;
             }
 
@@ -346,13 +346,13 @@ void UChatMenu::ChangeChatMenuVisibilityStateBasedOnPreviewEntries(void)
     return;
 }
 
-UChatMenuEntry* UChatMenu::ConstructChatMenuEntry(const FString& Sender, const FText& Message) const
+UChatMenuEntry* UChatMenu::ConstructChatMenuEntry(const FChatMessage& Message) const
 {
     const UJAFGSlateSettings* SlateSettings = GetDefault<UJAFGSlateSettings>();
     check( SlateSettings )
 
     UChatMenuEntry* ChatMenuEntry = CreateWidget<UChatMenuEntry>(this->GetWorld(), SlateSettings->ChatMenuEntryWidgetClass);
-    ChatMenuEntry->PassDataToWidget(FChatMessageData(Sender, Message));
+    ChatMenuEntry->PassDataToWidget(FChatMessagePassData(Message));
 
     return ChatMenuEntry;
 }
@@ -363,7 +363,7 @@ void UChatMenu::OnChatTextChanged(const FText& Text)
 {
     if (ChatStatics::IsTextToLong(Text))
     {
-        this->ET_StdIn->SetText(FText::FromString(this->ET_StdIn->GetText().ToString().Left(ChatStatics::MaxChatInputLength)));
+        this->EditableText_StdIn->SetText(FText::FromString(this->EditableText_StdIn->GetText().ToString().Left(ChatStatics::MaxChatInputLength)));
     }
 
     return;
@@ -440,7 +440,7 @@ void UChatMenu::OnHistoryLookUp(const bool bPrevious)
     if (this->CurrentCursorInHistory < 0)
     {
         this->CurrentCursorInHistory = UChatMenu::InvalidCursorInHistory;
-        this->ET_StdIn->SetText(FText::GetEmpty());
+        this->EditableText_StdIn->SetText(FText::GetEmpty());
         return;
     }
     if (OWNING_CHAT_COMPONENT->ChatStdInLog.Num() <= this->CurrentCursorInHistory)
@@ -456,24 +456,24 @@ void UChatMenu::OnHistoryLookUp(const bool bPrevious)
     }
 #endif /* WITH_EDITOR */
 
-    this->ET_StdIn->SetText(OWNING_CHAT_COMPONENT->ChatStdInLog[this->CurrentCursorInHistory]);
+    this->EditableText_StdIn->SetText(OWNING_CHAT_COMPONENT->ChatStdInLog[this->CurrentCursorInHistory]);
 
     return;
 }
 
 void UChatMenu::FocusStdIn(void) const
 {
-    this->ET_StdIn->SetUserFocus(OWNING_PLAYER_CONTROLLER);
+    this->EditableText_StdIn->SetUserFocus(OWNING_PLAYER_CONTROLLER);
 }
 
 auto UChatMenu::ClearStdIn(void) const -> void
 {
-    this->ET_StdIn->SetText(FText::GetEmpty());
+    this->EditableText_StdIn->SetText(FText::GetEmpty());
 }
 
 bool UChatMenu::IsStdInValid(void) const
 {
-   return ChatStatics::IsTextValid(this->ET_StdIn->GetText());
+   return ChatStatics::IsTextValid(this->EditableText_StdIn->GetText());
 }
 
 #undef OWNING_PLAYER_CONTROLLER

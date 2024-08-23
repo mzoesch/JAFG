@@ -3,26 +3,26 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ChatMessage.h"
 #include "JAFGUserWidget.h"
 
 #include "ChatMenu.generated.h"
 
+class UJAFGTextBlock;
 class UVerticalBox;
 class UOverlay;
-class UTextBlock;
 class UScrollBox;
 class UEditableText;
 class UJAFGEditableText;
 
-struct CHAT_API FChatMessageData final : public FWidgetPassData
+struct CHAT_API FChatMessagePassData final : public FWidgetPassData
 {
-    FChatMessageData() = default;
-    FChatMessageData(const FString& Sender, const FText& Message) : Sender(Sender), Message(Message)
+    FChatMessagePassData() = default;
+    explicit FChatMessagePassData(const FChatMessage& InMessage) : Message(InMessage)
     {
     }
 
-    FString Sender;
-    FText   Message;
+    FChatMessage Message;
 };
 
 UCLASS(Abstract, Blueprintable)
@@ -36,10 +36,10 @@ public:
 
 protected:
 
-    FChatMessageData MessageData;
+    FChatMessagePassData MessageData;
 
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
-    UTextBlock* TB_Message;
+    TObjectPtr<UJAFGTextBlock> TextBlock_Message;
 
     virtual void ConstructMessage(void);
 };
@@ -75,7 +75,9 @@ protected:
 
 public:
 
-    void AddMessageToChatLog(const FString& Sender, const FText& Message);
+    void AddMessageToChatLog(const EChatMessageType::Type Type, const FString& Sender, const FText& Message);
+    void AddMessageToChatLog(const FChatMessage& Message);
+
     void ClearAllChatEntries(void);
 
 protected:
@@ -97,13 +99,13 @@ protected:
         UUserWidget* Entry;
     };
     /** Only adds an entry to the preview out if allowed by current widget state. */
-    auto SafeAddToPreviewOut(const FString& Sender, const FText& Message) -> void;
+    auto SafeAddToPreviewOut(const FChatMessage& Message) -> void;
     auto RemoveOutdatedPreviewEntries(void) -> void;
     auto ChangeChatMenuVisibilityStateBasedOnPreviewEntries(void) -> void;
     const float PreviewOutEntryLifetimeInSeconds { 0x5 };
     const int32 MaxEntriesInPreviewOut { 0x8 };
     TArray<FPrivatePreviewEntryData> PreviewEntries;
-    auto ConstructChatMenuEntry(const FString& Sender, const FText& Message) const -> UChatMenuEntry*;
+    auto ConstructChatMenuEntry(const FChatMessage& Message) const -> UChatMenuEntry*;
     /**
      *  The offset of the stdout scroll box to the end, where we scroll to the end if a new message appears and the
      *  stdout is active. If the current offset is higher than this value, we leave the scroll offset as it is.
@@ -111,25 +113,25 @@ protected:
     const float StdOutScrollOffsetOfEndIgnoreDelta { 0x3F };
 
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
-    TObjectPtr<UOverlay> O_OutWrapper;
+    TObjectPtr<UOverlay> Overlay_OutWrapper;
 
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
-    TObjectPtr<UPanelWidget> PW_StdOutWrapper;
+    TObjectPtr<UPanelWidget> PanelWidget_StdOutWrapper;
 
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
-    TObjectPtr<UScrollBox> SB_StdOut;
+    TObjectPtr<UScrollBox> ScrollBox_StdOut;
 
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
-    TObjectPtr<UPanelWidget> PW_PreviewOutWrapper;
+    TObjectPtr<UPanelWidget> PanelWidget_PreviewOutWrapper;
 
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
-    TObjectPtr<UVerticalBox> VB_PreviewOut;
+    TObjectPtr<UVerticalBox> VerticalBox_PreviewOut;
 
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
-    TObjectPtr<UJAFGEditableText> ET_StdIn;
+    TObjectPtr<UJAFGEditableText> EditableText_StdIn;
 
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
-    TObjectPtr<UPanelWidget> PW_StdInWrapper;
+    TObjectPtr<UPanelWidget> PanelWidget_StdInWrapper;
 
     UFUNCTION()
     void OnChatTextChanged(const FText& Text);
