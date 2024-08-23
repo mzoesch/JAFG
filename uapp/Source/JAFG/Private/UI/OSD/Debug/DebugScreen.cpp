@@ -19,6 +19,7 @@
 #include "MISC/App.h"
 #include "System/VoxelSubsystem.h"
 #include "WorldCore/ChunkWorldSettings.h"
+#include "WorldCore/Chunk/ChunkArena.h"
 #include "WorldCore/Validation/ChunkGenerationSubsystem.h"
 #include "WorldCore/Chunk/CommonChunk.h"
 #if WITH_EDITOR
@@ -321,7 +322,7 @@ FString UDebugScreen::GetSectionUWorld(void) const
 
 FString UDebugScreen::GetSectionChunks(void) const
 {
-    bool bChunksMeaningful = false;
+    bool bChunksMeaningful    = false;
 
     int32 VerticalChunks      = -1;
     int32 TotalChunks         = -1;
@@ -329,6 +330,9 @@ FString UDebugScreen::GetSectionChunks(void) const
     int32 PendingKillChunks   = -1;
     int32 PendingClientChunks = -1;
     int32 PurgeInterval       = -1;
+
+    int32 FreeGladiators      = -1;
+    int32 AllocatedGladiators = -1;
 
     if (const UChunkGenerationSubsystem* const GenSubsystem = this->GetWorld()->GetSubsystem<UChunkGenerationSubsystem>(); GenSubsystem)
     {
@@ -340,12 +344,19 @@ FString UDebugScreen::GetSectionChunks(void) const
         PendingKillChunks   = GenSubsystem->GetPendingKillVerticalChunkQueue().Num();
         PendingClientChunks = GenSubsystem->ClientQueue.Num();
         PurgeInterval       = GenSubsystem->GetCurrentPureInterval_Inverted();
+
+        if (const UChunkArena* const Arena = this->GetWorld()->GetSubsystem<UChunkArena>(); Arena)
+        {
+            FreeGladiators      = Arena->GetFreeChunkCount();
+            AllocatedGladiators = Arena->GetAllocatedChunkCount();
+        }
     }
 
     return FString::Printf(
-        TEXT("Chunks (%s): %d%%, D: %d, VC %d[%d], p: %d, pk: %d, pcl: %d, purge: %d"),
+        TEXT("Chunks (%s): %d%%[F:%d;A:%d], D: %d, VC %d[%d], p: %d, pk: %d, pcl: %d, purge: %d"),
         bChunksMeaningful ? TEXT("Strong") : TEXT("Weak"),
         static_cast<int32>(100.0f * (static_cast<float>(this->ActorCommonChunkCountCache) / static_cast<float>(this->ActorCountCache))),
+        FreeGladiators, AllocatedGladiators,
         -1,
         VerticalChunks, TotalChunks,
         PendingChunks,
