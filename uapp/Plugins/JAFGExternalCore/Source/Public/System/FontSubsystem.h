@@ -11,16 +11,40 @@ JAFG_VOID
 
 class UFontFace;
 
+UENUM(BlueprintType)
+namespace EJAFGFontTypeFace
+{
+
+enum Type : uint8
+{
+    Default,
+    Bold,
+    Italic,
+    BoldItalic,
+};
+
+}
+
+
 USTRUCT(NotBlueprintable, NotBlueprintType)
 struct JAFGEXTERNALCORE_API FJAFGFontData
 {
     GENERATED_BODY()
 
     UPROPERTY()
-    TObjectPtr<UFontFace> FontFace = nullptr;
+    TObjectPtr<UFont> Font = nullptr;
 
     UPROPERTY()
-    TObjectPtr<UFont> Font         = nullptr;
+    TObjectPtr<UFontFace> FontFace_Default    = nullptr;
+
+    UPROPERTY()
+    TObjectPtr<UFontFace> FontFace_Bold       = nullptr;
+
+    UPROPERTY()
+    TObjectPtr<UFontFace> FontFace_Italic     = nullptr;
+
+    UPROPERTY()
+    TObjectPtr<UFontFace> FontFace_BoldItalic = nullptr;
 
     /**
      * Be aware of your enemy, the Garbage Collector.
@@ -44,5 +68,15 @@ public:
     virtual auto Deinitialize(void) -> void override;
     // ~Subsystem implementation
 
+    /**
+     * The core font. It requires a default type face, a bold one, an italic one, and a bold italic one.
+     */
+    UPROPERTY()
     FJAFGFontData CoreFontData;
+
+    static auto GetTypeByScheme(const EJAFGFontTypeFace::Type InScheme) -> FName;
+
+private:
+
+    bool LoadFontFile(const FString& FileName, TArray<uint8>& OutBytes, TArray<FString> AllowedExtensions = {TEXT(".otf"), TEXT(".ttf")}) const;
 };
