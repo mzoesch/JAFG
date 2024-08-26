@@ -3,6 +3,7 @@
 #include "ChatMenu.h"
 #include "ChatComponentImpl.h"
 #include "ChatStatics.h"
+#include "DefaultColorsSubsystem.h"
 #include "EnhancedInputSubsystems.h"
 #include "JAFGSlateSettings.h"
 #include "Components/EditableText.h"
@@ -114,21 +115,6 @@ void UChatMenu::NativeConstruct(void)
 
         this->AddMessageToChatLog(PreConstruct);
     }
-
-    // UFontSubsystem* FontSubsystem = this->GetWorld()->GetGameInstance()->GetSubsystem<UFontSubsystem>();
-    // check( FontSubsystem )
-    //
-    //
-    // FSlateFontInfo FontInfo;
-    // FontInfo.CompositeFont = MakeShared<FCompositeFont>(FontSubsystem->CoreFontData.Font->CompositeFont);
-    // this->EditableText_StdIn->SetFont(FontInfo);
-    //
-    // // Temp
-    // this->TempTable = FontSubsystem->CoreFontData.ConstructNewMinimalDataTable();
-    // URichTextBlock* RichTextBlock = WidgetTree->ConstructWidget<URichTextBlock>(URichTextBlock::StaticClass());
-    // RichTextBlock->SetText(FText::FromString(TEXT("Test Test Test")));
-    // RichTextBlock->SetTextStyleSet(this->TempTable);
-    // this->Overlay_OutWrapper->AddChild(RichTextBlock);
 
     return;
 }
