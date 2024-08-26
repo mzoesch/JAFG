@@ -253,6 +253,97 @@ UGameSettingCollection* UJAFGGameSettingRegistry::InitializeUserInterfaceSetting
         }
     }
 
+     {
+        UGameSettingCollection* Subsection = NewObject<UGameSettingCollection>();
+        Subsection->SetIdentifier("ChatUserInterfaceCollection");
+        Subsection->SetDisplayName("Chat");
+        Screen->AddSetting(Subsection);
+
+        {
+            UGameSettingValueColor* ConcreteSetting = NewObject<UGameSettingValueColor>();
+            ConcreteSetting->SetIdentifier("PlayerChatColorScheme");
+            ConcreteSetting->SetDisplayName("Player Message");
+
+            ConcreteSetting->SetValueGetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(GetChatMessageColorPlayer));
+            ConcreteSetting->SetValueSetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(SetChatMessageColorPlayer));
+            ConcreteSetting->SetDefaultValue(UJAFGSettingsLocal::DefaultChatMessageColorPlayer);
+
+            Subsection->AddSetting(ConcreteSetting);
+        }
+
+        {
+            UGameSettingValueColor* ConcreteSetting = NewObject<UGameSettingValueColor>();
+            ConcreteSetting->SetIdentifier("WhisperChatColorScheme");
+            ConcreteSetting->SetDisplayName("Player Whisper Message");
+
+            ConcreteSetting->SetValueGetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(GetChatMessageColorWhisper));
+            ConcreteSetting->SetValueSetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(SetChatMessageColorWhisper));
+            ConcreteSetting->SetDefaultValue(UJAFGSettingsLocal::DefaultChatMessageColorWhisper);
+
+            Subsection->AddSetting(ConcreteSetting);
+        }
+
+        {
+            UGameSettingValueColor* ConcreteSetting = NewObject<UGameSettingValueColor>();
+            ConcreteSetting->SetIdentifier("VerboseChatColorScheme");
+            ConcreteSetting->SetDisplayName("Verbose Game Message");
+
+            ConcreteSetting->SetValueGetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(GetChatMessageColorVerbose));
+            ConcreteSetting->SetValueSetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(SetChatMessageColorVerbose));
+            ConcreteSetting->SetDefaultValue(UJAFGSettingsLocal::DefaultChatMessageColorVerbose);
+
+            Subsection->AddSetting(ConcreteSetting);
+        }
+
+        {
+            UGameSettingValueColor* ConcreteSetting = NewObject<UGameSettingValueColor>();
+            ConcreteSetting->SetIdentifier("InfoChatColorScheme");
+            ConcreteSetting->SetDisplayName("Info Game Message");
+
+            ConcreteSetting->SetValueGetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(GetChatMessageColorInfo));
+            ConcreteSetting->SetValueSetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(SetChatMessageColorInfo));
+            ConcreteSetting->SetDefaultValue(UJAFGSettingsLocal::DefaultChatMessageColorInfo);
+
+            Subsection->AddSetting(ConcreteSetting);
+        }
+
+        {
+            UGameSettingValueColor* ConcreteSetting = NewObject<UGameSettingValueColor>();
+            ConcreteSetting->SetIdentifier("WarningChatColorScheme");
+            ConcreteSetting->SetDisplayName("Warning Game Message");
+
+            ConcreteSetting->SetValueGetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(GetChatMessageColorWarning));
+            ConcreteSetting->SetValueSetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(SetChatMessageColorWarning));
+            ConcreteSetting->SetDefaultValue(UJAFGSettingsLocal::DefaultChatMessageColorWarning);
+
+            Subsection->AddSetting(ConcreteSetting);
+        }
+
+        {
+            UGameSettingValueColor* ConcreteSetting = NewObject<UGameSettingValueColor>();
+            ConcreteSetting->SetIdentifier("ErrorChatColorScheme");
+            ConcreteSetting->SetDisplayName("Error Game Message");
+
+            ConcreteSetting->SetValueGetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(GetChatMessageColorError));
+            ConcreteSetting->SetValueSetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(SetChatMessageColorError));
+            ConcreteSetting->SetDefaultValue(UJAFGSettingsLocal::DefaultChatMessageColorError);
+
+            Subsection->AddSetting(ConcreteSetting);
+        }
+
+        {
+            UGameSettingValueColor* ConcreteSetting = NewObject<UGameSettingValueColor>();
+            ConcreteSetting->SetIdentifier("SuccessChatColorScheme");
+            ConcreteSetting->SetDisplayName("Success Game Message");
+
+            ConcreteSetting->SetValueGetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(GetChatMessageColorSuccess));
+            ConcreteSetting->SetValueSetter(GET_LOCAL_SETTINGS_FUNCTION_PATH(SetChatMessageColorSuccess));
+            ConcreteSetting->SetDefaultValue(UJAFGSettingsLocal::DefaultChatMessageColorSuccess);
+
+            Subsection->AddSetting(ConcreteSetting);
+        }
+    }
+
     Screen->Initialize(InOwningPlayer);
 
     return Screen;

@@ -6,6 +6,7 @@
 #include "JAFGSlateStatics.h"
 #include "UsesJAFGColorScheme.h"
 #include "Components/EditableText.h"
+#include "System/FontSubsystem.h"
 
 #include "JAFGEditableText.generated.h"
 
@@ -34,11 +35,19 @@ public:
     // ~IUserJAFGColorScheme interface
 
     FORCEINLINE auto SetColorScheme(const EJAFGFontSize::Type InColorScheme) -> void { this->ColorScheme = InColorScheme; }
+    FORCEINLINE auto SetColorScheme(const EJAFGFont::Type InColorScheme) -> void { this->FontColorScheme = InColorScheme; }
+    FORCEINLINE auto SetColorScheme(const EJAFGFontTypeFace::Type InColorScheme) -> void { this->TypeFaceColorScheme = InColorScheme; }
 
 protected:
 
     UPROPERTY(EditInstanceOnly, BlueprintReadOnly)
     TEnumAsByte<EJAFGFontSize::Type> ColorScheme = EJAFGFontSize::DontCare;
+
+    UPROPERTY(EditInstanceOnly, BlueprintReadOnly)
+    TEnumAsByte<EJAFGFont::Type> FontColorScheme = EJAFGFont::DontCare;
+
+    UPROPERTY(EditInstanceOnly, BlueprintReadOnly)
+    TEnumAsByte<EJAFGFontTypeFace::Type> TypeFaceColorScheme = EJAFGFontTypeFace::Default;
 
 private:
 

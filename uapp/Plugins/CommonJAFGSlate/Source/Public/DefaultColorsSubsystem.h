@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "JAFGSlateStatics.h"
 #include "Subsystems/EngineSubsystem.h"
+#include "System/FontSubsystem.h"
 
 #include "DefaultColorsSubsystem.generated.h"
 
@@ -20,9 +21,15 @@ public:
 
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
-    auto GetColorByScheme(const EJAFGColorScheme::Type InScheme) const -> FColor;
-    auto GetBlurStrengthByScheme(const EJAFGBlurriness::Type InScheme) const -> float;
-    auto GetFontSizeByScheme(const EJAFGFontSize::Type InScheme) const -> int32;
+    auto GetTypeByScheme(const EJAFGColorScheme::Type InScheme) const -> FColor;
+    auto GetTypeByScheme(const EJAFGBlurriness::Type InScheme) const -> float;
+    auto GetTypeByScheme(const EJAFGFontSize::Type InScheme) const -> int32;
+    auto GetTypeByScheme(const EJAFGFont::Type InScheme) const -> TSharedPtr<FCompositeFont>;
+    auto GetTypeByScheme(const EJAFGRichFont::Type InScheme) const -> UDataTable*;
+    auto GetTypeByScheme(const EJAFGFontTypeFace::Type InScheme) const -> FName;
+
+    auto ParseTypeByScheme(const EJAFGFont::Type InScheme, FSlateFontInfo& Info) const -> void;
+    auto ParseTypeByScheme(const EJAFGFont::Type InScheme, const EJAFGFontTypeFace::Type InTypeFace, FSlateFontInfo& Info) const -> void;
 
 protected:
 

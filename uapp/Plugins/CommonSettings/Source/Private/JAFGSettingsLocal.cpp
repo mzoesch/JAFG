@@ -1,7 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "JAFGSettingsLocal.h"
-
 #include "DefaultColorsSubsystem.h"
 #include "JAFGLogDefs.h"
 #include "JAFGUserWidget.h"
@@ -303,6 +302,76 @@ int32 UJAFGSettingsLocal::GetTinyFontSize(void) const
 void UJAFGSettingsLocal::SetTinyFontSize(const int32 InTinyFontSize)
 {
     this->TinyFontSize = InTinyFontSize;
+}
+
+FColor UJAFGSettingsLocal::GetChatMessageColorPlayer(void) const
+{
+    return this->ChatMessageColorPlayer;
+}
+
+void UJAFGSettingsLocal::SetChatMessageColorPlayer(const FColor& InChatMessageColorPlayer)
+{
+    this->ChatMessageColorPlayer = InChatMessageColorPlayer;
+}
+
+FColor UJAFGSettingsLocal::GetChatMessageColorWhisper(void) const
+{
+    return this->ChatMessageColorWhisper;
+}
+
+void UJAFGSettingsLocal::SetChatMessageColorWhisper(const FColor& InChatMessageColorWhisper)
+{
+    this->ChatMessageColorWhisper = InChatMessageColorWhisper;
+}
+
+FColor UJAFGSettingsLocal::GetChatMessageColorVerbose(void) const
+{
+    return this->ChatMessageColorVerbose;
+}
+
+void UJAFGSettingsLocal::SetChatMessageColorVerbose(const FColor& InChatMessageColorVerbose)
+{
+    this->ChatMessageColorVerbose = InChatMessageColorVerbose;
+}
+
+FColor UJAFGSettingsLocal::GetChatMessageColorInfo(void) const
+{
+    return this->ChatMessageColorInfo;
+}
+
+void UJAFGSettingsLocal::SetChatMessageColorInfo(const FColor& InChatMessageColorInfo)
+{
+    this->ChatMessageColorInfo = InChatMessageColorInfo;
+}
+
+FColor UJAFGSettingsLocal::GetChatMessageColorWarning(void) const
+{
+    return this->ChatMessageColorWarning;
+}
+
+void UJAFGSettingsLocal::SetChatMessageColorWarning(const FColor& InChatMessageColorWarning)
+{
+    this->ChatMessageColorWarning = InChatMessageColorWarning;
+}
+
+FColor UJAFGSettingsLocal::GetChatMessageColorError(void) const
+{
+    return this->ChatMessageColorError;
+}
+
+void UJAFGSettingsLocal::SetChatMessageColorError(const FColor& InChatMessageColorError)
+{
+    this->ChatMessageColorError = InChatMessageColorError;
+}
+
+FColor UJAFGSettingsLocal::GetChatMessageColorSuccess(void) const
+{
+    return this->ChatMessageColorSuccess;
+}
+
+void UJAFGSettingsLocal::SetChatMessageColorSuccess(const FColor& InChatMessageColorSuccess)
+{
+    this->ChatMessageColorSuccess = InChatMessageColorSuccess;
 }
 
 int32 UJAFGSettingsLocal::GetClientRenderDistance(void) const

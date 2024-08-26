@@ -20,12 +20,11 @@ void UJAFGTextBlock::UpdateComponentWithTheirScheme(void)
     FSlateFontInfo Temp = this->GetFont();
     if (this->ColorScheme != EJAFGFont::DontCare)
     {
-        Temp.Size = Subsystem->GetFontSizeByScheme(this->ColorScheme);
+        Temp.Size = Subsystem->GetTypeByScheme(this->ColorScheme);
     }
     if (this->FontColorScheme != EJAFGFont::DontCare)
     {
-        Temp.CompositeFont = Subsystem->GetFontByScheme(this->FontColorScheme);
-        Temp.TypefaceFontName = FName("Default");
+        Subsystem->ParseTypeByScheme(this->FontColorScheme, this->TypeFaceColorScheme, Temp);
     }
     this->SetFont(Temp);
 

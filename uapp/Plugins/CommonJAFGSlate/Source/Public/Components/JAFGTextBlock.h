@@ -6,6 +6,7 @@
 #include "Components/TextBlock.h"
 #include "UsesJAFGColorScheme.h"
 #include "JAFGSlateStatics.h"
+#include "System/FontSubsystem.h"
 
 #include "JAFGTextBlock.generated.h"
 
@@ -27,6 +28,7 @@ public:
 
     FORCEINLINE auto SetNativeColorScheme(const EJAFGFontSize::Type InColorScheme) -> void { this->ColorScheme     = InColorScheme;     }
     FORCEINLINE auto SetNativeColorScheme(const EJAFGFont::Type InFontColorScheme) -> void { this->FontColorScheme = InFontColorScheme; }
+    FORCEINLINE auto SetNativeColorScheme(const EJAFGFontTypeFace::Type InTypeFaceColorScheme) -> void { this->TypeFaceColorScheme = InTypeFaceColorScheme; }
 
 protected:
 
@@ -35,4 +37,7 @@ protected:
 
     UPROPERTY(EditInstanceOnly, BlueprintReadOnly)
     TEnumAsByte<EJAFGFont::Type> FontColorScheme = EJAFGFont::DontCare;
+
+    UPROPERTY(EditInstanceOnly, BlueprintReadOnly)
+    TEnumAsByte<EJAFGFontTypeFace::Type> TypeFaceColorScheme = EJAFGFontTypeFace::Default;
 };

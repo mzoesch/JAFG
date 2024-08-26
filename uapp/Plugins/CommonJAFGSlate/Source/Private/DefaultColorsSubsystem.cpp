@@ -3,6 +3,8 @@
 #include "DefaultColorsSubsystem.h"
 
 #include "JAFGLogDefs.h"
+#include "JAFGMacros.h"
+#include "System/FontSubsystem.h"
 
 UDefaultColorsSubsystem::UDefaultColorsSubsystem() : Super()
 {
@@ -16,7 +18,7 @@ void UDefaultColorsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     return;
 }
 
-FColor UDefaultColorsSubsystem::GetColorByScheme(const EJAFGColorScheme::Type InScheme) const
+FColor UDefaultColorsSubsystem::GetTypeByScheme(const EJAFGColorScheme::Type InScheme) const
 {
     switch (InScheme)
     {
@@ -52,7 +54,7 @@ FColor UDefaultColorsSubsystem::GetColorByScheme(const EJAFGColorScheme::Type In
     }
 }
 
-float UDefaultColorsSubsystem::GetBlurStrengthByScheme(const EJAFGBlurriness::Type InScheme) const
+float UDefaultColorsSubsystem::GetTypeByScheme(const EJAFGBlurriness::Type InScheme) const
 {
     switch (InScheme)
     {
@@ -80,7 +82,7 @@ float UDefaultColorsSubsystem::GetBlurStrengthByScheme(const EJAFGBlurriness::Ty
     }
 }
 
-int32 UDefaultColorsSubsystem::GetFontSizeByScheme(const EJAFGFontSize::Type InScheme) const
+int32 UDefaultColorsSubsystem::GetTypeByScheme(const EJAFGFontSize::Type InScheme) const
 {
     switch (InScheme)
     {
@@ -114,4 +116,57 @@ int32 UDefaultColorsSubsystem::GetFontSizeByScheme(const EJAFGFontSize::Type InS
         return 0.0f;
     }
     }
+}
+
+TSharedPtr<FCompositeFont> UDefaultColorsSubsystem::GetTypeByScheme(const EJAFGFont::Type InScheme) const
+{
+    if (InScheme == EJAFGFont::Core)
+    {
+        return this->GetGameInstance()->GetSubsystem<UFontSubsystem>()->CoreFontData.ConstructCompositeFont();
+    }
+
+    checkNoEntry()
+
+    return nullptr;
+}
+
+UDataTable* UDefaultColorsSubsystem::GetTypeByScheme(const EJAFGRichFont::Type InScheme) const
+{
+    if (InScheme == EJAFGRichFont::Core)
+    {
+        return this->GetGameInstance()->GetSubsystem<UFontSubsystem>()->CoreFontData.ConstructNewMinimalDataTable();
+    }
+
+    jcheckNoEntry()
+
+    return nullptr;
+}
+
+// ReSharper disable once CppMemberFunctionMayBeStatic
+FName UDefaultColorsSubsystem::GetTypeByScheme(const EJAFGFontTypeFace::Type InScheme) const
+{
+    return UFontSubsystem::GetTypeByScheme(InScheme);
+}
+
+void UDefaultColorsSubsystem::ParseTypeByScheme(const EJAFGFont::Type InScheme, FSlateFontInfo& Info) const
+{
+    Info.FontObject = nullptr;
+
+    if (InScheme == EJAFGFont::Core)
+    {
+        Info.CompositeFont = this->GetTypeByScheme(InScheme);
+        return;
+    }
+
+    jcheckNoEntry()
+
+    return;
+}
+
+void UDefaultColorsSubsystem::ParseTypeByScheme(const EJAFGFont::Type InScheme, const EJAFGFontTypeFace::Type InTypeFace, FSlateFontInfo& Info) const
+{
+    this->ParseTypeByScheme(InScheme, Info);
+    Info.TypefaceFontName = UFontSubsystem::GetTypeByScheme(InTypeFace);
+
+    return;
 }

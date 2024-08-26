@@ -60,3 +60,33 @@ enum Type : uint8
 };
 
 }
+
+UENUM(BlueprintType)
+namespace EJAFGFont
+{
+
+enum Type : uint8
+{
+    /** The component will be treated normal and will never be updated by the JAFG color subsystem. */
+    DontCare,
+
+    Core,
+    Custom,
+};
+
+}
+
+UENUM(BlueprintType)
+namespace EJAFGRichFont
+{
+
+enum Type : uint8
+{
+    /** The component will be treated normal and will never be updated by the JAFG color subsystem. */
+    DontCare,
+
+    Core,
+    Custom,
+};
+
+}

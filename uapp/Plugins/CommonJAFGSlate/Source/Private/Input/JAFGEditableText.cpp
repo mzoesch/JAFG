@@ -3,6 +3,8 @@
 #include "Input/JAFGEditableText.h"
 
 #include "DefaultColorsSubsystem.h"
+#include "Engine/Font.h"
+#include "System/FontSubsystem.h"
 
 void UJAFGEditableText::SetCustomEventToKeyDown(const FOnKeyDown& InOnKeyDownHandler) const
 {
@@ -27,13 +29,22 @@ void UJAFGEditableText::SetMaxSize(const int32 InMaxSize)
 
 void UJAFGEditableText::UpdateComponentWithTheirScheme(void)
 {
-    if (this->ColorScheme == EJAFGFontSize::DontCare)
+    if (this->ColorScheme == EJAFGFontSize::DontCare && this->FontColorScheme == EJAFGFont::DontCare)
     {
         return;
     }
 
-    FSlateFontInfo Temp = this->GetFont();
-    Temp.Size = this->GetGameInstance()->GetSubsystem<UDefaultColorsSubsystem>()->GetFontSizeByScheme(this->ColorScheme);
+    const UDefaultColorsSubsystem* Subsystem = this->GetGameInstance()->GetSubsystem<UDefaultColorsSubsystem>();
+
+    FSlateFontInfo Temp   = this->GetFont();
+    if (this->ColorScheme != EJAFGFont::DontCare)
+    {
+        Temp.Size = Subsystem->GetTypeByScheme(this->ColorScheme);
+    }
+    if (this->FontColorScheme != EJAFGFont::DontCare)
+    {
+        Subsystem->ParseTypeByScheme(this->FontColorScheme, this->TypeFaceColorScheme, Temp);
+    }
     this->SetFont(Temp);
 
     return;

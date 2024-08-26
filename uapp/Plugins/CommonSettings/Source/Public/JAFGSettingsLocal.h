@@ -187,12 +187,55 @@ public:
     UFUNCTION()
     void SetTinyFontSize(const int32 InTinyFontSize);
 
-    inline static constexpr int32 DefaultGargantuanHeaderFontSize = 48;
-    inline static constexpr int32 DefaultHeaderFontSize           = 36;
-    inline static constexpr int32 DefaultSubHeaderFontSize        = 24;
-    inline static constexpr int32 DefaultBodyFontSize             = 16;
-    inline static constexpr int32 DefaultSmallFontSize            = 12;
-    inline static constexpr int32 DefaultTinyFontSize             =  8;
+    inline static constexpr int32 DefaultGargantuanHeaderFontSize { 48 };
+    inline static constexpr int32 DefaultHeaderFontSize           { 36 };
+    inline static constexpr int32 DefaultSubHeaderFontSize        { 24 };
+    inline static constexpr int32 DefaultBodyFontSize             { 16 };
+    inline static constexpr int32 DefaultSmallFontSize            { 12 };
+    inline static constexpr int32 DefaultTinyFontSize             {  8 };
+
+    UFUNCTION()
+    FColor GetChatMessageColorPlayer( /* void */ ) const;
+    UFUNCTION()
+    void SetChatMessageColorPlayer(const FColor& InChatMessageColorPlayer);
+
+    UFUNCTION()
+    FColor GetChatMessageColorWhisper( /* void */ ) const;
+    UFUNCTION()
+    void SetChatMessageColorWhisper(const FColor& InChatMessageColorWhisper);
+
+    UFUNCTION()
+    FColor GetChatMessageColorVerbose( /* void */ ) const;
+    UFUNCTION()
+    void SetChatMessageColorVerbose(const FColor& InChatMessageColorVerbose);
+
+    UFUNCTION()
+    FColor GetChatMessageColorInfo( /* void */ ) const;
+    UFUNCTION()
+    void SetChatMessageColorInfo(const FColor& InChatMessageColorInfo);
+
+    UFUNCTION()
+    FColor GetChatMessageColorWarning( /* void */ ) const;
+    UFUNCTION()
+    void SetChatMessageColorWarning(const FColor& InChatMessageColorWarning);
+
+    UFUNCTION()
+    FColor GetChatMessageColorError( /* void */ ) const;
+    UFUNCTION()
+    void SetChatMessageColorError(const FColor& InChatMessageColorError);
+
+    UFUNCTION()
+    FColor GetChatMessageColorSuccess( /* void */ ) const;
+    UFUNCTION()
+    void SetChatMessageColorSuccess(const FColor& InChatMessageColorSuccess);
+
+    inline static constexpr FColor DefaultChatMessageColorPlayer  { 255, 255, 255, 255 };
+    inline static constexpr FColor DefaultChatMessageColorWhisper { 220, 220, 220, 255 };
+    inline static constexpr FColor DefaultChatMessageColorVerbose { 150, 150, 150, 255 };
+    inline static constexpr FColor DefaultChatMessageColorInfo    { 255, 255, 255, 255 };
+    inline static constexpr FColor DefaultChatMessageColorWarning { 235, 235,  23, 255 };
+    inline static constexpr FColor DefaultChatMessageColorError   { 235,  23,  23, 255 };
+    inline static constexpr FColor DefaultChatMessageColorSuccess {  23, 235,  23, 255 };
 
 private:
 
@@ -240,6 +283,27 @@ private:
 
     UPROPERTY(Config)
     int32 TinyFontSize             = UJAFGSettingsLocal::DefaultTinyFontSize;
+
+    UPROPERTY(Config)
+    FColor ChatMessageColorPlayer  = UJAFGSettingsLocal::ChatMessageColorPlayer;
+
+    UPROPERTY(Config)
+    FColor ChatMessageColorWhisper = UJAFGSettingsLocal::ChatMessageColorWhisper;
+
+    UPROPERTY(Config)
+    FColor ChatMessageColorVerbose = UJAFGSettingsLocal::ChatMessageColorVerbose;
+
+    UPROPERTY(Config)
+    FColor ChatMessageColorInfo    = UJAFGSettingsLocal::ChatMessageColorInfo;
+
+    UPROPERTY(Config)
+    FColor ChatMessageColorWarning = UJAFGSettingsLocal::ChatMessageColorWarning;
+
+    UPROPERTY(Config)
+    FColor ChatMessageColorError   = UJAFGSettingsLocal::ChatMessageColorError;
+
+    UPROPERTY(Config)
+    FColor ChatMessageColorSuccess = UJAFGSettingsLocal::ChatMessageColorSuccess;
 
     /**
      * From the CommonJAFGSlate plugin. All JAFG slate widgets will use this class to get their colors.

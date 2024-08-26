@@ -23,7 +23,7 @@ void UJAFGBorder::UpdateComponentWithTheirScheme(void)
     }
 
     this->SetBrushColor(FLinearColor(
-        this->GetGameInstance()->GetSubsystem<UDefaultColorsSubsystem>()->GetColorByScheme(this->ColorScheme)
+        this->GetGameInstance()->GetSubsystem<UDefaultColorsSubsystem>()->GetTypeByScheme(this->ColorScheme)
     ));
 
     return;

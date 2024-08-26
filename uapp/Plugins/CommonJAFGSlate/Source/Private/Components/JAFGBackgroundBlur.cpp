@@ -17,7 +17,7 @@ void UJAFGBackgroundBlur::UpdateComponentWithTheirScheme(void)
     }
 
     this->SetBlurStrength(
-        this->GetGameInstance()->GetSubsystem<UDefaultColorsSubsystem>()->GetBlurStrengthByScheme(this->BlurScheme)
+        this->GetGameInstance()->GetSubsystem<UDefaultColorsSubsystem>()->GetTypeByScheme(this->BlurScheme)
     );
 
     return;
