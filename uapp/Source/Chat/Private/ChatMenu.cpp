@@ -1,8 +1,8 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "ChatMenu.h"
-#include "ChatComponent.h"
-#include "CommonChatStatics.h"
+#include "ChatComponentImpl.h"
+#include "ChatStatics.h"
 #include "EnhancedInputSubsystems.h"
 #include "JAFGSlateSettings.h"
 #include "Components/EditableText.h"
@@ -13,14 +13,19 @@
 #include "SettingsData/JAFGInputSubsystem.h"
 #include "Player/WorldPlayerController.h"
 #include "JAFGLogDefs.h"
+#include "JAFGSettingsLocal.h"
+#include "Blueprint/WidgetTree.h"
+#include "Commands/ChatCommandStatics.h"
+#include "Commands/ShippedWorldChatCommands.h"
+#include "Components/JAFGBorder.h"
 #include "Components/JAFGTextBlock.h"
 
-#define OWNING_PLAYER_CONTROLLER                             \
+#define OWNING_PLAYER_CONTROLLER                              \
     Cast<AWorldPlayerController>(this->GetOwningPlayer())
-#define OWNING_CHAT_COMPONENT                                \
-    Cast<UChatComponent>(                                    \
-        Cast<AWorldPlayerController>(this->GetOwningPlayer() \
-    )->GetComponentByClass(UChatComponent::StaticClass()))
+#define OWNING_CHAT_COMPONENT                                 \
+    Cast<UChatComponentImpl>(                                 \
+        Cast<AWorldPlayerController>(this->GetOwningPlayer()  \
+    )->GetComponentByClass(UChatComponentImpl::StaticClass()))
 
 void UChatMenuEntry::PassDataToWidget(const FWidgetPassData& UncastedData)
 {
@@ -36,14 +41,22 @@ void UChatMenuEntry::PassDataToWidget(const FWidgetPassData& UncastedData)
 
 void UChatMenuEntry::ConstructMessage(void)
 {
-    this->TextBlock_Message->SetText(
-        FText::FromString(
-            FString::Printf(
-                TEXT("<%s> %s"),
-                *this->MessageData.Message.Sender, *this->MessageData.Message.Message.ToString()
-            )
-        )
+    this->TextBlock_Message->SetColorAndOpacity(
+        LexToSlateColor(UJAFGSettingsLocal::Get(), this->MessageData.Message.Type, this->MessageData.Message.Format)
     );
+
+    if (this->MessageData.Message.Sender.IsEmpty())
+    {
+        check( this->MessageData.Message.Type != EChatMessageType::Player )
+        this->TextBlock_Message->SetText(this->MessageData.Message.Message);
+    }
+    else
+    {
+        this->TextBlock_Message->SetText(FText::FromString(FString::Printf(
+            TEXT("<%s> %s"),
+            *this->MessageData.Message.Sender, *this->MessageData.Message.Message.ToString()
+        )));
+    }
 
     return;
 }
@@ -102,6 +115,21 @@ void UChatMenu::NativeConstruct(void)
         this->AddMessageToChatLog(PreConstruct);
     }
 
+    // UFontSubsystem* FontSubsystem = this->GetWorld()->GetGameInstance()->GetSubsystem<UFontSubsystem>();
+    // check( FontSubsystem )
+    //
+    //
+    // FSlateFontInfo FontInfo;
+    // FontInfo.CompositeFont = MakeShared<FCompositeFont>(FontSubsystem->CoreFontData.Font->CompositeFont);
+    // this->EditableText_StdIn->SetFont(FontInfo);
+    //
+    // // Temp
+    // this->TempTable = FontSubsystem->CoreFontData.ConstructNewMinimalDataTable();
+    // URichTextBlock* RichTextBlock = WidgetTree->ConstructWidget<URichTextBlock>(URichTextBlock::StaticClass());
+    // RichTextBlock->SetText(FText::FromString(TEXT("Test Test Test")));
+    // RichTextBlock->SetTextStyleSet(this->TempTable);
+    // this->Overlay_OutWrapper->AddChild(RichTextBlock);
+
     return;
 }
 
@@ -140,9 +168,19 @@ void UChatMenu::NativeTick(const FGeometry& MyGeometry, const float InDeltaTime)
     return;
 }
 
+void UChatMenu::AddMessageToChatLog(const EChatMessageType::Type Type, const EChatMessageFormat::Type FormatType, const FString& Sender, const FText& Message)
+{
+    this->AddMessageToChatLog(FChatMessage(Type, FormatType, Sender, Message));
+}
+
 void UChatMenu::AddMessageToChatLog(const EChatMessageType::Type Type, const FString& Sender, const FText& Message)
 {
     this->AddMessageToChatLog(FChatMessage(Type, Sender, Message));
+}
+
+void UChatMenu::AddMessageToChatLog(const FString& Sender, const FText& Message)
+{
+    this->AddMessageToChatLog(FChatMessage(Sender, Message));
 }
 
 void UChatMenu::AddMessageToChatLog(const FChatMessage& Message)
@@ -236,7 +274,8 @@ void UChatMenu::ChangeChatMenuVisibility(const EChatMenuVisibility::Type InVisib
         this->SetVisibility(ESlateVisibility::Visible);
         this->PanelWidget_StdOutWrapper->SetVisibility(ESlateVisibility::Collapsed);
         this->PanelWidget_PreviewOutWrapper->SetVisibility(ESlateVisibility::Visible);
-        this->PanelWidget_StdInWrapper->SetVisibility(ESlateVisibility::Hidden);
+        this->Border_StdInWrapper->SetVisibility(ESlateVisibility::Hidden);
+        this->PanelWidget_CmdSuggestionsWrapper->SetVisibility(ESlateVisibility::Collapsed);
 
         this->ClearStdIn();
         this->CurrentCursorInHistory = UChatMenu::InvalidCursorInHistory;
@@ -248,12 +287,23 @@ void UChatMenu::ChangeChatMenuVisibility(const EChatMenuVisibility::Type InVisib
         this->SetVisibility(ESlateVisibility::Visible);
         this->PanelWidget_StdOutWrapper->SetVisibility(ESlateVisibility::Visible);
         this->PanelWidget_PreviewOutWrapper->SetVisibility(ESlateVisibility::Collapsed);
-        this->PanelWidget_StdInWrapper->SetVisibility(ESlateVisibility::Visible);
+        this->Border_StdInWrapper->SetVisibility(ESlateVisibility::Visible);
+        this->PanelWidget_CmdSuggestionsWrapper->SetVisibility(ESlateVisibility::Visible);
 
         this->ScrollBox_StdOut->ScrollToEnd();
         this->ClearStdIn();
         this->FocusStdIn();
         this->CurrentCursorInHistory = UChatMenu::InvalidCursorInHistory;
+        this->VerticalBox_CmdSuggestions->ClearChildren();
+
+        if (this->ScrollBox_StdOut->GetAllChildren().IsEmpty())
+        {
+            this->PanelWidget_StdOutWrapper->SetVisibility(ESlateVisibility::Hidden);
+        }
+        else
+        {
+            this->PanelWidget_StdOutWrapper->SetVisibility(ESlateVisibility::Visible);
+        }
 
         break;
     }
@@ -365,6 +415,301 @@ void UChatMenu::OnChatTextChanged(const FText& Text)
     {
         this->EditableText_StdIn->SetText(FText::FromString(this->EditableText_StdIn->GetText().ToString().Left(ChatStatics::MaxChatInputLength)));
     }
+
+    this->UpdateCmdSuggestions(Text);
+
+    return;
+}
+
+void UChatMenu::UpdateCmdSuggestions(const FText& Text) const
+{
+    if (Text.IsEmpty() || CommandStatics::IsCommand(Text) == false)
+    {
+        this->HideCommandSuggestionsWindow();
+        this->MarkCommandInAsValid();
+        return;
+    }
+
+    const UShippedWorldChatCommandRegistry* CommandSubsystem = this->GetWorld()->GetSubsystem<UShippedWorldChatCommandRegistry>();
+    check( CommandSubsystem )
+
+    const FString      StdIn   = Text.ToString();
+    TArray<FString>    Args;
+    const FChatCommand Command = CommandStatics::GetCommandWithArgs(Text, Args);
+
+    bool bIsClientCommand;
+    bool bStdInStartWithSpecificCommandType = CommandStatics::DoesStdInStartWithSpecificCommandType(Text, bIsClientCommand);
+
+    if (StdIn.Contains(TEXT(" ")) == false)
+    {
+        /* The user is still typing the command to exec. */
+
+        const TArray<FString> RegisteredCommands = CommandSubsystem->GetCommandsThatStartWith(
+            CommandStatics::GetCommand(Text),
+            bStdInStartWithSpecificCommandType == false
+        );
+
+        if (RegisteredCommands.IsEmpty())
+        {
+            this->HideCommandSuggestionsWindow();
+            return;
+        }
+
+        this->ShowCommandSuggestionsWindow(RegisteredCommands, false);
+
+        for (const FString& RegisteredCommand : RegisteredCommands)
+        {
+            if (RegisteredCommand == Command)
+            {
+                const FString PrefixedCommand = CommandSubsystem->SmartPrefix(Command);
+                if (PrefixedCommand.IsEmpty())
+                {
+                    this->MarkCommandInAsInvalid();
+                    return;
+                }
+
+                const FChatCommandObject* CommandObj = nullptr;
+                if (CommandSubsystem->GetAnyCommandObj(PrefixedCommand, CommandObj) == false)
+                {
+                    checkNoEntry()
+                    this->MarkCommandInAsInvalid();
+                    this->HideCommandSuggestionsWindow();
+                    return;
+                }
+
+                if (CommandObj->Syntax.IsEmpty())
+                {
+                    this->MarkCommandInAsValid();
+                    return;
+                }
+
+                this->MarkCommandInAsInvalid();
+
+                return;
+            }
+        }
+
+        return;
+    }
+
+    /* The user has typed a command to exec. */
+
+    const FString PrefixedCommand = CommandSubsystem->SmartPrefix(Command);
+
+    if (PrefixedCommand.IsEmpty())
+    {
+        this->MarkCommandInAsInvalid();
+        this->HideCommandSuggestionsWindow();
+        return;
+    }
+
+    const FChatCommandObject* CommandObj = nullptr;
+    if (CommandSubsystem->GetAnyCommandObj(PrefixedCommand, CommandObj) == false)
+    {
+        checkNoEntry()
+        this->MarkCommandInAsInvalid();
+        this->HideCommandSuggestionsWindow();
+        return;
+    }
+    check( CommandObj )
+
+    if (CommandObj->Syntax.IsEmpty())
+    {
+        if (Args.IsEmpty())
+        {
+            this->MarkCommandInAsValid();
+            this->HideCommandSuggestionsWindow();
+        }
+        else
+        {
+            this->MarkCommandInAsInvalid();
+            this->ShowCommandSuggestionsWindow(*CommandObj);
+        }
+
+        return;
+    }
+
+    FString BaseSuggestion = PrefixedCommand;
+
+    bool bCurrentArgsValid = true;
+
+    int32      FailedSyntaxIndex = -1;
+    FArgCursor MovableArgCursor  =  0;
+    FArgCursor PreviousArgCursor =  0;
+    bool bBadInput = false;
+    for (int32 i = 0; i < CommandObj->Syntax.Num(); ++i)
+    {
+        const FArgCursor Temp = MovableArgCursor;
+        FString NotUsed;
+        if (::CommandStatics::Syntax::ParseArgument(Args, CommandObj->Syntax[i], NotUsed, MovableArgCursor, bBadInput))
+        {
+            PreviousArgCursor = Temp;
+            continue;
+        }
+
+        if (bBadInput)
+        {
+            for (int32 j = 0; j < MovableArgCursor; ++j)
+            {
+                BaseSuggestion += TEXT(" ") + Args[j];
+            }
+
+            BaseSuggestion += TEXT(" ") + LexToString(CommandObj->Syntax[i]).ToUpper();
+
+            this->MarkCommandInAsInvalid();
+            this->ShowCommandSuggestionsWindow({BaseSuggestion});
+            return;
+        }
+
+        bCurrentArgsValid = false;
+        FailedSyntaxIndex = i;
+        break;
+    }
+
+    if (bCurrentArgsValid)
+    {
+        /* More args were given than syntax wants. */
+        if (Args.Num() > MovableArgCursor)
+        {
+            this->ShowCommandSuggestionsWindow(*CommandObj);
+            this->MarkCommandInAsInvalid();
+
+            return;
+        }
+
+        this->MarkCommandInAsValid();
+        this->HideCommandSuggestionsWindow();
+        return;
+    }
+
+    if (Text.ToString().EndsWith(TEXT(" ")) == false)
+    {
+        FailedSyntaxIndex = --FailedSyntaxIndex < 0 ? 0 : FailedSyntaxIndex;
+    }
+
+    /* Leave the last arg out as we suggest possible inputs. */
+    for (int32 i = 0; i < PreviousArgCursor && Args.Num(); ++i)
+    {
+        BaseSuggestion += TEXT(" ") + Args[i];
+    }
+
+    TArray<FString> PossibleInputs; ::CommandStatics::Syntax::GetAllAvailableInputsForSyntax(
+        *this->GetWorld(),
+        CommandObj->Syntax[FailedSyntaxIndex],
+        Args,
+        PreviousArgCursor,
+        PossibleInputs
+    );
+
+    TArray<FString> Suggestions;
+
+    if (PossibleInputs.IsEmpty())
+    {
+        FString Suggestion = BaseSuggestion;
+        if (Text.ToString().EndsWith(TEXT(" ")))
+        {
+            for (int32 i = PreviousArgCursor; i < MovableArgCursor; ++i)
+            {
+                Suggestion += TEXT(" ") + Args[i];
+            }
+        }
+
+        Suggestions.Emplace(Suggestion + TEXT(" ") + LexToString(CommandObj->Syntax[FailedSyntaxIndex]).ToUpper());
+    }
+    else
+    {
+        for (const FString& PossibleInput : PossibleInputs)
+        {
+            Suggestions.Emplace(BaseSuggestion + TEXT(" ") + PossibleInput);
+        }
+
+        Suggestions.Emplace(BaseSuggestion + TEXT(" ") + FString::Join(Args, TEXT(" ")));
+    }
+
+    this->MarkCommandInAsInvalid();
+    this->ShowCommandSuggestionsWindow(Suggestions);
+
+    return;
+}
+
+void UChatMenu::MarkCommandInAsInvalid(void) const
+{
+    this->Border_StdInWrapper->SetTemporarilyColor(FColor::Red, true);
+}
+
+void UChatMenu::MarkCommandInAsValid(void) const
+{
+    this->Border_StdInWrapper->UpdateComponentWithTheirScheme();
+}
+
+void UChatMenu::HideCommandSuggestionsWindow(void) const
+{
+    if (this->VerticalBox_CmdSuggestions->GetVisibility() != ESlateVisibility::Collapsed)
+    {
+        this->VerticalBox_CmdSuggestions->SetVisibility(ESlateVisibility::Collapsed);
+    }
+
+    this->VerticalBox_CmdSuggestions->ClearChildren();
+
+    return;
+}
+
+void UChatMenu::ShowCommandSuggestionsWindow(const TArray<FString>& Content, const bool bUpdateStdInValidityFeedback /* = false */) const
+{
+    if (Content.IsEmpty())
+    {
+        this->HideCommandSuggestionsWindow();
+        return;
+    }
+
+    if (this->VerticalBox_CmdSuggestions->GetVisibility() != ESlateVisibility::Visible)
+    {
+        this->VerticalBox_CmdSuggestions->SetVisibility(ESlateVisibility::Visible);
+    }
+
+    this->VerticalBox_CmdSuggestions->ClearChildren();
+
+    bool          bCommandValid = false;
+    const FString Command       = CommandStatics::GetCommand(this->EditableText_StdIn->GetText());
+
+    for (const FString& ContentCommand : Content)
+    {
+        UJAFGTextBlock* TextBlock = WidgetTree->ConstructWidget<UJAFGTextBlock>(UJAFGTextBlock::StaticClass());
+        TextBlock->SetText(FText::FromString(ContentCommand));
+        TextBlock->SetColorScheme(EJAFGFontSize::Small);
+        TextBlock->UpdateComponentWithTheirScheme();
+
+        this->VerticalBox_CmdSuggestions->AddChild(TextBlock);
+
+        if (bUpdateStdInValidityFeedback && ContentCommand == Command)
+        {
+            bCommandValid = true;
+        }
+
+        continue;
+    }
+
+    if (bCommandValid)
+    {
+        this->MarkCommandInAsValid();
+    }
+    else
+    {
+        this->MarkCommandInAsInvalid();
+    }
+
+    return;
+}
+
+void UChatMenu::ShowCommandSuggestionsWindow(const FChatCommandObject& InObj) const
+{
+    FString FullCommandRepresentation = InObj.Command;
+    for (const EChatCommandSyntax::Type& Syntax : InObj.Syntax)
+    {
+        FullCommandRepresentation += TEXT(" ") + LexToString(Syntax);
+    }
+
+    this->ShowCommandSuggestionsWindow({ FullCommandRepresentation }, false);
 
     return;
 }

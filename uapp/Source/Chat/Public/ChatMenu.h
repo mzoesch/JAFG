@@ -8,6 +8,8 @@
 
 #include "ChatMenu.generated.h"
 
+struct FChatCommandObject;
+class UJAFGBorder;
 class UJAFGTextBlock;
 class UVerticalBox;
 class UOverlay;
@@ -75,7 +77,9 @@ protected:
 
 public:
 
+    void AddMessageToChatLog(const EChatMessageType::Type Type, const EChatMessageFormat::Type FormatType, const FString& Sender, const FText& Message);
     void AddMessageToChatLog(const EChatMessageType::Type Type, const FString& Sender, const FText& Message);
+    void AddMessageToChatLog(const FString& Sender, const FText& Message);
     void AddMessageToChatLog(const FChatMessage& Message);
 
     void ClearAllChatEntries(void);
@@ -131,10 +135,23 @@ protected:
     TObjectPtr<UJAFGEditableText> EditableText_StdIn;
 
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
-    TObjectPtr<UPanelWidget> PanelWidget_StdInWrapper;
+    TObjectPtr<UJAFGBorder> Border_StdInWrapper;
+
+    UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
+    TObjectPtr<UPanelWidget> PanelWidget_CmdSuggestionsWrapper;
+
+    UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
+    TObjectPtr<UVerticalBox> VerticalBox_CmdSuggestions;
 
     UFUNCTION()
     void OnChatTextChanged(const FText& Text);
+
+    void UpdateCmdSuggestions(const FText& Text) const;
+    void MarkCommandInAsInvalid(void) const;
+    void MarkCommandInAsValid(void) const;
+    void HideCommandSuggestionsWindow(void) const;
+    void ShowCommandSuggestionsWindow(const TArray<FString>& Content, const bool bUpdateStdInValidityFeedback = false) const;
+    void ShowCommandSuggestionsWindow(const FChatCommandObject& InObj) const;
 
     UFUNCTION()
     void OnChatTextCommitted(const FText& Text, const ETextCommit::Type CommitMethod);

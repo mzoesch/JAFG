@@ -44,6 +44,8 @@ public class JAFGExternalCore : ModuleRules
             "Engine",
             "Projects",
             "Json",
+            "SlateCore",
+            "UMG",
         }
         );
 

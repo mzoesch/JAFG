@@ -6,7 +6,9 @@
  * Use this macro in a header file to make the IDEA shut up about false positive
  * possibly unused #include directive warnings.
  */
-#define JAFG_VOID
+#ifndef JAFG_VOID
+    #define JAFG_VOID
+#endif /* JAFG_VOID */
 
 
 /*----------------------------------------------------------------------------

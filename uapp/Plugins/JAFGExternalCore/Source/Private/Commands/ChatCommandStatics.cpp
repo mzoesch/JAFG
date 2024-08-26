@@ -1,6 +1,6 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
-#include "CommonChatStatics.h"
+#include "Commands/ChatCommandStatics.h"
 
 bool CommandStatics::IsCommand(const FText& StdIn)
 {
@@ -134,4 +134,37 @@ FString CommandStatics::GetCommandWithArgs(const FText& StdIn, TArray<FString>& 
     }
 
     return CommandStatics::GetCommand(StdIn);
+}
+
+bool CommandStatics::DoesCommandStartWithSpecificCommandType(const FChatCommand& Command, bool& bOutClientPrefix)
+{
+    if (Command.StartsWith(CommandStatics::ClientCommandPrefix))
+    {
+        bOutClientPrefix = true;
+        return true;
+    }
+
+    if (Command.StartsWith(CommandStatics::ServerCommandPrefix))
+    {
+        bOutClientPrefix = false;
+        return true;
+    }
+
+    return false;
+
+}
+
+bool CommandStatics::DoesStdInStartWithSpecificCommandType(const FText& StdIn, bool& bOutClientPrefix)
+{
+    if (StdIn.IsEmpty())
+    {
+        return false;
+    }
+
+    if (CommandStatics::IsCommand(StdIn) == false)
+    {
+        return false;
+    }
+
+    return CommandStatics::DoesCommandStartWithSpecificCommandType(CommandStatics::GetCommand(StdIn), bOutClientPrefix);
 }

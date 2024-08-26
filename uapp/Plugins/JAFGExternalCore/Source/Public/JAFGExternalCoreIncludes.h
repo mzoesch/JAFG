@@ -2,9 +2,13 @@
 
 #pragma once
 
-/*
- * Add this file to get access to the most common headers and types.
+/**
+ * Use this macro in a header file to make the IDEA shut up about false positive
+ * possibly unused #include directive warnings.
  */
+#ifndef JAFG_VOID
+    #define JAFG_VOID
+#endif /* JAFG_VOID */
 
 
 /*----------------------------------------------------------------------------

@@ -22,6 +22,7 @@ public:
 
     // UGameInstance implementation
     virtual void Init(void) override;
+    virtual void OnWorldChanged(UWorld* OldWorld, UWorld* NewWorld) override;
     // ~UGameInstance implementation
 
     //////////////////////////////////////////////////////////////////////////

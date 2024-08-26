@@ -2,14 +2,29 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "JAFGExternalCoreIncludes.h"
 
-/*
+JAFG_VOID
+
+/**
  * Commands are always case-insensitive.
  * Prefixes are not mandatory. Except for the command prefix.
  */
+#if 0
 
-typedef uint8 CommandReturnCode;
+/* Both will be treated as the same command. */
+
+inline FString ExampleCommandWithPrefix    = TEXT("sv_ExampleCommand");
+inline FString ExampleCommandWithoutPrefix = TEXT("ExampleCommand");
+
+#endif /* 0 */
+
+typedef uint8   CommandReturnCode;
+typedef FString FChatCommand;
+
+namespace ECommandReturnCode { enum Type : CommandReturnCode; }
+
+FString JAFGEXTERNALCORE_API LexToString(const ECommandReturnCode::Type& InType);
 
 namespace ECommandReturnCode
 {
@@ -59,6 +74,9 @@ enum Type : CommandReturnCode
     /** Command executed with too many arguments. */
     TooManyArgs,
 
+    /** Command executed with a semantic error. */
+    SemanticError,
+
     /** Command executed with a syntax error. */
     SyntaxError,
 
@@ -66,7 +84,7 @@ enum Type : CommandReturnCode
     PlatformError,
 };
 
-FORCEINLINE bool IsSuccess(const ECommandReturnCode::Type& InType)
+FORCEINLINE JAFGEXTERNALCORE_API bool IsSuccess(const ECommandReturnCode::Type& InType)
 {
     return
            InType == ECommandReturnCode::Success
@@ -75,22 +93,25 @@ FORCEINLINE bool IsSuccess(const ECommandReturnCode::Type& InType)
         || InType == ECommandReturnCode::SuccessBroadcastWithAuthority;
 }
 
-FORCEINLINE bool IsSuccess(const CommandReturnCode& InType)
+FORCEINLINE JAFGEXTERNALCORE_API bool IsSuccess(const CommandReturnCode& InType)
 {
     return ECommandReturnCode::IsSuccess(static_cast<ECommandReturnCode::Type>(InType));
 }
 
-FORCEINLINE bool IsFailure(const ECommandReturnCode::Type& InType)
+FORCEINLINE JAFGEXTERNALCORE_API bool IsFailure(const ECommandReturnCode::Type& InType)
 {
     return InType >= ECommandReturnCode::Failure;
 }
 
-FORCEINLINE bool IsFailure(const CommandReturnCode& InType)
+FORCEINLINE JAFGEXTERNALCORE_API bool IsFailure(const CommandReturnCode& InType)
 {
     return ECommandReturnCode::IsFailure(static_cast<ECommandReturnCode::Type>(InType));
 }
 
-FORCEINLINE FString LexToString(const ECommandReturnCode::Type& InType)
+}
+
+FORCEINLINE JAFGEXTERNALCORE_API auto LexToString(const CommandReturnCode& InType) -> FString { return LexToString(static_cast<ECommandReturnCode::Type>(InType)); }
+FORCEINLINE JAFGEXTERNALCORE_API auto LexToString(const ECommandReturnCode::Type& InType) -> FString
 {
     switch (InType)
     {
@@ -134,6 +155,10 @@ FORCEINLINE FString LexToString(const ECommandReturnCode::Type& InType)
     {
         return TEXT("TooManyArgs");
     }
+    case ECommandReturnCode::SemanticError:
+    {
+        return TEXT("SemanticError");
+    }
     case ECommandReturnCode::SyntaxError:
     {
         return TEXT("SyntaxError");
@@ -150,67 +175,29 @@ FORCEINLINE FString LexToString(const ECommandReturnCode::Type& InType)
     }
 }
 
-FORCEINLINE FString LexToString(const CommandReturnCode& InType)
-{
-    return ECommandReturnCode::LexToString(static_cast<ECommandReturnCode::Type>(InType));
-}
-
-}
-
 namespace CommandStatics
 {
 
-
 static const FString CommandPrefix       = TEXT("/");
+/* Has to be the same lenght as client prefix. */
 static const FString ServerCommandPrefix = TEXT("sv_");
+/* Has to be the same lenght as server prefix. */
 static const FString ClientCommandPrefix = TEXT("cl_");
 
-bool IsCommand(const FText& StdIn);
-bool IsServerCommand(const FText& StdIn);
-bool IsClientCommand(const FText& StdIn);
+static const int32 PlatformCommandPrefixLength = ServerCommandPrefix.Len();
 
-FString GetCommand(const FText& StdIn);
-FString GetCommandWithServerPrefix(const FText& StdIn);
-FString SafePrefixServerCommand(const FString& Command);
-FString GetCommandWithClientPrefix(const FText& StdIn);
-FString SafePrefixClientCommand(const FString& Command);
-FString GetCommandWithArgs(const FText& StdIn, TArray<FString>& OutArgs);
+JAFGEXTERNALCORE_API bool IsCommand(const FText& StdIn);
+JAFGEXTERNALCORE_API bool IsServerCommand(const FText& StdIn);
+JAFGEXTERNALCORE_API bool IsClientCommand(const FText& StdIn);
 
-}
+JAFGEXTERNALCORE_API FString GetCommand(const FText& StdIn);
+JAFGEXTERNALCORE_API FString GetCommandWithServerPrefix(const FText& StdIn);
+JAFGEXTERNALCORE_API FString SafePrefixServerCommand(const FString& Command);
+JAFGEXTERNALCORE_API FString GetCommandWithClientPrefix(const FText& StdIn);
+JAFGEXTERNALCORE_API FString SafePrefixClientCommand(const FString& Command);
+JAFGEXTERNALCORE_API FString GetCommandWithArgs(const FText& StdIn, TArray<FString>& OutArgs);
 
-namespace ChatStatics
-{
-
-static const FString AuthorityName       = TEXT("AUTHORITY");
-static const FString InternalName        = TEXT("INTERNAL");
-
-static constexpr int32 MaxChatInputLength = 0x7F;
-
-FORCEINLINE bool IsTextToLong(const FText& Text)
-{
-    return Text.ToString().Len() > MaxChatInputLength;
-}
-
-FORCEINLINE bool IsTextBlank(const FText& Text)
-{
-    for (const TCHAR& Char : Text.ToString())
-    {
-        if (Char != TEXT(' '))
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-FORCEINLINE bool IsTextValid(const FText& Text)
-{
-    return
-           Text.ToString().Len()           >= 1
-        && Text.ToString().IsEmpty()       == false
-        && ChatStatics::IsTextBlank(Text)  == false
-        && ChatStatics::IsTextToLong(Text) == false;
-}
+JAFGEXTERNALCORE_API bool DoesCommandStartWithSpecificCommandType(const FChatCommand& Command, bool& bOutClientPrefix);
+JAFGEXTERNALCORE_API bool DoesStdInStartWithSpecificCommandType(const FText& StdIn, bool& bOutClientPrefix);
 
 }

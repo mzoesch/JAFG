@@ -4,6 +4,7 @@
 #include "GamePluginSettings.h"
 #include "JAFGExternalCore.h"
 #include "ModificationSupervisorSubsystem.h"
+#include "Commands/JAFGCoreChatCommands.h"
 #include "GameFramework/GameUserSettings.h"
 #include "Net/Core/PushModel/PushModel.h"
 #include "System/PreInternalInitializationSubsystem.h"
@@ -50,6 +51,27 @@ void UJAFGGameInstance::Init(void)
     GEngine->GetGameUserSettings()->SetFullscreenMode(EWindowMode::Windowed);
     GEngine->GetGameUserSettings()->SetScreenResolution(FIntPoint(1440, 900));
     GEngine->GetGameUserSettings()->ApplySettings(false);
+
+    return;
+}
+
+void UJAFGGameInstance::OnWorldChanged(UWorld* OldWorld, UWorld* NewWorld)
+{
+    Super::OnWorldChanged(OldWorld, NewWorld);
+
+    if (NewWorld)
+    {
+        AsyncTask(ENamedThreads::GameThread, [this] (void)
+        {
+            if (this->GetWorld())
+            {
+                if (UShippedWorldChatCommandRegistry* Registry = this->GetWorld()->GetSubsystem<UShippedWorldChatCommandRegistry>(); Registry)
+                {
+                    ChatCommands::RegisterJAFGCoreChatCommands(Registry);
+                }
+            }
+        });
+    }
 
     return;
 }
