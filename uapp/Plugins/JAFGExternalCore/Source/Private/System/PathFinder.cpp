@@ -9,11 +9,6 @@ FString LexToString(const EPathType::Type InType)
 {
     switch (InType)
     {
-    case EPathType::Internal:
-    {
-        jcheckNoEntry()
-        return TEXT("");
-    }
     case EPathType::Destruction:
     {
         return TEXT("Assets/Textures/Destruction");
@@ -37,6 +32,10 @@ FString LexToString(const EPathType::Type InType)
     case EPathType::Recipes:
     {
         return TEXT("Assets/Recipes");
+    }
+    case EPathType::Fonts:
+    {
+        return TEXT("Assets/Fonts");
     }
     default:
     {
@@ -104,12 +103,12 @@ bool PathFinder::DoesPathExist(const IPlugin* InPlugin, const FString& InRelativ
 
 void PathFinder::CreatePath(const IPlugin* InPlugin, const FString& InRelativePath, FString& OutRelativePath)
 {
-    OutRelativePath = InPlugin->GetContentDir() / InRelativePath;
+    OutRelativePath = InPlugin ? (InPlugin->GetContentDir() / InRelativePath) : (FPaths::ProjectContentDir() / InRelativePath);
 }
 
 bool PathFinder::CreatePathToFile(const IPlugin* InPlugin, const FString& InRelativePath, FString& OutRelativePath)
 {
-    OutRelativePath = InPlugin->GetContentDir() / InRelativePath;
+    PathFinder::CreatePath(InPlugin, InRelativePath, OutRelativePath);
     return IFileManager::Get().FileExists(*OutRelativePath);
 }
 
@@ -120,12 +119,6 @@ bool PathFinder::CreatePathToFile(
     FString& OutRelativePath
 )
 {
-    if (InPathType == EPathType::Internal)
-    {
-        jcheck( false && "Internal path type is not yet supported." )
-        return false;
-    }
-
     return PathFinder::CreatePathToFile(InPlugin, LexToString(InPathType) / FileName, OutRelativePath);
 }
 
@@ -138,6 +131,32 @@ bool PathFinder::CreatePathToDirectory(const IPlugin* InPlugin, const FString& I
 bool PathFinder::CreatePathToDirectory(const IPlugin* InPlugin, const EPathType::Type InPathType, FString& OutRelativePath)
 {
     return PathFinder::CreatePathToDirectory(InPlugin, LexToString(InPathType), OutRelativePath);
+}
+
+bool PathFinder::LoadBytesFromDisk(const IPlugin* InPlugin, const FString& InRelativePath, TArray<uint8>& OutBytes)
+{
+    FString Path;
+    if (PathFinder::CreatePathToFile(InPlugin, InRelativePath, Path) == false)
+    {
+        LOG_ERROR(LogSystem, "Failed to create path to file: %s.", *Path)
+        return false;
+    }
+
+    PathFinder::RelativeToAbsolutePath(Path);
+
+    if (FFileHelper::LoadFileToArray(OutBytes, *Path))
+    {
+        return true;
+    }
+
+    LOG_ERROR(LogSystem, "Failed to load file: %s.", *Path)
+
+    return false;
+}
+
+bool PathFinder::LoadBytesFromDisk(const IPlugin* InPlugin, const EPathType::Type InPathType, const FString& InFileName, TArray<uint8>& OutBytes)
+{
+    return PathFinder::LoadBytesFromDisk(InPlugin, LexToString(InPathType) / InFileName, OutBytes);
 }
 
 FString PathFinder::LoadStringFromDisk(const IPlugin* InPlugin, const FString& InRelativePath)

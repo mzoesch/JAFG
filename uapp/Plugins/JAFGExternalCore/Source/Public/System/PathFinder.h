@@ -13,11 +13,6 @@ namespace EPathType
 
 enum JAFGEXTERNALCORE_API Type : uint8
 {
-    /** Reference to JAFG itself. A plugin pointer will not be required. */
-    Internal,
-
-    /* Everything below this point requires a plugin pointer to be provided. */
-
     //////////////////////////////////////////////////////////////////////////
     // Inside Textures directory
     Destruction,
@@ -29,6 +24,7 @@ enum JAFGEXTERNALCORE_API Type : uint8
     //////////////////////////////////////////////////////////////////////////
     // Top level directories
     Recipes,
+    Fonts,
 };
 
 }
@@ -57,6 +53,8 @@ auto JAFGEXTERNALCORE_API CreatePathToFile(const IPlugin* InPlugin, const EPathT
 auto JAFGEXTERNALCORE_API CreatePathToDirectory(const IPlugin* InPlugin, const FString& InRelativePath, FString& OutRelativePath) -> bool;
 auto JAFGEXTERNALCORE_API CreatePathToDirectory(const IPlugin* InPlugin, const EPathType::Type InPathType, FString& OutRelativePath) -> bool;
 
+auto JAFGEXTERNALCORE_API LoadBytesFromDisk(const IPlugin* InPlugin, const FString& InRelativePath, TArray<uint8>& OutBytes) -> bool;
+auto JAFGEXTERNALCORE_API LoadBytesFromDisk(const IPlugin* InPlugin, const EPathType::Type InPathType, const FString& InFileName, TArray<uint8>& OutBytes) -> bool;
 auto JAFGEXTERNALCORE_API LoadStringFromDisk(const IPlugin* InPlugin, const FString& InRelativePath) -> FString;
 auto JAFGEXTERNALCORE_API LoadStringFromDisk(const IPlugin* InPlugin, const EPathType::Type InPathType, const FString& InFileName) -> FString;
 auto JAFGEXTERNALCORE_API LoadJSONFromDisk(const IPlugin* InPlugin, const FString& InRelativePath) -> TSharedPtr<FJsonObject>;
