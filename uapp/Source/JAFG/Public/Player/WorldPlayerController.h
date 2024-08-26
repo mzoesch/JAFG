@@ -21,7 +21,7 @@ class UContainerReplicatorComponent;
 class AWorldCharacter;
 class UServerWorldSettingsReplicationComponent;
 class UChatMenu;
-class UChatComponent;
+class UChatComponentImpl;
 class UEscapeMenuResumeButton;
 class UMyHyperlaneComponent;
 
@@ -65,7 +65,7 @@ protected:
     TObjectPtr<UMyHyperlaneComponent> HyperlaneComponent = nullptr;
 
     UPROPERTY()
-    TObjectPtr<UChatComponent> ChatComponent = nullptr;
+    TObjectPtr<UChatComponentImpl> ChatComponent = nullptr;
 
     UPROPERTY()
     TObjectPtr<UServerWorldSettingsReplicationComponent> ServerWorldSettingsReplicationComponent = nullptr;

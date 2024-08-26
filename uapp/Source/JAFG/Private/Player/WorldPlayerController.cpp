@@ -2,7 +2,7 @@
 // Copyright 2024 mzoesch. All rights reserved.
 
 #include "Player/WorldPlayerController.h"
-#include "ChatComponent.h"
+#include "ChatComponentImpl.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Input/CustomInputNames.h"
@@ -30,7 +30,7 @@ AWorldPlayerController::AWorldPlayerController(const FObjectInitializer& ObjectI
     this->HyperlaneComponent                      =
         ObjectInitializer.CreateDefaultSubobject<UMyHyperlaneComponent>(this, TEXT("HyperlaneComponent"));
     this->ChatComponent                           =
-        ObjectInitializer.CreateDefaultSubobject<UChatComponent>(this, TEXT("ChatComponent"));
+        ObjectInitializer.CreateDefaultSubobject<UChatComponentImpl>(this, TEXT("ChatComponent"));
     this->ServerWorldSettingsReplicationComponent =
         ObjectInitializer.CreateDefaultSubobject<UServerWorldSettingsReplicationComponent>(this, TEXT("ServerWorldSettingsReplicationComponent"));
     this->ContainerReplicatorComponent            =
