@@ -3,20 +3,20 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/TextBlock.h"
 #include "UsesJAFGColorScheme.h"
+#include "Components/RichTextBlock.h"
 #include "JAFGSlateStatics.h"
 
-#include "JAFGTextBlock.generated.h"
+#include "JAFGRichTextBlock.generated.h"
 
 UCLASS(Blueprintable)
-class COMMONJAFGSLATE_API UJAFGTextBlock : public UTextBlock, public IUsesJAFGColorScheme
+class COMMONJAFGSLATE_API UJAFGRichTextBlock : public URichTextBlock, public IUsesJAFGColorScheme
 {
     GENERATED_BODY()
 
 public:
 
-    explicit UJAFGTextBlock(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+    explicit UJAFGRichTextBlock(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
     // IUserJAFGColorScheme interface
     virtual void UpdateComponentWithTheirScheme(void) override;
@@ -25,8 +25,8 @@ public:
     UFUNCTION(BlueprintCallable)
     void SetColorScheme(const EJAFGFontSize::Type InColorScheme);
 
-    FORCEINLINE auto SetNativeColorScheme(const EJAFGFontSize::Type InColorScheme) -> void { this->ColorScheme     = InColorScheme;     }
-    FORCEINLINE auto SetNativeColorScheme(const EJAFGFont::Type InFontColorScheme) -> void { this->FontColorScheme = InFontColorScheme; }
+    FORCEINLINE auto SetNativeColorScheme(const EJAFGFontSize::Type InColorScheme) -> void { this->ColorScheme     = InColorScheme; }
+    FORCEINLINE auto SetNativeColorScheme(const EJAFGRichFont::Type InColorScheme) -> void { this->FontColorScheme = InColorScheme; }
 
 protected:
 
@@ -34,5 +34,5 @@ protected:
     TEnumAsByte<EJAFGFontSize::Type> ColorScheme = EJAFGFontSize::DontCare;
 
     UPROPERTY(EditInstanceOnly, BlueprintReadOnly)
-    TEnumAsByte<EJAFGFont::Type> FontColorScheme = EJAFGFont::DontCare;
+    TEnumAsByte<EJAFGRichFont::Type> FontColorScheme = EJAFGRichFont::DontCare;
 };
