@@ -26,9 +26,20 @@ public:
 
     DECLARE_EVENT_OneParam(UJAFGEditableText, OnTrimmedTextChangedSignature, const FText& /* InText */)
     OnTrimmedTextChangedSignature OnTrimmedTextChanged;
+    void ResetLastValidText(void) { this->LastValidText = FText::GetEmpty(); }
 
     /** @param InMaxSize The max size allowed. -1 for engine maximum. */
-    void SetMaxSize(int32 InMaxSize);
+    void SetMaxSize(const int32 InMaxSize);
+    /**
+     * If StdIn exceeds UJAFGEditableText#TrimTo trim the text to InMaxSize if the length of characters from
+     * StdIn exceeds it and the InTrimFunctionB returns true.
+     *
+     * Requires that UJAFGEditableText#TrimTo is set.
+     *
+     * @param InMaxSize       The max size allowed. -1 for engine maximum.
+     * @param InTrimFunctionB Check if StdIn is relevant and meaningful for the current B-Trim.
+     */
+    void SetMaxSizeB(const int32 InMaxSize, const TFunction<bool(const FText& InText)>* InTrimFunctionB = nullptr);
 
     // IUserJAFGColorScheme interface
     virtual void UpdateComponentWithTheirScheme(void) override;
@@ -54,6 +65,8 @@ private:
     UFUNCTION()
     void OnNativeTextChanged(const FText& InText);
 
-    int32 TrimTo        = -1;
-    FText LastValidText = FText::GetEmpty();
+    int32 TrimTo                                       = -1;
+    int32 TrimToB                                      = -1;
+    TFunction<bool(const FText& InText)> TrimFunctionB = nullptr;
+    FText LastValidText                                = FText::GetEmpty();
 };
