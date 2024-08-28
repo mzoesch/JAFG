@@ -459,7 +459,7 @@ bool ParseDeliveryArray(const UObject& Context, const TArray<TSharedPtr<FJsonVal
         }
 
         FAccumulated Accumulated;
-        if (FString PotentialNamespace, PotentialName; VoxelSubsystem->SplitAccumulatedName(Value->AsString(), PotentialNamespace, PotentialName))
+        if (FString PotentialNamespace, PotentialName; Accumulated::Split(Value->AsString(), PotentialNamespace, PotentialName))
         {
             Accumulated = FAccumulated(VoxelSubsystem->GetAccumulatedIndex(PotentialNamespace, PotentialName));
         }
@@ -541,7 +541,7 @@ bool UGameRecipeSubsystem::ParseRecipeDelivery(const TSharedPtr<FJsonObject>& Ob
     else if (Obj->HasTypedField<EJson::String>(RecipeJsonTranslation::Delivery))
     {
         FAccumulated Accumulated;
-        if (FString PotentialNamespace, PotentialName; VoxelSubsystem->SplitAccumulatedName(Obj->GetStringField(RecipeJsonTranslation::Delivery), PotentialNamespace, PotentialName))
+        if (FString PotentialNamespace, PotentialName; Accumulated::Split(Obj->GetStringField(RecipeJsonTranslation::Delivery), PotentialNamespace, PotentialName))
         {
             Accumulated = FAccumulated(VoxelSubsystem->GetAccumulatedIndex(PotentialNamespace, PotentialName));
         }
@@ -582,7 +582,7 @@ bool UGameRecipeSubsystem::ParseRecipeProduct(const TSharedPtr<FJsonObject>& Obj
         }
 
         FAccumulated Accumulated;
-        if (FString PotentialNamespace, PotentialName; this->GetGameInstance()->GetSubsystem<UVoxelSubsystem>()->SplitAccumulatedName(Obj->GetObjectField(RecipeJsonTranslation::Product)->GetStringField(RecipeJsonTranslation::ProductContent), PotentialNamespace, PotentialName))
+        if (FString PotentialNamespace, PotentialName; Accumulated::Split(Obj->GetObjectField(RecipeJsonTranslation::Product)->GetStringField(RecipeJsonTranslation::ProductContent), PotentialNamespace, PotentialName))
         {
             Accumulated = FAccumulated(VoxelSubsystem->GetAccumulatedIndex(PotentialNamespace, PotentialName));
         }
@@ -612,7 +612,7 @@ bool UGameRecipeSubsystem::ParseRecipeProduct(const TSharedPtr<FJsonObject>& Obj
     else if (Obj->HasTypedField<EJson::String>(RecipeJsonTranslation::Product))
     {
         FAccumulated Accumulated;
-        if (FString PotentialNamespace, PotentialName; VoxelSubsystem->SplitAccumulatedName(Obj->GetStringField(RecipeJsonTranslation::Product), PotentialNamespace, PotentialName))
+        if (FString PotentialNamespace, PotentialName; Accumulated::Split(Obj->GetStringField(RecipeJsonTranslation::Product), PotentialNamespace, PotentialName))
         {
             Accumulated = FAccumulated(VoxelSubsystem->GetAccumulatedIndex(PotentialNamespace, PotentialName));
         }
