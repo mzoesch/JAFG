@@ -203,7 +203,54 @@ struct JAFGEXTERNALCORE_API FAccumulated
 namespace Accumulated
 {
 
+static const FString NamespaceToNameSplitter { TEXT("::") };
+
 static const FAccumulated Null { ACCUMULATED_PRIVATE_NULL_IDX, ACCUMULATED_PRIVATE_NULL_AMT };
+
+/**
+ * Try to split an accumulated name into its namespace and name.
+ *     Space::Name  => (   true ) Space, Name
+ *     Space::      => (  false )
+ *     ::Name       => (  false )
+ *     Name         => (  false )
+ *
+ * @return True, if OutNamespace and OutName is meaningful.
+ */
+FORCEINLINE JAFGEXTERNALCORE_API bool Split(const FString& AccumulatedName, FString& OutNamespace, FString& OutName)
+{
+    if (AccumulatedName.Split(Accumulated::NamespaceToNameSplitter, &OutNamespace, &OutName) == false)
+    {
+        OutNamespace.Empty();
+        OutName.Empty();
+        return false;
+    }
+
+    if (OutNamespace.IsEmpty() || OutName.IsEmpty())
+    {
+        OutNamespace.Empty();
+        OutName.Empty();
+        return false;
+    }
+
+    return true;
+}
+
+FORCEINLINE JAFGEXTERNALCORE_API bool UnrealSplit(const FString& AccumulatedName, FString& OutNamespace, FString& OutName)
+{
+    if (AccumulatedName.Split(Accumulated::NamespaceToNameSplitter, &OutNamespace, &OutName) == false)
+    {
+        OutNamespace.Empty();
+        OutName.Empty();
+        return false;
+    }
+
+    return true;
+}
+
+FORCEINLINE JAFGEXTERNALCORE_API FString Join(const FString& Namespace, const FString& Name)
+{
+    return Namespace + Accumulated::NamespaceToNameSplitter + Name;
+}
 
 }
 

@@ -155,12 +155,6 @@ voxel_t UVoxelSubsystem::GetSafeAccumulatedIndex(const FString& Namespace, const
     return ECommonAccumulated::Null;
 }
 
-// ReSharper disable once CppMemberFunctionMayBeStatic
-bool UVoxelSubsystem::SplitAccumulatedName(const FString& AccumulatedName, FString& OutNamespace, FString& OutName) const
-{
-    return AccumulatedName.Split(TEXT("::"), &OutNamespace, &OutName);
-}
-
 void UVoxelSubsystem::SetCommonVoxelNum(void)
 {
     /* If only common voxels are currently initialized, we need this. */

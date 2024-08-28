@@ -66,12 +66,6 @@ public:
                 auto GetSafeAccumulatedIndex(const FString& Namespace, const FString& Name) const -> voxel_t;
     FORCEINLINE auto GetAccumulatedNamespace(const voxel_t Accumulated) const -> FString { return this->VoxelMasks.IsValidIndex(Accumulated) ? this->GetVoxelNamespace(Accumulated) : this->GetItemNamespace(Accumulated); }
 
-    /**
-     * Try to split an accumulated name into namespace and name (e.g.: "Space::Name" -> "Space", "Name").
-     * @return True, if OutNamespace and OutName is meaningful.
-     */
-    bool SplitAccumulatedName(const FString& AccumulatedName, FString& OutNamespace, FString& OutName) const;
-
 private:
 
     UPROPERTY()
