@@ -181,6 +181,22 @@ bool AWorldPlayerController::UnSubscribeToChatHistoryLookup(const FDelegateHandl
     return this->ChatHistoryLookupDelegate.Remove(Handle);
 }
 
+FDelegateHandle AWorldPlayerController::SubscribeToFillSuggestionToChatStdIn(const FOnFillSuggestionToChatStdInDelegateSignature::FDelegate& Delegate)
+{
+    if (this->IsLocalController() == false)
+    {
+        LOG_FATAL(LogWorldChar, "Not a local controller.")
+        return FDelegateHandle();
+    }
+
+    return this->OnFillSuggestionToChatStdInDelegate.Add(Delegate);
+}
+
+bool AWorldPlayerController::UnSubscribeToFillSuggestionToChatStdIn(const FDelegateHandle& Handle)
+{
+    return this->OnFillSuggestionToChatStdInDelegate.Remove(Handle);
+}
+
 void AWorldPlayerController::SetupCommonPlayerInput(void)
 {
     LOG_VERBOSE(LogWorldChar, "Called.")
@@ -275,6 +291,11 @@ void AWorldPlayerController::BindAction(const FString& ActionName, UEnhancedInpu
         this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldPlayerController::OnNextChatStdIn);
     }
 
+    else if (ActionName == InputActions::FillSuggestionToChatStdIn)
+    {
+        this->BindAction(ActionName, EnhancedInputComponent, ETriggerEvent::Started, &AWorldPlayerController::OnFillSuggestionToChatStdIn);
+    }
+
     return;
 }
 
@@ -367,14 +388,25 @@ void AWorldPlayerController::OnCompletedQuickSessionPreview(const FInputActionVa
     return;
 }
 
+/* Do NOT convert to const method, as this is a Rider IDEA false positive error. */
+// ReSharper disable once CppMemberFunctionMayBeConst
 void AWorldPlayerController::OnPreviousChatStdIn(const FInputActionValue& Value)
 {
     this->ChatHistoryLookupDelegate.Broadcast(true);
 }
 
+/* Do NOT convert to const method, as this is a Rider IDEA false positive error. */
+// ReSharper disable once CppMemberFunctionMayBeConst
 void AWorldPlayerController::OnNextChatStdIn(const FInputActionValue& Value)
 {
     this->ChatHistoryLookupDelegate.Broadcast(false);
+}
+
+/* Do NOT convert to const method, as this is a Rider IDEA false positive error. */
+// ReSharper disable once CppMemberFunctionMayBeConst
+void AWorldPlayerController::OnFillSuggestionToChatStdIn(const FInputActionValue& Value)
+{
+    this->OnFillSuggestionToChatStdInDelegate.Broadcast();
 }
 
 void AWorldPlayerController::BindAction(

@@ -49,6 +49,7 @@ static const FString ToggleDebugScreen         = TEXT("ToggleDebugScreen");
 static const FString ToggleChat                = TEXT("ToggleChat");
 static const FString ToggleQuickSessionPreview = TEXT("ToggleQuickSessionPreview");
 static const FString PreviousChatStdIn         = TEXT("PreviousChatStdIn");
+static const FString FillSuggestionToChatStdIn = TEXT("FillSuggestionToChatStdIn");
 static const FString NextChatStdIn             = TEXT("NextChatStdIn");
 static const FString ToggleCameras             = TEXT("ToggleCameras");
 static const FString ZoomCameras               = TEXT("ZoomCameras");

@@ -32,6 +32,7 @@ DECLARE_MULTICAST_DELEGATE(FSlateVisibilityChangedOwnerVisSignature)
 DECLARE_MULTICAST_DELEGATE_OneParam(FSlateVisibilityChangedSignature, const bool /* bVisible */)
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FChatHistoryLookupSignature, const bool /* bPrevious */)
+DECLARE_MULTICAST_DELEGATE(FOnFillSuggestionToChatStdInDelegateSignature)
 
 /**
  * Only called on the owing local connection.
@@ -99,6 +100,9 @@ public:
     auto SubscribeToChatHistoryLookup(const FChatHistoryLookupSignature::FDelegate& Delegate) -> FDelegateHandle;
     auto UnSubscribeToChatHistoryLookup(const FDelegateHandle& Handle) -> bool;
 
+    auto SubscribeToFillSuggestionToChatStdIn(const FOnFillSuggestionToChatStdInDelegateSignature::FDelegate& Delegate) -> FDelegateHandle;
+    auto UnSubscribeToFillSuggestionToChatStdIn(const FDelegateHandle& Handle) -> bool;
+
 private:
 
     /** Obviously local controller only. */
@@ -113,6 +117,8 @@ private:
     FSlateVisibilityChangedSignature OnQuickSessionPreviewVisibilityChangedDelegate;
     /** Obviously local controller only. */
     FChatHistoryLookupSignature ChatHistoryLookupDelegate;
+    /** Obviously local controller only. */
+    FOnFillSuggestionToChatStdInDelegateSignature OnFillSuggestionToChatStdInDelegate;
 
 protected:
 
@@ -126,13 +132,14 @@ protected:
     /** Override this method to add custom key bindings in derived classes. */
     virtual auto BindAction(const FString& ActionName, UEnhancedInputComponent* EnhancedInputComponent) -> void;
 
-    virtual void OnToggleEscapeMenu(const FInputActionValue& Value); friend UEscapeMenuResumeButton;
-    virtual void OnToggleDebugScreen(const FInputActionValue& Value);
-    virtual void OnToggleChat(const FInputActionValue& Value); friend UChatMenu;
-    virtual void OnStartedQuickSessionPreview(const FInputActionValue& Value);
-    virtual void OnCompletedQuickSessionPreview(const FInputActionValue& Value);
-    virtual void OnPreviousChatStdIn(const FInputActionValue& Value);
-    virtual void OnNextChatStdIn(const FInputActionValue& Value);
+    void OnToggleEscapeMenu(const FInputActionValue& Value); friend UEscapeMenuResumeButton;
+    void OnToggleDebugScreen(const FInputActionValue& Value);
+    void OnToggleChat(const FInputActionValue& Value); friend UChatMenu;
+    void OnStartedQuickSessionPreview(const FInputActionValue& Value);
+    void OnCompletedQuickSessionPreview(const FInputActionValue& Value);
+    void OnPreviousChatStdIn(const FInputActionValue& Value);
+    void OnNextChatStdIn(const FInputActionValue& Value);
+    void OnFillSuggestionToChatStdIn(const FInputActionValue& Value);
 
 private:
 

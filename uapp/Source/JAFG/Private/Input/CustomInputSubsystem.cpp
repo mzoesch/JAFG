@@ -286,6 +286,17 @@ void UCustomInputSubsystem::AddAllKeyMappings(void) const
         InputSubsystem->AddAction(Action);
     }
 
+    // Fill Suggestion To Chat StdIn Action
+    //////////////////////////////////////////////////////////////////////////
+    {
+        FJAFGSingleInputAction Action;
+        Action.Name      = InputActions::FillSuggestionToChatStdIn;
+        Action.Keys.KeyA = EKeys::Tab;
+        Action.Keys.KeyB = EKeys::Invalid;
+        Action.Contexts.Add(InputContexts::Chat);
+        InputSubsystem->AddAction(Action);
+    }
+
     // Toggle Cameras Action
     //////////////////////////////////////////////////////////////////////////
     {
