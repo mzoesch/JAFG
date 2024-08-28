@@ -10,7 +10,7 @@ namespace ChatStatics
 static const FString AuthorityName       = TEXT("AUTHORITY");
 static const FString InternalName        = TEXT("INTERNAL");
 
-static constexpr int32 MaxChatInputLength = 0x7F;
+static constexpr int32 MaxChatInputLength { 0x7F };
 
 FORCEINLINE bool IsTextToLong(const FText& Text)
 {

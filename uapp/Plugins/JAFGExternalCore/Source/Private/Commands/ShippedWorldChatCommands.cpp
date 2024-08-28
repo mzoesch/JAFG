@@ -4,6 +4,20 @@
 #include "Chat/ChatComponent.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerState.h"
+#include "System/VoxelSubsystem.h"
+
+#define SPECIFIC_SYNTAX_CODE_CHECK()                    \
+    checkCode(                                          \
+        if (InArgs == nullptr)                          \
+        {                                               \
+            check( InArgCursor == nullptr )             \
+        }                                               \
+        else                                            \
+        {                                               \
+            check( InArgCursor != nullptr )             \
+            check( InArgs->IsValidIndex(*InArgCursor) ) \
+        }                                               \
+    )
 
 FString LexToString(const EChatCommandSyntax::Type& InType)
 {
@@ -15,7 +29,7 @@ FString LexToString(const EChatCommandSyntax::Type& InType)
     }
     case EChatCommandSyntax::SharpSharpAny:
     {
-        return TEXT("SharpSharpAny");
+        return TEXT("##Any");
     }
     case EChatCommandSyntax::PlayerName:
     {
@@ -56,7 +70,8 @@ bool CommandStatics::Syntax::ParseArgument(
     const TArray<FString>& InArgs,
     const EChatCommandSyntax::Type& InArgSyntax,
     FString& OutArgStringRepresentation,
-    FArgCursor& MovableArgCursor, bool& bBadInput
+    FArgCursor& MovableArgCursor,
+    bool& bBadInput
 )
 {
     bBadInput = false;
@@ -96,14 +111,9 @@ bool CommandStatics::Syntax::ParseArgument(
 
     if (InArgSyntax == EChatCommandSyntax::Accumulated)
     {
-        if (InArgs[MovableArgCursor].IsNumeric())
-        {
-            OutArgStringRepresentation = InArgs[MovableArgCursor];
-            ++MovableArgCursor;
-            return true;
-        }
-        bBadInput = true;
-        return false;
+        OutArgStringRepresentation = InArgs[MovableArgCursor];
+        ++MovableArgCursor;
+        return true;
     }
 
     if (InArgSyntax == EChatCommandSyntax::Integer)
@@ -144,7 +154,26 @@ void CommandStatics::Syntax::GetAllAvailableInputsForSyntax(
     if (InSyntax == EChatCommandSyntax::PlayerName)
     {
         CommandStatics::Syntax::GetAllAvailableInputsForSyntax_PlayerName(
-            InContext, OutPossibleInputs, bOOB ? nullptr : &InArgs, bOOB ? nullptr : &InArgCursor, InLimit);
+            InContext,
+            OutPossibleInputs,
+            bOOB ? nullptr : &InArgs,
+            bOOB ? nullptr : &InArgCursor,
+            InLimit
+        );
+
+        return;
+    }
+
+    if (InSyntax == EChatCommandSyntax::Accumulated)
+    {
+        CommandStatics::Syntax::GetAllAvailableInputsForSyntax_Accumulated(
+            InContext,
+            OutPossibleInputs,
+            bOOB ? nullptr : &InArgs,
+            bOOB ? nullptr : &InArgCursor,
+            InLimit
+        );
+
         return;
     }
 
@@ -156,21 +185,15 @@ void CommandStatics::Syntax::GetAllAvailableInputsForSyntax(
     return;
 }
 
-void CommandStatics::Syntax::GetAllAvailableInputsForSyntax_PlayerName(const UWorld& InContext,
-    TArray<FString>& OutPossibleInputs, const TArray<FString>* InArgs, const FArgCursor* InArgCursor,
-    const int32 InLimit)
+void CommandStatics::Syntax::GetAllAvailableInputsForSyntax_PlayerName(
+    const UWorld& InContext,
+    TArray<FString>& OutPossibleInputs,
+    const TArray<FString>* InArgs /* = nullptr */,
+    const FArgCursor* InArgCursor /* = nullptr */,
+    const int32 InLimit /* DEFAULT_SYNTAX_RESULT_LIMIT */
+)
 {
-    checkCode(
-        if (InArgs == nullptr)
-        {
-            check( InArgCursor == nullptr )
-        }
-        else
-        {
-            check( InArgCursor != nullptr )
-            check( InArgs->IsValidIndex(*InArgCursor) )
-        }
-    )
+    SPECIFIC_SYNTAX_CODE_CHECK()
 
     for (const APlayerState* State : InContext.GetGameState()->PlayerArray)
     {
@@ -202,6 +225,152 @@ void CommandStatics::Syntax::GetAllAvailableInputsForSyntax_PlayerName(const UWo
     return;
 }
 
+void CommandStatics::Syntax::GetAllAvailableInputsForSyntax_Accumulated(
+    const UWorld& InContext,
+    TArray<FString>& OutPossibleInputs,
+    const TArray<FString>* InArgs /* = nullptr */,
+    const FArgCursor* InArgCursor /* = nullptr */,
+    const int32 InLimit /* DEFAULT_SYNTAX_RESULT_LIMIT */
+)
+{
+    SPECIFIC_SYNTAX_CODE_CHECK()
+
+#define OUT_NUM                              \
+    (OutNamespaceName.Num() + OutName.Num())
+
+    TArray<FString> OutName;
+    TArray<FString> OutNamespaceName;
+
+    bool    bCopiedArgs        = false;
+    bool    bFoundNamespaceSep = false;
+    FString Namespace          = TEXT("");
+    FString Name               = TEXT("");
+    if (InArgs)
+    {
+        if (Accumulated::UnrealSplit((*InArgs)[*InArgCursor], Namespace, Name) == false)
+        {
+            /*
+             * We do not know what we are searching for. A specific accumulated by name or all accumulates inside
+             * a namespace. Therefore, we search both for matching names and namespaces.
+             */
+            bCopiedArgs = true;
+            Namespace   = (*InArgs)[*InArgCursor];
+            Name        = (*InArgs)[*InArgCursor];
+        }
+
+        bFoundNamespaceSep = (*InArgs)[*InArgCursor].Contains(Accumulated::NamespaceToNameSplitter);
+    }
+
+    const UVoxelSubsystem* Subsystem = InContext.GetGameInstance()->GetSubsystem<UVoxelSubsystem>();
+
+    for (const FVoxelMask& Mask : Subsystem->GetVoxelMasks())
+    {
+        if (OUT_NUM >= InLimit)
+        {
+            break;
+        }
+
+        if (Namespace.IsEmpty() && Name.IsEmpty())
+        {
+            if (bFoundNamespaceSep)
+            {
+                OutNamespaceName.Emplace(Accumulated::Join(Mask.Namespace, Mask.Name));
+            }
+            else
+            {
+                OutName.Emplace(Mask.Name);
+            }
+
+            continue;
+        }
+
+        if (Name.IsEmpty())
+        {
+            check( Namespace.IsEmpty() == false && Name.IsEmpty() )
+
+            /* Always add namespace as prefix for out. We are looking at every accumulated inside a space. */
+            if (Mask.Namespace.StartsWith(Namespace, ESearchCase::IgnoreCase))
+            {
+                OutNamespaceName.Emplace(Accumulated::Join(Mask.Namespace, Mask.Name));
+            }
+
+            continue;
+        }
+
+        if (Namespace.IsEmpty())
+        {
+            if (Mask.Namespace.StartsWith(Namespace, ESearchCase::IgnoreCase) && Mask.Name.StartsWith(Name, ESearchCase::IgnoreCase))
+            {
+                check( Namespace.IsEmpty() && Name.IsEmpty() == false )
+
+                if (bFoundNamespaceSep)
+                {
+                    OutNamespaceName.Emplace(Accumulated::Join(Mask.Namespace, Mask.Name));
+                }
+                else
+                {
+                    OutName.Emplace(Mask.Name);
+                }
+            }
+
+            continue;
+        }
+
+        if (bCopiedArgs)
+        {
+            check( bFoundNamespaceSep == false )
+            check( Namespace.IsEmpty() == false && Name.IsEmpty() == false )
+
+            if (Mask.Namespace.StartsWith(Namespace, ESearchCase::IgnoreCase))
+            {
+                OutNamespaceName.Emplace(Accumulated::Join(Mask.Namespace, Mask.Name));
+            }
+
+            if (Mask.Name.StartsWith(Name, ESearchCase::IgnoreCase))
+            {
+                OutName.Emplace(Mask.Name);
+            }
+
+            continue;
+        }
+
+        if (Mask.Namespace.StartsWith(Namespace, ESearchCase::IgnoreCase) && Mask.Name.StartsWith(Name, ESearchCase::IgnoreCase))
+        {
+            check( Namespace.IsEmpty() == false && Name.IsEmpty() == false )
+
+            if (bFoundNamespaceSep)
+            {
+                OutNamespaceName.Emplace(Accumulated::Join(Mask.Namespace, Mask.Name));
+            }
+            else
+            {
+                OutName.Emplace(Mask.Name);
+            }
+        }
+
+        continue;
+    }
+
+    // for (const FItemMask& Mask : Subsystem->GetItemMasks())
+    // {
+    //     if (OutPossibleInputs.Num() >= InLimit)
+    //     {
+    //         break;
+    //     }
+    //
+    //     continue;
+    // }
+
+    OutName.Sort( [] (const FString& A, const FString& B) -> bool { return A < B; } );
+    OutNamespaceName.Sort( [] (const FString& A, const FString& B) -> bool { return A < B; } );
+
+    OutPossibleInputs.Append(OutName);
+    OutPossibleInputs.Append(OutNamespaceName);
+
+#undef OUT_NUM
+
+    return;
+}
 
 UShippedWorldChatCommandRegistry::UShippedWorldChatCommandRegistry(void) : Super()
 {
@@ -547,3 +716,5 @@ TArray<FString> UShippedWorldChatCommandRegistry::GetCommandsThatStartWith(const
 
     return Out;
 }
+
+#undef SPECIFIC_SYNTAX_CODE_CHECK

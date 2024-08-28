@@ -8,7 +8,6 @@
 
 #include "ChatMenu.generated.h"
 
-struct FChatCommandObject;
 class UJAFGBorder;
 class UJAFGTextBlock;
 class UVerticalBox;
@@ -16,6 +15,7 @@ class UOverlay;
 class UScrollBox;
 class UEditableText;
 class UJAFGEditableText;
+struct FChatCommandObject;
 
 struct CHAT_API FChatMessagePassData final : public FWidgetPassData
 {
@@ -143,24 +143,32 @@ protected:
     UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true", BindWidget))
     TObjectPtr<UVerticalBox> VerticalBox_CmdSuggestions;
 
-    UFUNCTION()
-    void OnChatTextChanged(const FText& Text);
-
-    void UpdateCmdSuggestions(const FText& Text) const;
+    void UpdateCmdSuggestions(const FText& InText) const;
+    void UpdateCmdSuggestions(void) const;
     void MarkCommandInAsInvalid(void) const;
     void MarkCommandInAsValid(void) const;
     void HideCommandSuggestionsWindow(void) const;
     void ShowCommandSuggestionsWindow(const TArray<FString>& Content, const bool bUpdateStdInValidityFeedback = false) const;
     void ShowCommandSuggestionsWindow(const FChatCommandObject& InObj) const;
+    void RerenderCommandSuggestionsWindow(void) const;
 
     UFUNCTION()
     void OnChatTextCommitted(const FText& Text, const ETextCommit::Type CommitMethod);
+    void OnChatTextChanged(const FText& Text);
 
     static constexpr int32 InvalidCursorInHistory { -1 };
     int32 CurrentCursorInHistory = UChatMenu::InvalidCursorInHistory;
     virtual FOnKeyDown GetOnStdInKeyDownHandler(void);
-    virtual void OnHistoryLookUp(const bool bPrevious);
+    void OnHistoryLookUp(const bool bPrevious);
     FDelegateHandle ChatHistoryLookupHandle;
+    mutable FText LastSelfTypedIn;
+
+    static constexpr int32 InvalidCursorInCmdSuggestions { 0 };
+    mutable int32 CurrentCursorInCmdSuggestions = UChatMenu::InvalidCursorInCmdSuggestions;
+    void OnCommandSuggestionLookUp(const bool bPrevious) const;
+    void OnFillCommandSuggestion(void) const;
+    mutable TArray<FString> CommandSuggestions;
+    FDelegateHandle FillCommandSuggestionToChatStdInHandle;
 
     auto FocusStdIn(void) const -> void;
     auto ClearStdIn(void) const -> void;

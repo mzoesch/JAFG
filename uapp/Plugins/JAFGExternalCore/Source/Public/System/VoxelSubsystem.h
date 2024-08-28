@@ -53,11 +53,13 @@ public:
     FORCEINLINE auto GetTextureIndex(const voxel_t Voxel, const FVector& Normal) const -> int32 { return this->VoxelMasks[Voxel].GetTextureIndex(Normal); };
     FORCEINLINE auto GetVoxelMask(const voxel_t Voxel) const -> const FVoxelMask& { return this->VoxelMasks[Voxel]; }
     FORCEINLINE auto GetVoxelMaskAsPtr(const voxel_t Voxel) const -> const FVoxelMask* { return &this->VoxelMasks[Voxel]; }
+    FORCEINLINE auto GetVoxelMasks(void) const -> const TArray<FVoxelMask>& { return this->VoxelMasks; }
 
     FORCEINLINE auto GetItemName(const voxel_t Item) const -> FString { return this->ItemMasks[this->TransformAccumulatedToItem(Item)].Name; }
                 auto GetItemIndex(const FString& Name) const -> voxel_t;
                 auto GetItemIndex(const FString& Namespace, const FString& Name) const -> voxel_t;
     FORCEINLINE auto GetItemNamespace(const voxel_t Item) const -> FString { return this->ItemMasks[this->TransformAccumulatedToItem(Item)].Namespace; }
+    FORCEINLINE auto GetItemMasks(void) const -> const TArray<FItemMask>& { return this->ItemMasks; }
 
     FORCEINLINE auto GetAccumulatedName(const voxel_t Accumulated) const -> FString { return this->VoxelMasks.IsValidIndex(Accumulated) ? this->GetVoxelName(Accumulated) : this->GetItemName(Accumulated); }
                 auto GetAccumulatedIndex(const FString& Name) const -> voxel_t;

@@ -10,6 +10,7 @@
 
 JAFG_VOID
 
+#define DEFAULT_SYNTAX_RET_LIMIT 20
 #define DECLARE_CLIENT_COMMAND(Name, Callback, Subsystem)                       \
     {                                                                           \
         const FChatCommand Command = FString::Printf(                           \
@@ -25,10 +26,10 @@ JAFG_VOID
 class  UChatComponent;
 struct FChatCommandParams;
 
-typedef TFunction<void(FChatCommandParams& Params)> FChatCommandCallback;
-typedef FString                                     FSyntaxIdentifier;
+typedef TFunction<void(FChatCommandParams& Params)>                       FChatCommandCallback;
+typedef FString                                                           FSyntaxIdentifier;
 typedef TFunction<TArray<FString>(const FSyntaxIdentifier& InPieceIdent)> FSyntaxCallback;
-typedef int32 FArgCursor;
+typedef int32                                                             FArgCursor;
 
 struct JAFGEXTERNALCORE_API FChatCommandParams final
 {
@@ -89,7 +90,13 @@ namespace CommandStatics::Syntax
  * @return True, if the currently pointed to argument was parsed correctly (the syntax was ok).
  *         This does not mean that the output is valid and is semantically correct.
  */
-JAFGEXTERNALCORE_API bool ParseArgument(const TArray<FString>& InArgs, const EChatCommandSyntax::Type& InArgSyntax, FString& OutArgStringRepresentation, FArgCursor& MovableArgCursor, bool& bBadInput);
+JAFGEXTERNALCORE_API bool ParseArgument(
+    const TArray<FString>& InArgs,
+    const EChatCommandSyntax::Type& InArgSyntax,
+    FString& OutArgStringRepresentation,
+    FArgCursor& MovableArgCursor,
+    bool& bBadInput
+);
 
 JAFGEXTERNALCORE_API void GetAllAvailableInputsForSyntax(
     const UWorld& InContext,
@@ -97,10 +104,28 @@ JAFGEXTERNALCORE_API void GetAllAvailableInputsForSyntax(
     const TArray<FString>& InArgs,
     const FArgCursor InArgCursor,
     TArray<FString>& OutPossibleInputs,
-    const int32 InLimit = 20
+    const int32 InLimit = DEFAULT_SYNTAX_RET_LIMIT
 );
 
-JAFGEXTERNALCORE_API void GetAllAvailableInputsForSyntax_PlayerName(const UWorld& InContext, TArray<FString>& OutPossibleInputs, const TArray<FString>* InArgs = nullptr, const FArgCursor* InArgCursor = nullptr, const int32 InLimit = 20);
+//////////////////////////////////////////////////////////////////////////
+// Specific syntaxes
+//////////////////////////////////////////////////////////////////////////
+
+JAFGEXTERNALCORE_API void GetAllAvailableInputsForSyntax_PlayerName(
+    const UWorld& InContext,
+    TArray<FString>& OutPossibleInputs,
+    const TArray<FString>* InArgs = nullptr,
+    const FArgCursor* InArgCursor = nullptr,
+    const int32 InLimit = DEFAULT_SYNTAX_RET_LIMIT
+);
+
+JAFGEXTERNALCORE_API void GetAllAvailableInputsForSyntax_Accumulated(
+    const UWorld& InContext,
+    TArray<FString>& OutPossibleInputs,
+    const TArray<FString>* InArgs = nullptr,
+    const FArgCursor* InArgCursor = nullptr,
+    const int32 InLimit = DEFAULT_SYNTAX_RET_LIMIT
+);
 
 }
 
@@ -155,3 +180,5 @@ private:
     TMap<FChatCommand,      FChatCommandObject> RegisteredCommands;
     TMap<FChatCommand,      FChatCommandObject> RegisteredRemoteCommands;
 };
+
+#undef DEFAULT_SYNTAX_RET_LIMIT

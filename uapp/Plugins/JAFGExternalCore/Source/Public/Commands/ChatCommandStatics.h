@@ -186,6 +186,8 @@ static const FString ClientCommandPrefix = TEXT("cl_");
 
 static const int32 PlatformCommandPrefixLength = ServerCommandPrefix.Len();
 
+static constexpr int32 MaxChatInputLength { 0x7FF };
+
 JAFGEXTERNALCORE_API bool IsCommand(const FText& StdIn);
 JAFGEXTERNALCORE_API bool IsServerCommand(const FText& StdIn);
 JAFGEXTERNALCORE_API bool IsClientCommand(const FText& StdIn);
