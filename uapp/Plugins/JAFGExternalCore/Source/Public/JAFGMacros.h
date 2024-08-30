@@ -6,6 +6,15 @@
 #include "JAFGLogDefs.h"
 #include "Runtime/JAFGBuild.h"
 
+/**
+ * Some files should never be included directly but only conditionally by including this file.
+ * They then can check if they are included at a later point than this master macro repository file.
+ */
+#define INCLUDED_JAFG_MACROS_HEADER
+
+//////////////////////////////////////////////////////////////////////////
+// Static assertions
+
 #ifndef DO_HARSH_JCHECK
     #error "DO_HARSH_JCHECK is not defined."
 #endif /* !DO_HARSH_JCHECK */
@@ -17,6 +26,9 @@
 #ifndef DO_VERY_RELAXED_JCHECKS
     #error "DO_VERY_RELAXED_JCHECKS is not defined."
 #endif /* !DO_VERY_RELAXED_JCHECKS */
+
+// ~Static assertions
+//////////////////////////////////////////////////////////////////////////
 
 #define UNREACHABLE_ENCLOSING_BLOCK_TEXT "Enclosing block should never be called."
 
@@ -68,7 +80,7 @@
 
 /**
  * A check that only throws an error. If DO_VERY_RELAXED_JCHECKS is false,
- * it wil be completely purged from the code.
+ * it will be completely purged from the code.
  */
 #if DO_VERY_RELAXED_JCHECKS
     // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
@@ -132,3 +144,13 @@
     // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
     #define jveryRelaxedCheckNoEntry()
 #endif /* !DO_VERY_RELAXED_JCHECKS */
+
+/**
+ * Only include this file when testing to override defined macros.
+ */
+#if WITH_TESTS
+    #if UE_BUILD_SHIPPING
+        #error "Found WITH_TESTS but not in a test build."
+    #endif /* UE_BUILD_SHIPPING */
+    #include "JAFGTestMacros.h"
+#endif /* WITH_TESTS */

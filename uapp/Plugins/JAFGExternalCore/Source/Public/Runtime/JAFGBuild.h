@@ -33,3 +33,16 @@
 #endif /* !UE_BUILD_SHIPPING */
 
 #define WITH_STRIKE_SUBSYSTEM 0
+
+/** When running unit tests, do we want to run checks that check if specific assertions are being triggered? */
+/*
+ * We check here for not defined - as the default value is false.
+ * Some unit tests might want to override this value only for them and not the whole application.
+ */
+#ifndef DO_CHECK_ASSERTIONS
+    #if WITH_TESTS && !UE_BUILD_SHIPPING
+        #define DO_CHECK_ASSERTIONS 0
+    #else /* WITH_TESTS && !UE_BUILD_SHIPPING */
+        #define DO_CHECK_ASSERTIONS 0
+    #endif /* !(WITH_TESTS && !UE_BUILD_SHIPPING) */
+#endif /* !DO_CHECK_ASSERTIONS */

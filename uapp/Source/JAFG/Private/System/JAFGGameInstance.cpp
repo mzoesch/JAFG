@@ -18,9 +18,19 @@ UJAFGGameInstance::UJAFGGameInstance(const FObjectInitializer& ObjectInitializer
 
 void UJAFGGameInstance::Init(void)
 {
+#if DO_CHECK_ASSERTIONS
+    LOG_FATAL(LogSystem, "Assertions checks are enabled. This is disallowed when not unit testing.")
+#endif /* DO_CHECK_ASSERTIONS */
+
 #if UE_BUILD_SHIPPING
     check( false && "Checks are enabled in shipping builds. Was this intensional?" )
 #endif /* UE_BUILD_SHIPPING */
+
+    if (IS_PUSH_MODEL_ENABLED() == false)
+    {
+        LOG_FATAL(LogSystem, "Push model is not enabled. This is a requirement.")
+        return;
+    }
 
     GetMutableDefault<UGamePluginSettings>()->OnGameBootUp();
 
@@ -39,12 +49,6 @@ void UJAFGGameInstance::Init(void)
     });
 
     Super::Init();
-
-    if (IS_PUSH_MODEL_ENABLED() == false)
-    {
-        LOG_FATAL(LogSystem, "Push model is not enabled. This is a requirement for the game instance.")
-        return;
-    }
 
     LOG_DISPLAY(LogSystem, "Found %d mods to load.", UModificationSupervisorSubsystem::ModSubsystems.Num())
 
