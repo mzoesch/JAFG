@@ -108,7 +108,7 @@ void ChatCommands::RegisterJAFGCoreChatCommands(UShippedWorldChatCommandRegistry
         CommandObject.Callback = OnGiveAccumulated;
         CommandObject.Syntax.Emplace(EChatCommandSyntax::PlayerName);
         CommandObject.Syntax.Emplace(EChatCommandSyntax::Accumulated);
-        CommandObject.Syntax.Emplace(EChatCommandSyntax::Integer);
+        CommandObject.Syntax.Emplace(EChatCommandSyntax::AccAmount);
 
         ChatCommands->RegisterCommand(CommandObject);
     }
@@ -309,3 +309,4 @@ void ChatCommands::Callbacks::Authority::OnShowReadOnlyPlayerInventory(const FCh
 }
 
 #undef DECLARE_CALLEE_AS_CHAR_TARGET
+#undef DECLARE_CALLEE_AS_CTRL_TARGET

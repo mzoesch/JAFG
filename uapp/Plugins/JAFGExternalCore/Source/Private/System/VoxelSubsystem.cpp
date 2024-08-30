@@ -155,6 +155,76 @@ voxel_t UVoxelSubsystem::GetSafeAccumulatedIndex(const FString& Namespace, const
     return ECommonAccumulated::Null;
 }
 
+bool UVoxelSubsystem::GetMaybeUndefinedVoxel(const voxel_t Voxel, FString& OutName, FString& OutNamespace) const
+{
+    if (this->VoxelMasks.IsValidIndex(Voxel))
+    {
+        OutName      = this->VoxelMasks[Voxel].Name;
+        OutNamespace = this->VoxelMasks[Voxel].Namespace;
+        return true;
+    }
+
+    return false;
+}
+
+bool UVoxelSubsystem::GetMaybeUndefinedVoxelName(const voxel_t Voxel, FString& OutName) const
+{
+    FString Unused;
+    return this->GetMaybeUndefinedVoxel(Voxel, OutName, Unused);
+}
+
+bool UVoxelSubsystem::GetMaybeUndefinedVoxelNamespace(const voxel_t Voxel, FString& OutNamespace) const
+{
+    FString Unused;
+    return this->GetMaybeUndefinedVoxel(Voxel, Unused, OutNamespace);
+}
+
+bool UVoxelSubsystem::GetMaybeUndefinedItem(const voxel_t Item, FString& OutName, FString& OutNamespace) const
+{
+    if (this->ItemMasks.IsValidIndex(this->TransformAccumulatedToItem(Item)))
+    {
+        OutName      = this->ItemMasks[this->TransformAccumulatedToItem(Item)].Name;
+        OutNamespace = this->ItemMasks[this->TransformAccumulatedToItem(Item)].Namespace;
+        return true;
+    }
+
+    return false;
+}
+
+bool UVoxelSubsystem::GetMaybeUndefinedItemName(const voxel_t Item, FString& OutName) const
+{
+    FString Unused;
+    return this->GetMaybeUndefinedItem(Item, OutName, Unused);
+}
+
+bool UVoxelSubsystem::GetMaybeUndefinedItemNamespace(const voxel_t Item, FString& OutNamespace) const
+{
+    FString Unused;
+    return this->GetMaybeUndefinedItem(Item, Unused, OutNamespace);
+}
+
+bool UVoxelSubsystem::GetMaybeUndefinedAccumulated(const voxel_t Accumulated, FString& OutName, FString& OutNamespace) const
+{
+    if (this->GetMaybeUndefinedVoxel(Accumulated, OutName, OutNamespace))
+    {
+        return true;
+    }
+
+    return this->GetMaybeUndefinedItem(Accumulated, OutName, OutNamespace);
+}
+
+bool UVoxelSubsystem::GetMaybeUndefinedAccumulatedName(const voxel_t Accumulated, FString& OutName) const
+{
+    FString Unused;
+    return this->GetMaybeUndefinedAccumulated(Accumulated, OutName, Unused);
+}
+
+bool UVoxelSubsystem::GetMaybeUndefinedAccumulatedNamespace(const voxel_t Accumulated, FString& OutNamespace) const
+{
+    FString Unused;
+    return this->GetMaybeUndefinedAccumulated(Accumulated, Unused, OutNamespace);
+}
+
 void UVoxelSubsystem::SetCommonVoxelNum(void)
 {
     /* If only common voxels are currently initialized, we need this. */

@@ -153,8 +153,8 @@ protected:
     void RerenderCommandSuggestionsWindow(void) const;
 
     UFUNCTION()
-    void OnChatTextCommitted(const FText& Text, const ETextCommit::Type CommitMethod);
-    void OnChatTextChanged(const FText& Text);
+    void OnChatTextCommitted(const FText& InText, const ETextCommit::Type CommitMethod);
+    void OnChatTextChanged(const FText& InText);
 
     static constexpr int32 InvalidCursorInHistory { -1 };
     int32 CurrentCursorInHistory = UChatMenu::InvalidCursorInHistory;

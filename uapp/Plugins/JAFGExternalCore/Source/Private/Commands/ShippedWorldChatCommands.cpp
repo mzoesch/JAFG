@@ -5,6 +5,7 @@
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerState.h"
 #include "System/VoxelSubsystem.h"
+#include "UObject/FastReferenceCollector.h"
 
 #define SPECIFIC_SYNTAX_CODE_CHECK()                    \
     checkCode(                                          \
@@ -19,10 +20,30 @@
         }                                               \
     )
 
+EChatCommandSyntax::Type EChatCommandSyntax::Redirect(const EChatCommandSyntax::Type& InType)
+{
+    if (InType == EChatCommandSyntax::Integer)
+    {
+        return EChatCommandSyntax::Integer32;
+    }
+
+    if (InType == EChatCommandSyntax::AccAmount)
+    {
+        return EChatCommandSyntax::UInteger32;
+    }
+
+    return InType;
+}
+
 FString LexToString(const EChatCommandSyntax::Type& InType)
 {
     switch (InType)
     {
+
+    //////////////////////////////////////////////////////////////////////////
+    // Typedefs
+    //////////////////////////////////////////////////////////////////////////
+
     case EChatCommandSyntax::Any:
     {
         return TEXT("Any");
@@ -51,22 +72,54 @@ FString LexToString(const EChatCommandSyntax::Type& InType)
     {
         return TEXT("Item");
     }
+    case EChatCommandSyntax::Byte:
+    {
+        return TEXT("Byte");
+    }
+    case EChatCommandSyntax::Integer32:
+    {
+        return TEXT("Integer32");
+    }
+    case EChatCommandSyntax::UInteger32:
+    {
+        return TEXT("UInteger32");
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    // Redirected typedefs
+    //////////////////////////////////////////////////////////////////////////
+
     case EChatCommandSyntax::Integer:
     {
         return TEXT("Integer");
     }
+    case EChatCommandSyntax::AccAmount:
+    {
+        return TEXT("AccAmount");
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    // Subsystem redirections
+    //////////////////////////////////////////////////////////////////////////
+
     case EChatCommandSyntax::Custom:
     {
-        return TEXT("Custom");
+        return TEXT("SubsystemRedirected");
     }
     default:
     {
-        return TEXT("Unknown");
+        if (EChatCommandSyntax::IsSubsystemRedirected(InType))
+        {
+            return TEXT("__SubsystemRedirected");
+        }
+
+        return TEXT("__Unspecified");
     }
     }
 }
 
 bool CommandStatics::Syntax::ParseArgument(
+    const UWorld& InContext,
     const TArray<FString>& InArgs,
     const EChatCommandSyntax::Type& InArgSyntax,
     FString& OutArgStringRepresentation,
@@ -74,6 +127,11 @@ bool CommandStatics::Syntax::ParseArgument(
     bool& bBadInput
 )
 {
+#define BAD_INPUT_RET() \
+    bBadInput = true; return false;
+
+    const EChatCommandSyntax::Type RedirectedArgSyntax = EChatCommandSyntax::Redirect(InArgSyntax);
+
     bBadInput = false;
 
     if (MovableArgCursor >= InArgs.Num())
@@ -81,14 +139,14 @@ bool CommandStatics::Syntax::ParseArgument(
         return false;
     }
 
-    if (InArgSyntax == EChatCommandSyntax::Any)
+    if (RedirectedArgSyntax == EChatCommandSyntax::Any)
     {
         OutArgStringRepresentation = InArgs[MovableArgCursor];
         ++MovableArgCursor;
         return true;
     }
 
-    if (InArgSyntax == EChatCommandSyntax::SharpSharpAny)
+    if (RedirectedArgSyntax == EChatCommandSyntax::SharpSharpAny)
     {
         for (int32 i = MovableArgCursor; i < InArgs.Num(); ++i)
         {
@@ -102,35 +160,91 @@ bool CommandStatics::Syntax::ParseArgument(
         return true;
     }
 
-    if (InArgSyntax == EChatCommandSyntax::PlayerName)
+    if (RedirectedArgSyntax == EChatCommandSyntax::PlayerName)
     {
         OutArgStringRepresentation = InArgs[MovableArgCursor];
         ++MovableArgCursor;
         return true;
     }
 
-    if (InArgSyntax == EChatCommandSyntax::Accumulated)
+    if (RedirectedArgSyntax == EChatCommandSyntax::Accumulated)
     {
+        if (CommandStatics::Syntax::IsUInteger32_RangeCheck(InArgs[MovableArgCursor]))
+        {
+            FString Name; FString Namespace;
+            if (InContext.GetGameInstance()->GetSubsystem<UVoxelSubsystem>()->GetMaybeUndefinedAccumulated(
+                CommandStatics::Syntax::ToUInteger32(InArgs[MovableArgCursor]),
+                Name,
+                Namespace
+            ) == false)
+            {
+                BAD_INPUT_RET()
+            }
+
+            OutArgStringRepresentation = ::Accumulated::Join(Namespace, Name);
+            ++MovableArgCursor;
+            return true;
+        }
+
         OutArgStringRepresentation = InArgs[MovableArgCursor];
         ++MovableArgCursor;
         return true;
     }
 
-    if (InArgSyntax == EChatCommandSyntax::Integer)
+    if (RedirectedArgSyntax == EChatCommandSyntax::Voxel)
     {
-        if (InArgs[MovableArgCursor].IsNumeric())
+        jveryRelaxedCheck( false && "Voxel" )
+        return false;
+    }
+
+    if (RedirectedArgSyntax == EChatCommandSyntax::Item)
+    {
+        jveryRelaxedCheck( false && "Item" )
+        return false;
+    }
+
+    if (RedirectedArgSyntax == EChatCommandSyntax::Byte)
+    {
+        if (CommandStatics::Syntax::IsByte_RangeCheck(InArgs[MovableArgCursor]))
+        {
+            OutArgStringRepresentation = FString::Printf(TEXT("%u"), CommandStatics::Syntax::ToByte(InArgs[MovableArgCursor]));
+            return true;
+        }
+
+        BAD_INPUT_RET()
+    }
+
+    if (RedirectedArgSyntax == EChatCommandSyntax::Integer32)
+    {
+        if (CommandStatics::Syntax::IsInteger32_RangeCheck(InArgs[MovableArgCursor]))
         {
             OutArgStringRepresentation = InArgs[MovableArgCursor];
             ++MovableArgCursor;
             return true;
         }
 
-        bBadInput = true;
+        BAD_INPUT_RET()
+    }
 
-        return false;
+    if (RedirectedArgSyntax == EChatCommandSyntax::UInteger32)
+    {
+        if (CommandStatics::Syntax::IsUInteger32_RangeCheck(InArgs[MovableArgCursor]))
+        {
+            OutArgStringRepresentation = InArgs[MovableArgCursor];
+            ++MovableArgCursor;
+            return true;
+        }
+
+        BAD_INPUT_RET()
+    }
+
+    if (EChatCommandSyntax::IsSubsystemRedirected(RedirectedArgSyntax))
+    {
+        jveryRelaxedCheck( false && "SubsystemRedirected" )
     }
 
     return false;
+#undef BAD_INPUT_RET
 }
 
 void CommandStatics::Syntax::GetAllAvailableInputsForSyntax(
@@ -139,7 +253,7 @@ void CommandStatics::Syntax::GetAllAvailableInputsForSyntax(
     const TArray<FString>& InArgs,
     const FArgCursor InArgCursor,
     TArray<FString>& OutPossibleInputs,
-    const int32 InLimit /* = 20 */
+    const int32 InLimit /* = DEFAULT_SYNTAX_RET_LIMIT */
 )
 {
     check( OutPossibleInputs.IsEmpty() )
@@ -245,7 +359,19 @@ void CommandStatics::Syntax::GetAllAvailableInputsForSyntax_Accumulated(
     bool    bFoundNamespaceSep = false;
     FString Namespace          = TEXT("");
     FString Name               = TEXT("");
-    if (InArgs)
+    if (InArgs && CommandStatics::Syntax::IsUInteger32_RangeCheck((*InArgs)[*InArgCursor]))
+    {
+        if (InContext.GetGameInstance()->GetSubsystem<UVoxelSubsystem>()->GetMaybeUndefinedAccumulated(
+            CommandStatics::Syntax::ToUInteger32((*InArgs)[*InArgCursor]),
+            Name,
+            Namespace
+        ))
+        {
+            OutPossibleInputs.Emplace(Accumulated::Join(Namespace, Name));
+        }
+        return;
+    }
+    else if (InArgs)
     {
         if (Accumulated::UnrealSplit((*InArgs)[*InArgCursor], Namespace, Name) == false)
         {
@@ -351,15 +477,93 @@ void CommandStatics::Syntax::GetAllAvailableInputsForSyntax_Accumulated(
         continue;
     }
 
-    // for (const FItemMask& Mask : Subsystem->GetItemMasks())
-    // {
-    //     if (OutPossibleInputs.Num() >= InLimit)
-    //     {
-    //         break;
-    //     }
-    //
-    //     continue;
-    // }
+    for (const FItemMask& Mask : Subsystem->GetItemMasks())
+    {
+        if (OUT_NUM >= InLimit)
+        {
+            break;
+        }
+
+        if (Namespace.IsEmpty() && Name.IsEmpty())
+        {
+            if (bFoundNamespaceSep)
+            {
+                OutNamespaceName.Emplace(Accumulated::Join(Mask.Namespace, Mask.Name));
+            }
+            else
+            {
+                OutName.Emplace(Mask.Name);
+            }
+
+            continue;
+        }
+
+        if (Name.IsEmpty())
+        {
+            check( Namespace.IsEmpty() == false && Name.IsEmpty() )
+
+            /* Always add namespace as prefix for out. We are looking at every accumulated inside a space. */
+            if (Mask.Namespace.StartsWith(Namespace, ESearchCase::IgnoreCase))
+            {
+                OutNamespaceName.Emplace(Accumulated::Join(Mask.Namespace, Mask.Name));
+            }
+
+            continue;
+        }
+
+        if (Namespace.IsEmpty())
+        {
+            if (Mask.Namespace.StartsWith(Namespace, ESearchCase::IgnoreCase) && Mask.Name.StartsWith(Name, ESearchCase::IgnoreCase))
+            {
+                check( Namespace.IsEmpty() && Name.IsEmpty() == false )
+
+                if (bFoundNamespaceSep)
+                {
+                    OutNamespaceName.Emplace(Accumulated::Join(Mask.Namespace, Mask.Name));
+                }
+                else
+                {
+                    OutName.Emplace(Mask.Name);
+                }
+            }
+
+            continue;
+        }
+
+        if (bCopiedArgs)
+        {
+            check( bFoundNamespaceSep == false )
+            check( Namespace.IsEmpty() == false && Name.IsEmpty() == false )
+
+            if (Mask.Namespace.StartsWith(Namespace, ESearchCase::IgnoreCase))
+            {
+                OutNamespaceName.Emplace(Accumulated::Join(Mask.Namespace, Mask.Name));
+            }
+
+            if (Mask.Name.StartsWith(Name, ESearchCase::IgnoreCase))
+            {
+                OutName.Emplace(Mask.Name);
+            }
+
+            continue;
+        }
+
+        if (Mask.Namespace.StartsWith(Namespace, ESearchCase::IgnoreCase) && Mask.Name.StartsWith(Name, ESearchCase::IgnoreCase))
+        {
+            check( Namespace.IsEmpty() == false && Name.IsEmpty() == false )
+
+            if (bFoundNamespaceSep)
+            {
+                OutNamespaceName.Emplace(Accumulated::Join(Mask.Namespace, Mask.Name));
+            }
+            else
+            {
+                OutName.Emplace(Mask.Name);
+            }
+        }
+
+        continue;
+    }
 
     OutName.Sort( [] (const FString& A, const FString& B) -> bool { return A < B; } );
     OutNamespaceName.Sort( [] (const FString& A, const FString& B) -> bool { return A < B; } );
@@ -370,6 +574,243 @@ void CommandStatics::Syntax::GetAllAvailableInputsForSyntax_Accumulated(
 #undef OUT_NUM
 
     return;
+}
+
+bool CommandStatics::Syntax::IsNumeric(const FString& S)
+{
+    return S.IsNumeric();
+}
+
+bool CommandStatics::Syntax::IsByte(const FString& S)
+{
+    if (CommandStatics::Syntax::IsUInteger32(S))
+    {
+        /* We do not care about the range. */
+        return true;
+    }
+
+    FString Lowered = S.ToLower(); Lowered.TrimStartAndEndInline();
+
+    if (Lowered.IsEmpty() || Lowered.Len() > 4)
+    {
+        return false;
+    }
+
+    if (Lowered.Len() == 4)
+    {
+        if (Lowered[0] != TEXT('0') || Lowered[1] != TEXT('x'))
+        {
+            return false;
+        }
+
+        return FChar::IsHexDigit(Lowered[2]) && FChar::IsHexDigit(Lowered[3]);
+    }
+
+    if (Lowered.Len() == 3)
+    {
+        if (Lowered[0] != TEXT('0') || Lowered[1] != TEXT('x'))
+        {
+            return false;
+        }
+
+        return FChar::IsHexDigit(Lowered[2]);
+    }
+
+    if (Lowered.Len() == 2)
+    {
+       return FChar::IsHexDigit(Lowered[0]) && FChar::IsHexDigit(Lowered[1]);
+    }
+
+    if (Lowered.Len() == 1)
+    {
+        return FChar::IsHexDigit(Lowered[0]);
+    }
+
+    checkNoEntry()
+
+    return false;
+}
+
+uint8 CommandStatics::Syntax::ToByte(const FString& S)
+{
+#define CHAR_TO_BYTE(InChar) \
+    static_cast<uint8>(FChar::IsDigit(InChar) ? InChar - TEXT('0') : InChar - TEXT('a') + 10)
+
+    check( CommandStatics::Syntax::IsByte(S) )
+
+    if (CommandStatics::Syntax::IsUInteger32(S))
+    {
+        check( CommandStatics::Syntax::ToUInteger32(S) <= TNumericLimits<uint8>::Max() )
+        return static_cast<uint8>(CommandStatics::Syntax::ToUInteger32(S));
+    }
+
+    FString Lowered = S.ToLower(); Lowered.TrimStartAndEndInline();
+
+    if (Lowered.Len() == 4)
+    {
+        return (CHAR_TO_BYTE(Lowered[2]) << 4) + CHAR_TO_BYTE(Lowered[3]);
+    }
+
+    if (Lowered.Len() == 3)
+    {
+        return CHAR_TO_BYTE(Lowered[2]);
+    }
+
+    if (Lowered.Len() == 2)
+    {
+        return (CHAR_TO_BYTE(Lowered[0]) << 4) + CHAR_TO_BYTE(Lowered[1]);
+    }
+
+    if (Lowered.Len() == 1)
+    {
+        return CHAR_TO_BYTE(Lowered[0]);
+    }
+
+    checkNoEntry()
+    return 0b0;
+
+#undef CHAR_TO_BYTE
+}
+
+bool CommandStatics::Syntax::IsInteger32(const FString& S)
+{
+    if (S.IsEmpty())
+    {
+        return false;
+    }
+
+    bool bFirst = true;
+    for (const TCHAR& Char : S)
+    {
+        if (bFirst)
+        {
+            if (Char == '-' || Char == '+')
+            {
+                bFirst = false;
+                continue;
+            }
+
+            bFirst = false;
+        }
+
+        if (FChar::IsDigit(Char) == false)
+        {
+            return false;
+        }
+
+        continue;
+    }
+
+    return true;
+}
+
+int32_t CommandStatics::Syntax::ToInteger32(const FString& S)
+{
+    check( CommandStatics::Syntax::IsInteger32_RangeCheck(S) )
+
+    /*
+     * This is a super edgy edge-case. We assert here to come back in the future if this really
+     * fails to test this function. We should probably do some unit tests for this - lol.
+     * But theoretically, this if approach with the signed 64-Bit Integer here should work? If not, then maybe the
+     * user is just fucked and should buy a newer platform to run this game...
+     */
+    static_assert( sizeof(int32_t) == sizeof(int32) );
+
+    if constexpr (sizeof(int32) < sizeof(int32_t))
+    {
+        return FCString::Atoi64(*S);
+    }
+
+    return FCString::Atoi(*S);
+}
+
+bool CommandStatics::Syntax::IsUInteger32(const FString& S)
+{
+    if (S.IsEmpty())
+    {
+        return false;
+    }
+
+    bool bFirst = true;
+    for (const TCHAR& Char : S)
+    {
+        if (bFirst)
+        {
+            if (/* Checking for unsigned integer - no minus allowed. */ Char == '+')
+            {
+                bFirst = false;
+                continue;
+            }
+
+            bFirst = false;
+        }
+
+        if (FChar::IsDigit(Char) == false)
+        {
+            return false;
+        }
+
+        continue;
+    }
+
+    return true;
+}
+
+uint32_t CommandStatics::Syntax::ToUInteger32(const FString& S)
+{
+    check( CommandStatics::Syntax::IsUInteger32_RangeCheck(S) )
+    return static_cast<uint32_t>(FCString::Atoi64(*S));
+}
+
+bool CommandStatics::Syntax::IsByte_RangeCheck(const FString& S)
+{
+    if (CommandStatics::Syntax::IsByte(S) == false)
+    {
+        return false;
+    }
+
+    if (CommandStatics::Syntax::IsUInteger32(S))
+    {
+        return CommandStatics::Syntax::ToUInteger32(S) <= TNumericLimits<uint8>::Max();
+    }
+
+    return true;
+}
+
+bool CommandStatics::Syntax::IsInteger32_RangeCheck(const FString& S)
+{
+    if (CommandStatics::Syntax::IsInteger32(S) == false)
+    {
+        return false;
+    }
+
+    const int64 Value = FCString::Atoi64(*S);
+    return Value >= TNumericLimits<int32_t>::Min() && Value <= TNumericLimits<int32_t>::Max();
+}
+
+bool CommandStatics::Syntax::IsUInteger32_RangeCheck(const FString& S)
+{
+    if (CommandStatics::Syntax::IsUInteger32(S) == false)
+    {
+        return false;
+    }
+
+    const int64 Value = FCString::Atoi64(*S);
+    return Value >= TNumericLimits<uint32_t>::Min() && Value <= TNumericLimits<uint32_t>::Max();
+}
+
+bool CommandStatics::Syntax::AssumedInteger32_RangeCheck(const FString& S)
+{
+    check( CommandStatics::Syntax::IsInteger32(S) )
+    const int64 Value = FCString::Atoi64(*S);
+    return Value >= TNumericLimits<int32_t>::Min() && Value <= TNumericLimits<int32_t>::Max();
+}
+
+bool CommandStatics::Syntax::AssumedUInteger32_RangeCheck(const FString& S)
+{
+    check( CommandStatics::Syntax::IsUInteger32(S) )
+    const uint64 Value = FCString::Atoi64(*S);
+    return Value <= TNumericLimits<uint32_t>::Max();
 }
 
 UShippedWorldChatCommandRegistry::UShippedWorldChatCommandRegistry(void) : Super()
@@ -490,8 +931,7 @@ bool UShippedWorldChatCommandRegistry::GetAnyCommandObj(const FChatCommand& InCo
 
 FChatCommand UShippedWorldChatCommandRegistry::SmartPrefix(const FChatCommand& InCommand) const
 {
-    bool bClientCommand;
-    if (CommandStatics::DoesCommandStartWithSpecificCommandType(InCommand, bClientCommand))
+    if (bool bClientCommand; CommandStatics::DoesCommandStartWithSpecificCommandType(InCommand, bClientCommand))
     {
         return InCommand;
     }

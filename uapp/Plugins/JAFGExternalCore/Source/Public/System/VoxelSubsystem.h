@@ -44,11 +44,11 @@ public:
     FORCEINLINE auto GetItemIndexStart(void) const -> voxel_t { return this->VoxelMasks.Num(); }
 
     FORCEINLINE auto GetVoxelName(const voxel_t Voxel) const -> FString { return this->VoxelMasks[Voxel].Name; }
+    FORCEINLINE auto GetVoxelNamespace(const voxel_t Voxel) const -> FString { return this->VoxelMasks[Voxel].Namespace; }
                 auto GetVoxelIndex(const FString& Name) const -> voxel_t;
                 auto GetSafeVoxelIndex(const FString& Name) const -> voxel_t;
                 auto GetVoxelIndex(const FString& NameSpace, const FString& Name) const -> voxel_t;
                 auto GetSafeVoxelIndex(const FString& Namespace, const FString& Name) const -> voxel_t;
-    FORCEINLINE auto GetVoxelNamespace(const voxel_t Voxel) const -> FString { return this->VoxelMasks[Voxel].Namespace; }
     FORCEINLINE auto GetVoxelTextureGroup(const voxel_t Voxel, const FVector& Normal) const -> ETextureGroup::Type { return this->VoxelMasks[Voxel].GetTextureGroup(Normal); }
     FORCEINLINE auto GetTextureIndex(const voxel_t Voxel, const FVector& Normal) const -> int32 { return this->VoxelMasks[Voxel].GetTextureIndex(Normal); };
     FORCEINLINE auto GetVoxelMask(const voxel_t Voxel) const -> const FVoxelMask& { return this->VoxelMasks[Voxel]; }
@@ -56,9 +56,9 @@ public:
     FORCEINLINE auto GetVoxelMasks(void) const -> const TArray<FVoxelMask>& { return this->VoxelMasks; }
 
     FORCEINLINE auto GetItemName(const voxel_t Item) const -> FString { return this->ItemMasks[this->TransformAccumulatedToItem(Item)].Name; }
+    FORCEINLINE auto GetItemNamespace(const voxel_t Item) const -> FString { return this->ItemMasks[this->TransformAccumulatedToItem(Item)].Namespace; }
                 auto GetItemIndex(const FString& Name) const -> voxel_t;
                 auto GetItemIndex(const FString& Namespace, const FString& Name) const -> voxel_t;
-    FORCEINLINE auto GetItemNamespace(const voxel_t Item) const -> FString { return this->ItemMasks[this->TransformAccumulatedToItem(Item)].Namespace; }
     FORCEINLINE auto GetItemMasks(void) const -> const TArray<FItemMask>& { return this->ItemMasks; }
 
     FORCEINLINE auto GetAccumulatedName(const voxel_t Accumulated) const -> FString { return this->VoxelMasks.IsValidIndex(Accumulated) ? this->GetVoxelName(Accumulated) : this->GetItemName(Accumulated); }
@@ -67,6 +67,23 @@ public:
                 auto GetAccumulatedIndex(const FString& NameSpace, const FString& Name) const -> voxel_t;
                 auto GetSafeAccumulatedIndex(const FString& Namespace, const FString& Name) const -> voxel_t;
     FORCEINLINE auto GetAccumulatedNamespace(const voxel_t Accumulated) const -> FString { return this->VoxelMasks.IsValidIndex(Accumulated) ? this->GetVoxelNamespace(Accumulated) : this->GetItemNamespace(Accumulated); }
+
+    /*
+     * Use these methods if it is unsure if the input is valid. Very useful for user input.
+     * Return true if the out is meaningful.
+     */
+
+    bool GetMaybeUndefinedVoxel(const voxel_t Voxel, FString& OutName, FString& OutNamespace) const;
+    bool GetMaybeUndefinedVoxelName(const voxel_t Voxel, FString& OutName) const;
+    bool GetMaybeUndefinedVoxelNamespace(const voxel_t Voxel, FString& OutNamespace) const;
+
+    bool GetMaybeUndefinedItem(const voxel_t Item, FString& OutName, FString& OutNamespace) const;
+    bool GetMaybeUndefinedItemName(const voxel_t Item, FString& OutName) const;
+    bool GetMaybeUndefinedItemNamespace(const voxel_t Item, FString& OutNamespace) const;
+
+    bool GetMaybeUndefinedAccumulated(const voxel_t Accumulated, FString& OutName, FString& OutNamespace) const;
+    bool GetMaybeUndefinedAccumulatedName(const voxel_t Accumulated, FString& OutName) const;
+    bool GetMaybeUndefinedAccumulatedNamespace(const voxel_t Accumulated, FString& OutNamespace) const;
 
 private:
 

@@ -10,7 +10,8 @@
 
 JAFG_VOID
 
-#define DEFAULT_SYNTAX_RET_LIMIT 20
+#define DEFAULT_SYNTAX_RET_LIMIT                                                \
+    20
 #define DECLARE_CLIENT_COMMAND(Name, Callback, Subsystem)                       \
     {                                                                           \
         const FChatCommand Command = FString::Printf(                           \
@@ -49,7 +50,11 @@ namespace EChatCommandSyntax
 
 enum Type : uint16
 {
-    Any,
+    //////////////////////////////////////////////////////////////////////////
+    // Typedefs
+    //////////////////////////////////////////////////////////////////////////
+
+    Any             = 0,
     SharpSharpAny,
 
     PlayerName,
@@ -61,13 +66,41 @@ enum Type : uint16
     Item,
 
     Byte,
-    Integer, // 32 if the platform allows
+    Integer32,
+    UInteger32,
 
-    // Redirection typedefs
-    // ...
+    //////////////////////////////////////////////////////////////////////////
+    // Redirected typedefs
+    //////////////////////////////////////////////////////////////////////////
 
-    Custom,
+    /** Redirects to Integer32  */
+    Integer         = 100,
+    /** Redirects to UInteger32 */
+    AccAmount,
+
+    //////////////////////////////////////////////////////////////////////////
+    // Subsystem redirections
+    //////////////////////////////////////////////////////////////////////////
+
+    Custom          = 200,
 };
+
+JAFGEXTERNALCORE_API auto Redirect(const EChatCommandSyntax::Type& InType) -> EChatCommandSyntax::Type;
+
+FORCEINLINE JAFGEXTERNALCORE_API bool IsTypedef(const Type& InType)
+{
+    return InType < EChatCommandSyntax::Integer;
+}
+
+FORCEINLINE JAFGEXTERNALCORE_API bool IsRedirected(const Type& InType)
+{
+    return InType >= EChatCommandSyntax::Integer && InType < EChatCommandSyntax::Custom;
+}
+
+FORCEINLINE JAFGEXTERNALCORE_API bool IsSubsystemRedirected(const Type& InType)
+{
+    return InType >= EChatCommandSyntax::Custom;
+}
 
 }
 
@@ -91,6 +124,7 @@ namespace CommandStatics::Syntax
  *         This does not mean that the output is valid and is semantically correct.
  */
 JAFGEXTERNALCORE_API bool ParseArgument(
+    const UWorld& InContext,
     const TArray<FString>& InArgs,
     const EChatCommandSyntax::Type& InArgSyntax,
     FString& OutArgStringRepresentation,
@@ -126,6 +160,26 @@ JAFGEXTERNALCORE_API void GetAllAvailableInputsForSyntax_Accumulated(
     const FArgCursor* InArgCursor = nullptr,
     const int32 InLimit = DEFAULT_SYNTAX_RET_LIMIT
 );
+
+//////////////////////////////////////////////////////////////////////////
+// Common syntaxes determination methods
+//////////////////////////////////////////////////////////////////////////
+
+JAFGEXTERNALCORE_API auto IsNumeric(const FString& S) -> bool;
+
+JAFGEXTERNALCORE_API auto IsByte(const FString& S) -> bool;
+JAFGEXTERNALCORE_API auto ToByte(const FString& S) -> uint8;
+JAFGEXTERNALCORE_API auto IsInteger32(const FString& S) -> bool;
+JAFGEXTERNALCORE_API auto ToInteger32(const FString& S) -> int32_t;
+JAFGEXTERNALCORE_API auto IsUInteger32(const FString& S) -> bool;
+JAFGEXTERNALCORE_API auto ToUInteger32(const FString& S) -> uint32_t;
+
+JAFGEXTERNALCORE_API bool IsByte_RangeCheck(const FString& S);
+JAFGEXTERNALCORE_API bool IsInteger32_RangeCheck(const FString& S);
+JAFGEXTERNALCORE_API bool IsUInteger32_RangeCheck(const FString& S);
+
+JAFGEXTERNALCORE_API bool AssumedInteger32_RangeCheck(const FString& S);
+JAFGEXTERNALCORE_API bool AssumedUInteger32_RangeCheck(const FString& S);
 
 }
 

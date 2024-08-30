@@ -24,12 +24,13 @@
 #ifdef SPACE
     #error "SPACE macro is already defined."
 #endif /* SPACE */
-#define SPACE TEXT(" ")
-#define OWNING_PLAYER_CONTROLLER                              \
+#define SPACE                                                  \
+    TEXT(" ")
+#define OWNING_PLAYER_CONTROLLER                               \
     Cast<AWorldPlayerController>(this->GetOwningPlayer())
-#define OWNING_CHAT_COMPONENT                                 \
-    Cast<UChatComponentImpl>(                                 \
-        Cast<AWorldPlayerController>(this->GetOwningPlayer()  \
+#define OWNING_CHAT_COMPONENT                                  \
+    Cast<UChatComponentImpl>(                                  \
+        Cast<AWorldPlayerController>(this->GetOwningPlayer()   \
     )->GetComponentByClass(UChatComponentImpl::StaticClass()))
 
 void UChatMenuEntry::PassDataToWidget(const FWidgetPassData& UncastedData)
@@ -543,7 +544,14 @@ void UChatMenu::UpdateCmdSuggestions(const FText& InText) const
     for (int32 i = 0; i < CommandObj->Syntax.Num(); ++i)
     {
         const FArgCursor Temp = MovableArgCursor;
-        if (FString NotUsed; ::CommandStatics::Syntax::ParseArgument(Args, CommandObj->Syntax[i], NotUsed, MovableArgCursor, bBadInput))
+        if (FString NotUsed; ::CommandStatics::Syntax::ParseArgument(
+            *this->GetWorld(),
+            Args,
+            CommandObj->Syntax[i],
+            NotUsed,
+            MovableArgCursor,
+            bBadInput
+        ))
         {
             PreviousArgCursor = Temp;
             continue;
@@ -624,8 +632,6 @@ void UChatMenu::UpdateCmdSuggestions(const FText& InText) const
             Suggestions.Emplace(BaseSuggestion + SPACE + PossibleInput);
         }
     }
-
-    // Suggestions.Sort( [] (const FString& A, const FString& B) { return A < B; });
 
     this->MarkCommandInAsInvalid();
     this->ShowCommandSuggestionsWindow(Suggestions);
@@ -722,7 +728,7 @@ void UChatMenu::ShowCommandSuggestionsWindow(const FChatCommandObject& InObj) co
     FString FullCommandRepresentation = InObj.Command;
     for (const EChatCommandSyntax::Type& Syntax : InObj.Syntax)
     {
-        FullCommandRepresentation += TEXT(" ") + LexToString(Syntax);
+        FullCommandRepresentation += SPACE + LexToString(Syntax);
     }
 
     this->ShowCommandSuggestionsWindow({ FullCommandRepresentation }, false);
@@ -764,7 +770,7 @@ void UChatMenu::RerenderCommandSuggestionsWindow(void) const
     return;
 }
 
-void UChatMenu::OnChatTextCommitted(const FText& Text, const ETextCommit::Type CommitMethod)
+void UChatMenu::OnChatTextCommitted(const FText& InText, const ETextCommit::Type CommitMethod)
 {
     /* Ignoring commits that are not passed through the key Enter. */
     if (
@@ -782,7 +788,7 @@ void UChatMenu::OnChatTextCommitted(const FText& Text, const ETextCommit::Type C
 
     if (this->IsStdInValid() == false)
     {
-        if (Text.ToString().IsEmpty())
+        if (InText.ToString().IsEmpty())
         {
             this->HideChatMenu();
             return;
@@ -791,7 +797,7 @@ void UChatMenu::OnChatTextCommitted(const FText& Text, const ETextCommit::Type C
         LOG_WARNING(
             LogJAFGChat,
             "Chat text not committed. Text [%s]; Method: [%d]. Not valid.",
-            *Text.ToString(), static_cast<int32>(CommitMethod)
+            *InText.ToString(), static_cast<int32>(CommitMethod)
         )
 
         return;
@@ -799,17 +805,17 @@ void UChatMenu::OnChatTextCommitted(const FText& Text, const ETextCommit::Type C
 
     this->HideChatMenu();
 
-    OWNING_CHAT_COMPONENT->ParseMessage(Text);
+    OWNING_CHAT_COMPONENT->ParseMessage(InText);
 
     return;
 }
 
-void UChatMenu::OnChatTextChanged(const FText& Text)
+void UChatMenu::OnChatTextChanged(const FText& InText)
 {
-    this->LastSelfTypedIn = Text;
+    this->LastSelfTypedIn        = InText;
     this->CurrentCursorInHistory = UChatMenu::InvalidCursorInHistory;
 
-    this->UpdateCmdSuggestions(Text);
+    this->UpdateCmdSuggestions(InText);
 
     return;
 }
@@ -829,7 +835,10 @@ FOnKeyDown UChatMenu::GetOnStdInKeyDownHandler(void)
 
             if (InputSubsystem->GetAllKeysForAction(InputActions::PreviousChatStdIn).Contains(InKeyEvent.GetKey()))
             {
-                if (this->VerticalBox_CmdSuggestions->GetVisibility() == ESlateVisibility::Collapsed || this->VerticalBox_CmdSuggestions->GetChildrenCount() <= 1)
+                if (
+                       this->VerticalBox_CmdSuggestions->GetVisibility() == ESlateVisibility::Collapsed
+                    || this->VerticalBox_CmdSuggestions->GetChildrenCount() <= 1
+                )
                 {
                     this->OnHistoryLookUp(true);
                 }
@@ -843,7 +852,10 @@ FOnKeyDown UChatMenu::GetOnStdInKeyDownHandler(void)
 
             if (InputSubsystem->GetAllKeysForAction(InputActions::NextChatStdIn).Contains(InKeyEvent.GetKey()))
             {
-                if (this->VerticalBox_CmdSuggestions->GetVisibility() == ESlateVisibility::Collapsed || this->VerticalBox_CmdSuggestions->GetChildrenCount() <= 1)
+                if (
+                       this->VerticalBox_CmdSuggestions->GetVisibility() == ESlateVisibility::Collapsed
+                    || this->VerticalBox_CmdSuggestions->GetChildrenCount() <= 1
+                )
                 {
                     this->OnHistoryLookUp(false);
                 }
@@ -923,7 +935,6 @@ void UChatMenu::OnFillCommandSuggestion(void) const
     this->LastSelfTypedIn = this->EditableText_StdIn->GetText();
 
     this->UpdateCmdSuggestions(this->EditableText_StdIn->GetText());
-
 
     return;
 }
