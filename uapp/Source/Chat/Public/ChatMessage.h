@@ -122,10 +122,10 @@ struct CHAT_API FChatMessage final
     //////////////////////////////////////////////////////////////////////////
 
     UPROPERTY( /* Replicated */ )
-    TEnumAsByte<EChatMessageType::Type> Type;
+    TEnumAsByte<EChatMessageType::Type> Type { EChatMessageType::Player };
 
     UPROPERTY( /* Replicated */ )
-    TEnumAsByte<EChatMessageFormat::Type> Format;
+    TEnumAsByte<EChatMessageFormat::Type> Format { EChatMessageFormat::Default };
 
     UPROPERTY( /* Replicated */ )
     FString Sender;
